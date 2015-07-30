@@ -1,21 +1,5 @@
 This project has link to external common files.
-To setup symbolic link, execute setup.sh script.
-Because widows version of Eclipse cannot handle unix symbolic link
-
-
-Download logback and slf4j binary from URL below.
-  http://logback.qos.ch/dist/logback-1.0.13.zip
-  http://www.slf4j.org/dist/slf4j-1.7.5.zip
-Extract jar and copy relevant jar files to jar directory.
-----
-(cd tmp; wget http://logback.qos.ch/dist/logback-1.0.13.zip)
-(cd tmp; unzip logback-1.0.13.zip)
-(cd tmp/logback-1.0.13; cp -p logback-classic-1.0.13*.jar logback-core-1.0.13*.jar ../../jar)
-
-(cd tmp; wget http://www.slf4j.org/dist/slf4j-1.7.5.zip)
-(cd tmp; unzip slf4j-1.7.5.zip)
-(cd tmp/slf4j-1.7.5; cp -p slf4j-api-1.7.5*.jar ../../jar/)
-----
+To setup symbolic link, execute Make file
 
 
 Download junit from URL below.

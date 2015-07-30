@@ -2,5 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/Common/jar/logback-classic-1.1.3.jar" sourcepath="/Common/jar/logback-classic-1.1.3-sources.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/logback-core-1.1.3.jar" sourcepath="/Common/jar/logback-core-1.1.3-sources.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/slf4j-api-1.7.12.jar" sourcepath="/Common/jar/slf4j-api-1.7.12-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

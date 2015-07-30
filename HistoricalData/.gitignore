@@ -1,0 +1,6 @@
+#
+# .gitignore for HistoricalData
+#
+
+tmp/
+

@@ -65,15 +65,34 @@ public class HV {
 	public static double stddevPopulation(final double[] data) {
 		return stddevBase(data, 0);
 	}
-	public static double hv(final double[] S) {
-		final int N = S.length;
+	public static double[] rateOfReturn(final double[] data) {
+		final int N = data.length;
+		double[] ret = new double[N - 1];
 		
-		// R is 0 base not 1
-		double[] R = new double[N - 1];
-		for(int t = 1; t < N; t++) {
-			R[t - 1] = Math.log(S[t] / S[t - 1]);
+		for(int i = 1; i < N; i++) {
+			ret[i - 1] = (data[i] / data[i - 1]) - 1.0;
+			//logger.info("ret[{}] = {}", i - 1, ret[i - 1]);
 		}
+		return ret;
+	}
+	public static double[] rateOfReturnLog(final double[] data) {
+		final int N = data.length;
+		double[] ret = new double[N - 1];
 		
+		for(int i = 1; i < N; i++) {
+			ret[i - 1] = Math.log(data[i] / data[i - 1]);
+			//logger.info("ret[{}] = {}", i - 1, ret[i - 1]);
+		}
+		return ret;
+	}
+	public static double hv(final double[] S) {
+		final double[] R = rateOfReturn(S);
+		final double ret = stddevSample(R);
+		logger.info("hv = {}", ret);
+		return ret;
+	}
+	public static double hvLog(final double[] S) {
+		final double[] R = rateOfReturnLog(S);
 		final double ret = stddevSample(R);
 		logger.info("hv = {}", ret);
 		return ret;
@@ -84,19 +103,21 @@ public class HV {
 		{
 			double[] data = {53, 61, 49, 67, 55, 63};
 			stddevSample(data);
+			hv(data);
+			hvLog(data);
 		}
 		
 		
 		// HV should be 7.12%
 		{
-			double[] data = testData();
-			double hv = hv(data) * Math.sqrt(252);
-			logger.info("hv = {}", hv);
+//			double[] data = testData();
+//			double hv = hv(data) * Math.sqrt(252);
+//			logger.info("hv = {}", hv);
 		}
 		
 		logger.info("STOP");
 	}
-	private static double[] testData() {
+	public static double[] testData() {
 		return toArray(testDataList());
 	}
 	private static List<Double> testDataList() {

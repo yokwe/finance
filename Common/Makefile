@@ -10,9 +10,13 @@ all: fetch update
 clean:
 	rm -rf tmp/*
 
-fetch: fetch-logback fetch-slf4j
+prepare:
+	mkdir -p tmp jar
 
-update: update-logback update-slf4j
+fetch: prepare fetch-logback fetch-slf4j
+
+update: prepare update-logback update-slf4j
+
 
 fetch-logback:
 	cd tmp; wget http://logback.qos.ch/dist/logback-${LOGBACK_VERSION}.zip

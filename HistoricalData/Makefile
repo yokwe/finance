@@ -12,7 +12,7 @@ clean:
 	rm -rf tmp/*
 
 prepare:
-	mkdir -p tmp/fx/mizuho tmp/google
+	mkdir -p tmp/mizuho tmp/google
 	
 download: prepare download-mizuho download-google
 
@@ -23,13 +23,13 @@ update: prepare update-mizuho update-google
 # MIZUHO
 #
 download-mizuho:
-	mkdir -p tmp/fx/mizuho
-	rm -f tmp/fx/mizuho/quote.csv
-	cd tmp/fx/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+	mkdir -p tmp/mizuho
+	rm -f tmp/mizuho/quote.csv
+	cd tmp/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 
 update-mizuho:
 	rm -f data/fx/mizuho-*
-	awk -f data/script/mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/fx/mizuho/quote.csv >data/fx/mizuho-${CURRENCY_LIST}.csv
+	awk -f data/script/mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/mizuho/quote.csv >data/fx/mizuho-${CURRENCY_LIST}.csv
 
 #
 # GOOGLE

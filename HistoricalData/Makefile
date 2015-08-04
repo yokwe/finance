@@ -30,7 +30,7 @@ download-mizuho:
 update-mizuho:
 	mkdir -p tmp/fx
 	rm -f tmp/fx/mizuho-*
-	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/mizuho/quote.csv >tmp/fx/mizuho-${CURRENCY_LIST}.csv
+	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/mizuho/quote.csv
 
 #
 # GOOGLE
@@ -42,4 +42,5 @@ download-google:
 
 update-google:
 	mkdir -p tmp/security
+	rm -f tmp/security/google-*
 	awk -f data/script/update-google.awk -v TICKER_LIST="${TICKER_LIST}"

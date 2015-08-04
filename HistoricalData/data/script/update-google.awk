@@ -6,7 +6,7 @@ BEGIN {
   for(i = 1; i <= TICKER_SIZE; i++) {
     NAME = TICKER_NAME[i]
     FILE_IN  = sprintf("tmp/google/%s.csv", NAME)
-    FILE_OUT = sprintf("tmp/security/%s.csv", NAME)
+    FILE_OUT = sprintf("tmp/security/google-%s.csv", NAME)
     COUNT = 0
     for(;;) {
       if ((getline <FILE_IN) <= 0) break

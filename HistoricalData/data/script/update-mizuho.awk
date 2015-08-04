@@ -38,20 +38,20 @@ function findIndex(VALUE, i) {
     for(i = 1; i <= CURRENCY_SIZE; i++) {
       NAME = CURRENCY_NAME[i]
       CURRENCY_INDEX[i] = findIndex(NAME)
+      
+      print "DATE,TTM" > "tmp/fx/mizuho-" NAME ".csv"
     }
-    LINE="DATE"
-    for(i = 1; i <= CURRENCY_SIZE; i++) {
-      LINE = LINE "," CURRENCY_NAME[i]
-    }
-    print LINE
     next
   }
   
   YMD_SIZE = split($1,YMD,"/")
   if (YMD_SIZE != 3) error(sprintf("UNEXPTECTED YMD_SIZE = %s", YMD_SIZE))
-  LINE = sprintf("%4d-%02d-%02d", YMD[1], YMD[2], YMD[3])
+  YYYMMDD = sprintf("%4d-%02d-%02d", YMD[1], YMD[2], YMD[3])
+  
   for(i = 1; i <= CURRENCY_SIZE; i++) {
-    LINE = LINE "," sprintf("%.2f", $CURRENCY_INDEX[i])
+    NAME = CURRENCY_NAME[i]
+    LINE = YYYMMDD "," sprintf("%.2f", $CURRENCY_INDEX[i])
+    
+    print LINE > "tmp/fx/mizuho-" NAME ".csv"
   }
-  print LINE
 }

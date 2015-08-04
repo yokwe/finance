@@ -19,6 +19,7 @@ BEGIN {
         print "DATE,OPEN,HIGH,LOW,CLOSE,VOLUE" >FILE_OUT
         continue
       }
+      if ($2 == "-") continue
       
       CMD = "date -d '" $1 "' '+%Y-%m-%d'"
       CMD | getline YYYYMMDD

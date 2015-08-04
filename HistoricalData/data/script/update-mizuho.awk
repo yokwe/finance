@@ -55,3 +55,10 @@ function findIndex(VALUE, i) {
     print LINE > "tmp/fx/mizuho-" NAME ".csv"
   }
 }
+
+END {
+  for(i = 1; i <= CURRENCY_SIZE; i++) {
+    NAME = CURRENCY_NAME[i]
+      printf("%-8s %5d\n", NAME, COUNT)
+  }
+}

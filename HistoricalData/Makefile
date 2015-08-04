@@ -6,12 +6,12 @@ CURRENCY_LIST=USD-EUR-GBP-AUD
 TICKER_LIST=QQQ-SPY-PGX
 TICKER_YEAR=5
 
-all: download update
+all: fetch update
 
 clean:
 	rm -rf tmp/*
 
-download: download-mizuho download-google
+fetch: fetch-mizuho fetch-google
 
 update: update-mizuho update-google
 
@@ -19,23 +19,23 @@ update: update-mizuho update-google
 #
 # MIZUHO
 #
-download-mizuho:
-	mkdir -p tmp/download/mizuho
-	rm -f tmp/download/mizuho/quote.csv
-	cd tmp/download/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+fetch-mizuho:
+	mkdir -p tmp/fetch/mizuho
+	rm -f tmp/fetch/mizuho/quote.csv
+	cd tmp/fetch/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 
 update-mizuho:
 	mkdir -p tmp/fx
 	rm -f tmp/fx/mizuho-*
-	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/download/mizuho/quote.csv
+	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/fetch/mizuho/quote.csv
 
 #
 # GOOGLE
 #
-download-google:
-	mkdir -p tmp/download/google
-	awk -f data/script/download-google.awk -v TICKER_LIST="${TICKER_LIST}" -v TICKER_YEAR="${TICKER_YEAR}" >tmp/download/google/download-google.sh
-	sh -f tmp/download/google/download-google.sh
+fetch-google:
+	mkdir -p tmp/fetch/google
+	awk -f data/script/fetch-google.awk -v TICKER_LIST="${TICKER_LIST}" -v TICKER_YEAR="${TICKER_YEAR}" >tmp/fetch/google/fetch-google.sh
+	sh -f tmp/fetch/google/fetch-google.sh
 
 update-google:
 	mkdir -p tmp/security

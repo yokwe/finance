@@ -5,7 +5,7 @@ BEGIN {
   
   for(i = 1; i <= TICKER_SIZE; i++) {
     NAME = TICKER_NAME[i]
-    FILE_IN  = sprintf("tmp/download/google/%s.csv", NAME)
+    FILE_IN  = sprintf("tmp/fetch/google/%s.csv", NAME)
     FILE_OUT = sprintf("tmp/security/google-%s.csv", NAME)
     COUNT = 0
     for(;;) {

@@ -28,16 +28,18 @@ download-mizuho:
 	cd tmp/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 
 update-mizuho:
-	rm -f data/fx/mizuho-*
-	awk -f data/script/mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/mizuho/quote.csv >data/fx/mizuho-${CURRENCY_LIST}.csv
+	mkdir -p tmp/fx
+	rm -f tmp/fx/mizuho-*
+	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/mizuho/quote.csv >tmp/fx/mizuho-${CURRENCY_LIST}.csv
 
 #
 # GOOGLE
 #
 download-google:
 	mkdir -p tmp/google
-	awk -f data/script/google.awk -v TICKER_LIST="${TICKER_LIST}" -v TICKER_YEAR="${TICKER_YEAR}" >tmp/google/downlod.google.sh
-	sh -f tmp/google/downlod.google.sh
+	awk -f data/script/download-google.awk -v TICKER_LIST="${TICKER_LIST}" -v TICKER_YEAR="${TICKER_YEAR}" >tmp/google/downlod-google.sh
+	sh -f tmp/google/downlod-google.sh
 
 update-google:
-	
+	mkdir -p tmp/security
+	awk -f data/script/update-google.awk -v TICKER_LIST="${TICKER_LIST}"

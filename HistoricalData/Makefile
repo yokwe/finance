@@ -15,6 +15,8 @@ fetch: fetch-mizuho fetch-google
 
 update: update-mizuho update-google
 
+run-chorome:
+	google-chrome --allow-file-access-from-files
 
 #
 # MIZUHO

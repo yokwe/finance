@@ -1,0 +1,58 @@
+<html>
+<head>
+<!--Load the AJAX API-->
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript">
+	// Load the Visualization API and the piechart package.
+	google.load('visualization', '1.0', {
+		'packages' : [ 'corechart' ]
+	});
+
+	// Set a callback to run when the Google Visualization API is loaded.
+	google.setOnLoadCallback(drawChart);
+
+	// Callback that creates and populates a data table,
+	// instantiates the pie chart, passes in the data and draws it.
+	function drawChart() {
+		var opts = {
+			sendMethod : 'auto'
+		};
+		// Replace the data source URL on next line with your data source URL.
+		var URL   = 'https://docs.google.com/spreadsheets/d/147hwSxoZILu_yTu3hNzxlD9E-rHWrq1xDB0LsIZB1Q4'
+		var SHEET = encodeURIComponent('google-SPY')
+		var QUERY = encodeURIComponent('SELECT A, E, (F / 1000000) LIMIT 999999 OFFSET 0');
+		
+		//var query = new google.visualization.Query(URL + 'tq?sheet=' + SHEET_NAME + '&tq=' + QUERY_STRING, opts);
+		var query = new google.visualization.Query(URL + '/gviz/tq?sheet=' + SHEET + '&tq=' + QUERY, opts);
+
+		// Send the query with a callback function.
+		query.send(handleQueryResponse);
+	}
+	
+	function handleQueryResponse(response) {
+		if (response.isError()) {
+			alert('Error in query: ' + response.getMessage() + ' ' + response.getDetailedMessage());
+			return;
+		}
+
+		var data = response.getDataTable();
+
+		// Set chart options
+		var options = {
+			'title'  : 'SPDY - CLOSE VOLUME',
+			'width'  : 800,
+			'height' : 300
+		};
+
+		var chart = new google.visualization.LineChart(document
+				.getElementById('chart_div'));
+		chart.draw(data, options);
+	}
+</script>
+</head>
+
+<body>
+ <!--Div that will hold the pie chart-->
+ <div id="chart_div"></div>
+</body>
+</html>

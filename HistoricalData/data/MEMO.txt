@@ -67,5 +67,19 @@ Google
   
 Yahoo is the best candidate to get core ETF info.
 Which format should be used for data XML or JSON?
-  
-  
+
+
+
+----
+ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt
+ftp://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt
+
+See link below for symbol used in above files.
+  http://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs
+----
+
+----
+ftp://ftp.nasdaqtrader.com/ETFData/
+  ftp://ftp.nasdaqtrader.com/ETFData/nasdaq_etf_08192015.txt
+See files in above directory for ETF trade of specific date
+----

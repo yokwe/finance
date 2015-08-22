@@ -83,3 +83,11 @@ ftp://ftp.nasdaqtrader.com/ETFData/
   ftp://ftp.nasdaqtrader.com/ETFData/nasdaq_etf_08192015.txt
 See files in above directory for ETF trade of specific date
 ----
+
+----
+http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+
+Server check user-agent string to prohibit download with wget. So need to set user-agent string as Mozilla to download the file
+
+wget -vvvv -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+----

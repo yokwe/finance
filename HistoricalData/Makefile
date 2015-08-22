@@ -43,3 +43,16 @@ update-google:
 	mkdir -p tmp/security
 	rm -f tmp/security/google-*
 	awk -f data/script/update-google.awk -v TICKER_LIST="${TICKER_LIST}"
+
+#
+# NASDAQ
+#
+fetch-nasdaq:
+	mkdir -p tmp/fetch/nasdaq
+	rm -f tmp/fetch/nasdaq/{nasdaqlisted.txt,otherlisted.txt,ETFList.csv,ETFData.html,fetch-nasdaq-etf.sh,nasdaq-etf.txt}
+	cd tmp/fetch/nasdaq; wget ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt
+	cd tmp/fetch/nasdaq; wget ftp://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt
+	cd tmp/fetch/nasdaq; wget -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+	cd tmp/fetch/nasdaq; wget -O ETFData.html ftp://ftp.nasdaqtrader.com/ETFData/
+	awk -f data/script/fetch-nasdaq-etf.awk < tmp/fetch/nasdaq/ETFData.html >tmp/fetch/nasdaq/fetch-nasdaq-etf.sh
+	sh -f tmp/fetch/nasdaq/fetch-nasdaq-etf.sh

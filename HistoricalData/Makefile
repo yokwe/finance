@@ -62,4 +62,24 @@ store-nasdaq:
 	mkdir -p tmp/nasdaq
 	awk 'BEGIN{RS="\r\n";FS="[\",]+"};$$1=="Symbol"{next};{printf("%s\n", $$2)}' tmp/fetch/nasdaq/ETFList.csv     | sort | uniq >tmp/nasdaq/etf-nasdaq.txt
 	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%s\n", $$8)}'        tmp/fetch/nasdaq/otherlisted.txt | sort | uniq >tmp/nasdaq/etf-other.txt
-	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | uniq >tmp/nasdaq/etf-all.txt
+	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | uniq | \
+	awk 'BEGIN{RS="[\r\n]+";FS="|";X["P"]="NYSEARCA";X["Z"]="BATS"; while(0 < (getline <"tmp/fetch/nasdaq/otherlisted.txt")) {Y[$$8]=$$3}};{printf("%s %s\n", $$1, ((Y[$$1] in X) ? X[Y[$$1]] : "NASDAQ"))}' >tmp/nasdaq/etf-all.txt
+
+
+#
+# ETF
+#
+fetch-etf: fetch-etf-google fetch-etf-yahoo
+
+fetch-etf-google:
+	mkdir -p tmp/fetch/etf
+	rm -f tmp/fetch/etf/finance*
+	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-google
+	cd tmp/fetch/etf; wget -nH -nc -i wget-list-google
+	
+fetch-etf-yahoo:
+	mkdir -p tmp/fetch/etf
+	rm -f tmp/fetch/etf/q*
+	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'            tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-yahoo
+	cd tmp/fetch/etf; wget -nH -nc -i wget-list-yahoo
+	

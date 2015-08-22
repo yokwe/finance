@@ -49,10 +49,17 @@ update-google:
 #
 fetch-nasdaq:
 	mkdir -p tmp/fetch/nasdaq
-	rm -f tmp/fetch/nasdaq/{nasdaqlisted.txt,otherlisted.txt,ETFList.csv,ETFData.html,fetch-nasdaq-etf.sh,nasdaq-etf.txt}
-	cd tmp/fetch/nasdaq; wget ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt
-	cd tmp/fetch/nasdaq; wget ftp://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt
-	cd tmp/fetch/nasdaq; wget -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
-	cd tmp/fetch/nasdaq; wget -O ETFData.html ftp://ftp.nasdaqtrader.com/ETFData/
-	awk -f data/script/fetch-nasdaq-etf.awk < tmp/fetch/nasdaq/ETFData.html >tmp/fetch/nasdaq/fetch-nasdaq-etf.sh
-	sh -f tmp/fetch/nasdaq/fetch-nasdaq-etf.sh
+	rm -f tmp/fetch/nasdaq/*
+	wget -O tmp/fetch/nasdaq/nasdaqlisted.txt         ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt
+	wget -O tmp/fetch/nasdaq/otherlisted.txt          ftp://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt
+	wget -O tmp/fetch/nasdaq/ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+
+fetch-nasdaq-etfdata:
+	mkdir -p tmp/fetch/nasdaq-etfdata
+	cd tmp/fetch/nasdaq-etfdata; wget -r -l1 --no-parent -nH -nd -N -A 'nasdaq_etf_????????.txt' ftp://ftp.nasdaqtrader.com:21/ETFData/
+
+store-nasdaq:
+	mkdir -p tmp/nasdaq
+	awk 'BEGIN{RS="\r\n";FS="[\",]+"};$$1=="Symbol"{next};{printf("%s\n", $$2)}' tmp/fetch/nasdaq/ETFList.csv     | sort | uniq >tmp/nasdaq/etf-nasdaq.txt
+	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%s\n", $$8)}'        tmp/fetch/nasdaq/otherlisted.txt | sort | uniq >tmp/nasdaq/etf-other.txt
+	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | uniq >tmp/nasdaq/etf-all.txt

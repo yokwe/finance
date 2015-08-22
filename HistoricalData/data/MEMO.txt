@@ -9,7 +9,7 @@ YQL
   select * from yahoo.finance.quotes where symbol = "VCIT"
   select * from yahoo.finance.historicaldata where symbol = "VGIT" and startDate = "2012-09-13" and endDate = "2012-09-23"
   ---- XML
-  wget -O tmp/qyl.xml 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%3D%22VCIT%22&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys'
+  wget -O tmp/yql.xml 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%3D%22VCIT%22&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys'
   ---- JSON
   wget -O tmp/yql.js  'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%3D%22VCIT%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
   ---- JSON

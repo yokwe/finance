@@ -49,7 +49,7 @@ update-google:
 #
 fetch-nasdaq:
 	mkdir -p tmp/fetch/nasdaq
-#	rm -f tmp/fetch/nasdaq/*
+	rm -f tmp/fetch/nasdaq/*
 	cd tmp/fetch/nasdaq; wget -nv -r -l1 --no-parent -nH -nd -N -A 'nasdaqtraded.txt,otherlisted.txt' ftp://ftp.nasdaqtrader.com/SymbolDirectory/
 
 store-nasdaq:

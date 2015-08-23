@@ -53,10 +53,13 @@ morningstar
 
 Yahoo
   http://finance.yahoo.com/q?s=VCIT
+  http://finance.yahoo.com/q/pr?s=VCIT
   ----
   wget -O yahoo.out http://finance.yahoo.com/q?s=VCIT
+  wget -O yahoo.out http://finance.yahoo.com/q/pr?s=VCIT
   ----
   Can get ETF core info without JavaScript.
+  Not always can get Expense Ratio(Some doesn't have Profile(QQQ). Some has profile but no Expense Ratio(VCIT)
 
 Google
   http://www.google.com/finance?q=VCIT

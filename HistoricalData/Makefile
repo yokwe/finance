@@ -66,14 +66,22 @@ store-nasdaq:
 fetch-etf: fetch-etf-google fetch-etf-yahoo
 
 fetch-etf-google:
-	mkdir -p tmp/fetch/etf
-	rm -f tmp/fetch/etf/finance*
-	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-google
-	cd tmp/fetch/etf; wget -nv -nH -nc -i wget-list-google
+	mkdir -p tmp/fetch/etf/google
+	rm -f tmp/fetch/etf/google/*
+	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/google/wget.list
+	cd tmp/fetch/etf/google; wget -nv -nH -nc -i wget.list
 	
 fetch-etf-yahoo:
-	mkdir -p tmp/fetch/etf
-	rm -f tmp/fetch/etf/q*
-	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'            tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-yahoo
-	cd tmp/fetch/etf; wget -nv -nH -nc -i wget-list-yahoo
+	mkdir -p tmp/fetch/etf/yahoo
+	rm -f tmp/fetch/etf/yahoo/*
+	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/yahoo/wget.list
+	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i wget.list
+
+test:
+	wget -O tmp/QQQ-yahoo.html    http://finance.yahoo.com/q?s=QQQ
+	wget -O tmp/QQQ-google.html   http://www.google.com/finance?q=QQQ
+	wget -O tmp/QQQ-etfdb.html    http://etfdb.com/etf/QQQ
+	wget -O tmp/QQQ-etf.html      http://www.etf.com/QQQ
+	wget -O tmp/QQQ-xtf.html      http://www.xtf.com/ETF-Ratings/QQQ
+	wget -O tmp/QQQ-barchart.html http://www.barchart.com/quotes/etf/QQQ
 	

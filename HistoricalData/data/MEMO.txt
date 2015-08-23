@@ -82,6 +82,27 @@ See link below for symbol used in above files.
 ftp://ftp.nasdaqtrader.com/ETFData/
   ftp://ftp.nasdaqtrader.com/ETFData/nasdaq_etf_08192015.txt
 See files in above directory for ETF trade of specific date
+
+Some files use BOM with UTF-16 encoding.
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_10312007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11012007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11022007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11052007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11062007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11072007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11082007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11092007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11122007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11132007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11142007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11152007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11162007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11192007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11202007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11262007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11272007.txt 1 ��D
+  
+Use iconv to convert to UTF-8 => iconv -f UTF-16 -t UTF-8 tmp/fetch/nasdaq-etfdata/nasdaq_etf_10312007.txt
 ----
 
 ----
@@ -91,3 +112,6 @@ Server check user-agent string to prohibit download with wget. So need to set us
 
 wget -vvvv -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
 ----
+
+
+

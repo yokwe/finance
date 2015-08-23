@@ -60,11 +60,11 @@ fetch-nasdaq-etfdata:
 
 store-nasdaq:
 	mkdir -p tmp/nasdaq
-	awk 'BEGIN{RS="\r\n";FS="[\",]+"};$$1=="Symbol"{next};{printf("%s\n", $$2)}' tmp/fetch/nasdaq/ETFList.csv     | sort | uniq >tmp/nasdaq/etf-nasdaq.txt
-	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%s\n", $$8)}'        tmp/fetch/nasdaq/otherlisted.txt | sort | uniq >tmp/nasdaq/etf-other.txt
-	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | uniq | \
+	awk 'BEGIN{RS="\r\n";FS="[\",]+"};$$1=="Symbol"{next};{printf("%s\n", $$2)}'   tmp/fetch/nasdaq/ETFList.csv              | sort | uniq >tmp/nasdaq/etf-nasdaq.txt
+	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%s\n", $$8)}'          tmp/fetch/nasdaq/otherlisted.txt          | sort | uniq >tmp/nasdaq/etf-other.txt
+	awk 'BEGIN{FS="|";RS="\r\n"};$$2=="Symbol"||NF==1{next};{printf("%s\n", $$2)}' tmp/fetch/nasdaq-etfdata/nasdaq_etf_*.txt | sort | uniq >tmp/nasdaq/etf-trade.txt
+	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt  tmp/nasdaq/etf-trade.txt | uniq | \
 	awk 'BEGIN{RS="[\r\n]+";FS="|";X["P"]="NYSEARCA";X["Z"]="BATS"; while(0 < (getline <"tmp/fetch/nasdaq/otherlisted.txt")) {Y[$$8]=$$3}};{printf("%s %s\n", $$1, ((Y[$$1] in X) ? X[Y[$$1]] : "NASDAQ"))}' >tmp/nasdaq/etf-all.txt
-
 
 #
 # ETF

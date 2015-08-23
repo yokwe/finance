@@ -75,11 +75,11 @@ fetch-etf-google:
 	mkdir -p tmp/fetch/etf
 	rm -f tmp/fetch/etf/finance*
 	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-google
-	cd tmp/fetch/etf; wget -nH -nc -i wget-list-google
+	cd tmp/fetch/etf; wget -nv -nH -nc -i wget-list-google
 	
 fetch-etf-yahoo:
 	mkdir -p tmp/fetch/etf
 	rm -f tmp/fetch/etf/q*
 	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'            tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-list-yahoo
-	cd tmp/fetch/etf; wget -nH -nc -i wget-list-yahoo
+	cd tmp/fetch/etf; wget -nv -nH -nc -i wget-list-yahoo
 	

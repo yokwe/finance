@@ -68,9 +68,44 @@ Google
   ----
   Can get ETF core info without JavaScript. But no expense info.
   
-Yahoo is the best candidate to get core ETF info.
-Which format should be used for data XML or JSON?
+  ----
+  http://www.google.com/finance/getprices?q=RELIANCE&x=NSE&i=60&p=5d&f=d,c,o,h,l&df=cpct&auto=1&ts=1266701290218
+  ----
+  See page below for description of parameters
+    http://www.marketcalls.in/database/google-realtime-intraday-backfill-data.html
+    https://github.com/madsailor/SMF-Extension/blob/master/src/morningstar.py
+    
+WikiInvest
+  http://www.wikinvest.com/wiki/SPY
+  ----
+  wget -O wikiinvest.out http://www.wikinvest.com/wiki/VCIT
+  ----
+  Data is not complete(No data for QQQ and VCIT)
 
+Reuters
+  http://www.reuters.com/finance/stocks/overview?symbol=SPY
+  ----
+  No expense ratio
+
+StockEncyclopedia
+  http://etf.stock-encyclopedia.com/QQQ.html
+  ----
+  Page contains link to issuer's product page
+  
+NYSE
+  https://www.nyse.com/quote/ARCX:SPY/fund
+  https://www.nyse.com/quote/XNAS:QQQ/fund
+  ----
+  Page contains expense information.
+  Data is from morningstar. So need javascript to retrieve data.
+  
+Some yahoo page doesn't provide expense ratio of ETF.
+etf.com page has link to issuer's product page
+
+There is no unified category / segment of ETF. So 
+Historical open/close value of ETF can be download from google
+
+Use htmlunit to download page from javascript generated page.
 
 
 ----
@@ -116,5 +151,30 @@ Server check user-agent string to prohibit download with wget. So need to set us
 wget -vvvv -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
 ----
 
+Investopia
+----
+  http://etf.stock-encyclopedia.com/QQQ
+----
+  Page contains link to iuuser's product page, issued date, listed exchange, name
+
+MSN
+----
+  http://www.msn.com/en-us/money/etfdetails?symbol=SPY
+  Need javascript to get expense ratio
+
+seekingalpha
+----
+  http://seekingalpha.com/symbol/QQQ
+  Page contains expense ration value as data
+  
 
 
+What can be static data of ETF?
+  Symbol
+  Name
+  Issuer Name
+  Inception Date
+  Expense Ratio
+  Category
+What can be dynamic data of ETF?
+  

@@ -68,20 +68,28 @@ fetch-etf: fetch-etf-google fetch-etf-yahoo
 fetch-etf-google:
 	mkdir -p tmp/fetch/etf/google
 	rm -f tmp/fetch/etf/google/*
-	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/google/wget.list
-	cd tmp/fetch/etf/google; wget -nv -nH -nc -i wget.list
+	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-google.list
+	cd tmp/fetch/etf/google; wget -nv -nH -nc -i ../wget-google.list
 	
 fetch-etf-yahoo:
 	mkdir -p tmp/fetch/etf/yahoo
 	rm -f tmp/fetch/etf/yahoo/*
-	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/yahoo/wget.list
-	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i wget.list
+	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/yahoo/wget-yahoo.list
+	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo.list
 
 test:
-	wget -O tmp/QQQ-yahoo.html    http://finance.yahoo.com/q?s=QQQ
-	wget -O tmp/QQQ-google.html   http://www.google.com/finance?q=QQQ
-	wget -O tmp/QQQ-etfdb.html    http://etfdb.com/etf/QQQ
-	wget -O tmp/QQQ-etf.html      http://www.etf.com/QQQ
-	wget -O tmp/QQQ-xtf.html      http://www.xtf.com/ETF-Ratings/QQQ
-	wget -O tmp/QQQ-barchart.html http://www.barchart.com/quotes/etf/QQQ
+	wget -O tmp/QQQ-yahoo-q.html    http://finance.yahoo.com/q?s=QQQ
+	wget -O tmp/QQQ-yahoo-qpr.html  http://finance.yahoo.com/q/pr?s=QQQ
+	wget -O tmp/QQQ-google.html     http://www.google.com/finance?q=QQQ
+	wget -O tmp/QQQ-etfdb.html      http://etfdb.com/etf/QQQ
+	wget -O tmp/QQQ-etf.html        http://www.etf.com/QQQ
+	wget -O tmp/QQQ-xtf.html        http://www.xtf.com/ETF-Ratings/QQQ
+	wget -O tmp/QQQ-barchart.html   http://www.barchart.com/quotes/etf/QQQ
+	wget -O tmp/QQQ-wikiinvest.html http://www.wikinvest.com/wiki/QQQ
+	wget -O tmp/QQQ-reuters.html    http://www.reuters.com/finance/stocks/overview?symbol=QQQ
+	wget -O tmp/QQQ-stockencyclopedia.html http://etf.stock-encyclopedia.com/QQQ.html
+	wget -O tmp/QQQ-msn.html        http://www.msn.com/en-us/money/etfdetails?symbol=QQQ
+#
+	wget -O tmp/SPY-yahoo-qpr.html  http://finance.yahoo.com/q/pr?s=SPY
+	wget -O tmp/SPY-msn.html        http://www.msn.com/en-us/money/etfdetails?symbol=SPY
 	

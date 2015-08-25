@@ -89,6 +89,7 @@ test:
 	wget -O tmp/QQQ-reuters.html    http://www.reuters.com/finance/stocks/overview?symbol=QQQ
 	wget -O tmp/QQQ-stockencyclopedia.html http://etf.stock-encyclopedia.com/QQQ.html
 	wget -O tmp/QQQ-msn.html        http://www.msn.com/en-us/money/etfdetails?symbol=QQQ
+	wget -O tmp/QQQ-seekingalpha.html http://seekingalpha.com/symbol/QQQ
 #
 	wget -O tmp/SPY-yahoo-qpr.html  http://finance.yahoo.com/q/pr?s=SPY
 	wget -O tmp/SPY-msn.html        http://www.msn.com/en-us/money/etfdetails?symbol=SPY

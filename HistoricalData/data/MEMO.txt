@@ -177,4 +177,250 @@ What can be static data of ETF?
   Expense Ratio
   Category
 What can be dynamic data of ETF?
+
+Download from sieekingalpha.com takes 155sec 1565 files
+Download from
+---
+2015-08-26 18:24:00 URL:http://seekingalpha.com/symbol/ZSML [52137/52137] -> "ZSML" [1]
+FINISHED --2015-08-26 18:24:00--
+Total wall clock time: 11m 35s
+Downloaded: 1565 files, 95M in 2m 15s (719 KB/s)
+----
+
+----
+awk -F , '{if ("2003-09-24" <= $1 && $1 <= "2008-09-24") printf("data[%s] = %s;\n", i++, $3)}' data/fx/mizuho-USD-EUR-GBP-AUD.csv >tmp/a.csv
+
+To download stock data from finance.google.com, use URL like below.
+  http://www.google.com/finance/historical?q=SPY&histperiod=daily&startdate=2014-01-01&output=csv
+  Above URL is historical data from 2014-01-01 to today as csv format.
+
+
+YQL
+  select * from yahoo.finance.quotes where symbol = "VCIT"
+  select * from yahoo.finance.historicaldata where symbol = "VGIT" and startDate = "2012-09-13" and endDate = "2012-09-23"
+  ---- XML
+  wget -O tmp/yql.xml 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%3D%22VCIT%22&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys'
+  ---- JSON
+  wget -O tmp/yql.js  'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%3D%22VCIT%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
+  ---- JSON
+  wget -O tmp/yql.js 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.historicaldata%20where%20symbol%3D%22VCIT%22%20and%20startDate%3D%222012-09-13%22%20and%20endDate%3D%222012-09-23%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback='
+  ----
+
+etfdb.com
+  http://etfdb.com/etf/VCIT/
+  ----
+  wget -O tmp/etfdb.out http://etfdb.com/etf/VCIT/
+  ----
+  Can get ETF core info without JavaScript.
+
+xtf.db
+  http://www.xtf.com/ETF-Ratings/VCIT
+  ----
+  wget -O tmp/xtf.out http://www.xtf.com/ETF-Ratings/VCIT
+  ----
+  Can get ETF core info without JavaScript
+
+etfscreen.com
+  http://www.etfscreen.com/price-chart.php?s=VCIT
+  ----
+  wget -O etfscreen.out http://www.etfscreen.com/price-chart.php?s=VCIT
+  ----
+  Can get ETF core info without JavaScript. But no expense info.
+
+etf.com
+  http://www.etf.com/VCIT
+  ----
+  wget -O etf.out http://www.etf.com/VCIT
+  ----
+  Cannot get ETF core info without JavaScript
+
+morningstar
+  http://www.morningstar.com/etfs/XNAS/VCIT/quote.html
+  ----
+  wget -O morningstar.out http://www.morningstar.com/etfs/XNAS/VCIT/quote.html
+  ----
+  Cannot get ETF core info without JavaScript
+
+Yahoo
+  http://finance.yahoo.com/q?s=VCIT
+  http://finance.yahoo.com/q/pr?s=VCIT
+  ----
+  wget -O yahoo.out http://finance.yahoo.com/q?s=VCIT
+  wget -O yahoo.out http://finance.yahoo.com/q/pr?s=VCIT
+  ----
+  Can get ETF core info without JavaScript.
+  Not always can get Expense Ratio(Some doesn't have Profile(QQQ). Some has profile but no Expense Ratio(VCIT)
+
+Google
+  http://www.google.com/finance?q=VCIT
+  ----
+  wget -O google.out http://www.google.com/finance?q=VCIT
+  ----
+  Can get ETF core info without JavaScript. But no expense info.
   
+  ----
+  http://www.google.com/finance/getprices?q=RELIANCE&x=NSE&i=60&p=5d&f=d,c,o,h,l&df=cpct&auto=1&ts=1266701290218
+  ----
+  See page below for description of parameters
+    http://www.marketcalls.in/database/google-realtime-intraday-backfill-data.html
+    https://github.com/madsailor/SMF-Extension/blob/master/src/morningstar.py
+    
+WikiInvest
+  http://www.wikinvest.com/wiki/SPY
+  ----
+  wget -O wikiinvest.out http://www.wikinvest.com/wiki/VCIT
+  ----
+  Data is not complete(No data for QQQ and VCIT)
+
+Reuters
+  http://www.reuters.com/finance/stocks/overview?symbol=SPY
+  ----
+  No expense ratio
+
+StockEncyclopedia
+  http://etf.stock-encyclopedia.com/QQQ.html
+  ----
+  Page contains link to issuer's product page
+  
+NYSE
+  https://www.nyse.com/quote/ARCX:SPY/fund
+  https://www.nyse.com/quote/XNAS:QQQ/fund
+  ----
+  Page contains expense information.
+  Data is from morningstar. So need javascript to retrieve data.
+  
+Some yahoo page doesn't provide expense ratio of ETF.
+etf.com page has link to issuer's product page
+
+There is no unified category / segment of ETF. So 
+Historical open/close value of ETF can be download from google
+
+Use htmlunit to download page from javascript generated page.
+
+
+----
+ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqlisted.txt
+ftp://ftp.nasdaqtrader.com/SymbolDirectory/otherlisted.txt
+
+See link below for symbol used in above files.
+  http://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs
+----
+
+----
+ftp://ftp.nasdaqtrader.com/ETFData/
+  ftp://ftp.nasdaqtrader.com/ETFData/nasdaq_etf_08192015.txt
+See files in above directory for ETF trade of specific date
+
+Some files use BOM with UTF-16 encoding.
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_10312007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11012007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11022007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11052007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11062007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11072007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11082007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11092007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11122007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11132007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11142007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11152007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11162007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11192007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11202007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11262007.txt 1 ��D
+  tmp/fetch/nasdaq-etfdata/nasdaq_etf_11272007.txt 1 ��D
+  
+Use iconv to convert to UTF-8 => iconv -f UTF-16 -t UTF-8 tmp/fetch/nasdaq-etfdata/nasdaq_etf_10312007.txt
+----
+
+----
+http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+
+Server check user-agent string to prohibit download with wget. So need to set user-agent string as Mozilla to download the file
+
+wget -vvvv -O ETFList.csv -U 'Mozilla' http://www.nasdaq.com/investing/etfs/etf-finder-results.aspx?download=Yes
+----
+
+Investopia
+----
+  http://etf.stock-encyclopedia.com/QQQ
+----
+  Page contains link to iuuser's product page, issued date, listed exchange, name
+
+MSN
+----
+  http://www.msn.com/en-us/money/etfdetails?symbol=SPY
+  Need javascript to get expense ratio
+
+seekingalpha
+----
+  http://seekingalpha.com/symbol/QQQ
+  Page contains expense ration value as data
+  
+
+
+What can be static data of ETF?
+  Symbol
+  Name
+  Issuer Name
+  Inception Date
+  Expense Ratio
+  Category
+What can be dynamic data of ETF?
+
+
+Download from sieekingalpha.com takes 11m 35s -- 1565 files
+---
+2015-08-26 18:24:00 URL:http://seekingalpha.com/symbol/ZSML [52137/52137] -> "ZSML" [1]
+FINISHED --2015-08-26 18:24:00--
+Total wall clock time: 11m 35s
+Downloaded: 1565 files, 95M in 2m 15s (719 KB/s)
+----
+
+Download from msn.com takes 36m 26s -- 1592 files
+----
+2015-08-26 18:48:14 URL:http://www.msn.com/en-us/money/etfdetails?symbol=ZSML [64394/64394] -> "etfdetails?symbol=ZSML" [1]
+FINISHED --2015-08-26 18:48:14--
+Total wall clock time: 36m 26s
+Downloaded: 1592 files, 97M in 3m 23s (490 KB/s)
+----
+
+Download from finance.yahoo.com takes 48m 9s -- download 1592 files
+----
+2015-08-26 19:02:06 URL:http://finance.yahoo.com/q?s=ZSML [72019] -> "q?s=ZSML" [1]
+FINISHED --2015-08-26 19:02:06--
+Total wall clock time: 48m 9s
+Downloaded: 1592 files, 109M in 21m 49s (85.5 KB/s)
+----
+
+Download from etf.com takes 39m 38s -- download 1581 files
+----
+2015-08-26 20:10:11 URL:http://www.etf.com/ZSML [164551] -> "ZSML" [1]
+FINISHED --2015-08-26 20:10:11--
+Total wall clock time: 39m 38s
+Downloaded: 1581 files, 242M in 29m 42s (139 KB/s)
+----
+
+Download from etfdb.com takes 44m 13s -- download 1525 files
+----
+2015-08-26 20:13:08 URL:http://etfdb.com/etf/ZSML/ [106830/106830] -> "ZSML" [1]
+FINISHED --2015-08-26 20:13:08--
+Total wall clock time: 44m 13s
+Downloaded: 1525 files, 170M in 21m 51s (133 KB/s)
+----
+
+----
+2015-08-26 22:37:35 URL:http://etfdb.com/etf/ZSML/ [106830/106830] -> "ZSML" [1]
+FINISHED --2015-08-26 22:37:35--
+Total wall clock time: 2h 13m 43s
+Downloaded: 1535 files, 172M in 59m 44s (49.0 KB/s)
+----
+
+----
+2015-08-26 23:17:17 URL:http://www.xtf.com/ETF-Ratings/ZSML [158943/158943] -> "ZSML" [1]
+FINISHED --2015-08-26 23:17:17--
+Total wall clock time: 2h 52m 44s
+Downloaded: 1591 files, 238M in 1h 40m 22s (40.6 KB/s)
+----
+
+

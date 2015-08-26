@@ -6,6 +6,8 @@ CURRENCY_LIST=USD-EUR-GBP-AUD
 TICKER_LIST=QQQ-SPY-PGX
 TICKER_YEAR=10
 
+COMMON_WGET_OPTIONS=-nv --wait=1 --random-wait
+
 all: fetch update
 
 clean:
@@ -24,7 +26,7 @@ run-chrome:
 fetch-mizuho:
 	mkdir -p tmp/fetch/mizuho
 	rm -f tmp/fetch/mizuho/quote.csv
-	cd tmp/fetch/mizuho; wget http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+	cd tmp/fetch/mizuho; wget ${COMMON_WGET_OPTIONS} http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 
 update-mizuho:
 	mkdir -p tmp/fx
@@ -50,7 +52,7 @@ update-google:
 fetch-nasdaq:
 	mkdir -p tmp/fetch/nasdaq
 	rm -f tmp/fetch/nasdaq/*
-	cd tmp/fetch/nasdaq; wget -nv -r -l1 --no-parent -nH -nd -N -A 'nasdaqtraded.txt,otherlisted.txt' ftp://ftp.nasdaqtrader.com/SymbolDirectory/
+	cd tmp/fetch/nasdaq; wget ${COMMON_WGET_OPTIONS} -r -l1 --no-parent -nH -nd -N -A 'nasdaqtraded.txt,otherlisted.txt' ftp://ftp.nasdaqtrader.com/SymbolDirectory/
 
 store-nasdaq:
 	mkdir -p tmp/nasdaq
@@ -69,36 +71,54 @@ fetch-etf-google:
 	mkdir -p tmp/fetch/etf/google
 	rm -f tmp/fetch/etf/google/*
 	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-google.list
-	cd tmp/fetch/etf/google; wget -nv -nH -nc -i ../wget-google.list
+	cd tmp/fetch/etf/google; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-google.list
 	
 fetch-etf-yahoo-profile:
 # name listed-exchange moningstar-category expense-ratio inception-date *net-assets fund-summary
-	mkdir -p tmp/fetch/etf/yahoo
-	rm -f tmp/fetch/etf/yahoo/*
+	mkdir -p tmp/fetch/etf/yahoo-profile
+	rm -f tmp/fetch/etf/yahoo-profile/*
 	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-yahoo-profile.list
-	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo-profile.list
+	cd tmp/fetch/etf/yahoo-profile; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-yahoo-profile.list
 
 fetch-etf-yahoo-summary:
 # name listed-exchange moningstar-category *net-asset *NAV fund-family fund-summary
-	mkdir -p tmp/fetch/etf/yahoo
-	rm -f tmp/fetch/etf/yahoo/*
+	mkdir -p tmp/fetch/etf/yahoo-summary
+	rm -f tmp/fetch/etf/yahoo-summary/*
 	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-yahoo-summary.list
-	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo-summary.list
+	cd tmp/fetch/etf/yahoo-summary; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-yahoo-summary.list
 
 fetch-etf-seekingalpha:
 # name listed-exchange expense-ratio dividend-frequencey inception-date
 	mkdir -p tmp/fetch/etf/seekingalpha
 	rm -f tmp/fetch/etf/seekingalpha/*
 	awk '{printf("http://seekingalpha.com/symbol/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-seekingalpha.list
-	cd tmp/fetch/etf/seekingalpha; wget -nv -nH -nc -i ../wget-seekingalpha.list
+	cd tmp/fetch/etf/seekingalpha; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-seekingalpha.list
 
 fetch-etf-msn:
 # morningstar moningstar-category listed-exchange
 	mkdir -p tmp/fetch/etf/msn
 	rm -f tmp/fetch/etf/msn/*
 	awk '{printf("http://www.msn.com/en-us/money/etfdetails?symbol=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-msn.list
-	cd tmp/fetch/etf/msn; wget -nv -nH -nc -i ../wget-msn.list
+	cd tmp/fetch/etf/msn; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-msn.list
+
+fetch-etf-etfdb:
+	mkdir -p tmp/fetch/etf/etfdb
+	rm -f tmp/fetch/etf/etfdb/*
+	awk '{printf("http://etfdb.com/etf/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-etfdb.list
+	cd tmp/fetch/etf/etfdb; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-etfdb.list
 	
+fetch-etf-etf:
+	mkdir -p tmp/fetch/etf/etf
+	rm -f tmp/fetch/etf/etf/*
+	awk '{printf("http://www.etf.com/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-etf.list
+	cd tmp/fetch/etf/etf; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-etf.list
+
+fetch-etf-xtf:
+	mkdir -p tmp/fetch/etf/xtf
+	rm -f tmp/fetch/etf/xtf/*
+	awk '{printf("http://www.xtf.com/ETF-Ratings/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-xtf.list
+	cd tmp/fetch/etf/xtf; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-xtf.list
+
 
 test:
 	wget -O tmp/QQQ-yahoo-q.html    http://finance.yahoo.com/q?s=QQQ

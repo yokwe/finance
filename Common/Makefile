@@ -4,6 +4,7 @@
 
 LOGBACK_VERSION=1.1.3
 SLF4J_VERSION=1.7.12
+SQLITE_JDBC_VERSION=3.8.11.1
 
 all: fetch update
 
@@ -13,9 +14,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc
 
-update: prepare update-logback update-slf4j
+update: prepare update-logback update-slf4j store-sqlite-jdbc
 
 
 fetch-logback:
@@ -23,6 +24,9 @@ fetch-logback:
 
 fetch-slf4j:
 	cd tmp; wget http://www.slf4j.org/dist/slf4j-${SLF4J_VERSION}.zip
+
+fetch-sqlite-jdbc:
+	cd tmp; wget https://bitbucket.org/xerial/sqlite-jdbc/downloads/sqlite-jdbc-${SQLITE_JDBC_VERSION}.jar
 	
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
@@ -35,3 +39,7 @@ update-slf4j:
 	rm -rf jar/slf4j-*
 	cd tmp; unzip slf4j-${SLF4J_VERSION}.zip
 	cd tmp/slf4j-${SLF4J_VERSION}; cp -p slf4j-api-${SLF4J_VERSION}*.jar ../../jar/
+
+update-sqlite-jdbc:
+	rm -rf jar/sqlite-jdbc-*
+	cp tmp/sqlite-jdbc-* jar

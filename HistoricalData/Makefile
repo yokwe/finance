@@ -65,7 +65,8 @@ store-nasdaq:
 #
 # ETF
 #
-fetch-etf: fetch-etf-google fetch-etf-yahoo
+fetch-etf:
+	@echo make fech-etf-*
 
 fetch-etf-google:
 	mkdir -p tmp/fetch/etf/google

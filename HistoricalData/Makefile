@@ -71,11 +71,34 @@ fetch-etf-google:
 	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-google.list
 	cd tmp/fetch/etf/google; wget -nv -nH -nc -i ../wget-google.list
 	
-fetch-etf-yahoo:
+fetch-etf-yahoo-profile:
+# name listed-exchange moningstar-category expense-ratio inception-date *net-assets fund-summary
 	mkdir -p tmp/fetch/etf/yahoo
 	rm -f tmp/fetch/etf/yahoo/*
-	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/yahoo/wget-yahoo.list
-	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo.list
+	awk '{printf("http://finance.yahoo.com/q/pr?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-yahoo-profile.list
+	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo-profile.list
+
+fetch-etf-yahoo-summary:
+# name listed-exchange moningstar-category *net-asset *NAV fund-family fund-summary
+	mkdir -p tmp/fetch/etf/yahoo
+	rm -f tmp/fetch/etf/yahoo/*
+	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-yahoo-summary.list
+	cd tmp/fetch/etf/yahoo; wget -nv -nH -nc -i ../wget-yahoo-summary.list
+
+fetch-etf-seekingalpha:
+# name listed-exchange expense-ratio dividend-frequencey inception-date
+	mkdir -p tmp/fetch/etf/seekingalpha
+	rm -f tmp/fetch/etf/seekingalpha/*
+	awk '{printf("http://seekingalpha.com/symbol/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-seekingalpha.list
+	cd tmp/fetch/etf/seekingalpha; wget -nv -nH -nc -i ../wget-seekingalpha.list
+
+fetch-etf-msn:
+# morningstar moningstar-category listed-exchange
+	mkdir -p tmp/fetch/etf/msn
+	rm -f tmp/fetch/etf/msn/*
+	awk '{printf("http://www.msn.com/en-us/money/etfdetails?symbol=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-msn.list
+	cd tmp/fetch/etf/msn; wget -nv -nH -nc -i ../wget-msn.list
+	
 
 test:
 	wget -O tmp/QQQ-yahoo-q.html    http://finance.yahoo.com/q?s=QQQ

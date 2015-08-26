@@ -423,4 +423,10 @@ Total wall clock time: 2h 52m 44s
 Downloaded: 1591 files, 238M in 1h 40m 22s (40.6 KB/s)
 ----
 
+----
+2015-08-27 08:04:15 URL:http://www.google.com/finance?q=NYSEARCA:ZSML [84371] -> "finance?q=NYSEARCA:ZSML" [1]
+FINISHED --2015-08-27 08:04:15--
+Total wall clock time: 36m 32s
+Downloaded: 1592 files, 138M in 7m 55s (297 KB/s)
+----
 

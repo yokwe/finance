@@ -430,3 +430,21 @@ Total wall clock time: 36m 32s
 Downloaded: 1592 files, 138M in 7m 55s (297 KB/s)
 ----
 
+
+About name
+----
+  Yahoo and MSN use abbreviated name of ETF. Others use not abbreviated name. (See AADR)
+  Use info from etf.com.  Search string likes below.
+----
+					GAInfoFundName = "PowerShares QQQ";
+					GAInfoTicker = "QQQ";
+----
+
+About screening
+----
+  Use average volume to filter weak liquidity ETF.
+
+About info of ETF from issuer
+----
+  Seekingalpha, etf and etfdb has link to ETF info in issuer
+  

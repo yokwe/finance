@@ -24,6 +24,7 @@ public abstract class Extract {
 		matcher.reset(contents);
 		if (!matcher.find()) {
 			logger.error("{}  NAME {}", fileName, name);
+			logger.error("pat {}", matcher.toString());
 			throw new RuntimeException(name);
 		}
 		if (matcher.groupCount() != count) {

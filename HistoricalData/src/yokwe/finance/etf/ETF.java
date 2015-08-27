@@ -46,12 +46,21 @@ public class ETF {
 	private static Extract extractExpenseRatio = new ExtractExpenseRatio("<span id=\"ExpenseRatioSpan\">\\p{javaWhitespace}+([0-9]\\.[0-9]{2}%|--)\\p{javaWhitespace}+</span>");
 	
 	// <a href="http://www.proshares.com/funds/ubio.html" title="Fund Home Page" target="_blank" id="fundHomePageLink">Fund Home Page</a>
+	private static Extract extractHomePage = new Extract.Simple("HOME_PAGE", "<a href=\"(.+)\" title=\"Fund Home Page\" target=\"_blank\" id=\"fundHomePageLink\">Fund Home Page</a>");
+	
+	// <span id="AssetsUnderManagementSpan">				$14.23 M			</span>
+	private static Extract extractAUM = new Extract.Simple("AUM", "<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+	
+	// <span id="AverageDailyVolumeSpan">				$87.24 K			</span>
+	private static Extract extractADV = new Extract.Simple("ADM", "<span id=\"AverageDailyVolumeSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 	
 
 	public final Map<String, String> mapName          = new TreeMap<>();
 	public final Map<String, String> mapInceptionDate = new TreeMap<>();
 	public final Map<String, String> mapExpenseRatio  = new TreeMap<>();
 	public final Map<String, String> mapIssuer        = new TreeMap<>();
+	public final Map<String, String> mapHomePage      = new TreeMap<>();
+	public final Map<String, String> mapAUM           = new TreeMap<>();
 	
 	private void extractInfo(File file) {
 		String fileName = file.getName();
@@ -64,13 +73,16 @@ public class ETF {
 		String inceptionDate = extractInceptionDate.getValue(fileName, contents);
 		String expenseRatio  = extractExpenseRatio.getValue(fileName, contents);
 		String issuer        = extractIssuer.getValue(fileName, contents);
+		String homePage      = extractHomePage.getValue(fileName, contents);
+		String aum           = extractAUM.getValue(fileName, contents);
 		
-		mapName.put(symbol, name);
+		mapName.put         (symbol, name);
 		mapInceptionDate.put(symbol, inceptionDate);
-		mapExpenseRatio.put(symbol, expenseRatio);
-		mapIssuer.put(symbol, issuer);
+		mapExpenseRatio.put (symbol, expenseRatio);
+		mapIssuer.put       (symbol, issuer);
+		mapHomePage.put     (symbol, homePage);
 		
-//		logger.debug("{} {}", symbol, issuer);
+		logger.debug("{}", String.format("%-8s %s", symbol, aum));
 	}
 	
 	public ETF(String path) {
@@ -94,6 +106,7 @@ public class ETF {
 		logger.info("mapInceptionDate = {}", nameList.mapInceptionDate.size());
 		logger.info("mapExpenseRatio  = {}", nameList.mapExpenseRatio.size());
 		logger.info("mapIssuer        = {}", nameList.mapIssuer.size());
+		logger.info("mapHomePage      = {}", nameList.mapHomePage.size());
 		logger.info("STOP");
 	}
 }

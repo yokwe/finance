@@ -9,13 +9,13 @@ public abstract class Extract {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Extract.class);
 
 	protected final String  name;
-	protected final int     count;
+	protected final int     groupCount;
 	protected final Matcher matcher;
 	
-	protected Extract(String name, int count, String pattern) {
-		this.name  = name;
-		this.count = count;
-		matcher    = Pattern.compile(pattern, Pattern.MULTILINE).matcher("");
+	protected Extract(String name, int groupCount, String pattern) {
+		this.name       = name;
+		this.groupCount = groupCount;
+		matcher         = Pattern.compile(pattern, Pattern.MULTILINE).matcher("");
 	}
 	
 	protected abstract String getValue(String fileName);
@@ -25,11 +25,11 @@ public abstract class Extract {
 		if (!matcher.find()) {
 			logger.error("{}  NAME {}", fileName, name);
 			logger.error("pat {}", matcher.toString());
-			throw new RuntimeException(name);
+			throw new RuntimeException("NAME");
 		}
-		if (matcher.groupCount() != count) {
-			logger.error("{}  COUNT {}  groupCount = {}", fileName, name, matcher.groupCount());
-			throw new RuntimeException("COUNT");
+		if (matcher.groupCount() != groupCount) {
+			logger.error("{}  GROUP_COUNT {}  groupCount = {}", fileName, name, matcher.groupCount());
+			throw new RuntimeException("GROUP_COUNT");
 		}
 		
 		return getValue(fileName);
@@ -39,11 +39,8 @@ public abstract class Extract {
 	}
 	
 	public static class Simple extends Extract {
-		public Simple(String name, String pattern) {
-			super(name, 1, pattern);
-		}
-		public Simple(String name, int count, String pattern) {
-			super(name, count, pattern);
+		public Simple(String name, int groupCount, String pattern) {
+			super(name, groupCount, pattern);
 		}
 		protected String getValue(String fileName) {
 			return matcher.group(1);

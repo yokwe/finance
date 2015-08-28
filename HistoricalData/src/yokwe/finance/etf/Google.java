@@ -16,7 +16,8 @@ public class Google {
 	public final Map<String, Element> map          = new TreeMap<>();
 	
 	// <title>Exchange Listed Funds Trust GaveKal Knowledge Leaders Developed World ETF: NYSEARCA:KLDW quotes & news - Google Finance</title>
-	private static Extract extractTitle = new Extract.Simple("TITLE", 3, "<title>(.+): (.+):(.+) quotes & news - Google Finance</title>");
+	private static Extract extractTitle = new Extract.Simple("TITLE", 3,
+			"<title>(.+): (.+):(.+) quotes & news - Google Finance</title>");
 		
 	private void extractInfo(File file) {
 		String fileName = file.getName();

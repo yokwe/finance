@@ -12,24 +12,28 @@ public class MSN {
 	private static final String DIR_PATH = "tmp/fetch/etf/msn";
 	
 	// <div class="header-companyname"><h1>AdvisorShares WCM/BNY MlnFcsd GR ADR ETF</h1></div>
-	private static Extract extractName   = new Extract.Simple("NAME",   "<div class=\"header-companyname\"><h1>(.+)</h1></div>");
+	private static Extract extractName   = new Extract.Simple("NAME", 1,
+			"<div class=\"header-companyname\"><h1>(.+)</h1></div>");
 
 	// <div class="subheader-symbol">(NYSE ARCA: AADR)</div>
-	private static Extract extractExchange = new Extract.Simple("EXCHANGE", 2, "<div class=\"subheader-symbol\">\\((.+): (.+)\\)</div>");
+	private static Extract extractExchange = new Extract.Simple("EXCHANGE", 2,
+			"<div class=\"subheader-symbol\">\\((.+): (.+)\\)</div>");
 	
 	// <span class="name"><p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p></span>
 	// <span class="value"><p class='truncated-string' tabindex = '0' title='14.57M'>14.57M</p></span>
-	private static Extract extractNetAssets= new Extract.Simple("EXCHANGE", "<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p></span>\\p{javaWhitespace}+<span class=\"value\"><p class='truncated-string' tabindex = '0' title='.+'>(.+)</p></span>");
+	private static Extract extractNetAssets= new Extract.Simple("EXCHANGE", 1,
+			"<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p></span>\\p{javaWhitespace}+" +
+			"<span class=\"value\"><p class='truncated-string' tabindex = '0' title='.+'>(.+)</p></span>");
 	
 	// <span class="name"><p class='truncated-string' tabindex = '0' title='Vol (3-Month Avg.)'>Vol (3-Month Avg.)</p></span>
 	// <span class="value"><p class='truncated-string' tabindex = '0' title='1.48k'>1.48k</p></span>
-	private static Extract extractVol3mAvg= new Extract.Simple("VOL3MAVG",
+	private static Extract extractVol3mAvg= new Extract.Simple("VOL3MAVG", 1,
 			"<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Vol \\(3-Month Avg\\.\\)'>Vol \\(3-Month Avg\\.\\)</p></span>\\p{javaWhitespace}+" +
 			"<span class=\"value\"><p class='truncated-string' tabindex = '0' title='.+'>(.+)</p></span>");
 
 	// <span class="name"><p class='truncated-string' tabindex = '0' title='Category'>Category</p></span>
 	// <span class="value baseminus11"><p class='truncated-string' tabindex = '0' title='Foreign Large Growth  '>Foreign Large Growth  </p></span>
-	private static Extract extractCategory= new Extract.Simple("CATEGORY",
+	private static Extract extractCategory= new Extract.Simple("CATEGORY", 1,
 			"<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Category'>Category</p></span>\\p{javaWhitespace}+" +
 	        "<span class=\"value.*\"><p class='truncated-string' tabindex = '0' title='.+'>(.+?)\\p{javaWhitespace}*</p></span>");
 

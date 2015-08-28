@@ -54,13 +54,29 @@ public class ETF {
 	// <span id="AverageDailyVolumeSpan">				$87.24 K			</span>
 	private static Extract extractADV = new Extract.Simple("ADM", "<span id=\"AverageDailyVolumeSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 	
-
-	public final Map<String, String> mapName          = new TreeMap<>();
-	public final Map<String, String> mapInceptionDate = new TreeMap<>();
-	public final Map<String, String> mapExpenseRatio  = new TreeMap<>();
-	public final Map<String, String> mapIssuer        = new TreeMap<>();
-	public final Map<String, String> mapHomePage      = new TreeMap<>();
-	public final Map<String, String> mapAUM           = new TreeMap<>();
+	public static final class Element {
+		public final String symbol;
+		public final String name;
+		public final String inceptionDate;
+		public final String expenseRatio;
+		public final String issuer;
+		public final String homePage;
+		public final String assetsUnderManagement;
+		public final String averageDailyVolume;
+		
+		public Element(String symbol, String name, String inceptionDate, String expenseRatio, String iuuser, String homePage, String assetsUnderManagement, String averageDailyVolume) {
+			this.symbol                = symbol;
+			this.name                  = name;
+			this.inceptionDate         = inceptionDate;
+			this.expenseRatio          = expenseRatio;
+			this.issuer                = iuuser;
+			this.homePage              = homePage;
+			this.assetsUnderManagement = assetsUnderManagement;
+			this.averageDailyVolume    = averageDailyVolume;
+		}
+	}
+	
+	public final Map<String, Element> map          = new TreeMap<>();
 	
 	private void extractInfo(File file) {
 		String fileName = file.getName();
@@ -68,21 +84,18 @@ public class ETF {
 		
 		String contents = Util.getContents(file);
 		
-		String symbol        = extractSymbol.getValue(fileName, contents);
-		String name          = extractName.getValue(fileName, contents);
-		String inceptionDate = extractInceptionDate.getValue(fileName, contents);
-		String expenseRatio  = extractExpenseRatio.getValue(fileName, contents);
-		String issuer        = extractIssuer.getValue(fileName, contents);
-		String homePage      = extractHomePage.getValue(fileName, contents);
-		String aum           = extractAUM.getValue(fileName, contents);
+		String symbol           = extractSymbol.getValue(fileName, contents);
+		String name             = extractName.getValue(fileName, contents);
+		String inceptionDate    = extractInceptionDate.getValue(fileName, contents);
+		String expenseRatio     = extractExpenseRatio.getValue(fileName, contents);
+		String issuer           = extractIssuer.getValue(fileName, contents);
+		String homePage         = extractHomePage.getValue(fileName, contents);
+		String aum              = extractAUM.getValue(fileName, contents);
+		String adv              = extractADV.getValue(fileName, contents);
 		
-		mapName.put         (symbol, name);
-		mapInceptionDate.put(symbol, inceptionDate);
-		mapExpenseRatio.put (symbol, expenseRatio);
-		mapIssuer.put       (symbol, issuer);
-		mapHomePage.put     (symbol, homePage);
+		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, adv));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, aum));
+//		logger.debug("{}", String.format("%-8s %s", symbol, aum));
 	}
 	
 	public ETF(String path) {
@@ -102,11 +115,7 @@ public class ETF {
 	public static void main(String[] args) {
 		logger.info("START");
 		ETF nameList = new ETF(DIR_PATH);
-		logger.info("mapName          = {}", nameList.mapName.size());
-		logger.info("mapInceptionDate = {}", nameList.mapInceptionDate.size());
-		logger.info("mapExpenseRatio  = {}", nameList.mapExpenseRatio.size());
-		logger.info("mapIssuer        = {}", nameList.mapIssuer.size());
-		logger.info("mapHomePage      = {}", nameList.mapHomePage.size());
+		logger.info("map = {}", nameList.map.size());
 		logger.info("STOP");
 	}
 }

@@ -450,4 +450,10 @@ About info of ETF from issuer
 
 
 Take morningstar category from yahoo summary.
+
+
+About exchange
+----
+Information of exchange is not so important. Because not used to search except Google.
+Exchange of KEMP is BATS. But Yahoo shows NYSE MKT as listed exchange of KEMP.
   

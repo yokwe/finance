@@ -54,6 +54,7 @@ public class ETF {
 	// <span id="AverageDailyVolumeSpan">				$87.24 K			</span>
 	private static Extract extractADV = new Extract.Simple("ADM", "<span id=\"AverageDailyVolumeSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 	
+	
 	public static final class Element {
 		public final String symbol;
 		public final String name;
@@ -80,7 +81,7 @@ public class ETF {
 	
 	private void extractInfo(File file) {
 		String fileName = file.getName();
-		//logger.debug("{}", fileName);
+		logger.debug("{}", fileName);
 		
 		String contents = Util.getContents(file);
 		
@@ -95,7 +96,7 @@ public class ETF {
 		
 		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, adv));
 		
-//		logger.debug("{}", String.format("%-8s %s", symbol, aum));
+		logger.debug("{}", String.format("%-8s %s", symbol));
 	}
 	
 	public ETF(String path) {

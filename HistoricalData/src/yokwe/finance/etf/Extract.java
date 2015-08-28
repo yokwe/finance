@@ -15,7 +15,7 @@ public abstract class Extract {
 	protected Extract(String name, int count, String pattern) {
 		this.name  = name;
 		this.count = count;
-		matcher    = Pattern.compile(pattern).matcher("");
+		matcher    = Pattern.compile(pattern, Pattern.MULTILINE).matcher("");
 	}
 	
 	protected abstract String getValue(String fileName);
@@ -34,10 +34,16 @@ public abstract class Extract {
 		
 		return getValue(fileName);
 	}
+	public String getValue(int group) {
+		return matcher.group(group);
+	}
 	
 	public static class Simple extends Extract {
 		public Simple(String name, String pattern) {
 			super(name, 1, pattern);
+		}
+		public Simple(String name, int count, String pattern) {
+			super(name, count, pattern);
 		}
 		protected String getValue(String fileName) {
 			return matcher.group(1);

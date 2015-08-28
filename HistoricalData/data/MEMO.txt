@@ -447,4 +447,7 @@ About screening
 About info of ETF from issuer
 ----
   Seekingalpha, etf and etfdb has link to ETF info in issuer
+
+
+Take morningstar category from yahoo summary.
   

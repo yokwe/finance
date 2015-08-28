@@ -81,7 +81,7 @@ public class ETF {
 	
 	private void extractInfo(File file) {
 		String fileName = file.getName();
-		logger.debug("{}", fileName);
+//		logger.debug("{}", fileName);
 		
 		String contents = Util.getContents(file);
 		
@@ -96,7 +96,7 @@ public class ETF {
 		
 		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, adv));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol));
+		logger.debug("{}", String.format("%-8s %s", symbol, name));
 	}
 	
 	public ETF(String path) {

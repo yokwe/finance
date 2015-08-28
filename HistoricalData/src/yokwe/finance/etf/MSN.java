@@ -83,7 +83,7 @@ public class MSN {
 		
 		map.put(symbol, new Element(exchange, symbol, name, netAssets, vol3mAvg, category));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, category));
+		logger.debug("{}", String.format("%-8s %s", symbol, name));
 	}
 	
 	public MSN(String path) {

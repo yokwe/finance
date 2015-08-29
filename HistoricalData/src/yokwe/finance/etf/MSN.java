@@ -1,6 +1,7 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -65,8 +66,8 @@ public class MSN {
 		
 		if (contents.contains("<title>: Quote and summary for  - MSN Money</title>")) return;
 		
-		if (!contents.contains("<p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p>")) return;
-		if (!contents.contains("<p class='truncated-string' tabindex = '0' title='Vol (3-Month Avg.)'>Vol (3-Month Avg.)</p>")) return;
+//		if (!contents.contains("<p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p>")) return;
+//		if (!contents.contains("<p class='truncated-string' tabindex = '0' title='Vol (3-Month Avg.)'>Vol (3-Month Avg.)</p>")) return;
 		if (!contents.contains("<p class='truncated-string' tabindex = '0' title='Category'>Category</p>")) return;
 		
 		String name      = extractName.getValue(fileName, contents);
@@ -87,7 +88,7 @@ public class MSN {
 		
 		map.put(symbol, new Element(exchange, symbol, name, netAssets, vol3mAvg, category));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, name));
+		logger.debug("{}", String.format("%-8s %s", symbol, category));
 	}
 	
 	public MSN(String path) {
@@ -98,6 +99,7 @@ public class MSN {
 		}
 		
 		File[] fileList = root.listFiles();
+		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		logger.info("fileList = {}", fileList.length);
 		for(File file: fileList) {
 			extractInfo(file);

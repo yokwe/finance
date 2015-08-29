@@ -1,6 +1,7 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -100,6 +101,7 @@ public class ETF {
 		}
 		
 		File[] fileList = root.listFiles();
+		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		logger.info("fileList = {}", fileList.length);
 		for(File file: fileList) {
 			extractInfo(file);

@@ -1,6 +1,7 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -18,8 +19,17 @@ public class YahooSummary {
 	//private static Extract extractExchange = new Extract.Simple("EXCHANGE", 1, "<span class=\"rtq_exch\"><span class=\"rtq_dash\">-</span>(.+?) +</span>");
 	
 	// <tr><th scope="row" width="$width">Category:</th><td class="yfnc_tabledata1"><a href="/etf/lists/?mod_id=mediaquotesetf&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a></td></tr>
-	private static Extract extractCategory = new Extract.Simple("CATEGORY", 1, "<tr><th scope=\"row\" width=\"\\$width\">Category:</th><td class=\"yfnc_tabledata1\"><a [^>]+?>([^<]+)</a></td></tr>");
-			
+	//private static Extract extractCategory = new Extract.Simple("CATEGORY", 1, "<tr><th scope=\"row\" width=\"\\$width\">Category:</th><td class=\"yfnc_tabledata1\"><a [^>]+?>([^<]+)</a></td></tr>");
+	
+	// <tr><th scope="row" width="48%">Net Assets²:</th><td class="yfnc_tabledata1">176.92B</td></tr>
+	private static Extract extractNetAssets = new Extract.Simple("NET_ASSETS", 1,
+			"<tr><th scope=\"row\" width=\"48%\">Net Assets[^:]*:</th><td class=\"yfnc_tabledata1\">(.+?)</td></tr>");
+	
+	// <tr><th scope="row" width="48%">Avg Vol <span class="small">(3m)</span>:</th><td class="yfnc_tabledata1">33,625,100</td></tr>
+	// <tr><th scope="row" width="48%">Avg Vol <span class="small">(3m)</span>:</th><td class="yfnc_tabledata1">239,516</td></tr>
+	private static Extract extractAvgVol3m = new Extract.Simple("AVG_VOL_3M", 1,
+			"<tr><th scope=\"row\" width=\"48%\">Avg Vol <span class=\"small\">\\(3m\\)</span>:</th><td class=\"yfnc_tabledata1\">(.+?)</td></tr>");
+	
 	public static final class Element {
 		public final String symbol;
 		public final String name;
@@ -40,18 +50,12 @@ public class YahooSummary {
 		
 		String name      = extractTitle.getValue(fileName, contents);
 		String symbol    = extractTitle.getValue(2);
+//		String netAssets = extractNetAssets.getValue(fileName, contents);
+		String avgVol3m  = extractAvgVol3m.getValue(fileName, contents);
 		
-		// For missing Category
-		if (!contents.contains("Fund Basics") || contents.contains("<tr><th scope=\"row\" width=\"$width\">Category:</th><td class=\"yfnc_tabledata1\">N/A</td></tr><tr>")) {
-			logger.debug("{}", String.format("%-8s %s", symbol, "XXXX"));
-			return;
-		}
-
-		String category  = extractCategory.getValue(fileName, contents);
+//		map.put(symbol, new Element(symbol, name));
 		
-		map.put(symbol, new Element(symbol, name));
-		
-		logger.debug("{}", String.format("%-8s %s", symbol, category));
+		logger.debug("{}", String.format("%-8s %s", symbol, avgVol3m));
 	}
 	
 	public YahooSummary(String path) {
@@ -62,6 +66,7 @@ public class YahooSummary {
 		}
 		
 		File[] fileList = root.listFiles();
+		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		logger.info("fileList = {}", fileList.length);
 		for(File file: fileList) {
 			extractInfo(file);

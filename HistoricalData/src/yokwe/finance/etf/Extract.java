@@ -46,18 +46,4 @@ public abstract class Extract {
 			return matcher.group(1);
 		}
 	}
-	
-	public static class MMDDYY extends Extract {
-		public MMDDYY(String name, String pattern) {
-			super(name, 3, pattern);
-		}
-		protected String getValue(String fileName) {
-			String mm = matcher.group(1);
-			String dd = matcher.group(2);
-			String yy = matcher.group(3);
-
-			return String.format("20%s-%s-%s", yy, mm, dd);
-		}
-	}
-	
 }

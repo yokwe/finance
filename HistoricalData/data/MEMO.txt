@@ -456,4 +456,8 @@ About exchange
 ----
 Information of exchange is not so important. Because not used to search except Google.
 Exchange of KEMP is BATS. But Yahoo shows NYSE MKT as listed exchange of KEMP.
-  
+
+About Morningstar
+----
+To download information of SPY, use URL below. But it use jQuery and ajax heavily.
+  http://etfs.morningstar.com/quote?t=QQQ&platform=RET

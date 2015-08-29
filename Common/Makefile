@@ -9,14 +9,14 @@ SQLITE_JDBC_VERSION=3.8.11.1
 all: fetch update
 
 clean:
-	rm -rf tmp/*
+	rm -rf tmp/* jar/*
 
 prepare:
 	mkdir -p tmp jar
 
 fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc
 
-update: prepare update-logback update-slf4j store-sqlite-jdbc
+update: prepare update-logback update-slf4j update-sqlite-jdbc
 
 
 fetch-logback:

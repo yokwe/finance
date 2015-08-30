@@ -63,6 +63,16 @@ store-nasdaq:
 	  awk 'BEGIN{X["A"]="NYSEMKT";X["N"]="NYSE";X["P"]="NYSEARCA";X["Q"]="NASDAQ";X["Z"]="BATS"}; {printf("%-8s %s\n", $$1, X[$$2])}'      | sort | uniq >tmp/nasdaq/etf-all.txt
 
 #
+# ICHART
+#
+fetch-ichart:
+	mkdir -p tmp/fetch/ichart
+	rm -f tmp/fetch/ichart/*
+	awk -f data/script/fetch-ichart.awk tmp/nasdaq/etf-all.txt >tmp/fetch/ichart/fetch-ichart.sh
+	sh -f tmp/fetch/ichart/fetch-ichart.sh
+
+
+#
 # ETF
 #
 fetch-etf:

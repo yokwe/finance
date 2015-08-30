@@ -41,9 +41,9 @@ public class ETF {
 	private static Extract extractAUM = new Extract.Simple("AUM", 1,
 			"<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 	
-	// <span id="AverageDailyVolumeSpan">				$87.24 K			</span>
-	private static Extract extractADV = new Extract.Simple("ADM", 1,
-			"<span id=\"AverageDailyVolumeSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+	// <span id="IndexTrackedSpan">				NASDAQ-100 Index			</span>
+	private static Extract extractIndexTracked = new Extract.Simple("INDEX_TRACKED", 1,
+			"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>");
 	
 	
 	public static final class Element {
@@ -54,9 +54,9 @@ public class ETF {
 		public final String issuer;
 		public final String homePage;
 		public final String assetsUnderManagement;
-		public final String averageDailyVolume;
+		public final String indexTracked;
 		
-		public Element(String symbol, String name, String inceptionDate, String expenseRatio, String iuuser, String homePage, String assetsUnderManagement, String averageDailyVolume) {
+		public Element(String symbol, String name, String inceptionDate, String expenseRatio, String iuuser, String homePage, String assetsUnderManagement, String indexTracked) {
 			this.symbol                = symbol;
 			this.name                  = name;
 			this.inceptionDate         = inceptionDate;
@@ -64,7 +64,7 @@ public class ETF {
 			this.issuer                = iuuser;
 			this.homePage              = homePage;
 			this.assetsUnderManagement = assetsUnderManagement;
-			this.averageDailyVolume    = averageDailyVolume;
+			this.indexTracked          = indexTracked;
 		}
 	}
 	
@@ -85,12 +85,22 @@ public class ETF {
 		String issuer           = extractIssuer.getValue(fileName, contents);
 		String homePage         = extractHomePage.getValue(fileName, contents);
 		String aum              = extractAUM.getValue(fileName, contents);
-		String adv              = extractADV.getValue(fileName, contents);
+		String indexTracked     = (contents.contains("<span id=\"IndexTrackedSpan\">")) ? extractIndexTracked.getValue(fileName, contents) : "NA";
 		
 		String inceptionDate = String.format("20%s-%s-%s", inception_YY, inception_MM, inception_DD);
-		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, adv));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, inceptionDate));
+		indexTracked = indexTracked.replace("&amp;", "&");
+		indexTracked = indexTracked.replace("&gt;",  ">");
+		indexTracked = indexTracked.replace("<br />", "");
+		indexTracked = indexTracked.replace("<br>",   "");
+		indexTracked = indexTracked.replace("<p>",    "");
+		indexTracked = indexTracked.replace("</p>",   "");
+		indexTracked = indexTracked.replaceAll("\\p{javaWhitespace}+", " ");
+		indexTracked = indexTracked.trim();
+		
+		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, indexTracked));
+		
+		logger.debug("{}", String.format("%-8s %s", symbol, indexTracked));
 	}
 	
 	public ETF(String path) {

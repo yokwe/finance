@@ -15,7 +15,7 @@ public abstract class Extract {
 	protected Extract(String name, int groupCount, String pattern) {
 		this.name       = name;
 		this.groupCount = groupCount;
-		matcher         = Pattern.compile(pattern, Pattern.MULTILINE).matcher("");
+		matcher         = Pattern.compile(pattern).matcher("");
 	}
 	
 	protected abstract String getValue(String fileName);

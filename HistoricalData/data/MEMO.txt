@@ -461,3 +461,34 @@ About Morningstar
 ----
 To download information of SPY, use URL below. But it use jQuery and ajax heavily.
   http://etfs.morningstar.com/quote?t=QQQ&platform=RET
+
+About Historical data of google
+----
+Data of NYSEARCA:BBH is missing from end of 2008.
+But YQL returns expected data.
+
+
+Download historical data from yahoo
+----
+To download information of SPY between 2015-01-01 and 2015-12-31
+  http://ichart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
+To lower server side stress, use sleep to wait between execution of wget.
+It took 24 mitutes to down load all etf-all.txt.
+Some etf historicla data is failed to download especially new one.
+----
+hasegawa@ubuntu:~/git/finance/HistoricalData$ ls -l tmp/fetch/ichart/*.csv | grep '    0 '
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/CLYH.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/DBAU.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/DBES.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/DBIT.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/DBSE.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:21 tmp/fetch/ichart/DBSP.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:22 tmp/fetch/ichart/DRVN.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:23 tmp/fetch/ichart/EMBH.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:26 tmp/fetch/ichart/HACW.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:26 tmp/fetch/ichart/HDEE.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:27 tmp/fetch/ichart/HHYX.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:28 tmp/fetch/ichart/ISZE.csv
+-rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:32 tmp/fetch/ichart/PUTX.csv
+hasegawa@ubuntu:~/git/finance/HistoricalData$ ls -l tmp/fetch/ichart/*.csv 
+----

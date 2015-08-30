@@ -22,16 +22,10 @@ public class MSN {
 	
 	// <span class="name"><p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p></span>
 	// <span class="value"><p class='truncated-string' tabindex = '0' title='14.57M'>14.57M</p></span>
-	private static Extract extractNetAssets= new Extract.Simple("EXCHANGE", 1,
+	private static Extract extractNetAssets= new Extract.Simple("NET_ASSETS", 1,
 			"<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Net Assets'>Net Assets</p></span>\\p{javaWhitespace}+" +
 			"<span class=\"value\"><p class='truncated-string' tabindex = '0' title='.+'>(.+)</p></span>");
 	
-	// <span class="name"><p class='truncated-string' tabindex = '0' title='Vol (3-Month Avg.)'>Vol (3-Month Avg.)</p></span>
-	// <span class="value"><p class='truncated-string' tabindex = '0' title='1.48k'>1.48k</p></span>
-	private static Extract extractVol3mAvg= new Extract.Simple("VOL3MAVG", 1,
-			"<span class=\"name\"><p class='truncated-string' tabindex = '0' title='Vol \\(3-Month Avg\\.\\)'>Vol \\(3-Month Avg\\.\\)</p></span>\\p{javaWhitespace}+" +
-			"<span class=\"value\"><p class='truncated-string' tabindex = '0' title='.+'>(.+)</p></span>");
-
 	// <span class="name"><p class='truncated-string' tabindex = '0' title='Category'>Category</p></span>
 	// <span class="value baseminus11"><p class='truncated-string' tabindex = '0' title='Foreign Large Growth  '>Foreign Large Growth  </p></span>
 	private static Extract extractCategory= new Extract.Simple("CATEGORY", 1,
@@ -43,15 +37,13 @@ public class MSN {
 		public final String symbol;
 		public final String name;
 		public final String netAssets;
-		public final String vol3mAvg;
 		public final String category;
 		
-		public Element(String exchange, String symbol, String name, String netAssets, String vol3mAvg, String category) {
+		public Element(String exchange, String symbol, String name, String netAssets, String category) {
 			this.exchange  = exchange;
 			this.symbol    = symbol;
 			this.name      = name;
 			this.netAssets = netAssets;
-			this.vol3mAvg  = vol3mAvg;
 			this.category  = category;
 		}
 	}
@@ -74,7 +66,6 @@ public class MSN {
 		String exchange  = extractExchange.getValue(fileName, contents);
 		String symbol    = extractExchange.getValue(2);
 		String netAssets = extractNetAssets.getValue(fileName, contents);
-		String vol3mAvg  = extractVol3mAvg.getValue(fileName, contents);
 		String category  = extractCategory.getValue(fileName, contents);
 		
 		// replace encoded string
@@ -86,7 +77,7 @@ public class MSN {
 		exchange = exchange.replace("NYSE ARCA",      "NYSEARCA");
 		exchange = exchange.replace("finance_EX_BAT", "BATS");
 		
-		map.put(symbol, new Element(exchange, symbol, name, netAssets, vol3mAvg, category));
+		map.put(symbol, new Element(exchange, symbol, name, netAssets, category));
 		
 		logger.debug("{}", String.format("%-8s %s", symbol, category));
 	}

@@ -1,5 +1,8 @@
 package yokwe.finance.etf;
 
+import java.io.File;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +23,7 @@ public abstract class Extract {
 	
 	protected abstract String getValue(String fileName);
 	
-	public String getValue(String fileName, String contents) {
+	public void reset(String fileName, String contents) {
 		matcher.reset(contents);
 		if (!matcher.find()) {
 			logger.error("{}  NAME {}", fileName, name);
@@ -31,7 +34,9 @@ public abstract class Extract {
 			logger.error("{}  GROUP_COUNT {}  groupCount = {}", fileName, name, matcher.groupCount());
 			throw new RuntimeException("GROUP_COUNT");
 		}
-		
+	}
+	public String getValue(String fileName, String contents) {
+		reset(fileName, contents);
 		return getValue(fileName);
 	}
 	public String getValue(int group) {
@@ -44,6 +49,36 @@ public abstract class Extract {
 		}
 		protected String getValue(String fileName) {
 			return matcher.group(1);
+		}
+	}
+	
+	public static class Set {
+		Map<String, Extract> map = new TreeMap<>();
+		String fileName = null;
+		String contents = null;
+		
+		public void add(String name, int groupCount, String pattern) {
+			Extract extract = new Extract.Simple(name, groupCount, pattern);
+			
+			map.put(name, extract);
+		}
+		public void add(Extract extract) {
+			map.put(extract.name, extract);
+		}
+		
+		public void reset(File file) {
+			fileName = file.getName();
+			contents = Util.getContents(file);
+
+			for(Extract extract: map.values()) {
+				extract.reset(fileName, contents);
+			}
+		}
+		public String getValue(String name, int group) {
+			return map.get(name).getValue(group);
+		}
+		public String getValue(String name) {
+			return getValue(name, 1);
 		}
 	}
 }

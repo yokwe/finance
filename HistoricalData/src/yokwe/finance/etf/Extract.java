@@ -10,40 +10,54 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Extract {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Extract.class);
+	public static final String NO_VALUE = "*NOVALUE*";
 
-	protected final String  name;
-	protected final int     groupCount;
-	protected final Matcher matcher;
+	protected final   String  name;
+	protected final   int     groupCount;
+	protected final   String  expect;
+	protected final   Matcher matcher;
+	protected boolean haveValue;
 	
-	protected Extract(String name, int groupCount, String pattern) {
+	protected Extract(String name, int groupCount, String pattern, String expect) {
 		this.name       = name;
 		this.groupCount = groupCount;
+		this.expect     = expect;
 		matcher         = Pattern.compile(pattern).matcher("");
+		haveValue        = false;
+	}
+	protected Extract(String name, int groupCount, String pattern) {
+		this(name, groupCount, pattern, null);
 	}
 	
 	protected abstract String getValue(String fileName);
 	
 	public void reset(String fileName, String contents) {
-		matcher.reset(contents);
-		if (!matcher.find()) {
-			logger.error("{}  NAME {}", fileName, name);
-			logger.error("pat {}", matcher.toString());
-			throw new RuntimeException("NAME");
-		}
-		if (matcher.groupCount() != groupCount) {
-			logger.error("{}  GROUP_COUNT {}  groupCount = {}", fileName, name, matcher.groupCount());
-			throw new RuntimeException("GROUP_COUNT");
+		haveValue = expect == null || contents.contains(expect);
+		if (haveValue) {
+			matcher.reset(contents);
+			if (!matcher.find()) {
+				logger.error("{}  NAME {}", fileName, name);
+				logger.error("pat {}", matcher.toString());
+				throw new RuntimeException("NAME");
+			}
+			if (matcher.groupCount() != groupCount) {
+				logger.error("{}  GROUP_COUNT {}  groupCount = {}", fileName, name, matcher.groupCount());
+				throw new RuntimeException("GROUP_COUNT");
+			}
 		}
 	}
 	public String getValue(String fileName, String contents) {
 		reset(fileName, contents);
-		return getValue(fileName);
+		return haveValue ? getValue(fileName) : NO_VALUE;
 	}
 	public String getValue(int group) {
-		return matcher.group(group);
+		return haveValue ? matcher.group(group) : NO_VALUE;
 	}
 	
 	public static class Simple extends Extract {
+		public Simple(String name, int groupCount, String pattern, String expect) {
+			super(name, groupCount, pattern, expect);
+		}
 		public Simple(String name, int groupCount, String pattern) {
 			super(name, groupCount, pattern);
 		}
@@ -58,8 +72,10 @@ public abstract class Extract {
 		String contents = null;
 		
 		public void add(String name, int groupCount, String pattern) {
-			Extract extract = new Extract.Simple(name, groupCount, pattern);
-			
+			add(name, groupCount, pattern, null);
+		}
+		public void add(String name, int groupCount, String pattern, String expect) {
+			Extract extract = new Extract.Simple(name, groupCount, pattern, expect);
 			map.put(name, extract);
 		}
 		public void add(Extract extract) {

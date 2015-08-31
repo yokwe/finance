@@ -10,41 +10,7 @@ import org.slf4j.LoggerFactory;
 public class ETF {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(ETF.class);
 	
-	private static final String DIR_PATH = "tmp/fetch/etf/etf";
-	
-	// GAInfoFundName = "PowerShares QQQ";
-	private static Extract extractName   = new Extract.Simple("NAME", 1,
-			"\\p{javaWhitespace}+GAInfoFundName = \"(.+)\";");
-	
-	// GAInfoTicker = "QQQ";
-	private static Extract extractSymbol = new Extract.Simple("SYMBOL", 1,
-			"\\p{javaWhitespace}+GAInfoTicker = \"(.+)\";");
-	
-	// <span id="IssuerSpan">				ProShares			</span>
-	private static Extract extractIssuer = new Extract.Simple("ISSUER", 1,
-			"<span id=\"IssuerSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
-	
-	// <span id="InceptionDateSpan">				03/10/99			</span>
-	private static Extract extractInceptionDate = new Extract.Simple("INCEPTION_DATE", 3,
-			"<span id=\"InceptionDateSpan\">\\p{javaWhitespace}+([0-9]{2})/([0-9]{2})/([0-9]{2})\\p{javaWhitespace}+</span>");
-	
-	// <span id="ExpenseRatioSpan">				0.20%			</span>
-	// <span id="ExpenseRatioSpan">				--			</span>
-	private static Extract extractExpenseRatio = new Extract.Simple("EXPENSE_RATIO", 1,
-			"<span id=\"ExpenseRatioSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
-	
-	// <a href="http://www.proshares.com/funds/ubio.html" title="Fund Home Page" target="_blank" id="fundHomePageLink">Fund Home Page</a>
-	private static Extract extractHomePage = new Extract.Simple("HOME_PAGE", 1,
-			"<a href=\"(.+)\" title=\"Fund Home Page\" target=\"_blank\" id=\"fundHomePageLink\">Fund Home Page</a>");
-	
-	// <span id="AssetsUnderManagementSpan">				$14.23 M			</span>
-	private static Extract extractAUM = new Extract.Simple("AUM", 1,
-			"<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
-	
-	// <span id="IndexTrackedSpan">				NASDAQ-100 Index			</span>
-	private static Extract extractIndexTracked = new Extract.Simple("INDEX_TRACKED", 1,
-			"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>");
-	
+	private static final String DIR_PATH = "tmp/fetch/etf/etf";	
 	
 	public static final class Element {
 		public final String symbol;
@@ -68,24 +34,24 @@ public class ETF {
 		}
 	}
 	
-	public final Map<String, Element> map          = new TreeMap<>();
+	public final Map<String, Element> map = new TreeMap<>();
+	private final Extract.Set extract = new Extract.Set();
 	
 	private void extractInfo(File file) {
-		String fileName = file.getName();
-//		logger.debug("{}", fileName);
+//		logger.debug("{}", file.getName());
 		
-		String contents = Util.getContents(file);
+		extract.reset(file);;
 		
-		String symbol           = extractSymbol.getValue(fileName, contents);
-		String name             = extractName.getValue(fileName, contents);
-		String inception_MM     = extractInceptionDate.getValue(fileName, contents);
-		String inception_DD     = extractInceptionDate.getValue(2);
-		String inception_YY     = extractInceptionDate.getValue(3);
-		String expenseRatio     = extractExpenseRatio.getValue(fileName, contents);
-		String issuer           = extractIssuer.getValue(fileName, contents);
-		String homePage         = extractHomePage.getValue(fileName, contents);
-		String aum              = extractAUM.getValue(fileName, contents);
-		String indexTracked     = (contents.contains("<span id=\"IndexTrackedSpan\">")) ? extractIndexTracked.getValue(fileName, contents) : "NA";
+		String symbol           = extract.getValue("SYMBOL");
+		String name             = extract.getValue("NAME");
+		String inception_MM     = extract.getValue("INCEPTION_DATE", 1);
+		String inception_DD     = extract.getValue("INCEPTION_DATE", 2);
+		String inception_YY     = extract.getValue("INCEPTION_DATE", 3);
+		String expenseRatio     = extract.getValue("EXPENSE_RATIO");
+		String issuer           = extract.getValue("ISSUER");
+		String homePage         = extract.getValue("HOME_PAGE");
+		String aum              = extract.getValue("AUM");
+		String indexTracked     = extract.getValue("INDEX_TRACKED");
 		
 		String inceptionDate = String.format("20%s-%s-%s", inception_YY, inception_MM, inception_DD);
 		
@@ -104,6 +70,41 @@ public class ETF {
 	}
 	
 	public ETF(String path) {
+		// GAInfoFundName = "PowerShares QQQ";
+		extract.add("NAME", 1,
+				"\\p{javaWhitespace}+GAInfoFundName = \"(.+)\";");
+		
+		// GAInfoTicker = "QQQ";
+		extract.add("SYMBOL", 1,
+				"\\p{javaWhitespace}+GAInfoTicker = \"(.+)\";");
+		
+		// <span id="IssuerSpan">				ProShares			</span>
+		extract.add("ISSUER", 1,
+				"<span id=\"IssuerSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+		
+		// <span id="InceptionDateSpan">				03/10/99			</span>
+		extract.add("INCEPTION_DATE", 3,
+				"<span id=\"InceptionDateSpan\">\\p{javaWhitespace}+([0-9]{2})/([0-9]{2})/([0-9]{2})\\p{javaWhitespace}+</span>");
+		
+		// <span id="ExpenseRatioSpan">				0.20%			</span>
+		// <span id="ExpenseRatioSpan">				--			</span>
+		extract.add("EXPENSE_RATIO", 1,
+				"<span id=\"ExpenseRatioSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+		
+		// <a href="http://www.proshares.com/funds/ubio.html" title="Fund Home Page" target="_blank" id="fundHomePageLink">Fund Home Page</a>
+		extract.add("HOME_PAGE", 1,
+				"<a href=\"(.+)\" title=\"Fund Home Page\" target=\"_blank\" id=\"fundHomePageLink\">Fund Home Page</a>");
+		
+		// <span id="AssetsUnderManagementSpan">				$14.23 M			</span>
+		extract.add("AUM", 1,
+				"<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+		
+		// <span id="IndexTrackedSpan">				NASDAQ-100 Index			</span>
+		extract.add("INDEX_TRACKED", 1,
+				"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>",
+				"IndexTrackedSpan");
+
+		
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);

@@ -43,36 +43,36 @@ public class ETF {
 	public static class ScrapeETF extends Scrape<Field> {
 		public void init() {
 			// GAInfoFundName = "PowerShares QQQ";
-			add(Field.NAME, 1,
+			add(Field.NAME,
 				"\\p{javaWhitespace}+GAInfoFundName = \"(.+)\";");
 			
 			// GAInfoTicker = "QQQ";
-			add(Field.SYMBOL, 1,
+			add(Field.SYMBOL,
 				"\\p{javaWhitespace}+GAInfoTicker = \"(.+)\";");
 			
 			// <span id="IssuerSpan">				ProShares			</span>
-			add(Field.ISSUER, 1,
+			add(Field.ISSUER,
 				"<span id=\"IssuerSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 			
 			// <span id="InceptionDateSpan">				03/10/99			</span>
-			add(Field.INCEPTION_DATE, 1,
+			add(Field.INCEPTION_DATE,
 				"<span id=\"InceptionDateSpan\">\\p{javaWhitespace}+([0-9]{2}/[0-9]{2}/[0-9]{2})\\p{javaWhitespace}+</span>");
 			
 			// <span id="ExpenseRatioSpan">				0.20%			</span>
 			// <span id="ExpenseRatioSpan">				--			</span>
-			add(Field.EXPENSE_RATIO, 1,
+			add(Field.EXPENSE_RATIO,
 				"<span id=\"ExpenseRatioSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 			
 			// <a href="http://www.proshares.com/funds/ubio.html" title="Fund Home Page" target="_blank" id="fundHomePageLink">Fund Home Page</a>
-			add(Field.HOME_PAGE, 1,
+			add(Field.HOME_PAGE,
 				"<a href=\"(.+)\" title=\"Fund Home Page\" target=\"_blank\" id=\"fundHomePageLink\">Fund Home Page</a>");
 			
 			// <span id="AssetsUnderManagementSpan">				$14.23 M			</span>
-			add(Field.AUM, 1,
+			add(Field.AUM,
 				"<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 			
 			// <span id="IndexTrackedSpan">				NASDAQ-100 Index			</span>
-			add(Field.INDEX_TRACKED, 1,
+			add(Field.INDEX_TRACKED,
 				"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>",
 				"IndexTrackedSpan");
 		}

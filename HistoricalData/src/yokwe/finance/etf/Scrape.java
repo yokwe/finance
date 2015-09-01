@@ -51,10 +51,13 @@ public abstract class Scrape<E extends Enum<E>> {
 	
 	protected  TreeMap<Enum<E>, Element<E>> map = new TreeMap<>();
 	
-	protected void add(E e, int groupCount, String pattern) {
-		add(e, groupCount, pattern, null);
+	protected void add(E e, String pattern) {
+		add(e, 1, pattern, null);
 	}
-	protected void add(E e, int groupCount, String pattern, String expect) {
+	protected void add(E e, String pattern, String expect) {
+		add(e, 1, pattern, expect);
+	}
+	private void add(E e, int groupCount, String pattern, String expect) {
 		if (map.containsKey(e)) {
 			logger.error("DUPLICATE {}", e);
 			throw new RuntimeException("DUPLICATE");
@@ -80,7 +83,11 @@ public abstract class Scrape<E extends Enum<E>> {
 	public String getValue(E e) {
 		return getValue(e, 1);
 	}
-	public String getValue(E e, int group) {
+	
+	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
+	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	private String getValue(E e, int group) {
 		String ret = map.get(e).getValue(group);
 		
 		ret = ret.replace("&amp;", "&");
@@ -178,8 +185,7 @@ public abstract class Scrape<E extends Enum<E>> {
 			ret = NO_VALUE;
 		}
 		
-
-		
+		// Sanity check
 		if (ret.contains(";")) {
 			logger.error("SEMI {} {}", e, ret);
 			throw new RuntimeException("SEMI");
@@ -187,9 +193,4 @@ public abstract class Scrape<E extends Enum<E>> {
 		
 		return ret;
 	}
-
-	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
-	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-
 }

@@ -83,7 +83,7 @@ public class ETF {
 	private void scrapeInfo(File file) {
 //		logger.debug("{}", file.getName());
 		
-		scrape.reset(file);;
+		scrape.reset(file);
 		
 		String symbol           = scrape.getValue(Field.SYMBOL);
 		String name             = scrape.getValue(Field.NAME);
@@ -96,7 +96,7 @@ public class ETF {
 		
 		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, indexTracked));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, indexTracked));
+		logger.debug("{}", String.format("%-8s %s", symbol, expenseRatio));
 	}
 	
 	public ETF(String path) {

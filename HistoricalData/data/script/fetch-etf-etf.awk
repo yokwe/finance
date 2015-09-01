@@ -9,6 +9,6 @@ BEGIN {
   NAME     = $1
   EXCHANGE = $2
   
-  printf("%s; wget -nv -O %s/%s.csv 'http://www.etf.com/%s'\n",
+  printf("%s; wget -nv -O %s/%s.html 'http://www.etf.com/%s'\n",
     CMD_SLEEP, DIR_OUTPUT, NAME, NAME)
 }

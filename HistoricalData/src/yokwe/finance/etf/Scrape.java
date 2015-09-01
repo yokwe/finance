@@ -1,6 +1,7 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.time.format.DateTimeFormatter;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -131,7 +132,49 @@ public abstract class Scrape<E extends Enum<E>> {
 			ret = fract + suffix;
 		}
 		
-		if (ret.matches("--")) {
+		// 998.14K
+		// 59.31M
+		// 144.98B
+		if (ret.matches("^([0-9]+\\.[0-9]+)[KBM]$")) {
+			String suffix = "";
+			char unit = ret.charAt(ret.length() - 1);
+			switch (unit) {
+			case 'K':
+				suffix = "";
+				break;
+			case 'M':
+				suffix = "000";
+				break;
+			case 'B':
+				suffix = "000000";
+				break;
+			default:
+				logger.error("ret {}!", ret);
+				throw new RuntimeException("UNIT " + unit);
+			}
+			String str = ret.substring(0, ret.length() - 1);
+			Float value = Float.valueOf(str);
+			String fract = String.format("%.0f", value * 1000.0);
+			ret = fract + suffix;
+		}
+		
+		// Aug 19, 2015
+		if (ret.matches("^([A-Za-z]{3}) ([0-9]{1,2}), ([0-9]{4})$")) {
+			ret = formatInceptionDate.format(parseInceptionDate.parse(ret));
+		}
+		
+		// --
+		if (ret.compareTo("--") == 0) {
+			ret = NO_VALUE;
+		}
+		
+		// --
+		if (ret.compareTo("NaN") == 0) {
+			ret = NO_VALUE;
+		}
+		
+		// N/A
+		if (ret.compareTo("N/A") == 0) {
 			ret = NO_VALUE;
 		}
 		
@@ -144,5 +187,9 @@ public abstract class Scrape<E extends Enum<E>> {
 		
 		return ret;
 	}
+
+	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
+	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
 }

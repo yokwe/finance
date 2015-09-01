@@ -1,7 +1,6 @@
 package yokwe.finance.etf;
 
 import java.io.File;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,37 +12,6 @@ public class YahooProfile {
 	
 	private static final String DIR_PATH = "tmp/fetch/etf/yahoo-profile";
 	
-	// <div class="title"><h2>AdvisorShares WCM/BNY MlnFcsd GR ADR ETF (AADR)</h2>
-	private static Extract extractTitle = new Extract.Simple("TITLE", 2, "<div class=\"title\"><h2>(.+) \\((.+)\\)</h2>");
-	
-	// <a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a>
-    private static Extract extractCategory = new Extract.Simple("CATEGORY", 1,
-    		"<a href=\"/etf/lists/\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=[^>]+>(.+?)</a>");
-    
-    // <a href="/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=0C00004HZR">AdvisorShares</a>
-    private static Extract extractFamily = new Extract.Simple("FAMILY", 1,
-    		"<a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=[^>]+>(.+?)</a>");
-	
-    // <tr><td class="yfnc_tablehead1" width="50%">Net Assets:</td><td class="yfnc_tabledata1">NaN</td></tr>
-    private static Extract extractNetAssets = new Extract.Simple("NET_ASSETS", 1,
-    		"<tr><td class=\"yfnc_tablehead1\" width=\"50%\">Net Assets:</td><td class=\"yfnc_tabledata1\">(.+?)</td></tr>");
-    
-    // <tr><td class="yfnc_tablehead1" width="50%">Fund Inception Date:</td><td class="yfnc_tabledata1">Aug 19, 2015</td></tr>
-    private static Extract extractInception = new Extract.Simple("INCEPTION", 1,
-    		"<tr><td class=\"yfnc_tablehead1\" width=\"50%\">Fund Inception Date:</td><td class=\"yfnc_tabledata1\">(.+?)</td></tr>");
-    
-    // <tr><td class="yfnc_tablehead1" width="50%">Legal Type:</td><td class="yfnc_tabledata1">Exchange Traded Fund</td></tr>
-    //private static Extract extractType = new Extract.Simple("TYPE", 1,
-    //		"<tr><td class=\"yfnc_tablehead1\" width=\"50%\">Legal Type:</td><td class=\"yfnc_tabledata1\">(.+?)</td></tr>");
-   
-    // <tr><td class="yfnc_datamodlabel1">Annual Report Expense Ratio (net)</td><td class="yfnc_datamoddata1" align="right">0.09%</td>
-    private static Extract extractExpense = new Extract.Simple("EXPENSE", 1,
-    		"<tr><td class=\"yfnc_datamodlabel1\">Annual Report Expense Ratio \\(net\\)</td><td class=\"yfnc_datamoddata1\" align=\"right\">(.+?)</td>");
-    
-    // <tr><td class="yfnc_datamodlabel1">Total Net Assets</td><td class="yfnc_datamoddata1" align="right">NaN</td>
-    //private static Extract extractTotalNetAssets = new Extract.Simple("NET_ASSETS", 1,
-    //		"<tr><td class=\"yfnc_datamodlabel1\">Total Net Assets</td><td class=\"yfnc_datamoddata1\" align=\"right\">(.+?)</td>");
-    
 	public static final class Element {
 		public final String symbol;
 		public final String name;
@@ -66,33 +34,72 @@ public class YahooProfile {
 
 	public final Map<String, Element> map          = new TreeMap<>();
 	
-	private final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
-	private final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	public enum Field {
+		SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO,
+	}
+	
+	public static class ScrapeYahooProfile extends Scrape<Field> {
+		public void init() {
+			// <div class="title"><h2>AdvisorShares WCM/BNY MlnFcsd GR ADR ETF (AADR)</h2>
+			// <div class="title"><h2>Lattice Developed Mkts (ex-US) Stra ETF (RODM)</h2>
+			add(Field.SYMBOL, 1,
+					"<div class=\"title\"><h2>.+? \\(([A-Z]+?)\\)</h2>",
+					"Fund Overview");
+			
+			// <div class="title"><h2>AdvisorShares WCM/BNY MlnFcsd GR ADR ETF (AADR)</h2>
+			add(Field.NAME, 1,
+					"<div class=\"title\"><h2>(.+?) \\([A-Z]+?\\)</h2>",
+					"Fund Overview");
+			
+			// <a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a>
+		    add(Field.CATEGORY, 1,
+		    		"<a href=\"/etf/lists/\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=[^>]+>(.+?)</a>",
+					"Fund Overview");
+		    
+		    // <a href="/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=0C00004HZR">AdvisorShares</a>
+		    add(Field.FAMILY, 1,
+		    		"<a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=[^>]+>(.+?)</a>",
+					"Fund Overview");
+			
+		    // <tr><td class="yfnc_tablehead1" width="50%">Net Assets:</td><td class="yfnc_tabledata1">NaN</td></tr>
+		    add(Field.NET_ASSETS, 1,
+		    		"<tr><td class=\"yfnc_tablehead1\" width=\"50%\">Net Assets:</td><td class=\"yfnc_tabledata1\">(.+?)</td></tr>",
+					"Fund Overview");
+		    
+		    // <tr><td class="yfnc_tablehead1" width="50%">Fund Inception Date:</td><td class="yfnc_tabledata1">Aug 19, 2015</td></tr>
+		    add(Field.INCEPTION_DATE, 1,
+		    		"<tr><td class=\"yfnc_tablehead1\" width=\"50%\">Fund Inception Date:</td><td class=\"yfnc_tabledata1\">(.+?)</td></tr>",
+					"Fund Overview");
+		    
+		    // <tr><td class="yfnc_datamodlabel1">Annual Report Expense Ratio (net)</td><td class="yfnc_datamoddata1" align="right">0.09%</td>
+		    add(Field.EXPENSE_RATIO, 1,
+		    		"<tr><td class=\"yfnc_datamodlabel1\">Annual Report Expense Ratio \\(net\\)</td><td class=\"yfnc_datamoddata1\" align=\"right\">(.+?)</td>",
+					"Fund Operations");
+		}
+	}
+
+	private ScrapeYahooProfile scrape = new ScrapeYahooProfile();
+
 
 	private void extractInfo(File file) {
-		String fileName = file.getName();
-//		logger.debug("{}", fileName);
+//		logger.debug("{}", file.getName());
 		
-		String contents = Util.getContents(file);
+		scrape.reset(file);
 		
-		if (!contents.contains("Fund Overview")) return;
+		String name      = scrape.getValue(Field.NAME);
+		String symbol    = scrape.getValue(Field.SYMBOL);
+		String category  = scrape.getValue(Field.CATEGORY);
+		String family    = scrape.getValue(Field.FAMILY);
+		String netAssets = scrape.getValue(Field.NET_ASSETS);
+		String inception = scrape.getValue(Field.INCEPTION_DATE);
+		String expense   = scrape.getValue(Field.EXPENSE_RATIO);
 		
-		String name      = extractTitle.getValue(fileName, contents);
-		String symbol    = extractTitle.getValue(2);
-		String category  = extractCategory.getValue(fileName, contents);
-		String family    = extractFamily.getValue(fileName, contents);
-		String netAssets = extractNetAssets.getValue(fileName, contents);
-		String inception = extractInception.getValue(fileName, contents);
-		String expense   = extractExpense.getValue(fileName, contents);
+		if (name.equals(Scrape.NO_VALUE)) return;
 		
-		// replace encoded string
-		family = family.replace("&amp;",  "&");
-		
-		String inceptionDate = formatInceptionDate.format(parseInceptionDate.parse(inception));
-		
-		map.put(symbol, new Element(symbol, name, category, family, netAssets, inceptionDate, expense));
-		logger.debug("{}", String.format("%-8s %s", symbol, name));
+		map.put(symbol, new Element(symbol, name, category, family, netAssets, inception, expense));
+		logger.debug("{}", String.format("%-8s %s", symbol, netAssets));
 	}
+	
 	
 	public YahooProfile(String path) {
 		File root = new File(path);

@@ -1,5 +1,6 @@
 package yokwe.finance.etf;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -56,10 +57,12 @@ public class YahooProfile {
 
 	private static ScrapeYahooProfile scrape = new ScrapeYahooProfile();
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		logger.info("START");
 		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
-		CSVFile.write(System.out, values);
+		//
+		Scrape.save(System.out, values);
+		//
 		logger.info("STOP");
 	}
 }

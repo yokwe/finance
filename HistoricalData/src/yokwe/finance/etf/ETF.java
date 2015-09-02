@@ -82,6 +82,7 @@ public class ETF {
 	
 	private void scrapeInfo(File file) {
 //		logger.debug("{}", file.getName());
+		if (file.length() == 0) return;
 		
 		scrape.reset(file);
 		

@@ -1,12 +1,7 @@
 package yokwe.finance.etf;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -14,28 +9,6 @@ public class YahooProfile {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooProfile.class);
 	
 	private static final String DIR_PATH = "tmp/fetch/etf/yahoo-profile";
-	
-	public static final class Element {
-		public final String symbol;
-		public final String name;
-		public final String category;
-		public final String family;
-		public final String netAssets;
-		public final String inceptionDate;
-		public final String expenseRatio;
-		
-		public Element(String symbol, String name, String category, String family, String netAssets, String inceptionDate, String expenseRatio) {
-			this.symbol        = symbol;
-			this.name          = name;
-			this.category      = category;
-			this.family        = family;
-			this.netAssets     = netAssets;
-			this.inceptionDate = inceptionDate;
-			this.expenseRatio  = expenseRatio;
-		}
-	}
-
-	public final Map<String, Element> map          = new TreeMap<>();
 	
 	public enum Field {
 		SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO,
@@ -83,39 +56,10 @@ public class YahooProfile {
 
 	private static ScrapeYahooProfile scrape = new ScrapeYahooProfile();
 
-	private static void scrapeInfo(File file, List<Map<Field, String>> list) {
-//		logger.debug("{}", file.getName());
-		if (file.length() == 0) return;
-		
-		Map<Field, String> values = scrape.read(file);
-		list.add(values);
-		
-		logger.debug("{}", String.format("%-8s %s", values.get(Field.SYMBOL), values.get(Field.NAME)));
-	}
-	
-	public static void processDirectory(String path) {
-		File root = new File(path);
-		if (!root.isDirectory()) {
-			logger.error("Not directory  path = {}", path);
-			throw new RuntimeException("not directory");
-		}
-		
-		File[] fileList = root.listFiles();
-		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
-		
-		List<Map<Field, String>> list = new ArrayList<>();
-		for(File file: fileList) {
-			scrapeInfo(file, list);
-		}
-		
-		CSVFile.write(System.out, list);
-		logger.info("file = {}", fileList.length);
-		logger.info("list = {}", list.size());
-	}
-
-	public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException, IOException {
+	public static void main(String[] args) {
 		logger.info("START");
-		processDirectory(DIR_PATH);
+		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
+		CSVFile.write(System.out, values);
 		logger.info("STOP");
 	}
 }

@@ -2,6 +2,9 @@ package yokwe.finance.etf;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -66,20 +69,49 @@ public abstract class Scrape<E extends Enum<E>> {
 	public Scrape() {
 		init();
 	}
-	public Map<E, String> read(File file) {
+	public Map<E, String> readFile(File file) {
 		Map<E, String> ret = new TreeMap<>();
 		
 		String fileName = file.getName();
 		String contents = Util.getContents(file);
 		
+		int count = 0;
 		for(E key: map.keySet()) {
 			String value = map.get(key).read(fileName, contents);
 			value = normalize(value);
+			if (!value.equals(NO_VALUE)) count++;
 			ret.put(key, value);
 		}
 		
+		return (count == 0) ? null : ret;
+	}
+	
+	public List<Map<E, String>> readDirectory(String path) {
+		File root = new File(path);
+		if (!root.isDirectory()) {
+			logger.error("Not directory  path = {}", path);
+			throw new RuntimeException("not directory");
+		}
+		
+		File[] fileList = root.listFiles();
+		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
+		
+		List<Map<E, String>> ret = new ArrayList<>();
+		for(File file: fileList) {
+			if (file.length() == 0) continue;
+			
+			Map<E, String> values = readFile(file);
+			if (values == null) continue;
+			
+			ret.add(values);
+		}
+		
+		logger.info("file = {}", fileList.length);
+		logger.info("list = {}", ret.size());
+		
 		return ret;
 	}
+
 	
 	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
 	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");

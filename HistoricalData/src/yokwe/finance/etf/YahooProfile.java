@@ -1,7 +1,10 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -78,30 +81,19 @@ public class YahooProfile {
 		}
 	}
 
-	private ScrapeYahooProfile scrape = new ScrapeYahooProfile();
+	private static ScrapeYahooProfile scrape = new ScrapeYahooProfile();
 
-
-	private void extractInfo(File file) {
+	private static void scrapeInfo(File file, List<Map<Field, String>> list) {
 //		logger.debug("{}", file.getName());
+		if (file.length() == 0) return;
 		
-		scrape.reset(file);
+		Map<Field, String> values = scrape.read(file);
+		list.add(values);
 		
-		String name      = scrape.getValue(Field.NAME);
-		String symbol    = scrape.getValue(Field.SYMBOL);
-		String category  = scrape.getValue(Field.CATEGORY);
-		String family    = scrape.getValue(Field.FAMILY);
-		String netAssets = scrape.getValue(Field.NET_ASSETS);
-		String inception = scrape.getValue(Field.INCEPTION_DATE);
-		String expense   = scrape.getValue(Field.EXPENSE_RATIO);
-		
-		if (name.equals(Scrape.NO_VALUE)) return;
-		
-		map.put(symbol, new Element(symbol, name, category, family, netAssets, inception, expense));
-		logger.debug("{}", String.format("%-8s %s", symbol, netAssets));
+		logger.debug("{}", String.format("%-8s %s", values.get(Field.SYMBOL), values.get(Field.NAME)));
 	}
 	
-	
-	public YahooProfile(String path) {
+	public static void processDirectory(String path) {
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);
@@ -110,16 +102,20 @@ public class YahooProfile {
 		
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
-		logger.info("fileList = {}", fileList.length);
+		
+		List<Map<Field, String>> list = new ArrayList<>();
 		for(File file: fileList) {
-			extractInfo(file);
+			scrapeInfo(file, list);
 		}
+		
+		CSVFile.write(System.out, list);
+		logger.info("file = {}", fileList.length);
+		logger.info("list = {}", list.size());
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException, IOException {
 		logger.info("START");
-		YahooProfile nameList = new YahooProfile(DIR_PATH);
-		logger.info("nameList = {}", nameList.map.size());
+		processDirectory(DIR_PATH);
 		logger.info("STOP");
 	}
 }

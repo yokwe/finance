@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
@@ -12,28 +13,6 @@ public class ETF {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(ETF.class);
 	
 	private static final String DIR_PATH = "tmp/fetch/etf/etf";	
-	
-	public static final class Element {
-		public final String symbol;
-		public final String name;
-		public final String inceptionDate;
-		public final String expenseRatio;
-		public final String issuer;
-		public final String homePage;
-		public final String assetsUnderManagement;
-		public final String indexTracked;
-		
-		public Element(String symbol, String name, String inceptionDate, String expenseRatio, String iuuser, String homePage, String assetsUnderManagement, String indexTracked) {
-			this.symbol                = symbol;
-			this.name                  = name;
-			this.inceptionDate         = inceptionDate;
-			this.expenseRatio          = expenseRatio;
-			this.issuer                = iuuser;
-			this.homePage              = homePage;
-			this.assetsUnderManagement = assetsUnderManagement;
-			this.indexTracked          = indexTracked;
-		}
-	}
 	
 	public enum Field {
 		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, INDEX_TRACKED,
@@ -79,24 +58,14 @@ public class ETF {
 	
 	private static ScrapeETF scrape = new ScrapeETF();
 	
-	private static void scrapeInfo(File file,List<Element> list) {
+	private static void scrapeInfo(File file, List<Map<Field, String>> list) {
 //		logger.debug("{}", file.getName());
 		if (file.length() == 0) return;
 		
-		scrape.reset(file);
+		Map<Field, String> values = scrape.read(file);
+		list.add(values);
 		
-		String symbol           = scrape.getValue(Field.SYMBOL);
-		String name             = scrape.getValue(Field.NAME);
-		String inceptionDate    = scrape.getValue(Field.INCEPTION_DATE);
-		String expenseRatio     = scrape.getValue(Field.EXPENSE_RATIO);
-		String issuer           = scrape.getValue(Field.ISSUER);
-		String homePage         = scrape.getValue(Field.HOME_PAGE);
-		String aum              = scrape.getValue(Field.AUM);
-		String indexTracked     = scrape.getValue(Field.INDEX_TRACKED);
-		
-		list.add(new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, indexTracked));
-		
-//		logger.debug("{}", String.format("%-8s %s", symbol, expenseRatio));
+		logger.debug("{}", String.format("%-8s %s", values.get(Field.SYMBOL), values.get(Field.NAME)));
 	}
 	
 	public static void processDirectory(String path) {
@@ -109,7 +78,7 @@ public class ETF {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		List<Element> list = new ArrayList<>();
+		List<Map<Field, String>> list = new ArrayList<>();
 		for(File file: fileList) {
 			scrapeInfo(file, list);
 		}

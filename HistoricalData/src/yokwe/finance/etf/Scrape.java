@@ -2,6 +2,7 @@ package yokwe.finance.etf;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,22 +16,18 @@ public abstract class Scrape<E extends Enum<E>> {
 	
 	protected static class Element<EE extends Enum<EE>> {
 		protected final   EE      key;
-		protected final   int     groupCount;
 		protected final   String  expect;
 		protected final   Matcher matcher;
-		protected         boolean haveValue;
 		
-		protected Element(EE key, int groupCount, String pattern, String expect) {
+		protected Element(EE key, String pattern, String expect) {
 			this.key        = key;
-			this.groupCount = groupCount;
 			this.expect     = expect;
 			
 			matcher         = Pattern.compile(pattern).matcher("");
-			haveValue       = false;
 		}
 		
-		protected void reset(String fileName, String contents) {
-			haveValue = expect == null || contents.contains(expect);
+		protected String read(String fileName, String contents) {
+			boolean haveValue = expect == null || contents.contains(expect);
 			if (haveValue) {
 				matcher.reset(contents);
 				if (!matcher.find()) {
@@ -38,31 +35,28 @@ public abstract class Scrape<E extends Enum<E>> {
 					logger.error("pat {}", matcher.toString());
 					throw new RuntimeException("NAME");
 				}
-				if (matcher.groupCount() != groupCount) {
+				if (matcher.groupCount() != 1) {
 					logger.error("GROUP_COUNT {} {}  groupCount = {}", fileName, key, matcher.groupCount());
 					throw new RuntimeException("GROUP_COUNT");
 				}
+				return matcher.group(1);
+			} else {
+				return NO_VALUE;
 			}
 		}
-		protected String getValue(int group) {
-			return haveValue ? matcher.group(group) : NO_VALUE;
-		}
 	}
 	
-	protected  TreeMap<Enum<E>, Element<E>> map = new TreeMap<>();
+	protected  TreeMap<E, Element<E>> map = new TreeMap<>();
 	
 	protected void add(E e, String pattern) {
-		add(e, 1, pattern, null);
+		add(e, pattern, null);
 	}
 	protected void add(E e, String pattern, String expect) {
-		add(e, 1, pattern, expect);
-	}
-	private void add(E e, int groupCount, String pattern, String expect) {
 		if (map.containsKey(e)) {
 			logger.error("DUPLICATE {}", e);
 			throw new RuntimeException("DUPLICATE");
 		}
-		Element<E> element = new Element<>(e, groupCount, pattern, expect);
+		Element<E> element = new Element<>(e, pattern, expect);
 		map.put(e, element);
 	}
 
@@ -72,23 +66,26 @@ public abstract class Scrape<E extends Enum<E>> {
 	public Scrape() {
 		init();
 	}
-	public void reset(File file) {
+	public Map<E, String> read(File file) {
+		Map<E, String> ret = new TreeMap<>();
+		
 		String fileName = file.getName();
 		String contents = Util.getContents(file);
-
-		for(Element<E> element: map.values()) {
-			element.reset(fileName, contents);
+		
+		for(E key: map.keySet()) {
+			String value = map.get(key).read(fileName, contents);
+			value = normalize(value);
+			ret.put(key, value);
 		}
-	}
-	public String getValue(E e) {
-		return getValue(e, 1);
+		
+		return ret;
 	}
 	
 	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
 	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-	private String getValue(E e, int group) {
-		String ret = map.get(e).getValue(group);
+	protected String normalize(String string) {
+		String ret = string;
 		
 		ret = ret.replace("&amp;", "&");
 		ret = ret.replace("&gt;",  ">");
@@ -187,12 +184,12 @@ public abstract class Scrape<E extends Enum<E>> {
 		
 		// Sanity check
 		if (ret.contains(";")) {
-			logger.error("SEMI {} {}", e, ret);
+			logger.error("SEMI {}", ret);
 			throw new RuntimeException("SEMI");
 		}
 		
 		if (ret.contains("\"")) {
-			logger.error("DOUBLE_QUOTE {} {}", e, ret);
+			logger.error("DOUBLE_QUOTE {}", ret);
 			throw new RuntimeException("DOUBLE_QUOTE");
 		}
 		

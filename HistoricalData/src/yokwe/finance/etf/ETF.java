@@ -59,7 +59,7 @@ public class ETF {
 		logger.info("START");
 		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
 		//
-		Scrape.save(System.out, values);
+		Util.save(System.out, values);
 		//
 		logger.info("STOP");
 	}

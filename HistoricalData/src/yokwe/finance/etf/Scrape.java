@@ -1,7 +1,6 @@
 package yokwe.finance.etf;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,8 +10,6 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,23 +111,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		
 		return ret;
 	}
-	
-	public static <T extends Enum<T>> void save(Appendable appendable, List<Map<T, String>> values) {
-		if (values.size() == 0) return;
 		
-		try (CSVPrinter printer = new CSVPrinter(appendable, CSVFormat.DEFAULT)) {
-			// Use key of first record as header
-			printer.printRecord(values.get(0).keySet());			
-			for(Map<T, String> record: values) {
-				printer.printRecord(record.values());
-			}
-		} catch (IOException e) {
-			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
-		}
-	}
-
-	
 	private static final DateTimeFormatter parseInceptionDate  = DateTimeFormatter.ofPattern("MMM d, yyyy");
 	private static final DateTimeFormatter formatInceptionDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 

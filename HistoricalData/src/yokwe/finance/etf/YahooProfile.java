@@ -52,7 +52,7 @@ public class YahooProfile {
 		    add(Field.EXPENSE_RATIO,
 	    		"<tr><td class=\"yfnc_datamodlabel1\">Annual Report Expense Ratio \\(net\\)</td><td class=\"yfnc_datamoddata1\" align=\"right\">(.+?)</td>",
 				"Fund Operations");
-	}
+		}
 	}
 
 	private static ScrapeYahooProfile scrape = new ScrapeYahooProfile();
@@ -61,7 +61,7 @@ public class YahooProfile {
 		logger.info("START");
 		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
 		//
-		Scrape.save(System.out, values);
+		Util.save(System.out, values);
 		//
 		logger.info("STOP");
 	}

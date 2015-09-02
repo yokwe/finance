@@ -1,9 +1,10 @@
 package yokwe.finance.etf;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +34,6 @@ public class ETF {
 			this.indexTracked          = indexTracked;
 		}
 	}
-	
-	public final Map<String, Element> map = new TreeMap<>();
 	
 	public enum Field {
 		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, INDEX_TRACKED,
@@ -78,9 +77,9 @@ public class ETF {
 		}
 	}
 	
-	private ScrapeETF scrape = new ScrapeETF();
+	private static ScrapeETF scrape = new ScrapeETF();
 	
-	private void scrapeInfo(File file) {
+	private static void scrapeInfo(File file,List<Element> list) {
 //		logger.debug("{}", file.getName());
 		if (file.length() == 0) return;
 		
@@ -95,12 +94,12 @@ public class ETF {
 		String aum              = scrape.getValue(Field.AUM);
 		String indexTracked     = scrape.getValue(Field.INDEX_TRACKED);
 		
-		map.put(symbol, new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, indexTracked));
+		list.add(new Element(symbol, name, inceptionDate, expenseRatio, issuer, homePage, aum, indexTracked));
 		
-		logger.debug("{}", String.format("%-8s %s", symbol, expenseRatio));
+//		logger.debug("{}", String.format("%-8s %s", symbol, expenseRatio));
 	}
 	
-	public ETF(String path) {
+	public static void processDirectory(String path) {
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);
@@ -109,16 +108,20 @@ public class ETF {
 		
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
-		logger.info("fileList = {}", fileList.length);
+		
+		List<Element> list = new ArrayList<>();
 		for(File file: fileList) {
-			scrapeInfo(file);
+			scrapeInfo(file, list);
 		}
+		
+		CSVFile.write(System.out, list);
+		logger.info("file = {}", fileList.length);
+		logger.info("list = {}", list.size());
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IllegalArgumentException, IllegalAccessException, IOException {
 		logger.info("START");
-		ETF nameList = new ETF(DIR_PATH);
-		logger.info("map = {}", nameList.map.size());
+		processDirectory(DIR_PATH);
 		logger.info("STOP");
 	}
 }

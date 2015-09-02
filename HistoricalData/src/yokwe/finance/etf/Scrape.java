@@ -191,6 +191,11 @@ public abstract class Scrape<E extends Enum<E>> {
 			throw new RuntimeException("SEMI");
 		}
 		
+		if (ret.contains("\"")) {
+			logger.error("DOUBLE_QUOTE {} {}", e, ret);
+			throw new RuntimeException("DOUBLE_QUOTE");
+		}
+		
 		return ret;
 	}
 }

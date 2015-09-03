@@ -1,11 +1,18 @@
 package yokwe.finance.etf;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -43,15 +50,32 @@ public final class Util {
 		return ret.toString();
 	}
 	
-	public static <E extends Enum<E>> void save(Appendable appendable, List<Map<E, String>> values) {
+	public static <E extends Enum<E>> void save(Writer writer, List<Map<E, String>> values) {
 		if (values.size() == 0) return;
 		
-		try (CSVPrinter printer = new CSVPrinter(appendable, CSVFormat.DEFAULT)) {
+		try (BufferedWriter bw = new BufferedWriter(writer, 65536);
+			CSVPrinter printer = new CSVPrinter(bw, CSVFormat.DEFAULT)) {
 			// Use key of first record as header
 			printer.printRecord(values.get(0).keySet());			
 			for(Map<E, String> record: values) {
 				printer.printRecord(record.values());
 			}
+		} catch (IOException e) {
+			logger.error("IOException {}", e);
+			throw new RuntimeException("IOException");
+		}
+	}
+	public static <E extends Enum<E>> void save(File file, List<Map<E, String>> values) {
+		try (FileWriter writer = new FileWriter(file)) {
+			save(writer, values);
+		} catch (IOException e) {
+			logger.error("IOException {}", e);
+			throw new RuntimeException("IOException");
+		}
+	}
+	public static <E extends Enum<E>> void save(OutputStream os, List<Map<E, String>> values) {
+		try (OutputStreamWriter writer = new OutputStreamWriter(os)) {
+			save(writer, values);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
 			throw new RuntimeException("IOException");
@@ -83,7 +107,8 @@ public final class Util {
 					String value = csvRecord.get(key);
 					
 					// format floating point value
-					if (value.matches("[0-9]+\\.[0-9]{4,}")) {
+					if (value.matches("[0-9]+\\.[0-9][0-9](000|999)[0-9]+")) {
+					//if (value.matches("[0-9][0-9]+\\.[0-9][0-9][0-9]+")) {
 						double v = Float.parseFloat(value);
 						value = String.format("%.2f", v);
 					}
@@ -102,6 +127,28 @@ public final class Util {
 		
 		return ret;
 	}
+	public static <E extends Enum<E>> List<Map<E, String>>load(File file, Class<E> eClass) {
+		try (FileReader reader = new FileReader(file)) {
+			return load(reader, eClass);
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e);
+			throw new RuntimeException("FileNotFoundException");
+		} catch (IOException e) {
+			logger.error("IOException {}", e);
+			throw new RuntimeException("IOException");
+		}
+	}
+	public static <E extends Enum<E>> List<Map<E, String>>load(InputStream is, Class<E> eClass) {
+		try (InputStreamReader reader = new InputStreamReader(is)) {
+			return load(reader, eClass);
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e);
+			throw new RuntimeException("FileNotFoundException");
+		} catch (IOException e) {
+			logger.error("IOException {}", e);
+			throw new RuntimeException("IOException");
+		}
+	}
 	
 	enum Field {
 		DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
@@ -115,7 +162,7 @@ public final class Util {
 		}
 	}
 	public static void main(String[] args) throws FileNotFoundException {
-		FileReader reader = new FileReader("tmp/fetch/etf/ichart/AADR.csv");
+		FileReader reader = new FileReader("tmp/fetch/etf/ichart/QQQ.csv");
 		//List<Map<Field, String>> records = load(reader, Field.class);
 		load(reader, Field.class);
 	}

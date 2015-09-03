@@ -40,11 +40,13 @@ CREATE TABLE etf_ichart (
   volume    INTEGER  NOT NULL
 );
 
+.tables
+
 .separator ,
 
-.import tmp/sqlite/etf_etf.csv           etf_etf;
-.import tmp/sqlite/etf_yahoo_profile.csv etf_yahoo_profile;
-.import tmp/sqlite/etf_ichart.csv        etf_ichart;
+.import tmp/sqlite/etf-etf.csv etf_etf
+.import tmp/sqlite/etf-yahoo-profile.csv etf_yahoo_profile
+.import tmp/sqlite/etf-ichart.csv        etf_ichart
 
 CREATE UNIQUE INDEX etf_etf_symbol           ON etf_etf(symbol);
 CREATE UNIQUE INDEX etf_yahoo_profile_symbol ON etf_yahoo_profile(symbol);

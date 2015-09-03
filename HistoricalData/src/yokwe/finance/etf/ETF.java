@@ -1,5 +1,6 @@
 package yokwe.finance.etf;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ public class ETF {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(ETF.class);
 	
 	private static final String DIR_PATH = "tmp/fetch/etf/etf";	
+	private static final String CSV_PATH = "tmp/sqlite/etf-etf.csv";
 	
 	public enum Field {
 		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, INDEX_TRACKED,
@@ -55,11 +57,19 @@ public class ETF {
 	
 	private static ScrapeETF scrape = new ScrapeETF();
 	
-	public static void main(String[] args) throws IOException {
-		logger.info("START");
+	public static void save(String path) {
 		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
 		//
-		Util.save(System.out, values);
+		Util.save(new File(path), values);
+	}
+	public static void save() {
+		save (CSV_PATH);
+	}
+
+	public static void main(String[] args) throws IOException {
+		logger.info("START");
+		//
+		save();
 		//
 		logger.info("STOP");
 	}

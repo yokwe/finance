@@ -56,7 +56,7 @@ public final class Util {
 		try (BufferedWriter bw = new BufferedWriter(writer, 65536);
 			CSVPrinter printer = new CSVPrinter(bw, CSVFormat.DEFAULT)) {
 			// Use key of first record as header
-			printer.printRecord(values.get(0).keySet());			
+			//printer.printRecord(values.get(0).keySet());			
 			for(Map<E, String> record: values) {
 				printer.printRecord(record.values());
 			}
@@ -112,10 +112,13 @@ public final class Util {
 						double v = Float.parseFloat(value);
 						value = String.format("%.0f", v * 100);
 					}
+					if (value.compareTo("000") == 0) {
+						value = "0";
+					}
 					
 					record.put(key, value);
 				}
-				logger.debug("record {}", record);
+//				logger.debug("record {}", record);
 				
 				ret.add(record);
 			}

@@ -1,5 +1,6 @@
 package yokwe.finance.etf;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ public class YahooProfile {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooProfile.class);
 	
 	private static final String DIR_PATH = "tmp/fetch/etf/yahoo-profile";
+	private static final String CSV_PATH = "tmp/sqlite/etf-yahoo-profile.csv";
 	
 	public enum Field {
 		SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO,
@@ -56,12 +58,20 @@ public class YahooProfile {
 	}
 
 	private static ScrapeYahooProfile scrape = new ScrapeYahooProfile();
+	
+	public static void save(String path) {
+		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
+		//
+		Util.save(new File(path), values);
+	}
+	public static void save() {
+		save (CSV_PATH);
+	}
 
 	public static void main(String[] args) throws IOException {
 		logger.info("START");
-		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
 		//
-		Util.save(System.out, values);
+		save();
 		//
 		logger.info("STOP");
 	}

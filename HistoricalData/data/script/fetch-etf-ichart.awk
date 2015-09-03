@@ -1,14 +1,18 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-  # From 2000-01-01
+  Y = strftime("%Y")
+  
+  # Data for last 10 years
+  
+  # From (Y - 10)-01-01
   A = "00"
   B = "01"
-  C = "2000"
-  # To 2049-12-31
+  C = Y - 10
+  # To Y-12-31
   D = "30"
   E = "12"
-  F = "2049"
+  F = Y
   
   CMD_SLEEP = "sleep 0.5 0.$((RANDOM%10))"
  }

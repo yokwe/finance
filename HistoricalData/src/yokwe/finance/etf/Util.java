@@ -66,7 +66,7 @@ public final class Util {
 
 		List<Map<E, String>> ret = new ArrayList<>();
 		
-		try (BufferedReader br = new BufferedReader(reader);
+		try (BufferedReader br = new BufferedReader(reader, 65536);
 			CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(br)) {
 			Iterator<CSVRecord> i = parser.iterator();
 			while(i.hasNext()) {

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.LoggerFactory;
@@ -62,21 +63,20 @@ public final class Util {
 		for(E e: eClass.getEnumConstants()) {
 			keyList.add(e);
 		}
-		
-		logger.debug("keyList = {}", keyList);
 
 		List<Map<E, String>> ret = new ArrayList<>();
 		
-		try {
-			Iterator<CSVRecord> i = CSVFormat.DEFAULT.withHeader().parse(reader).iterator();
+		try (BufferedReader br = new BufferedReader(reader);
+			CSVParser parser = CSVFormat.DEFAULT.withHeader().parse(br)) {
+			Iterator<CSVRecord> i = parser.iterator();
 			while(i.hasNext()) {
 				CSVRecord csvRecord = i.next();
 
 				Map<E, String> record = new TreeMap<>();
 				
 				for(E key: keyList) {
-					if (!csvRecord.isSet(key.name())) {
-						logger.error("IS_SET {}", key.name());
+					if (!csvRecord.isSet(key.toString())) {
+						logger.error("IS_SET {}", key.toString());
 						logger.error("csvRecord {}", csvRecord.toString());
 						throw new RuntimeException("IS_SET");
 					}
@@ -104,10 +104,18 @@ public final class Util {
 	}
 	
 	enum Field {
-		Date, Open, High, Low, Close, Volume
+		DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
+		
+		String name;
+		Field(String name) {
+			this.name = name;
+		}
+		public String toString() {
+			return name;
+		}
 	}
 	public static void main(String[] args) throws FileNotFoundException {
-		FileReader reader = new FileReader("tmp/fetch/ichart/AADR.csv");
+		FileReader reader = new FileReader("tmp/fetch/etf/ichart/AADR.csv");
 		//List<Map<Field, String>> records = load(reader, Field.class);
 		load(reader, Field.class);
 	}

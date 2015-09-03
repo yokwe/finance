@@ -106,11 +106,11 @@ public final class Util {
 					}
 					String value = csvRecord.get(key);
 					
-					// format floating point value
-					if (value.matches("[0-9]+\\.[0-9][0-9](000|999)[0-9]+")) {
-					//if (value.matches("[0-9][0-9]+\\.[0-9][0-9][0-9]+")) {
+					// format floating point value for ichart  123.4567 => 12346
+					//if (value.matches("[0-9]+\\.[0-9][0-9](000|999)[0-9]+")) {
+					if (value.matches("[0-9][0-9]+\\.[0-9][0-9][0-9]*")) {
 						double v = Float.parseFloat(value);
-						value = String.format("%.2f", v);
+						value = String.format("%.0f", v * 100);
 					}
 					
 					record.put(key, value);

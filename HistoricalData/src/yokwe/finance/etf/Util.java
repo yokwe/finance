@@ -106,8 +106,8 @@ public final class Util {
 	enum Field {
 		DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
 		
-		String name;
-		Field(String name) {
+		private final String name;
+		private Field(String name) {
 			this.name = name;
 		}
 		public String toString() {

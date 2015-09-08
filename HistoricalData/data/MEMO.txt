@@ -492,3 +492,47 @@ hasegawa@ubuntu:~/git/finance/HistoricalData$ ls -l tmp/fetch/ichart/*.csv | gre
 -rw-rw-r-- 1 hasegawa hasegawa     0 Aug 30 14:32 tmp/fetch/ichart/PUTX.csv
 hasegawa@ubuntu:~/git/finance/HistoricalData$ ls -l tmp/fetch/ichart/*.csv 
 ----
+
+Top 20 of average trade volume of last 3 month
+----
+select etf_ichart.symbol, round(avg(volume)) as V, expense_ratio, aum / 1000000, name
+  from etf_ichart, etf_etf
+  where etf_etf.symbol = etf_ichart.symbol and '2014-08-08' <= date
+  group by etf_ichart.symbol
+  order by V desc, etf_ichart.symbol
+  limit 10;
+----
+sqlite> select etf_ichart.symbol, round(avg(volume)) as V, expense_ratio, aum / 1000000, name
+   ...>   from etf_ichart, etf_etf
+   ...>   where etf_etf.symbol = etf_ichart.symbol and '2015-06-08' <= date
+   ...>   group by etf_ichart.symbol
+   ...>   order by V desc, etf_ichart.symbol
+   ...>   limit 10;
+SPY|133595893.0|9|167580|SPDR S&P 500
+EEM|60181317.0|68|21010|iShares MSCI Emerging Markets
+GDX|54028742.0|53|4650|Market Vectors Gold Miners
+EWJ|38484667.0|48|19350|iShares MSCI Japan
+XLF|37768020.0|15|18180|Financial Select SPDR
+QQQ|34849943.0|20|37540|PowerShares QQQ
+NUGT|34771987.0|105|672|Direxion Daily Gold Miners Bull 3X
+IWM|33963847.0|20|25520|iShares Russell 2000
+FXI|28654597.0|74|5870|iShares China Large-Cap
+USO|24155752.0|66|2890|United States Oil
+sqlite> 
+----
+
+Top 10 of largest assets-under-management of ETF
+----
+sqlite> select symbol, (aum / 1000000) AUM, name from etf_etf order by AUM desc limit 10;
+SPY|167580|SPDR S&P 500
+IVV|67070|iShares Core S&P 500
+EFA|56850|iShares MSCI EAFE
+VTI|54810|Vanguard Total Stock Market
+VWO|38970|Vanguard FTSE Emerging Markets
+QQQ|37540|PowerShares QQQ
+VOO|33920|Vanguard S&P 500
+IWF|28950|iShares Russell 1000 Growth
+VEA|27150|Vanguard FTSE Developed Markets
+BND|26480|Vanguard Total Bond Market
+sqlite> 
+---

@@ -1,14 +1,14 @@
 #! /usr/bin/awk -f
 
 BEGIN {
-  Y = strftime("%Y")
+  "date '+%Y'" | getline Y
   
-  # Data for last 10 years
+  # Data for at least last 10 years
   
-  # From (Y - 10)-01-01
+  # From (Y - 11)-01-01
   A = "00"
   B = "01"
-  C = Y - 10
+  C = Y - 11
   # To Y-12-31
   D = "30"
   E = "12"

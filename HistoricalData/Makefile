@@ -3,8 +3,6 @@
 #
 
 CURRENCY_LIST=USD-EUR-GBP-AUD
-TICKER_LIST=QQQ-SPY-PGX
-TICKER_YEAR=10
 
 COMMON_WGET_OPTIONS=-nv --wait=1 --random-wait
 
@@ -40,18 +38,6 @@ update-mizuho:
 	rm -f tmp/fx/mizuho-*
 	awk -f data/script/update-mizuho.awk -v CURRENCY_LIST="${CURRENCY_LIST}" < tmp/fetch/mizuho/quote.csv
 
-#
-# GOOGLE
-#
-fetch-google:
-	mkdir -p tmp/fetch/google
-	awk -f data/script/fetch-google.awk -v TICKER_LIST="${TICKER_LIST}" -v TICKER_YEAR="${TICKER_YEAR}" >tmp/fetch/google/fetch-google.sh
-	sh -f tmp/fetch/google/fetch-google.sh
-
-update-google:
-	mkdir -p tmp/security
-	rm -f tmp/security/google-*
-	awk -f data/script/update-google.awk -v TICKER_LIST="${TICKER_LIST}"
 
 #
 # NASDAQ
@@ -68,6 +54,7 @@ store-nasdaq:
 	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%-8s %s\n", $$8, $$3)}'                      tmp/fetch/nasdaq/otherlisted.txt  | sort | uniq >tmp/nasdaq/etf-other.txt
 	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | sort | uniq | \
 	  awk 'BEGIN{X["A"]="NYSEMKT";X["N"]="NYSE";X["P"]="NYSEARCA";X["Q"]="NASDAQ";X["Z"]="BATS"}; {printf("%-8s %s\n", $$1, X[$$2])}'      | sort | uniq >tmp/nasdaq/etf-all.txt
+
 
 #
 # ETF
@@ -110,46 +97,6 @@ update-etf-yahoo-dividend:
 
 update-etf-yahoo-profile:
 	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooProfile
-
-
-#fetch-etf-google:
-#	mkdir -p tmp/fetch/etf/google
-#	rm -f tmp/fetch/etf/google/*
-#	awk '{printf("http://www.google.com/finance?q=%s:%s\n", $$2, $$1)}' tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-google.list
-#	cd tmp/fetch/etf/google; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-google.list
-
-#fetch-etf-yahoo-summary:
-## name listed-exchange moningstar-category *net-asset *NAV fund-family fund-summary
-#	mkdir -p tmp/fetch/etf/yahoo-summary
-#	rm -f tmp/fetch/etf/yahoo-summary/*
-#	awk '{printf("http://finance.yahoo.com/q?s=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-yahoo-summary.list
-#	cd tmp/fetch/etf/yahoo-summary; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-yahoo-summary.list
-
-#fetch-etf-seekingalpha:
-## name listed-exchange expense-ratio dividend-frequencey inception-date
-#	mkdir -p tmp/fetch/etf/seekingalpha
-#	rm -f tmp/fetch/etf/seekingalpha/*
-#	awk '{printf("http://seekingalpha.com/symbol/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-seekingalpha.list
-#	cd tmp/fetch/etf/seekingalpha; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-seekingalpha.list
-
-#fetch-etf-msn:
-## morningstar moningstar-category listed-exchange
-#	mkdir -p tmp/fetch/etf/msn
-#	rm -f tmp/fetch/etf/msn/*
-#	awk '{printf("http://www.msn.com/en-us/money/etfdetails?symbol=%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-msn.list
-#	cd tmp/fetch/etf/msn; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-msn.list
-
-#fetch-etf-etfdb:
-#	mkdir -p tmp/fetch/etf/etfdb
-#	rm -f tmp/fetch/etf/etfdb/*
-#	awk '{printf("http://etfdb.com/etf/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-etfdb.list
-#	cd tmp/fetch/etf/etfdb; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-etfdb.list
-	
-#fetch-etf-xtf:
-#	mkdir -p tmp/fetch/etf/xtf
-#	rm -f tmp/fetch/etf/xtf/*
-#	awk '{printf("http://www.xtf.com/ETF-Ratings/%s\n", $$1)}'         tmp/nasdaq/etf-all.txt > tmp/fetch/etf/wget-xtf.list
-#	cd tmp/fetch/etf/xtf; wget ${COMMON_WGET_OPTIONS} -nH -nc -i ../wget-xtf.list
 
 
 fetch-test:

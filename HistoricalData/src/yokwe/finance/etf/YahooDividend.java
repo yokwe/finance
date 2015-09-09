@@ -13,14 +13,14 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.LoggerFactory;
 
-public class IChart {
-	static final org.slf4j.Logger logger = LoggerFactory.getLogger(IChart.class);
+public class YahooDividend {
+	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDividend.class);
 	
-	private static final String DIR_PATH = "tmp/fetch/etf/ichart";
-	private static final String CSV_PATH = "tmp/sqlite/etf-ichart.csv";
+	private static final String DIR_PATH = "tmp/fetch/etf/yahoo-dividend";
+	private static final String CSV_PATH = "tmp/sqlite/etf-yahoo-dividend.csv";
 	
 	enum Field_In {
-		DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
+		DATE("Date"), DIVIDENDS("Dividends");
 		
 		private final String name;
 		private Field_In(String name) {
@@ -32,7 +32,7 @@ public class IChart {
 	}
 
 	enum Field_Out {
-		SYMBOL("Symbol"), DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
+		SYMBOL("Symbol"), DATE("Date"), DIVIDENDS("Dividends");
 		
 		private final String name;
 		private Field_Out(String name) {
@@ -72,12 +72,12 @@ public class IChart {
 					Map<Field_Out, String> outRecord = new TreeMap<>();
 					outRecord.put(Field_Out.SYMBOL, symbol);
 					
-					outRecord.put(Field_Out.DATE,   inRecord.get(Field_In.DATE));
-					outRecord.put(Field_Out.OPEN,   inRecord.get(Field_In.OPEN));
-					outRecord.put(Field_Out.HIGH,   inRecord.get(Field_In.HIGH));
-					outRecord.put(Field_Out.LOW,    inRecord.get(Field_In.LOW));
-					outRecord.put(Field_Out.CLOSE,  inRecord.get(Field_In.CLOSE));
-					outRecord.put(Field_Out.VOLUME, inRecord.get(Field_In.VOLUME));
+					// 1.022000 => 1022
+					String dividend = inRecord.get(Field_In.DIVIDENDS);
+					dividend = String.format("%.0f", Float.valueOf(dividend) * 1000);
+					
+					outRecord.put(Field_Out.DATE,      inRecord.get(Field_In.DATE));
+					outRecord.put(Field_Out.DIVIDENDS, dividend);
 
 					printer.printRecord(outRecord.values());
 				}

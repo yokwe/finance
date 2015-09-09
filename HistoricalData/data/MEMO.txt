@@ -536,3 +536,54 @@ VEA|27150|Vanguard FTSE Developed Markets
 BND|26480|Vanguard Total Bond Market
 sqlite> 
 ---
+
+Top 10 of ETF that has more than 1,000,000 average daily trading volume for last 30 days
+select etf_ichart.symbol, round(avg(volume)) as V, expense_ratio, aum / 1000000, name
+  from etf_ichart, etf_etf
+  where etf_etf.symbol = etf_ichart.symbol and '2014-08-08' <= date
+  group by etf_ichart.symbol
+  having 1000000 < V
+  order by V desc, etf_ichart.symbol
+  limit 10;
+----
+sqlite> select etf_ichart.symbol, round(avg(volume)) as V, expense_ratio, aum / 1000000, name
+   ...>   from etf_ichart, etf_etf
+   ...>   where etf_etf.symbol = etf_ichart.symbol and '2014-08-08' <= date
+   ...>   group by etf_ichart.symbol
+   ...>   having 1000000 < V
+   ...>   order by V desc, etf_ichart.symbol
+   ...>   limit 10;
+SPY|119900189.0|9|167580|SPDR S&P 500
+EEM|55388207.0|68|21010|iShares MSCI Emerging Markets
+GDX|47857972.0|53|4650|Market Vectors Gold Miners
+IWM|34817108.0|20|25520|iShares Russell 2000
+XLF|33788425.0|15|18180|Financial Select SPDR
+QQQ|33396044.0|20|37540|PowerShares QQQ
+EWJ|32798890.0|48|19350|iShares MSCI Japan
+USO|21053671.0|66|2890|United States Oil
+FXI|20965876.0|74|5870|iShares China Large-Cap
+EWZ|20845507.0|62|2010|iShares MSCI Brazil Capped
+sqlite> 
+----
+
+How to download dividend history?
+----
+  Use finananc.yahoo.com
+  http://finance.yahoo.com/q/hp?s=VGIT&a=10&b=3&c=2009&d=00&e=4&f=2012&g=v
+  http://real-chart.finance.yahoo.com/table.csv?s=VGIT&a=10&b=23&c=2009&d=08&e=9&f=2015&g=v&ignore=.csv
+
+
+How to screen ETF
+1)Liquidity
+  More than 25,000 daily average trading volume for last 3 month
+2)Asset diversification
+  Choose ETF that has diversification(not small number of assets component)
+3)Find similar ETF that has less expense ratio
+  If one ETF is popular, other company may sell similar ETF
+4)Reduce cost of buying ETF(buy in large if applicable)
+  If buy in small unit, total cost for each share can be bigger.
+5)See trend of value for more than 1 time scale
+  At least for short, 3m and medium for 1y and long for 5/10y
+6)Check dividend
+
+

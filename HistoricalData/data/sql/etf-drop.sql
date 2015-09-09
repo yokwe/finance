@@ -7,8 +7,10 @@
 
 DROP INDEX IF EXISTS etf_etf_symbol;
 DROP INDEX IF EXISTS etf_yahoo_profile_symbol;
-DROP INDEX IF EXISTS etf_ichart_symbol_date;
+DROP INDEX IF EXISTS etf_yahoo_dialy_symbol_date;
+DROP INDEX IF EXISTS etf_yahoo_dividend_symbol_date;
 
 DROP TABLE IF EXISTS etf_etf;
 DROP TABLE IF EXISTS etf_yahoo_profile;
-DROP TABLE IF EXISTS etf_ichart;
+DROP TABLE IF EXISTS etf_yahoo_dialy;
+DROP TABLE IF EXISTS etf_yahoo_dividend;

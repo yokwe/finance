@@ -30,7 +30,7 @@ CREATE TABLE etf_yahoo_profile (
   expense_ratio    INTEGER  NOT NULL  -- in 100th of percent  12.34% = 123
 );
 
-CREATE TABLE etf_ichart (
+CREATE TABLE etf_yahoo_daily (
   symbol    TEXT     NOT NULL, -- ticker symbol
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
   open      INTEGER  NOT NULL, -- in 100th of value  123.45 = 12345
@@ -40,14 +40,22 @@ CREATE TABLE etf_ichart (
   volume    INTEGER  NOT NULL
 );
 
+CREATE TABLE etf_yahoo_dividend (
+  symbol    TEXT     NOT NULL, -- ticker symbol
+  date      TEXT     NOT NULL, -- date is YYYY-MM-DD
+  dividend  INTEGER  NOT NULL  -- in 1000th of value 1.234 = 1234
+);
+
 .tables
 
 .separator ,
 
 .import tmp/sqlite/etf-etf.csv etf_etf
-.import tmp/sqlite/etf-yahoo-profile.csv etf_yahoo_profile
-.import tmp/sqlite/etf-ichart.csv        etf_ichart
+.import tmp/sqlite/etf-yahoo-profile.csv  etf_yahoo_profile
+.import tmp/sqlite/etf-yahoo-daily.csv    etf_yahoo_daily
+.import tmp/sqlite/etf-yahoo-dividend.csv etf_yahoo_dividend
 
-CREATE UNIQUE INDEX etf_etf_symbol           ON etf_etf(symbol);
-CREATE UNIQUE INDEX etf_yahoo_profile_symbol ON etf_yahoo_profile(symbol);
-CREATE UNIQUE INDEX etf_ichart_symbol_date   ON etf_ichart(symbol, date);
+CREATE UNIQUE INDEX etf_etf_symbol                 ON etf_etf(symbol);
+CREATE UNIQUE INDEX etf_yahoo_profile_symbol       ON etf_yahoo_profile(symbol);
+CREATE UNIQUE INDEX etf_yahoo_daily_symbol_date    ON etf_yahoo_daily(symbol, date);
+CREATE UNIQUE INDEX etf_yahoo_dividend_symbol_date ON etf_yahoo_dividend(symbol, date);

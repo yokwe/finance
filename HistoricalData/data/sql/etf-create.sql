@@ -31,19 +31,19 @@ CREATE TABLE etf_yahoo_profile (
 );
 
 CREATE TABLE etf_yahoo_daily (
-  symbol    TEXT  NOT NULL, -- ticker symbol
-  date      TEXT  NOT NULL, -- date is YYYY-MM-DD
-  open      REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
-  high      REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
-  low       REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
-  close     REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
-  volume    REAL  NOT NULL
+  symbol    TEXT     NOT NULL, -- ticker symbol
+  date      TEXT     NOT NULL, -- date is YYYY-MM-DD
+  open      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
+  high      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
+  low       REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
+  close     REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
+  volume    INTEGER  NOT NULL
 );
 
 CREATE TABLE etf_yahoo_dividend (
-  symbol    TEXT     NOT NULL, -- ticker symbol
-  date      TEXT     NOT NULL, -- date is YYYY-MM-DD
-  dividend  INTEGER  NOT NULL  -- in 1000th of value 1.234 = 1.234
+  symbol    TEXT  NOT NULL, -- ticker symbol
+  date      TEXT  NOT NULL, -- date is YYYY-MM-DD
+  dividend  REAL  NOT NULL  -- in 1000th of value 1.234 = 1.234
 );
 
 .tables

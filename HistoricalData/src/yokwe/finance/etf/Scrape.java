@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class Scrape<E extends Enum<E>> {
 	private static final Logger logger = LoggerFactory.getLogger(Scrape.class);
-	public static final String NO_VALUE = "*NOVALUE*";
+	public static final String NO_VALUE = "*NA*";
 	
 	protected static class Element<EE extends Enum<EE>> {
 		protected final   EE      key;

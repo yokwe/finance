@@ -13,6 +13,7 @@ DIR_ETF_YAHOO_DAILY   =tmp/fetch/etf/yahoo-daily
 DIR_ETF_YAHOO_DIVIDEND=tmp/fetch/etf/yahoo-dividend
 DIR_ETF_YAHOO_PROFILE =tmp/fetch/etf/yahoo-profile
 
+JAVA_CLASSPATH        =bin:$(shell echo ../Common/jar/*.jar | tr ' ' ':')
 
 all: fetch update
 
@@ -72,28 +73,43 @@ store-nasdaq:
 # ETF
 #
 fetch-etf:
-	@echo make fech-etf-etf fetch-etf-yahoo-profile fetch-etf-yahoo-daily fetch-etf-yahoo-dividend
+	@echo make fech-etf-etf fetch-etf-yahoo-daily fetch-etf-yahoo-dividend fetch-etf-yahoo-profile
 
 fetch-etf-etf:
 	mkdir -p ${DIR_ETF_ETF}
-	rm -f ${DIR_ETF_ETF}/*
+	rm    -f ${DIR_ETF_ETF}/*
 	awk -v DIR_OUTPUT="${DIR_ETF_ETF}"           -f data/script/fetch-etf-etf.awk           tmp/nasdaq/etf-all.txt | bash 
 
 fetch-etf-yahoo-daily:
 	mkdir -p ${DIR_ETF_YAHOO_DAILY}
-	rm -f ${DIR_ETF_YAHOO_DAILY}/*
+	rm    -f ${DIR_ETF_YAHOO_DAILY}/*
 	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DAILY}"    -v G="d" -f data/script/fetch-etf-yahoo-table.awk        tmp/nasdaq/etf-all.txt | bash 
 
 fetch-etf-yahoo-dividend:
 	mkdir -p ${DIR_ETF_YAHOO_DIVIDEND}
-	rm -f ${DIR_ETF_YAHOO_DIVIDEND}/*
+	rm    -f ${DIR_ETF_YAHOO_DIVIDEND}/*
 	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DIVIDEND}" -v G="v" -f data/script/fetch-etf-yahoo-table.awk        tmp/nasdaq/etf-all.txt | bash 
 
 fetch-etf-yahoo-profile:
 	mkdir -p ${DIR_ETF_YAHOO_PROFILE}
-	rm -f ${DIR_ETF_YAHOO_PROFILE}/*
+	rm    -f ${DIR_ETF_YAHOO_PROFILE}/*
 	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_PROFILE}" -f data/script/fetch-etf-yahoo-profile.awk tmp/nasdaq/etf-all.txt | bash 
 
+
+update-etf:
+	@echo make update-etf-etf update-etf-yahoo-daily update-etf-yahoo-dividend update-etf-yahoo-profile
+
+update-etf-etf:
+	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.ETF
+
+update-etf-yahoo-daily:
+	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooDaily
+
+update-etf-yahoo-dividend:
+	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooDividend
+
+update-etf-yahoo-profile:
+	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooProfile
 
 
 #fetch-etf-google:

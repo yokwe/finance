@@ -110,7 +110,7 @@ public final class Util {
 					//if (value.matches("[0-9]+\\.[0-9][0-9](000|999)[0-9]+")) {
 					if (value.matches("[0-9][0-9]+\\.[0-9][0-9][0-9]*")) {
 						double v = Float.parseFloat(value);
-						value = String.format("%.0f", v * 100);
+						value = String.format("%.2f", v);
 					}
 					if (value.compareTo("000") == 0) {
 						value = "0";

@@ -138,7 +138,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		if (ret.matches("^[0-9]+\\.[0-9]+%$")) {
 			String str = ret.substring(0, ret.length() - 1);
 			Float value = Float.valueOf(str);
-			ret = String.format("%.0f", value * 100);
+			ret = String.format("%.2f", value);
 		}
 		
 		// $576.4 K

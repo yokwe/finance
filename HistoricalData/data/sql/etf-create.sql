@@ -12,7 +12,7 @@ CREATE TABLE etf_etf (
   symbol           TEXT     NOT NULL, -- ticker symbol
   name             TEXT     NOT NULL, -- name of ETF
   inception_date   TEXT     NOT NULL, -- inception date as YYYY-MM-DD
-  expense_ratio    INTEGER  NOT NULL, -- in 100th of percent  12.34% = 123
+  expense_ratio    REAL     NOT NULL, -- in 100th of percent  12.34% = 123
   issuer           TEXT     NOT NULL, -- name of issuer of ETF
   home_page        TEXT     NOT NULL, -- URL of ETF
   aum              INTEGER  NOT NULL, -- asset under management
@@ -27,23 +27,23 @@ CREATE TABLE etf_yahoo_profile (
   family           TEXT     NOT NULL, -- family of ETF
   net_assets       INTEGER  NOT NULL, -- net assets of ETF
   inception_date   TEXT     NOT NULL, -- inception date as YYYY-MM-DD
-  expense_ratio    INTEGER  NOT NULL  -- in 100th of percent  12.34% = 123
+  expense_ratio    REAL     NOT NULL  -- in 100th of percent  12.34% = 12.34
 );
 
 CREATE TABLE etf_yahoo_daily (
-  symbol    TEXT     NOT NULL, -- ticker symbol
-  date      TEXT     NOT NULL, -- date is YYYY-MM-DD
-  open      INTEGER  NOT NULL, -- in 100th of value  123.45 = 12345
-  high      INTEGER  NOT NULL, -- in 100th of value  123.45 = 12345
-  low       INTEGER  NOT NULL, -- in 100th of value  123.45 = 12345
-  close     INTEGER  NOT NULL, -- in 100th of value  123.45 = 12345
-  volume    INTEGER  NOT NULL
+  symbol    TEXT  NOT NULL, -- ticker symbol
+  date      TEXT  NOT NULL, -- date is YYYY-MM-DD
+  open      REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
+  high      REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
+  low       REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
+  close     REAL  NOT NULL, -- in 100th of value  123.45 = 123.45
+  volume    REAL  NOT NULL
 );
 
 CREATE TABLE etf_yahoo_dividend (
   symbol    TEXT     NOT NULL, -- ticker symbol
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
-  dividend  INTEGER  NOT NULL  -- in 1000th of value 1.234 = 1234
+  dividend  INTEGER  NOT NULL  -- in 1000th of value 1.234 = 1.234
 );
 
 .tables

@@ -72,9 +72,8 @@ public class YahooDividend {
 					Map<Field_Out, String> outRecord = new TreeMap<>();
 					outRecord.put(Field_Out.SYMBOL, symbol);
 					
-					// 1.022000 => 1022
-					String dividend = inRecord.get(Field_In.DIVIDENDS);
-					dividend = String.format("%.0f", Float.valueOf(dividend) * 1000);
+					// 1.022000 => 1.022
+					String dividend = String.format("%.3f", Float.valueOf(inRecord.get(Field_In.DIVIDENDS)));
 					
 					outRecord.put(Field_Out.DATE,      inRecord.get(Field_In.DATE));
 					outRecord.put(Field_Out.DIVIDENDS, dividend);

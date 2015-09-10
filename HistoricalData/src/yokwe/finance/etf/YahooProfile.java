@@ -30,15 +30,21 @@ public class YahooProfile {
 				"<div class=\"title\"><h2>(.+?) \\([A-Z]+?\\)</h2>",
 				"Fund Overview");
 			
+			// <tr><td class="yfnc_tablehead1" width="$width">Category:
+            //   </td><td class="yfnc_tabledata1"><a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a></td></tr>
+			//
 			// <a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a>
 		    add(Field.CATEGORY,
 	    		"<a href=\"/etf/lists/\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=[^>]+>(.+?)</a>",
-				"Fund Overview");
+				"<td class=\"yfnc_tabledata1\"><a href=\"/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=");
 		    
+		    // <tr><td class="yfnc_tablehead1" width="$width">Fund Family:
+            //   </td><td class="yfnc_tabledata1"><a href="/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=0C00004AZV">iShares</a></td></tr>
+		    //
 		    // <a href="/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=0C00004HZR">AdvisorShares</a>
 		    add(Field.FAMILY,
 	    		"<a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=[^>]+>(.+?)</a>",
-				"Fund Overview");
+				"<td class=\"yfnc_tabledata1\"><a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=");
 			
 		    // <tr><td class="yfnc_tablehead1" width="50%">Net Assets:</td><td class="yfnc_tabledata1">NaN</td></tr>
 		    add(Field.NET_ASSETS,

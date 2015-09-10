@@ -11,8 +11,6 @@ DIR_ETF_YAHOO_DAILY   =tmp/fetch/etf/yahoo-daily
 DIR_ETF_YAHOO_DIVIDEND=tmp/fetch/etf/yahoo-dividend
 DIR_ETF_YAHOO_PROFILE =tmp/fetch/etf/yahoo-profile
 
-JAVA_CLASSPATH        =bin:$(shell echo ../Common/jar/*.jar | tr ' ' ':')
-
 all: fetch update
 
 clean:
@@ -24,6 +22,9 @@ update: update-mizuho update-google
 
 run-chrome:
 	google-chrome --allow-file-access-from-files
+
+build-jar:
+	ant build
 
 #
 # MIZUHO
@@ -84,19 +85,19 @@ fetch-etf-yahoo-profile:
 
 
 update-etf:
-	@echo make update-etf-etf update-etf-yahoo-daily update-etf-yahoo-dividend update-etf-yahoo-profile
+	@echo make run-etf-etf run-etf-yahoo-daily run-etf-yahoo-dividend run-etf-yahoo-profile
 
-update-etf-etf:
-	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.ETF
+run-etf-etf:
+	ant run-etf-etf
 
-update-etf-yahoo-daily:
-	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooDaily
+run-etf-yahoo-daily:
+	ant run-etf-yahoo-daily
 
-update-etf-yahoo-dividend:
-	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooDividend
+run-etf-yahoo-dividend:
+	ant run-etf-yahoo-dividend
 
-update-etf-yahoo-profile:
-	java -Dfile.encoding=UTF-8 -classpath ${JAVA_CLASSPATH} yokwe.finance.etf.YahooProfile
+run-etf-yahoo-profile:
+	ant run-etf-yahoo-profile
 
 
 fetch-test:

@@ -1,0 +1,67 @@
+<project>
+	<property name="dir.ext.jar" location="../Common/jar" />
+	<property name="dir.src" location="src" />
+
+	<property name="dir.build" location="tmp/build" />
+	<property name="dir.build.bin" location="${dir.build}/bin" />
+	<property name="dir.build.jar" location="${dir.build}/jar" />
+
+	<path id="ext.jar">
+		<fileset dir="${dir.ext.jar}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+	
+	<property name="jar.yokwe" location="${dir.build.jar}/yokwe.jar" />
+
+	<target name="clean">
+		<delete includeemptydirs="true" quiet="true">
+			<fileset dir="${dir.build}" includes="**/*" />
+		</delete>
+	</target>
+
+	<target name="build">
+		<!-- clean destination directories -->
+		<delete dir="${dir.build.bin}" quiet="true" />
+		<mkdir dir="${dir.build.bin}" />
+		<delete dir="${dir.build.jar}" quiet="true" />
+		<mkdir dir="${dir.build.jar}" />
+		<!-- compile -->
+		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false" />
+		<!-- copy resource file -->
+		<copy todir="${dir.build.bin}">
+			<fileset dir="${dir.src}" excludes="**/*.java" />
+		</copy>
+		<!-- make jar -->
+		<jar destfile="${jar.yokwe}" basedir="${dir.build.bin}" />
+	</target>
+
+	<target name="run-etf-etf">
+		<java classname="yokwe.finance.etf.ETF" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+		</java>
+	</target>
+
+	<target name="run-etf-yahoo-daily">
+		<java classname="yokwe.finance.etf.YahooDaily" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+		</java>
+	</target>
+
+	<target name="run-etf-yahoo-dividend">
+		<java classname="yokwe.finance.etf.YahooDividend" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+		</java>
+	</target>
+
+	<target name="run-etf-yahoo-profile">
+		<java classname="yokwe.finance.etf.YahooProfile" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+		</java>
+	</target>
+
+</project>

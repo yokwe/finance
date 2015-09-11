@@ -47,7 +47,7 @@ public class YahooDividend {
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);
-			throw new RuntimeException("not directory");
+			throw new ETFException("not directory");
 		}
 		
 		File[] fileList = root.listFiles();
@@ -85,7 +85,7 @@ public class YahooDividend {
 			logger.info("TOTAL {}", totalSize);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	private static void save() {

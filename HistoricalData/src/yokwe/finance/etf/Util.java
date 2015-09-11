@@ -42,10 +42,10 @@ public final class Util {
 			}
 		} catch (FileNotFoundException e) {
 			logger.error("FileNotFoundException {}", file.getName());
-			throw new RuntimeException("FileNotFoundException");
+			throw new ETFException("FileNotFoundException");
 		} catch (IOException e1) {
 			logger.error("IOException {}", file.getName());
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 		return ret.toString();
 	}
@@ -62,7 +62,7 @@ public final class Util {
 			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	public static <E extends Enum<E>> void save(File file, List<Map<E, String>> values) {
@@ -70,7 +70,7 @@ public final class Util {
 			save(writer, values);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	public static <E extends Enum<E>> void save(OutputStream os, List<Map<E, String>> values) {
@@ -78,7 +78,7 @@ public final class Util {
 			save(writer, values);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	
@@ -102,7 +102,7 @@ public final class Util {
 					if (!csvRecord.isSet(key.toString())) {
 						logger.error("IS_SET {}", key.toString());
 						logger.error("csvRecord {}", csvRecord.toString());
-						throw new RuntimeException("IS_SET");
+						throw new ETFException("IS_SET");
 					}
 					String value = csvRecord.get(key);
 					
@@ -125,7 +125,7 @@ public final class Util {
 			
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}		
 		
 		return ret;
@@ -135,10 +135,10 @@ public final class Util {
 			return load(reader, eClass);
 		} catch (FileNotFoundException e) {
 			logger.error("FileNotFoundException {}", e);
-			throw new RuntimeException("FileNotFoundException");
+			throw new ETFException("FileNotFoundException");
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	public static <E extends Enum<E>> List<Map<E, String>>load(InputStream is, Class<E> eClass) {
@@ -146,10 +146,10 @@ public final class Util {
 			return load(reader, eClass);
 		} catch (FileNotFoundException e) {
 			logger.error("FileNotFoundException {}", e);
-			throw new RuntimeException("FileNotFoundException");
+			throw new ETFException("FileNotFoundException");
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
-			throw new RuntimeException("IOException");
+			throw new ETFException("IOException");
 		}
 	}
 	

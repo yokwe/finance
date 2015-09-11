@@ -59,3 +59,5 @@ CREATE UNIQUE INDEX etf_etf_symbol                 ON etf_etf(symbol);
 CREATE UNIQUE INDEX etf_yahoo_profile_symbol       ON etf_yahoo_profile(symbol);
 CREATE UNIQUE INDEX etf_yahoo_daily_symbol_date    ON etf_yahoo_daily(symbol, date);
 CREATE UNIQUE INDEX etf_yahoo_dividend_symbol_date ON etf_yahoo_dividend(symbol, date);
+
+VACUUM;

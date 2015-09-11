@@ -678,7 +678,7 @@ How to know best profit for $1000 investment?
 ---------------------------------------------
 select
   etf_etf.symbol,
-  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 12 / 11)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 1000), 2) as D,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 12 / 11)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 100), 2) as D,
   round(etf_yahoo_daily.close, 2),
   round((select avg(close) from etf_yahoo_daily where '2014-08-08' <= date and etf_yahoo_daily.symbol = etf_etf.symbol), 2),
   etf_etf.name
@@ -694,35 +694,35 @@ order by D desc, etf_etf.symbol
 limit 20;
 
 ----
-YYY|93.97|18.64|21.61|YieldShares High Income
-DIV|66.68|24.69|28.18|Global X SuperDividend U.S.
-SPFF|65.22|13.7|14.52|Global X SuperIncome Preferred
-SDIV|64.25|20.27|23.32|Global X SuperDividend
-HYEM|64.13|23.04|24.1|Market Vectors Emerging Markets High Yield Bond
-EMLC|58.2|17.47|20.98|Market Vectors Emerging Markets Local Currency Bond
-JNK|54.57|37.05|39.18|SPDR Barclays High Yield Bond
-ELD|51.66|35.1|41.43|WisdomTree Emerging Markets Local Debt
-IHY|50.64|23.76|25.1|Market Vectors International High Yield Bond
-HYLS|50.49|49.74|50.51|First Trust Tactical High Yield
-PFF|50.45|38.94|39.58|iShares U.S. Preferred Stock
-HYG|49.46|86.43|90.38|iShares iBoxx $ High Yield Corporate Bond
-HYGH|48.51|89.37|94.13|iShares Interest Rate Hedged High Yield Bond
-XMPT|48.47|25.57|26.0|Market Vectors CEF Municipal Income
-SJNK|48.22|27.68|29.22|SPDR Barclays Short Term High Yield Bond
-PFXF|46.8|19.85|20.56|Market Vectors Preferred Securities ex Financials
-FTHI|46.57|19.47|20.51|First Trust High Income
-FPE|46.49|18.91|19.07|First Trust Preferred Securities and Income
-ANGL|46.19|26.5|27.29|Market Vectors Fallen Angel High Yield Bond
-HYD|44.49|30.12|30.75|Market Vectors High-Yield Municipal
+YYY|79.03|18.64|21.61|YieldShares High Income
+DIV|62.63|24.69|28.18|Global X SuperDividend U.S.
+HYEM|60.53|23.04|24.1|Market Vectors Emerging Markets High Yield Bond
+SPFF|60.0|13.7|14.52|Global X SuperIncome Preferred
+SDIV|59.03|20.27|23.32|Global X SuperDividend
+EMLC|53.97|17.47|20.98|Market Vectors Emerging Markets Local Currency Bond
+JNK|50.97|37.05|39.18|SPDR Barclays High Yield Bond
+IHY|47.04|23.76|25.1|Market Vectors International High Yield Bond
+ELD|46.71|35.1|41.43|WisdomTree Emerging Markets Local Debt
+PFF|46.22|38.94|39.58|iShares U.S. Preferred Stock
+HYG|44.96|86.43|90.38|iShares iBoxx $ High Yield Corporate Bond
+SJNK|44.62|27.68|29.22|SPDR Barclays Short Term High Yield Bond
+HYGH|43.56|89.37|94.13|iShares Interest Rate Hedged High Yield Bond
+PFXF|43.2|19.85|20.56|Market Vectors Preferred Securities ex Financials
+ANGL|42.59|26.5|27.29|Market Vectors Fallen Angel High Yield Bond
+HYD|41.34|30.12|30.75|Market Vectors High-Yield Municipal
+BSJK|40.33|24.46|25.49|Guggenheim BulletShares 2020 High Yield Corporate Bond
+LWC|40.21|38.28|40.61|SPDR Barclays Long Term Corporate Bond
+VCLT|40.11|85.74|90.45|Vanguard Long-Term Corporate Bond
+SHYG|39.35|46.94|48.89|iShares 0-5 Year High Yield Corporate Bond
 ----
-BLV|36.84|88.78|92.18|Vanguard Long-Term Bond
-VCIT|29.16|84.78|86.32|Vanguard Intermediate-Term Corporate Bond
+BLV|35.94|88.78|92.18|Vanguard Long-Term Bond
+VCIT|28.08|84.78|86.32|Vanguard Intermediate-Term Corporate Bond
 
 
 
 select
   etf_etf.symbol,
-  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 4 / 4)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 1000), 2) as D,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 4 / 3)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 100), 2) as D,
   round(etf_yahoo_daily.close, 2),
   round((select avg(close) from etf_yahoo_daily where '2014-08-08' <= date and etf_yahoo_daily.symbol = etf_etf.symbol), 2),
   etf_etf.name
@@ -738,25 +738,26 @@ order by D desc, etf_etf.symbol
 limit 20;
 
 ----
-ZMLP|90.79|24.67|34.08|Direxion Zacks MLP High Income
-REM|87.43|10.42|11.76|iShares Mortgage Real Estate Capped
-MLPJ|69.39|10.53|14.3|Global X Junior MLP
-MORT|67.29|21.05|23.66|Market Vectors Mortgage REIT Income
-BIZD|56.22|17.13|18.5|Market Vectors BDC Income
-AMLP|55.86|14.31|17.07|Alerian MLP
-MLPA|55.07|12.53|15.51|Global X MLP
-PSP|50.08|11.08|11.44|PowerShares Global Listed Private Equity
-LVL|47.84|9.3|11.78|Guggenheim S&P Global Dividend Opportunities
-QDXU|42.72|39.84|47.12|Market Vectors MSCI International Quality Dividend
-CVY|42.43|19.69|22.69|Guggenheim Multi-Asset Income
-DWX|36.06|35.69|43.56|SPDR S&P International Dividend
-GNAT|35.97|12.97|17.19|WisdomTree Global Natural Resources
-EDIV|34.98|26.11|34.42|SPDR S&P Emerging Markets Dividend
-DVYA|34.81|39.6|50.06|iShares Asia/Pacific Dividend
-CCXE|34.15|20.93|26.37|WisdomTree Commodity Country Equity
-ROOF|33.79|23.78|26.74|IQ US Real Estate Small Cap
-QDEM|33.59|38.46|49.73|Market Vectors MSCI Emerging Markets Quality Dividend
-WDIV|32.85|60.7|66.0|SPDR S&P Global Dividend
-IDV|32.74|29.39|34.44|iShares International Select Dividend
+ZZMLP|65.85|24.67|34.08|Direxion Zacks MLP High Income
+REM|64.07|10.42|11.76|iShares Mortgage Real Estate Capped
+MORT|49.06|21.05|23.66|Market Vectors Mortgage REIT Income
+MLPJ|35.83|10.53|14.3|Global X Junior MLP
+QDXU|29.93|39.84|47.12|Market Vectors MSCI International Quality Dividend
+LVL|29.34|9.3|11.78|Guggenheim S&P Global Dividend Opportunities
+CVY|26.63|19.69|22.69|Guggenheim Multi-Asset Income
+DWX|25.13|35.69|43.56|SPDR S&P International Dividend
+GNAT|24.12|12.97|17.19|WisdomTree Global Natural Resources
+HDV|23.86|70.48|75.75|iShares Core High Dividend
+WDIV|23.54|60.7|66.0|SPDR S&P Global Dividend
+IPW|23.37|16.48|21.32|SPDR S&P International Energy
+CCXE|23.06|20.93|26.37|WisdomTree Commodity Country Equity
+RYU|22.96|70.0|74.47|Guggenheim S&P Equal Weight Utilities
+IDV|22.23|29.39|34.44|iShares International Select Dividend
+XLU|22.05|41.83|44.41|Utilities Select SPDR
+EDIV|21.91|26.11|34.42|SPDR S&P Emerging Markets Dividend
+REET|21.88|23.63|25.74|iShares Global REIT
+DVYA|21.83|39.6|50.06|iShares Asia/Pacific Dividend
+FUTY|21.26|26.65|28.65|Fidelity MSCI Utilities
 ----
-IVV|15.23|198.59|206.23|iShares Core S&P 500
+IVV|12.62|198.59|206.23|iShares Core S&P 500
+

@@ -587,3 +587,176 @@ How to screen ETF
 6)Check dividend
 
 
+Top 20 of ETF that has top annually dividend ratio per price for last 12 month (4 dividend per year)
+----------------------------------------------------------------------------------------------------
+select
+  etf_etf.symbol,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 4 / 3) / etf_yahoo_daily.close * 100), 2) as D,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 4 / 3)), 2) as DD,
+  etf_yahoo_daily.close,
+  etf_etf.expense_ratio,
+  count(*) as C,
+  etf_etf.name
+from etf_etf, etf_yahoo_dividend, etf_yahoo_daily
+where
+  etf_etf.symbol = etf_yahoo_dividend.symbol and
+  etf_etf.symbol = etf_yahoo_daily.symbol and
+  '2014-08-08' <= etf_yahoo_dividend.date and
+  etf_yahoo_daily.date = '2015-09-08'
+group by etf_etf.symbol
+having C = 4
+order by D desc, etf_etf.symbol
+limit 20;
+
+ZMLP|8.22|2.03|24.67|1.63|4|Direxion Zacks MLP High Income
+REM|6.89|0.72|10.42|0.48|4|iShares Mortgage Real Estate Capped
+MLPJ|6.36|0.67|10.53|2.78|4|Global X Junior MLP
+BIZD|5.73|0.98|17.13|9.45|4|Market Vectors BDC Income
+AMLP|5.43|0.78|14.31|5.43|4|Alerian MLP
+MORT|5.32|1.12|21.05|0.41|4|Market Vectors Mortgage REIT Income
+MLPA|5.24|0.66|12.53|3.99|4|Global X MLP
+LVL|4.01|0.37|9.3|1.08|4|Guggenheim S&P Global Dividend Opportunities
+PSP|3.97|0.44|11.08|2.09|4|PowerShares Global Listed Private Equity
+CVY|3.5|0.69|19.69|0.84|4|Guggenheim Multi-Asset Income
+QDXU|3.44|1.37|39.84|0.45|4|Market Vectors MSCI International Quality Dividend
+GNAT|2.99|0.39|12.97|0.58|4|WisdomTree Global Natural Resources
+DWX|2.96|1.06|35.69|0.45|4|SPDR S&P International Dividend
+CCXE|2.89|0.6|20.93|0.58|4|WisdomTree Commodity Country Equity
+HGI|2.83|0.42|14.94|0.81|4|Guggenheim International Multi-Asset Income
+WDIV|2.75|1.67|60.7|0.4|4|SPDR S&P Global Dividend
+IPW|2.74|0.45|16.48|0.4|4|SPDR S&P International Energy
+ENY|2.73|0.22|8.02|0.71|4|Guggenheim Canadian Energy Income
+IDV|2.72|0.8|29.39|0.5|4|iShares International Select Dividend
+ROOF|2.71|0.64|23.78|0.69|4|IQ US Real Estate Small Cap
+
+
+Top 20 of ETF that has top annually dividend ratio per price for last 12 month (1 dividend per year)
+----------------------------------------------------------------------------------------------------
+select
+  etf_etf.symbol,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 12 / 11) / etf_yahoo_daily.close * 100), 2) as D,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 12 / 11)), 2) as DD,
+  etf_yahoo_daily.close,
+  etf_etf.expense_ratio,
+  count(*) as C,
+  etf_etf.name
+from etf_etf, etf_yahoo_dividend, etf_yahoo_daily
+where
+  etf_etf.symbol = etf_yahoo_dividend.symbol and
+  etf_etf.symbol = etf_yahoo_daily.symbol and
+  '2014-08-08' <= etf_yahoo_dividend.date and
+  etf_yahoo_daily.date = '2015-09-08'
+group by etf_etf.symbol
+having C = 12
+order by D desc, etf_etf.symbol
+limit 20;
+----
+YYY|9.563|18.64|1.66|12|YieldShares High Income
+DIV|6.713|24.69|0.45|12|Global X SuperDividend U.S.
+SPFF|6.58|13.7|0.58|12|Global X SuperIncome Preferred
+SDIV|6.483|20.27|0.58|12|Global X SuperDividend
+HYEM|6.453|23.04|0.4|12|Market Vectors Emerging Markets High Yield Bond
+EMLC|5.867|17.47|0.47|12|Market Vectors Emerging Markets Local Currency Bond
+JNK|5.497|37.05|0.4|12|SPDR Barclays High Yield Bond
+ELD|5.221|35.1|0.55|12|WisdomTree Emerging Markets Local Debt
+HYLS|5.178|49.74|1.29|12|First Trust Tactical High Yield
+IHY|5.104|23.76|0.4|12|Market Vectors International High Yield Bond
+PFF|5.092|38.94|0.47|12|iShares U.S. Preferred Stock
+HYG|4.996|86.43|0.5|12|iShares iBoxx $ High Yield Corporate Bond
+XMPT|4.99|25.57|1.43|12|Market Vectors CEF Municipal Income
+HYGH|4.906|89.37|0.55|12|iShares Interest Rate Hedged High Yield Bond
+SJNK|4.862|27.68|0.4|12|SPDR Barclays Short Term High Yield Bond
+FTHI|4.742|19.47|0.85|12|First Trust High Income
+FPE|4.736|18.91|0.87|12|First Trust Preferred Securities and Income
+PFXF|4.72|19.85|0.4|12|Market Vectors Preferred Securities ex Financials
+ANGL|4.659|26.5|0.4|12|Market Vectors Fallen Angel High Yield Bond
+HYD|4.484|30.12|0.35|12|Market Vectors High-Yield Municipal
+---
+
+
+How to know best profit for $1000 investment?
+---------------------------------------------
+select
+  etf_etf.symbol,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 12 / 11)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 1000), 2) as D,
+  round(etf_yahoo_daily.close, 2),
+  round((select avg(close) from etf_yahoo_daily where '2014-08-08' <= date and etf_yahoo_daily.symbol = etf_etf.symbol), 2),
+  etf_etf.name
+from etf_etf, etf_yahoo_dividend, etf_yahoo_daily
+where
+  etf_etf.symbol = etf_yahoo_dividend.symbol and
+  etf_etf.symbol = etf_yahoo_daily.symbol and
+  '2014-08-08' <= etf_yahoo_dividend.date and
+  etf_yahoo_daily.date = '2015-09-08' and etf_etf.symbol = 'VCIT'
+group by etf_etf.symbol
+having count(*) = 12
+order by D desc, etf_etf.symbol
+limit 20;
+
+----
+YYY|93.97|18.64|21.61|YieldShares High Income
+DIV|66.68|24.69|28.18|Global X SuperDividend U.S.
+SPFF|65.22|13.7|14.52|Global X SuperIncome Preferred
+SDIV|64.25|20.27|23.32|Global X SuperDividend
+HYEM|64.13|23.04|24.1|Market Vectors Emerging Markets High Yield Bond
+EMLC|58.2|17.47|20.98|Market Vectors Emerging Markets Local Currency Bond
+JNK|54.57|37.05|39.18|SPDR Barclays High Yield Bond
+ELD|51.66|35.1|41.43|WisdomTree Emerging Markets Local Debt
+IHY|50.64|23.76|25.1|Market Vectors International High Yield Bond
+HYLS|50.49|49.74|50.51|First Trust Tactical High Yield
+PFF|50.45|38.94|39.58|iShares U.S. Preferred Stock
+HYG|49.46|86.43|90.38|iShares iBoxx $ High Yield Corporate Bond
+HYGH|48.51|89.37|94.13|iShares Interest Rate Hedged High Yield Bond
+XMPT|48.47|25.57|26.0|Market Vectors CEF Municipal Income
+SJNK|48.22|27.68|29.22|SPDR Barclays Short Term High Yield Bond
+PFXF|46.8|19.85|20.56|Market Vectors Preferred Securities ex Financials
+FTHI|46.57|19.47|20.51|First Trust High Income
+FPE|46.49|18.91|19.07|First Trust Preferred Securities and Income
+ANGL|46.19|26.5|27.29|Market Vectors Fallen Angel High Yield Bond
+HYD|44.49|30.12|30.75|Market Vectors High-Yield Municipal
+----
+BLV|36.84|88.78|92.18|Vanguard Long-Term Bond
+VCIT|29.16|84.78|86.32|Vanguard Intermediate-Term Corporate Bond
+
+
+
+select
+  etf_etf.symbol,
+  round(((sum(etf_yahoo_dividend.dividend) - max(etf_yahoo_dividend.dividend) * 4 / 4)) * (1000 / (etf_yahoo_daily.close)) - (1000 * etf_etf.expense_ratio / 1000), 2) as D,
+  round(etf_yahoo_daily.close, 2),
+  round((select avg(close) from etf_yahoo_daily where '2014-08-08' <= date and etf_yahoo_daily.symbol = etf_etf.symbol), 2),
+  etf_etf.name
+from etf_etf, etf_yahoo_dividend, etf_yahoo_daily
+where
+  etf_etf.symbol = etf_yahoo_dividend.symbol and
+  etf_etf.symbol = etf_yahoo_daily.symbol and
+  '2014-08-08' <= etf_yahoo_dividend.date and
+  etf_yahoo_daily.date = '2015-09-08' and etf_etf.symbol = 'IVV'
+group by etf_etf.symbol
+having count(*) = 4
+order by D desc, etf_etf.symbol
+limit 20;
+
+----
+ZMLP|90.79|24.67|34.08|Direxion Zacks MLP High Income
+REM|87.43|10.42|11.76|iShares Mortgage Real Estate Capped
+MLPJ|69.39|10.53|14.3|Global X Junior MLP
+MORT|67.29|21.05|23.66|Market Vectors Mortgage REIT Income
+BIZD|56.22|17.13|18.5|Market Vectors BDC Income
+AMLP|55.86|14.31|17.07|Alerian MLP
+MLPA|55.07|12.53|15.51|Global X MLP
+PSP|50.08|11.08|11.44|PowerShares Global Listed Private Equity
+LVL|47.84|9.3|11.78|Guggenheim S&P Global Dividend Opportunities
+QDXU|42.72|39.84|47.12|Market Vectors MSCI International Quality Dividend
+CVY|42.43|19.69|22.69|Guggenheim Multi-Asset Income
+DWX|36.06|35.69|43.56|SPDR S&P International Dividend
+GNAT|35.97|12.97|17.19|WisdomTree Global Natural Resources
+EDIV|34.98|26.11|34.42|SPDR S&P Emerging Markets Dividend
+DVYA|34.81|39.6|50.06|iShares Asia/Pacific Dividend
+CCXE|34.15|20.93|26.37|WisdomTree Commodity Country Equity
+ROOF|33.79|23.78|26.74|IQ US Real Estate Small Cap
+QDEM|33.59|38.46|49.73|Market Vectors MSCI Emerging Markets Quality Dividend
+WDIV|32.85|60.7|66.0|SPDR S&P Global Dividend
+IDV|32.74|29.39|34.44|iShares International Select Dividend
+----
+IVV|15.23|198.59|206.23|iShares Core S&P 500

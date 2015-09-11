@@ -26,6 +26,9 @@ run-chrome:
 build-jar:
 	ant build
 
+load-etf-data:
+	sqlite3 < data/sql/etf-create.sql
+
 #
 # MIZUHO
 #

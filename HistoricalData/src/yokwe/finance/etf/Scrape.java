@@ -36,11 +36,11 @@ public abstract class Scrape<E extends Enum<E>> {
 				if (!matcher.find()) {
 					logger.error("NAME {} {}", fileName, key);
 					logger.error("pat {}", matcher.toString());
-					throw new RuntimeException("NAME");
+					throw new ETFException("NAME");
 				}
 				if (matcher.groupCount() != 1) {
 					logger.error("GROUP_COUNT {} {}  groupCount = {}", fileName, key, matcher.groupCount());
-					throw new RuntimeException("GROUP_COUNT");
+					throw new ETFException("GROUP_COUNT");
 				}
 				return matcher.group(1);
 			} else {
@@ -57,7 +57,7 @@ public abstract class Scrape<E extends Enum<E>> {
 	protected void add(E e, String pattern, String expect) {
 		if (map.containsKey(e)) {
 			logger.error("DUPLICATE {}", e);
-			throw new RuntimeException("DUPLICATE");
+			throw new ETFException("DUPLICATE");
 		}
 		Element<E> element = new Element<>(e, pattern, expect);
 		map.put(e, element);
@@ -90,7 +90,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);
-			throw new RuntimeException("not directory");
+			throw new ETFException("not directory");
 		}
 		
 		File[] fileList = root.listFiles();
@@ -100,10 +100,14 @@ public abstract class Scrape<E extends Enum<E>> {
 		for(File file: fileList) {
 			if (file.length() == 0) continue;
 			
-			Map<E, String> values = readFile(file);
-			if (values == null) continue;
-			
-			ret.add(values);
+			try {
+				Map<E, String> values = readFile(file);
+				if (values == null) continue;
+				
+				ret.add(values);
+			} catch (ETFException e) {
+				logger.error(e.toString());
+			}
 		}
 		
 		logger.info("file = {}", fileList.length);
@@ -159,7 +163,7 @@ public abstract class Scrape<E extends Enum<E>> {
 				break;
 			default:
 				logger.error("ret {}!", ret);
-				throw new RuntimeException("UNIT " + unit);
+				throw new ETFException("UNIT " + unit);
 			}
 			String str = ret.substring(1, ret.length() - 2);
 			Float value = Float.valueOf(str);
@@ -185,7 +189,7 @@ public abstract class Scrape<E extends Enum<E>> {
 				break;
 			default:
 				logger.error("ret {}!", ret);
-				throw new RuntimeException("UNIT " + unit);
+				throw new ETFException("UNIT " + unit);
 			}
 			String str = ret.substring(0, ret.length() - 1);
 			Float value = Float.valueOf(str);
@@ -216,12 +220,12 @@ public abstract class Scrape<E extends Enum<E>> {
 		// Sanity check
 		if (ret.contains(";")) {
 			logger.error("SEMI {}", ret);
-			throw new RuntimeException("SEMI");
+			throw new ETFException("SEMI");
 		}
 		
 		if (ret.contains("\"")) {
 			logger.error("DOUBLE_QUOTE {}", ret);
-			throw new RuntimeException("DOUBLE_QUOTE");
+			throw new ETFException("DOUBLE_QUOTE");
 		}
 		
 		return ret;

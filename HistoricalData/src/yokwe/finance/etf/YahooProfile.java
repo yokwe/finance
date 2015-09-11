@@ -23,12 +23,12 @@ public class YahooProfile {
 			// <div class="title"><h2>Lattice Developed Mkts (ex-US) Stra ETF (RODM)</h2>
 			add(Field.SYMBOL,
 				"<div class=\"title\"><h2>.+? \\(([A-Z]+?)\\)</h2>",
-				"Fund Overview");
+				"<div class=\"title\">");
 			
 			// <div class="title"><h2>AdvisorShares WCM/BNY MlnFcsd GR ADR ETF (AADR)</h2>
 			add(Field.NAME,
 				"<div class=\"title\"><h2>(.+?) \\([A-Z]+?\\)</h2>",
-				"Fund Overview");
+				"<div class=\"title\">");
 			
 			// <tr><td class="yfnc_tablehead1" width="$width">Category:
             //   </td><td class="yfnc_tabledata1"><a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a></td></tr>
@@ -44,7 +44,7 @@ public class YahooProfile {
 		    // <a href="/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=0C00004HZR">AdvisorShares</a>
 		    add(Field.FAMILY,
 	    		"<a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=[^>]+>(.+?)</a>",
-				"<td class=\"yfnc_tabledata1\"><a href=\"/etf/lists\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=");
+				"<td class=\"yfnc_tabledata1\"><a href=\"/etf/lists?mod_id=mediaquotesetf&amp;tab=tab6&amp;ff=");
 			
 		    // <tr><td class="yfnc_tablehead1" width="50%">Net Assets:</td><td class="yfnc_tabledata1">NaN</td></tr>
 		    add(Field.NET_ASSETS,

@@ -66,7 +66,7 @@ store-nasdaq:
 fetch-etf:
 	@echo make fech-etf-etf fetch-etf-yahoo-daily fetch-etf-yahoo-dividend fetch-etf-yahoo-profile
 
-clear-etf:
+prepare-fetch-etf:
 	rm    -f ${DIR_ETF_ETF}/*
 	rm    -f ${DIR_ETF_YAHOO_DAILY}/*
 	rm    -f ${DIR_ETF_YAHOO_DIVIDEND}/*

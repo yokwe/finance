@@ -7,5 +7,8 @@
 	<classpathentry kind="lib" path="/Common/jar/slf4j-api-1.7.12.jar" sourcepath="/Common/jar/slf4j-api-1.7.12-sources.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/sqlite-jdbc-3.8.11.1.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/commons-csv-1.2.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/httpclient-4.5.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/httpcore-4.4.1.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/commons-logging-1.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

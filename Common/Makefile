@@ -6,6 +6,7 @@ LOGBACK_VERSION=1.1.3
 SLF4J_VERSION=1.7.12
 SQLITE_JDBC_VERSION=3.8.11.1
 COMMONS_CSV_VERSION=1.2
+HTTPCOMPONENTS_CLIENT_VERSION=4.5
 
 
 all: fetch update
@@ -16,9 +17,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client
 
-update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv
+update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client
 
 
 fetch-logback:
@@ -36,6 +37,10 @@ fetch-sqlite-jdbc:
 fetch-commons-csv:
 	rm -f tmp/commons-csv-${COMMONS_CSV_VERSION}-bin.zip
 	cd tmp; wget http://ftp.riken.jp/net/apache//commons/csv/binaries/commons-csv-${COMMONS_CSV_VERSION}-bin.zip
+
+fetch-httpcomponents-client:
+	rm -f tmp/http-httpcomponents-${HTTPCOMPONENTS_CLIENT_VERSION}-bin.zip
+	cd tmp; wget http://ftp.riken.jp/net/apache//httpcomponents/httpclient/binary/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}-bin.zip
 
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
@@ -58,3 +63,16 @@ update-commons-csv:
 	rm -rf jar/commons-csv-*
 	cd tmp; unzip commons-csv-${COMMONS_CSV_VERSION}-bin.zip
 	cd tmp/commons-csv-${COMMONS_CSV_VERSION}; cp -p commons-csv-${COMMONS_CSV_VERSION}*.jar ../../jar
+
+update-httpcomponents-client:
+	rm -rf tmp/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}
+	rm -rf jar/httpcomponents-client-*
+	cd tmp; unzip httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}-bin.zip
+	cd tmp/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}; \
+	  cp -p \
+	    lib/httpclient-${HTTPCOMPONENTS_CLIENT_VERSION}.jar \
+	    lib/httpclient-cache-${HTTPCOMPONENTS_CLIENT_VERSION}.jar \
+	    lib/httpcore-4.4.1.jar \
+	    lib/commons-logging-1.2.jar \
+	    lib/commons-codec-1.9.jar \
+	    ../../jar

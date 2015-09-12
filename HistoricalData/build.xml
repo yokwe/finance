@@ -57,11 +57,19 @@
 		</java>
 	</target>
 
-	<target name="run-etf-yahoo-profile">
-		<java classname="yokwe.finance.etf.YahooProfile" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
+        <target name="run-etf-yahoo-profile">
+                <java classname="yokwe.finance.etf.YahooProfile" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                </java>
+        </target>
+
+        <target name="run-downloader">
+                <java classname="yokwe.finance.etf.Downloader" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/downloader.list"/>
+                </java>
+        </target>
 
 </project>

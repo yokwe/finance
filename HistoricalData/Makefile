@@ -68,23 +68,35 @@ fetch-etf:
 
 fetch-etf-etf:
 	mkdir -p ${DIR_ETF_ETF}
-	rm    -f ${DIR_ETF_ETF}/*
-	awk -v DIR_OUTPUT="${DIR_ETF_ETF}"           -f data/script/fetch-etf-etf.awk           tmp/nasdaq/etf-all.txt | bash 
+#	rm    -f ${DIR_ETF_ETF}/*
+	awk -v DIR_OUTPUT="${DIR_ETF_ETF}" \
+	  -f data/script/fetch-etf-etf.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/downloader.list
+	ant run-downloader
 
 fetch-etf-yahoo-daily:
 	mkdir -p ${DIR_ETF_YAHOO_DAILY}
-	rm    -f ${DIR_ETF_YAHOO_DAILY}/*
-	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DAILY}"    -v G="d" -f data/script/fetch-etf-yahoo-table.awk        tmp/nasdaq/etf-all.txt | bash 
+#	rm    -f ${DIR_ETF_YAHOO_DAILY}/*
+	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DAILY}"    -v G="d" \
+	  -f data/script/fetch-etf-yahoo-table.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/downloader.list
+	ant run-downloader
 
 fetch-etf-yahoo-dividend:
 	mkdir -p ${DIR_ETF_YAHOO_DIVIDEND}
-	rm    -f ${DIR_ETF_YAHOO_DIVIDEND}/*
-	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DIVIDEND}" -v G="v" -f data/script/fetch-etf-yahoo-table.awk        tmp/nasdaq/etf-all.txt | bash 
+#	rm    -f ${DIR_ETF_YAHOO_DIVIDEND}/*
+	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_DIVIDEND}" -v G="v" \
+	  -f data/script/fetch-etf-yahoo-table.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/downloader.list
+	ant run-downloader
 
 fetch-etf-yahoo-profile:
 	mkdir -p ${DIR_ETF_YAHOO_PROFILE}
-	rm    -f ${DIR_ETF_YAHOO_PROFILE}/*
-	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_PROFILE}" -f data/script/fetch-etf-yahoo-profile.awk tmp/nasdaq/etf-all.txt | bash 
+#	rm    -f ${DIR_ETF_YAHOO_PROFILE}/*
+	awk -v DIR_OUTPUT="${DIR_ETF_YAHOO_PROFILE}" \
+	  -f data/script/fetch-etf-yahoo-profile.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/downloader.list
+	ant run-downloader
 
 
 update-etf:

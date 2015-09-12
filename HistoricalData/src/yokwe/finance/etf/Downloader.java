@@ -33,7 +33,7 @@ public class Downloader {
 			
 			if (code == 404) {
 				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
-				logger.error(message);
+//				logger.error(message);
 				messageList.add(message);
 				return;
 			}
@@ -140,6 +140,7 @@ public class Downloader {
 			int totalCount = messageList.size();
 			int count = 0;
 			for(String message: messageList) {
+				count++;
 				logger.error("{}", String.format("%5d / %5d  %s", count, totalCount, message));
 			}
 		}

@@ -71,8 +71,6 @@ update-httpcomponents-client:
 	cd tmp/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}; \
 	  cp -p \
 	    lib/httpclient-${HTTPCOMPONENTS_CLIENT_VERSION}.jar \
-	    lib/httpclient-cache-${HTTPCOMPONENTS_CLIENT_VERSION}.jar \
 	    lib/httpcore-4.4.1.jar \
 	    lib/commons-logging-1.2.jar \
-	    lib/commons-codec-1.9.jar \
 	    ../../jar

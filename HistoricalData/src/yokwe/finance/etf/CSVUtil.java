@@ -62,7 +62,7 @@ public class CSVUtil {
 		}
 	}
 	
-	public static <E extends Enum<E>> List<Map<E, String>>load(Reader reader, Class<E> eClass) {
+	public static <E extends Enum<E>> List<Map<E, String>> load(Reader reader, Class<E> eClass) {
 		List<E> keyList = new ArrayList<>();
 		for(E e: eClass.getEnumConstants()) {
 			keyList.add(e);
@@ -129,22 +129,4 @@ public class CSVUtil {
 			throw new ETFException();
 		}
 	}
-	
-	
-//	enum Field {
-//		DATE("Date"), OPEN("Open"), HIGH("High"), LOW("Low"), CLOSE("Close"), VOLUME("Volume");
-//		
-//		private final String name;
-//		private Field(String name) {
-//			this.name = name;
-//		}
-//		public String toString() {
-//			return name;
-//		}
-//	}
-//	public static void main(String[] args) throws FileNotFoundException {
-//		FileReader reader = new FileReader("tmp/fetch/etf/ichart/QQQ.csv");
-//		//List<Map<Field, String>> records = load(reader, Field.class);
-//		load(reader, Field.class);
-//	}
 }

@@ -1,4 +1,4 @@
-package yokwe.finance.etf;
+package yokwe.finance.test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -9,8 +9,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestJdbc {
-	static final Logger logger = LoggerFactory.getLogger(TestJdbc.class);
+import yokwe.finance.etf.JDBCUtil;
+
+public class TestJDBC {
+	private static final Logger logger = LoggerFactory.getLogger(TestJDBC.class);
 	
 	public static class Data {
 		public String symbol;

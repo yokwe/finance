@@ -761,3 +761,9 @@ FUTY|21.26|26.65|28.65|Fidelity MSCI Utilities
 ----
 IVV|12.62|198.59|206.23|iShares Core S&P 500
 
+
+Idea
+----
+  If number of data to process can stored in memory, use java8 stream to process data.
+  Number of data in etf_etf, etf_yahoo_profile is about 1500, so these data can be store in memory.
+  But number of data in etf_yahoo_daily is too big (more than 2 million)

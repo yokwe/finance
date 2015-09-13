@@ -14,68 +14,68 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JdbcHelper<E> {
-	static final Logger logger = LoggerFactory.getLogger(JdbcHelper.class);
+public class JDBCUtil {
+	static final Logger logger = LoggerFactory.getLogger(JDBCUtil.class);
 
-	public final String   name;
-	public final String   typeName;
-	public final int      sqlType;
-	public final Field    field;
-	public final Class<E> clazz;
-	public final int      columnIndex;
-	
-	private JdbcHelper(String name, String typeName, int sqlType, Field field, Class<E> clazz, int columnIndex) {
-		this.name = name;
-		this.typeName = typeName;
-		this.sqlType = sqlType;
-		this.field = field;
-		this.clazz = clazz;
-		this.columnIndex = columnIndex;
+	public static class ColumnInfo<E> {
+		public final String   name;
+		public final String   typeName;
+		public final int      sqlType;
+		public final Field    field;
+		public final Class<E> clazz;
+		public final int      columnIndex;
+		
+		private ColumnInfo(String name, String typeName, int sqlType, Field field, Class<E> clazz, int columnIndex) {
+			this.name = name;
+			this.typeName = typeName;
+			this.sqlType = sqlType;
+			this.field = field;
+			this.clazz = clazz;
+			this.columnIndex = columnIndex;
+		}
 	}
 	
 	public static <E> List<E> getResultAll(Statement statement, String sql, Class<E> clazz) {
-		ResultSet resultSet;
 		try {
-			resultSet = statement.executeQuery(sql);
+			ResultSet resultSet = statement.executeQuery(sql);
 			return getResultAll(resultSet, clazz);
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
-			throw new ETFException("");
+			throw new ETFException();
 		}
 	}
 
 	
 	public static <E> List<E> getResultAll(ResultSet resultSet, Class<E> clazz) {
-		List<E> ret = new ArrayList<>();
-		List<JdbcHelper<E>> metaDataList = toList(resultSet, clazz);
+		List<ColumnInfo<E>> columnInfoList = getColumnInfoList(resultSet, clazz);
 
 		try {
+			List<E> ret = new ArrayList<>();
 			for(;;) {
 				if (!resultSet.next()) break;
-				ret.add(getInstance(resultSet, metaDataList));
+				ret.add(getInstance(resultSet, columnInfoList));
 			}
+			return ret;
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
-			throw new ETFException("");
+			throw new ETFException();
 		}
-		return ret;
 	}
 	
-	
-	public static <E> E getInstance(ResultSet resultSet, List<JdbcHelper<E>> metaDataList) {
+	public static <E> E getInstance(ResultSet resultSet, List<ColumnInfo<E>> columnInfoList) {
 		try {
-			E ret = metaDataList.get(0).clazz.newInstance();
+			E ret = columnInfoList.get(0).clazz.newInstance();
 			
-			for(JdbcHelper<E> metaData: metaDataList) {
-				final String name = metaData.name;
-				final String typeName = metaData.typeName;
-				final int sqlType = metaData.sqlType;
-				final int columnIndex = metaData.columnIndex;
+			for(ColumnInfo<E> columnInfo: columnInfoList) {
+				final String name = columnInfo.name;
+				final String typeName = columnInfo.typeName;
+				final int sqlType = columnInfo.sqlType;
+				final int columnIndex = columnInfo.columnIndex;
 				final String stringValue = resultSet.getString(columnIndex);
 				
-				Class<?> type = metaData.field.getType();
+				Class<?> type = columnInfo.field.getType();
 				
 				switch(sqlType) {
 				case Types.VARCHAR:
@@ -87,7 +87,7 @@ public class JdbcHelper<E> {
 					}
 					{
 						String value = (stringValue.equals(Scrape.NO_VALUE)) ? null : stringValue;
-						metaData.field.set(ret, value);
+						columnInfo.field.set(ret, value);
 					}
 					break;
 				case Types.INTEGER:
@@ -98,7 +98,7 @@ public class JdbcHelper<E> {
 					}
 					{
 						int value = (stringValue.equals(Scrape.NO_VALUE)) ? -1 : resultSet.getInt(columnIndex);
-						metaData.field.setInt(ret, value);
+						columnInfo.field.setInt(ret, value);
 					}
 					break;
 				case Types.REAL:
@@ -109,7 +109,7 @@ public class JdbcHelper<E> {
 					}
 					{
 						double value = (stringValue.equals(Scrape.NO_VALUE)) ? -1 : resultSet.getDouble(columnIndex);
-						metaData.field.setDouble(ret, value);
+						columnInfo.field.setDouble(ret, value);
 					}
 					break;
 				default:
@@ -122,12 +122,12 @@ public class JdbcHelper<E> {
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
-			throw new ETFException("");
+			throw new ETFException();
 		}
 	}
 	
-	public static <E> List<JdbcHelper<E>> toList(ResultSet resultSet, Class<E> clazz) {
-		List<JdbcHelper<E>> ret = new ArrayList<>();
+	public static <E> List<ColumnInfo<E>> getColumnInfoList(ResultSet resultSet, Class<E> clazz) {
+		List<ColumnInfo<E>> ret = new ArrayList<>();
 		
 		try {
 			Field[] fields = clazz.getDeclaredFields();
@@ -142,7 +142,7 @@ public class JdbcHelper<E> {
 				sqlTypeMap.put(name, type);
 				
 				sqlColumnIndexMap.put(name, i);
-				logger.debug("sqlType {} {} {}", name, type, metaData.getColumnTypeName(i));
+//				logger.debug("sqlType {} {} {}", name, type, metaData.getColumnTypeName(i));
 			}
 			
 			for(Field field: fields) {
@@ -192,14 +192,13 @@ public class JdbcHelper<E> {
 					throw new ETFException(message);
 				}
 				
-				ret.add(new JdbcHelper<>(name, typeName, sqlType, field, clazz, columnIndex));
-				
-				logger.debug("field {} {} {}", name, typeName, sqlType);
+				ret.add(new ColumnInfo<>(name, typeName, sqlType, field, clazz, columnIndex));
+//				logger.debug("field {} {} {}", name, typeName, sqlType);
 			}
 		} catch (SQLException | SecurityException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
-			throw new ETFException("");
+			throw new ETFException();
 		}
 		return ret;
 	}

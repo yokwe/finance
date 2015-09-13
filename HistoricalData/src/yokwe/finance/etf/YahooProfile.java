@@ -68,7 +68,7 @@ public class YahooProfile {
 	public static void save(String path) {
 		List<Map<Field, String>> values = scrape.readDirectory(DIR_PATH);
 		//
-		Util.save(new File(path), values);
+		CSVUtil.save(new File(path), values);
 	}
 	public static void save() {
 		save (CSV_PATH);

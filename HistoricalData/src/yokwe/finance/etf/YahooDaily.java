@@ -63,7 +63,7 @@ public class YahooDaily {
 				String fileName = file.getName();
 				String symbol = fileName.substring(0, fileName.length() - 4);
 				
-				List<Map<Field_In, String>> inRecords = Util.load(file, Field_In.class);
+				List<Map<Field_In, String>> inRecords = CSVUtil.load(file, Field_In.class);
 				
 				logger.info("SYMBOL {}", String.format("%-8s %6d", symbol, inRecords.size()));
 				totalSize += inRecords.size();

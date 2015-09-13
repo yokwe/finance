@@ -12,10 +12,10 @@ import org.slf4j.LoggerFactory;
 public class TestJdbc {
 	static final Logger logger = LoggerFactory.getLogger(TestJdbc.class);
 	
-	public static class YahooProfileData {
+	public static class Data {
 		public String symbol;
 		public String name;
-		public int net_assets;
+		public int    net_assets;
 		public double expense_ratio;
 		
 		public String toString() {
@@ -30,18 +30,15 @@ public class TestJdbc {
 			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3")) {
 				Statement statement = connection.createStatement();
 				String sql = "select * from etf_yahoo_profile";
-				List<YahooProfileData> resutlList = JdbcHelper.getResultAll(statement, sql, YahooProfileData.class);
+				List<Data> resultList = JDBCUtil.getResultAll(statement, sql, Data.class);
 
 				int count = 0;
-				for(YahooProfileData record: resutlList) {
+				for(Data record: resultList) {
 					count++;
 					logger.debug("{} {}", count, record);
 				}
 			}
-		} catch (ClassNotFoundException e) {
-			logger.error(e.getClass().getName());
-			logger.error(e.getMessage());
-		} catch (SQLException e) {
+		} catch (ClassNotFoundException | SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
 		}

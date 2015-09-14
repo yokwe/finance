@@ -18,7 +18,7 @@ public abstract class Scrape<E extends Enum<E>> {
 	private static final String NO_VALUE = "*NA*";
 	
 	public static boolean isValid(String value) {
-		return !value.equals(NO_VALUE);
+		return value.compareTo(NO_VALUE) != 0;
 	}
 	
 	protected static class Element<EE extends Enum<EE>> {

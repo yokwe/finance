@@ -106,6 +106,7 @@ public class JDBCUtil {
 					}
 					break;
 				case Types.FLOAT:
+				case Types.REAL:
 					if (!type.equals(java.lang.Double.TYPE)) {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);
@@ -187,6 +188,7 @@ public class JDBCUtil {
 					}
 					break;
 				case Types.FLOAT:
+				case Types.REAL:
 					if (!type.equals(java.lang.Double.TYPE)) {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);

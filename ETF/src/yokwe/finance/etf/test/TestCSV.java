@@ -1,7 +1,7 @@
 package yokwe.finance.etf.test;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -27,14 +27,23 @@ public class TestCSV {
 		}
 	}
 
-	public static void main(String[] args) throws FileNotFoundException {
-		FileReader reader = new FileReader("tmp/fetch/yahoo-daily/QQQ.csv");
-		List<Map<Field, String>> records = CSVUtil.load(reader, Field.class);
-		int count = 0;
-		for(Map<Field, String> record: records) {
-			count++;
-			logger.info(String.format("%6d %s", count, record));
+	public static void main(String[] args) {
+		logger.info("START");
+
+		try (FileReader reader = new FileReader("tmp/fetch/yahoo-daily/QQQ.csv")){
+			List<Map<Field, String>> records = CSVUtil.load(reader, Field.class);
+			int count = 0;
+			for(Map<Field, String> record: records) {
+				count++;
+				logger.info(String.format("%6d %s", count, record));
+			}
+			logger.info("size = {}", records.size());
+			
+		} catch (IOException e) {
+			logger.error(e.getClass().getName());
+			logger.error(e.getMessage());
 		}
-		logger.info("size = {}", records.size());
+		
+		logger.info("STOP");
 	}
 }

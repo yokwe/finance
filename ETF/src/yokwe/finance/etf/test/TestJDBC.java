@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -14,7 +15,7 @@ import yokwe.finance.etf.util.JDBCUtil;
 public class TestJDBC {
 	static final Logger logger = LoggerFactory.getLogger(TestJDBC.class);
 	
-	public static class Data {
+	public static class Data implements Comparable<Data> {
 		public String symbol;
 		public String name;
 		public int    net_assets;
@@ -22,6 +23,11 @@ public class TestJDBC {
 		
 		public String toString() {
 			return String.format("[%s|%s|%d|%.2f]", symbol, name, net_assets, expense_ratio);
+		}
+
+		@Override
+		public int compareTo(Data that) {
+			return this.symbol.compareTo(that.symbol);
 		}
 	}
 
@@ -33,6 +39,8 @@ public class TestJDBC {
 				Statement statement = connection.createStatement();
 				String sql = "select * from yahoo_profile";
 				List<Data> resultList = JDBCUtil.getResultAll(statement, sql, Data.class);
+				
+				Collections.sort(resultList);
 
 				int count = 0;
 				for(Data record: resultList) {

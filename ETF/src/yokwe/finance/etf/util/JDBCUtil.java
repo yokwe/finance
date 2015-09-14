@@ -1,6 +1,7 @@
 package yokwe.finance.etf.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -104,14 +105,14 @@ public class JDBCUtil {
 						columnInfo.field.setInt(ret, value);
 					}
 					break;
-				case Types.REAL:
+				case Types.FLOAT:
 					if (!type.equals(java.lang.Double.TYPE)) {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);
 						throw new ETFException(message);
 					}
 					{
-						double value = Scrape.isValid(stringValue) ? resultSet.getDouble(columnIndex) : -1;
+						double value = Scrape.isValid(stringValue) ? resultSet.getDouble(columnIndex) : -1.0;
 						columnInfo.field.setDouble(ret, value);
 					}
 					break;
@@ -153,6 +154,9 @@ public class JDBCUtil {
 				Class<?> type = field.getType();
 				String typeName = type.getName();
 				
+				// Skip static field
+				if (Modifier.isStatic(field.getModifiers())) continue;
+				
 				Integer sqlType = sqlTypeMap.get(name);
 				if (sqlType == null) {
 					String message = String.format("Unknown field %s!", name);
@@ -182,7 +186,7 @@ public class JDBCUtil {
 						throw new ETFException(message);
 					}
 					break;
-				case Types.REAL:
+				case Types.FLOAT:
 					if (!type.equals(java.lang.Double.TYPE)) {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);

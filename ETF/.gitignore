@@ -1,0 +1,7 @@
+#
+# .gitignore for ETF
+#
+
+tmp/
+
+/bin/

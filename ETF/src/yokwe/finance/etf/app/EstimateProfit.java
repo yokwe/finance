@@ -215,8 +215,11 @@ public class EstimateProfit {
 		
 		List<SymbolProfit> profitList = new ArrayList<>();
 		for(String symbol: candidateMap.keySet()) {
+//		for(String symbol: infoMap.keySet()) {
 			List<SymbolDividend> rawList = dividendlist.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
 			final SymbolInfo info = infoMap.get(symbol);
+			if (rawList.size() == 0) continue;
+			
 			final String name = info.name;
 			final double expense_ratio = info.expense_ratio;
 			
@@ -232,6 +235,8 @@ public class EstimateProfit {
 			
 			// Handle special case properly: must be <= for the case rawSD == 0
 			List<SymbolDividend> adjList = rawList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
+			if (adjList.size() == 0) continue;
+			
 //			final int    adjCount = (int)adjList.stream().count();
 			final double adjAVG   = adjList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
 //			final double adjSD    = Util.StandardDeviationSample(adjList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
@@ -243,7 +248,7 @@ public class EstimateProfit {
 			
 			final int    dividendFrequency = rawCount / years;
 			
-			final double profitPerYearPer1000 = (profitPerYear * unitsPer1000) - (1000.0 * expense_ratio / 100);
+			final double profitPerYearPer1000 = (profitPerYear * unitsPer1000);
 			
 			profitList.add(new SymbolProfit(symbol, name, expense_ratio, dividendFrequency, close, unitsPer1000, profitPerYear, profitPerYearPer1000));
 		}

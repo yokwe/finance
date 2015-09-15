@@ -2,6 +2,7 @@ package yokwe.finance.etf.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -43,6 +44,15 @@ public class JDBCUtil {
 		try {
 			ResultSet resultSet = statement.executeQuery(sql);
 			return getResultAll(resultSet, clazz);
+		} catch (SQLException e) {
+			logger.error(e.getClass().getName());
+			logger.error(e.getMessage());
+			throw new ETFException();
+		}
+	}
+	public static <E> List<E> getResultAll(Connection connection, String sql, Class<E> clazz) {
+		try (Statement statement = connection.createStatement()) {
+			return getResultAll(statement, sql, clazz);
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

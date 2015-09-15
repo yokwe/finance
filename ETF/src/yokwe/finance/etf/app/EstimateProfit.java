@@ -211,16 +211,14 @@ public class EstimateProfit {
 			final double lowLimit  = baseAVG - baseSD - baseSD;
 			final double highLimit = baseAVG + baseSD + baseSD;
 			
-			List<SymbolDividend> adjustedList = baseList.stream().filter(o -> lowLimit < o.dividend && o.dividend < highLimit).collect(Collectors.toList());
+			// Handle special case properly: must be <= for the case baseSD == 0
+			List<SymbolDividend> adjustedList = baseList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
 			final int adjustedCount = (int)adjustedList.stream().count();
-			if (adjustedCount == 0) {
-				logger.info("XXX {}, {}", symbol, baseCount);
-			}
 			final double adjustedAVG = adjustedList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
 			final double adjustedSD  = Util.StandardDeviationSample(adjustedList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
 
 			if (baseCount != adjustedCount)
-				logger.info("{}", String.format("%-6s  %2d %2d  %6.3f  %6.3f", symbol, baseCount, adjustedCount, baseAVG, adjustedAVG));			
+				logger.info("{}", String.format("%-6s  %2d-%2d  %5.3f-%5.3f  %5.3f-%5.3f", symbol, baseCount, adjustedCount, baseAVG, adjustedAVG, baseSD, adjustedSD));			
 		}
 		
 		// TODO need to remove irregular value

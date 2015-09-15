@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -134,27 +135,38 @@ public class EstimateProfit {
 		}
 	}
 	
+	//			logger.info("{}", String.format("%-6s  %2d  %6.2f  %6.1f %6.2f %6.2f  %s", symbol, rawCount, close, unitsPer1000, profitPerYear, profitPerYearPer1000, name));			
+
 	public static class SymbolProfit implements Comparable<SymbolProfit> {
 		public String symbol;
-		public double profit;
-		public int    count;
+		public String name;
+		public double expense_ratio;
+		public int    dividendFrequency;
 		public double close;
 		
-		public SymbolProfit(String symbol, double profit, int count, double close) {
-			this.symbol = symbol;
-			this.profit = profit;
-			this.count  = count;
-			this.close  = close;
+		public double unitsPer1000;
+		public double dividendPerYear;
+		public double profitPerYearPer1000;
+		
+		public SymbolProfit(String symbol, String name, double expense_ratio, int dividendFrequency, double close, double unitsPer1000, double dividendPerYear, double profitPerYearPer1000) {
+			this.symbol               = symbol;
+			this.name                 = name;
+			this.expense_ratio        = expense_ratio;
+			this.dividendFrequency    = dividendFrequency;
+			this.close                = close;
+			this.unitsPer1000         = unitsPer1000;
+			this.dividendPerYear      = dividendPerYear;
+			this.profitPerYearPer1000 = profitPerYearPer1000;
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("%-6s %3.2f %2d %6.2f", symbol, profit, count, close);
+			return String.format("%-6s %2d %6.2f %6.2f %6.2f %7.2f %7.3f  %s", symbol, dividendFrequency, expense_ratio, close, unitsPer1000, dividendPerYear, profitPerYearPer1000, name);
 		}
 		
 		@Override
 		public int compareTo(SymbolProfit that) {
-			return (int)Math.signum(this.profit - that.profit);
+			return (int)Math.signum(this.profitPerYearPer1000 - that.profitPerYearPer1000);
 		}
 	}
 
@@ -163,7 +175,7 @@ public class EstimateProfit {
 				calendar.get(Calendar.DAY_OF_MONTH));
 	}
 	
-	public static void calculate(final Connection connection, final int delta) {
+	public static void calculate(final Connection connection, final int years) {
 		String                      lastDailyDay;
 		Map<String, SymbolInfo>     infoMap      = new TreeMap<>();
 		Map<String, SymbolCount>    candidateMap = new TreeMap<>();
@@ -189,37 +201,54 @@ public class EstimateProfit {
 		}
 
 		{
-			String sql = SymbolCount.genSQL(delta);
+			String sql = SymbolCount.genSQL(years);
 			JDBCUtil.getResultAll(connection, sql, SymbolCount.class).stream().forEach(o -> candidateMap.put(o.symbol, o));
 			logger.info("candidateMap = {}", candidateMap.keySet().size());
 		}
 		// candidateList.stream().forEach(o -> logger.info("{}", o));
 
 		{
-			String sql = SymbolDividend.genSQL(delta);
+			String sql = SymbolDividend.genSQL(years);
 			dividendlist = JDBCUtil.getResultAll(connection, sql, SymbolDividend.class);
 			logger.info("dividendlist = {}", dividendlist.size());
 		}
 		
-		
+		List<SymbolProfit> profitList = new ArrayList<>();
 		for(String symbol: candidateMap.keySet()) {
-			List<SymbolDividend> baseList = dividendlist.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
-			final int baseCount = (int)baseList.stream().count();
-			final double baseAVG = baseList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-			final double baseSD  = Util.StandardDeviationSample(baseList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+			List<SymbolDividend> rawList = dividendlist.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
+			final SymbolInfo info = infoMap.get(symbol);
+			final String name = info.name;
+			final double expense_ratio = info.expense_ratio;
 			
-			final double lowLimit  = baseAVG - baseSD - baseSD;
-			final double highLimit = baseAVG + baseSD + baseSD;
+			final double close = closeMap.get(symbol).close;
 			
-			// Handle special case properly: must be <= for the case baseSD == 0
-			List<SymbolDividend> adjustedList = baseList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
-			final int adjustedCount = (int)adjustedList.stream().count();
-			final double adjustedAVG = adjustedList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-			final double adjustedSD  = Util.StandardDeviationSample(adjustedList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+			final int    rawCount = (int)rawList.stream().count();
+			final double rawAVG   = rawList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
+			final double rawSD    = Util.StandardDeviationSample(rawList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+//			final double rawSUM   = rawList.stream().mapToDouble(o -> o.dividend).sum();
+			
+			final double lowLimit  = rawAVG - rawSD - rawSD;
+			final double highLimit = rawAVG + rawSD + rawSD;
+			
+			// Handle special case properly: must be <= for the case rawSD == 0
+			List<SymbolDividend> adjList = rawList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
+//			final int    adjCount = (int)adjList.stream().count();
+			final double adjAVG   = adjList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
+//			final double adjSD    = Util.StandardDeviationSample(adjList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
 
-			if (baseCount != adjustedCount)
-				logger.info("{}", String.format("%-6s  %2d-%2d  %5.3f-%5.3f  %5.3f-%5.3f", symbol, baseCount, adjustedCount, baseAVG, adjustedAVG, baseSD, adjustedSD));			
+			final double profitPerYear = adjAVG * rawCount / years;
+			
+			// If we buy $1000.00, how many units?
+			final double unitsPer1000 = 1000.0 / close;
+			
+			final int    dividendFrequency = rawCount / years;
+			
+			final double profitPerYearPer1000 = (profitPerYear * unitsPer1000) - (1000.0 * expense_ratio / 100);
+			
+			profitList.add(new SymbolProfit(symbol, name, expense_ratio, dividendFrequency, close, unitsPer1000, profitPerYear, profitPerYearPer1000));
 		}
+		Collections.sort(profitList);
+		profitList.stream().forEach(o -> logger.info("{}", o));
 		
 		// TODO need to remove irregular value
 //				List<SymbolProfit> symbolProfitList = new ArrayList<>();

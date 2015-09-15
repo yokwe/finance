@@ -3,17 +3,17 @@ package yokwe.finance.etf.app;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.etf.Util;
 import yokwe.finance.etf.util.JDBCUtil;
 
 public class EstimateProfit {
@@ -49,7 +49,7 @@ public class EstimateProfit {
 	}
 
 	public static class SymbolDividend  implements Comparable<SymbolDividend> {
-		private static String SQL_STATEMENT = "select symbol, sum(dividend) as dividend, count(*) as count from yahoo_dividend where '%s' < date and date <= '%s' group by symbol";
+		private static String SQL_STATEMENT = "select symbol, date, dividend from yahoo_dividend where '%s' < date and date <= '%s'";
 
 		public static String genSQL(int delta) {
 			return genSQL(0, delta);
@@ -66,11 +66,11 @@ public class EstimateProfit {
 		}
 
 		public String symbol;
+		public String date;
 		public double dividend;
-		public int    count;
 
 		public String toString() {
-			return String.format("%-6s %2.2f %2d", symbol, dividend, count);
+			return String.format("%-6s %2.2f", symbol, dividend);
 		}
 
 		@Override
@@ -162,63 +162,87 @@ public class EstimateProfit {
 		return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
 				calendar.get(Calendar.DAY_OF_MONTH));
 	}
+	
+	public static void calculate(final Connection connection, final int delta) {
+		String                      lastDailyDay;
+		Map<String, SymbolInfo>     infoMap      = new TreeMap<>();
+		Map<String, SymbolCount>    candidateMap = new TreeMap<>();
+		List<SymbolDividend>        dividendlist = new ArrayList<>();
+		Map<String, SymbolClose>    closeMap     = new TreeMap<>();
+
+		{
+			String sql = LastDailyDay.genSQL();
+			lastDailyDay = JDBCUtil.getResultAll(connection, sql, LastDailyDay.class).get(0).last_day;
+			logger.info("lastDailyDay = {}", lastDailyDay);
+		}
+
+		{
+			String sql = SymbolClose.genSQL(lastDailyDay);
+			JDBCUtil.getResultAll(connection, sql, SymbolClose.class).stream().forEach(o -> closeMap.put(o.symbol, o));
+			logger.info("closeMap = {}", closeMap.keySet().size());
+		}
+		
+		{
+			String sql = SymbolInfo.genSQL();
+			JDBCUtil.getResultAll(connection, sql, SymbolInfo.class).stream().forEach(o -> infoMap.put(o.symbol, o));
+			logger.info("infoMap = {}", infoMap.keySet().size());
+		}
+
+		{
+			String sql = SymbolCount.genSQL(delta);
+			JDBCUtil.getResultAll(connection, sql, SymbolCount.class).stream().forEach(o -> candidateMap.put(o.symbol, o));
+			logger.info("candidateMap = {}", candidateMap.keySet().size());
+		}
+		// candidateList.stream().forEach(o -> logger.info("{}", o));
+
+		{
+			String sql = SymbolDividend.genSQL(delta);
+			dividendlist = JDBCUtil.getResultAll(connection, sql, SymbolDividend.class);
+			logger.info("dividendlist = {}", dividendlist.size());
+		}
+		
+		
+		for(String symbol: candidateMap.keySet()) {
+			List<SymbolDividend> baseList = dividendlist.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
+			final int baseCount = (int)baseList.stream().count();
+			final double baseAVG = baseList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
+			final double baseSD  = Util.StandardDeviationSample(baseList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+			
+			final double lowLimit  = baseAVG - baseSD - baseSD;
+			final double highLimit = baseAVG + baseSD + baseSD;
+			
+			List<SymbolDividend> adjustedList = baseList.stream().filter(o -> lowLimit < o.dividend && o.dividend < highLimit).collect(Collectors.toList());
+			final int adjustedCount = (int)adjustedList.stream().count();
+			if (adjustedCount == 0) {
+				logger.info("XXX {}, {}", symbol, baseCount);
+			}
+			final double adjustedAVG = adjustedList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
+			final double adjustedSD  = Util.StandardDeviationSample(adjustedList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+
+			if (baseCount != adjustedCount)
+				logger.info("{}", String.format("%-6s  %2d %2d  %6.3f  %6.3f", symbol, baseCount, adjustedCount, baseAVG, adjustedAVG));			
+		}
+		
+		// TODO need to remove irregular value
+//				List<SymbolProfit> symbolProfitList = new ArrayList<>();
+//				for(String symbol: candidateMap.keySet()) {
+//					double close    = closeMap.get(symbol).close;
+//					double dividend = dividendMap.get(symbol).dividend;
+//					int    count    = dividendMap.get(symbol).count;
+//					
+//					symbolProfitList.add(new SymbolProfit(symbol, dividend, count, close));
+//				}
+//				Collections.sort(symbolProfitList);
+//				symbolProfitList.stream().forEach(o -> logger.info("{}", o));
+	}
 
 	public static void main(String[] args) {
 		logger.info("START");
-
-		final int delta = 3;
+		
 		try {
 			Class.forName("org.sqlite.JDBC");
 			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3")) {
-
-				String                      lastDailyDay;
-				Map<String, SymbolInfo>     infoMap      = new TreeMap<>();
-				Map<String, SymbolCount>    candidateMap = new TreeMap<>();
-				Map<String, SymbolDividend> dividendMap  = new TreeMap<>();
-				Map<String, SymbolClose>    closeMap     = new TreeMap<>();
-
-				try (Statement statement = connection.createStatement()) {
-					String sql = LastDailyDay.genSQL();
-					lastDailyDay = JDBCUtil.getResultAll(statement, sql, LastDailyDay.class).get(0).last_day;
-					logger.info("lastDailyDay = {}", lastDailyDay);
-				}
-
-				try (Statement statement = connection.createStatement()) {
-					String sql = SymbolClose.genSQL(lastDailyDay);
-					JDBCUtil.getResultAll(statement, sql, SymbolClose.class).stream().forEach(o -> closeMap.put(o.symbol, o));
-					logger.info("closeMap = {}", closeMap.keySet().size());
-				}
-				
-				try (Statement statement = connection.createStatement()) {
-					String sql = SymbolInfo.genSQL();
-					JDBCUtil.getResultAll(statement, sql, SymbolInfo.class).stream().forEach(o -> infoMap.put(o.symbol, o));
-					logger.info("infoMap = {}", infoMap.keySet().size());
-				}
-
-				try (Statement statement = connection.createStatement()) {
-					String sql = SymbolCount.genSQL(delta);
-					JDBCUtil.getResultAll(statement, sql, SymbolCount.class).stream().forEach(o -> candidateMap.put(o.symbol, o));
-					logger.info("candidateMap = {}", candidateMap.keySet().size());
-				}
-				// candidateList.stream().forEach(o -> logger.info("{}", o));
-
-				try (Statement statement = connection.createStatement()) {
-					String sql = SymbolDividend.genSQL(delta);
-					JDBCUtil.getResultAll(statement, sql, SymbolDividend.class).stream().forEach(o -> dividendMap.put(o.symbol, o));
-					logger.info("dividendMap = {}", dividendMap.keySet().size());
-				}
-				
-				// TODO need to remove irregular value
-				List<SymbolProfit> symbolProfitList = new ArrayList<>();
-				for(String symbol: candidateMap.keySet()) {
-					double close    = closeMap.get(symbol).close;
-					double dividend = dividendMap.get(symbol).dividend;
-					int    count    = dividendMap.get(symbol).count;
-					
-					symbolProfitList.add(new SymbolProfit(symbol, dividend, count, close));
-				}
-				Collections.sort(symbolProfitList);
-				symbolProfitList.stream().forEach(o -> logger.info("{}", o));
+				calculate(connection, 3);
 			}
 		} catch (ClassNotFoundException | SQLException e) {
 			logger.error(e.getClass().getName());

@@ -44,7 +44,7 @@ public class StreamUtil {
 			double term1 = delta * delta_n * (n - 1);
 			
 			M1 += delta_n;
-			M4 += term1 * delta_n2 * (n*n - 3*n + 3) + 6 * delta_n2 * M2 - 4 * delta_n * M3;
+			M4 += term1 * delta_n2 * (n * n - 3 * n + 3) + (6 * delta_n2 * M2) - (4 * delta_n * M3);
 			M3 += term1 * delta_n * (n - 2) - 3 * delta_n * M2;
 			M2 += term1;
 		}
@@ -61,9 +61,10 @@ public class StreamUtil {
 		public final double avg;
 		public final double sdPopulation;
 		public final double sdSample;
-		public final double skewnessSample;
 		public final double skewnessPopulation;
-		public final double kurtosis;
+		public final double skewnessSample;
+		public final double kurtosisPopulation;
+		public final double kurtosisSample;
 		
 		// http://www.real-statistics.com/descriptive-statistics/symmetry-skewness-kurtosis/
 		// http://www.johndcook.com/blog/skewness_kurtosis/
@@ -75,12 +76,18 @@ public class StreamUtil {
 			this.avg          = a.M1;
 			this.sdPopulation = Math.sqrt(a.M2 / (a.n + 1 - 1));
 			this.sdSample     = Math.sqrt(a.M2 / (a.n + 1 - 2));
-			this.skewnessSample = Math.sqrt(a.n) * a.M3 / Math.pow(a.M2, 1.5);
-			this.skewnessPopulation = skewnessSample * (a.n - 2) / Math.sqrt(a.n * (a.n - 1));
-			this.kurtosis     = (a.n * a.M4) / (a.M2 * a.M2) - 3.0;
+			
+			final double skew = a.M3 / Math.pow(a.M2, 1.5);
+			this.skewnessPopulation = Math.sqrt(a.n) * skew;
+			this.skewnessSample = (a.n * Math.sqrt(a.n - 1) / (a.n - 2)) * skew;
+			
+			// TODO still kurtosis has wrong value
+			final double kurtosis = a.M4 / (a.M2 * a.M2);
+			this.kurtosisPopulation = (a.n * kurtosis) - 3;
+			this.kurtosisSample     = ((a.n * (a.n + 1) * (a.n - 1)) / ((a.n - 2) * (a.n - 3)) * kurtosis) - 3;
 		}
 		public String toString() {
-			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, avg, max, sdPopulation, sdSample, skewnessPopulation, kurtosis);
+			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, avg, max, sdPopulation, sdSample, skewnessPopulation, kurtosisPopulation);
 		}
 	}
 	
@@ -113,7 +120,7 @@ public class StreamUtil {
 			List<Double> valueList = Arrays.asList(values);
 			Stats stats = valueList.stream().collect(toStats);
 			logger.info("Actual avg = {}  skewness = {}  kurtosis = {}",
-					stats.avg, stats.sdPopulation, stats.skewnessPopulation, stats.kurtosis);
+					stats.avg, stats.sdPopulation, stats.skewnessPopulation, stats.kurtosisPopulation);
 		}
 		
 		{
@@ -123,7 +130,7 @@ public class StreamUtil {
 			logger.info("--  9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 20.0");
 			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  3.32  kurtosis = 11.10");
 			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
-					stats.count, stats.avg, stats.sdSample, stats.skewnessPopulation, stats.kurtosis));
+					stats.count, stats.avg, stats.sdSample, stats.skewnessSample, stats.kurtosisSample));
 		}
 		{
 			Double[] values = {5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
@@ -132,7 +139,7 @@ public class StreamUtil {
 			logger.info("-- 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0");
 			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  0.00  kurtosis = -1.20");
 			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
-					stats.count, stats.avg, stats.sdSample, stats.skewnessPopulation, stats.kurtosis));
+					stats.count, stats.avg, stats.sdSample, stats.skewnessSample, stats.kurtosisSample));
 		}
 		
 		

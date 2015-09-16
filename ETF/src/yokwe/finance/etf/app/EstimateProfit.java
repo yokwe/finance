@@ -134,8 +134,6 @@ public class EstimateProfit {
 			return String.format("%-6s %3.2f", symbol, close);
 		}
 	}
-	
-	//			logger.info("{}", String.format("%-6s  %2d  %6.2f  %6.1f %6.2f %6.2f  %s", symbol, rawCount, close, unitsPer1000, profitPerYear, profitPerYearPer1000, name));			
 
 	public static class SymbolProfit implements Comparable<SymbolProfit> {
 		public String symbol;

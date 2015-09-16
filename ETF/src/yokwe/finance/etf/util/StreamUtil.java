@@ -15,52 +15,72 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.etf.ETFException;
 
 
+// Formulas for Robust, One-Pass Parallel
+// Computation of Covariances and
+// Arbitrary-Order Statistical Moments
+//   http://prod.sandia.gov/techlib/access-control.cgi/2008/086212.pdf
+
 public class StreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
 	
 	private static class StatsAccumlator {
-		int count = 0;
 		double min = Double.MAX_VALUE;
 		double max = Double.MIN_VALUE;
-		double sum = 0.0;
-		double M = 0.0;
-		double S = 0.0;
+		int    n   = 0;
+		double M1  = 0.0;
+		double M2  = 0.0;
+		double M3  = 0.0;
+		double M4  = 0.0;
 		
-		void apply(double value) {
-			count++;
-			sum += value;
+		void apply(double y) {
+			n++;
 			
-			if (value < min) min = value;
-			if (max < value) max = value;
+			if (y < min) min = y;
+			if (max < y) max = y;
 			
-	        double tmpM = M;
-	        M += (value - tmpM) / count;
-	        S += (value - tmpM) * (value - M);
+			double delta = y - M1;
+			double delta_n = delta / n;
+			double delta_n2 = delta_n * delta_n;
+			double term1 = delta * delta_n * (n - 1);
+			
+			M1 += delta_n;
+			M4 += term1 * delta_n2 * (n*n - 3*n + 3) + 6 * delta_n2 * M2 - 4 * delta_n * M3;
+			M3 += term1 * delta_n * (n - 2) - 3 * delta_n * M2;
+			M2 += term1;
 		}
 		
 		public String toString() {
-			return String.format("[%d  %.3f]", count, sum);
+			return String.format("[%d  %.3f]", n, M1);
 		}
 	}
 	
 	public static class Stats {
-		public final int    count;
 		public final double min;
 		public final double max;
+		public final int    count;
 		public final double avg;
 		public final double sdPopulation;
 		public final double sdSample;
+		public final double skewnessSample;
+		public final double skewnessPopulation;
+		public final double kurtosis;
 		
+		// http://www.real-statistics.com/descriptive-statistics/symmetry-skewness-kurtosis/
+		// http://www.johndcook.com/blog/skewness_kurtosis/
+		// http://www.johndcook.com/blog/running_regression/
 		private Stats(StatsAccumlator a) {
-			this.count        = a.count;
 			this.min          = a.min;
 			this.max          = a.max;
-			this.avg          = a.sum / a.count;
-			this.sdPopulation = Math.sqrt(a.S / (a.count + 1 - 1));
-			this.sdSample     = Math.sqrt(a.S / (a.count + 1 - 2));
+			this.count        = a.n;
+			this.avg          = a.M1;
+			this.sdPopulation = Math.sqrt(a.M2 / (a.n + 1 - 1));
+			this.sdSample     = Math.sqrt(a.M2 / (a.n + 1 - 2));
+			this.skewnessSample = Math.sqrt(a.n) * a.M3 / Math.pow(a.M2, 1.5);
+			this.skewnessPopulation = skewnessSample * (a.n - 2) / Math.sqrt(a.n * (a.n - 1));
+			this.kurtosis     = (a.n * a.M4) / (a.M2 * a.M2) - 3.0;
 		}
 		public String toString() {
-			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, avg, max, sdPopulation, sdSample);
+			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, avg, max, sdPopulation, sdSample, skewnessPopulation, kurtosis);
 		}
 	}
 	
@@ -79,12 +99,42 @@ public class StreamUtil {
 	
 	public static void main(String[] args) {
 		logger.info("START");
-		Double[] values = {1.0, 2.0, 3.0, 4.0, 5.0};
-		List<Double> valueList = Arrays.asList(values);
 		
-		Stats stats = valueList.stream().collect(toStats);
-		logger.info("Expect stats = [5  1.000  3.000  5.000  1.414  1.581]");
-		logger.info("Actual stats = {}", stats);
+		{
+			Double[] values = {1.0, 2.0, 3.0, 4.0, 5.0};
+			List<Double> valueList = Arrays.asList(values);
+			Stats stats = valueList.stream().collect(toStats);
+			logger.info("Expect stats = [5  1.000  3.000  5.000  1.414  1.581]");
+			logger.info("Actual stats = {}", stats);
+		}
+		
+		{
+			Double[] values = {70.0, 70.0, 70.0, 70.0, 85.0};
+			List<Double> valueList = Arrays.asList(values);
+			Stats stats = valueList.stream().collect(toStats);
+			logger.info("Actual avg = {}  skewness = {}  kurtosis = {}",
+					stats.avg, stats.sdPopulation, stats.skewnessPopulation, stats.kurtosis);
+		}
+		
+		{
+			Double[] values = {9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 20.0};
+			List<Double> valueList = Arrays.asList(values);
+			Stats stats = valueList.stream().collect(toStats);
+			logger.info("--  9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 20.0");
+			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  3.32  kurtosis = 11.10");
+			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
+					stats.count, stats.avg, stats.sdSample, stats.skewnessPopulation, stats.kurtosis));
+		}
+		{
+			Double[] values = {5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
+			List<Double> valueList = Arrays.asList(values);
+			Stats stats = valueList.stream().collect(toStats);
+			logger.info("-- 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0");
+			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  0.00  kurtosis = -1.20");
+			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
+					stats.count, stats.avg, stats.sdSample, stats.skewnessPopulation, stats.kurtosis));
+		}
+		
 		
 		logger.info("STOP");
 	}

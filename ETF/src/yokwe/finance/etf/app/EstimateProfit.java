@@ -227,7 +227,7 @@ public class EstimateProfit {
 			
 			final int    rawCount = (int)rawList.stream().count();
 			final double rawAVG   = rawList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-			final double rawSD    = Util.StandardDeviationSample(rawList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+			final double rawSD    = Util.StandardDeviationSample(rawList.stream().map(o -> o.dividend).collect(Collectors.toList()));
 //			final double rawSUM   = rawList.stream().mapToDouble(o -> o.dividend).sum();
 			
 			final double lowLimit  = rawAVG - rawSD - rawSD;
@@ -239,7 +239,7 @@ public class EstimateProfit {
 			
 //			final int    adjCount = (int)adjList.stream().count();
 			final double adjAVG   = adjList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-//			final double adjSD    = Util.StandardDeviationSample(adjList.stream().mapToDouble(o -> o.dividend).boxed().collect(Collectors.toList()));
+//			final double adjSD    = Util.StandardDeviationSample(adjList.stream().map(o -> o.dividend).collect(Collectors.toList()));
 
 			final double profitPerYear = adjAVG * rawCount / years;
 			

@@ -12,6 +12,8 @@ import java.util.stream.Collector.Characteristics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.etf.ETFException;
+
 
 public class StreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
@@ -67,8 +69,8 @@ public class StreamUtil {
 		Supplier<StatsAccumlator> supplier = () -> new StatsAccumlator();
 		BiConsumer<StatsAccumlator, Double> accumulator = (a, e) -> a.apply(e);
 		BinaryOperator<StatsAccumlator> combiner = (a1, a2) -> {
-			logger.info("combiner  {}  {}", a1.toString(), a2.toString());
-			return a1;
+			logger.error("combiner  {}  {}", a1.toString(), a2.toString());
+			throw new ETFException("Not expected");
 		};
 		Function<StatsAccumlator, Stats> finisher = (a) -> new Stats(a);
 		toStats = Collector.of(supplier, accumulator, combiner, finisher, Characteristics.CONCURRENT);

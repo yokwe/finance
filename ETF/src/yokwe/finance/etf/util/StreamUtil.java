@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class StatsCollector {
-	static final Logger logger = LoggerFactory.getLogger(StatsCollector.class);
+public class StreamUtil {
+	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
 	
 	private static class StatsAccumlator {
 		int count = 0;
@@ -81,7 +81,8 @@ public class StatsCollector {
 		List<Double> valueList = Arrays.asList(values);
 		
 		Stats stats = valueList.stream().collect(toStats);
-		logger.info("stats = {}", stats);
+		logger.info("Expect stats = [5  1.000  3.000  5.000  1.414  1.581]");
+		logger.info("Actual stats = {}", stats);
 		
 		logger.info("STOP");
 	}

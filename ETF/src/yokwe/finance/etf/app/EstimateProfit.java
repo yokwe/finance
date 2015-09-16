@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.etf.util.JDBCUtil;
-import yokwe.finance.etf.util.StatsCollector;
+import yokwe.finance.etf.util.StreamUtil;
 
 public class EstimateProfit {
 	static final Logger logger = LoggerFactory.getLogger(EstimateProfit.class);
@@ -226,7 +226,7 @@ public class EstimateProfit {
 			final double close = closeMap.get(symbol).close;
 			
 			final int    rawCount = (int)rawList.stream().count();
-			final StatsCollector.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StatsCollector.toStats);
+			final StreamUtil.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
 			final double rawAVG = rawStats.avg;
 			final double rawSD  = rawStats.sdPopulation;
 			
@@ -237,7 +237,7 @@ public class EstimateProfit {
 			List<SymbolDividend> adjList = rawList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
 			if (adjList.size() == 0) continue;
 			
-			final StatsCollector.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StatsCollector.toStats);
+			final StreamUtil.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
 			final double adjAVG   = adjStats.avg;
 
 			final double profitPerYear = adjAVG * rawCount / years;

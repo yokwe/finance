@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import yokwe.finance.etf.Util;
 import yokwe.finance.etf.util.JDBCUtil;
+import yokwe.finance.etf.util.StatsCollector;
 
 public class EstimateProfit {
 	static final Logger logger = LoggerFactory.getLogger(EstimateProfit.class);
@@ -226,9 +226,9 @@ public class EstimateProfit {
 			final double close = closeMap.get(symbol).close;
 			
 			final int    rawCount = (int)rawList.stream().count();
-			final double rawAVG   = rawList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-			final double rawSD    = Util.StandardDeviationSample(rawList.stream().map(o -> o.dividend).collect(Collectors.toList()));
-//			final double rawSUM   = rawList.stream().mapToDouble(o -> o.dividend).sum();
+			final StatsCollector.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StatsCollector.toStats);
+			final double rawAVG = rawStats.avg;
+			final double rawSD  = rawStats.sdPopulation;
 			
 			final double lowLimit  = rawAVG - rawSD - rawSD;
 			final double highLimit = rawAVG + rawSD + rawSD;
@@ -237,9 +237,8 @@ public class EstimateProfit {
 			List<SymbolDividend> adjList = rawList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
 			if (adjList.size() == 0) continue;
 			
-//			final int    adjCount = (int)adjList.stream().count();
-			final double adjAVG   = adjList.stream().mapToDouble(o -> o.dividend).average().getAsDouble();
-//			final double adjSD    = Util.StandardDeviationSample(adjList.stream().map(o -> o.dividend).collect(Collectors.toList()));
+			final StatsCollector.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StatsCollector.toStats);
+			final double adjAVG   = adjStats.avg;
 
 			final double profitPerYear = adjAVG * rawCount / years;
 			
@@ -254,18 +253,6 @@ public class EstimateProfit {
 		}
 		Collections.sort(profitList);
 		profitList.stream().forEach(o -> logger.info("{}", o));
-		
-		// TODO need to remove irregular value
-//				List<SymbolProfit> symbolProfitList = new ArrayList<>();
-//				for(String symbol: candidateMap.keySet()) {
-//					double close    = closeMap.get(symbol).close;
-//					double dividend = dividendMap.get(symbol).dividend;
-//					int    count    = dividendMap.get(symbol).count;
-//					
-//					symbolProfitList.add(new SymbolProfit(symbol, dividend, count, close));
-//				}
-//				Collections.sort(symbolProfitList);
-//				symbolProfitList.stream().forEach(o -> logger.info("{}", o));
 	}
 
 	public static void main(String[] args) {

@@ -42,12 +42,12 @@ public class StatsCollector {
 	}
 	
 	public static class Stats {
-		int    count;
-		double min;
-		double max;
-		double avg;
-		double sdPopulation;
-		double sdSample;
+		public final int    count;
+		public final double min;
+		public final double max;
+		public final double avg;
+		public final double sdPopulation;
+		public final double sdSample;
 		
 		private Stats(StatsAccumlator a) {
 			this.count        = a.count;

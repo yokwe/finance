@@ -45,7 +45,7 @@ fetch-httpcomponents-client:
 
 fetch-commons-math3:
 	rm -f tmp/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
-	cd tmp; wget http://ftp.kddilabs.jp/infosystems/apache//commons/math/binaries/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
+	cd tmp; wget http://ftp.riken.jp/net/apache//commons/math/binaries/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 	
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}

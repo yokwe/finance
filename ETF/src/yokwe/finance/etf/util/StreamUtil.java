@@ -9,83 +9,60 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.descriptive.moment.Kurtosis;
+import org.apache.commons.math3.stat.descriptive.moment.Skewness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.etf.ETFException;
 
-
-// Formulas for Robust, One-Pass Parallel
-// Computation of Covariances and
-// Arbitrary-Order Statistical Moments
-//   http://prod.sandia.gov/techlib/access-control.cgi/2008/086212.pdf
-
-// https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-
 public class StreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
 	
 	private static class StatsAccumlator {
-		double min = Double.MAX_VALUE;
-		double max = Double.MIN_VALUE;
-		int    n   = 0;
-		double mean  = 0.0;
-		double M2  = 0.0;
-		double M3  = 0.0;
-		double M4  = 0.0;
+		SummaryStatistics summary = new SummaryStatistics();
+		Skewness          skew    = new Skewness();
+		Kurtosis          kurt    = new Kurtosis();
 		
 		void apply(double x) {
-			final int n1 = n;
-			n = n + 1;
-			final double delta = x - mean;
-			final double delta_n = delta / n;
-			final double delta_n2 = delta_n * delta_n;
-			final double term1 = delta * delta_n * n1;
-			mean = mean + delta_n;
-			M4 = M4 + term1 * delta_n2 * (n * n - 3 * n + 3) + 6 * delta_n2 * M2 - 4 * delta_n * M3;
-			M3 = M3 + term1 * delta_n * (n - 2) - 3 * delta_n * M2;
-			M2 = M2 + term1;
-		}
-		
-		public String toString() {
-			return String.format("[%d  %.3f]", n, mean);
+			summary.addValue(x);
+			skew.increment(x);
+			kurt.increment(x);
 		}
 	}
 	
 	public static class Stats {
+		public final int    n;
 		public final double min;
 		public final double max;
-		public final int    count;
 		public final double mean;
-		public final double sdPopulation;
-		public final double sdSample;
-		public final double skewnessPopulation;
-		public final double skewnessSample;
-		public final double kurtosisPopulation;
-		public final double kurtosisSample;
 		
-		// http://www.real-statistics.com/descriptive-statistics/symmetry-skewness-kurtosis/
-		// http://www.johndcook.com/blog/skewness_kurtosis/
-		// http://www.johndcook.com/blog/running_regression/
+		public final double stdv;                // sample
+		public final double skewness;            // sample
+		public final double kurtosis;            // sample
+		
+		public final double population_stdv;     // population
+		public final double population_skewness; // population
+		public final double population_kurtosis; // population  *NOT VERIFIED*
+		
 		private Stats(StatsAccumlator a) {
-			this.min          = a.min;
-			this.max          = a.max;
-			this.count        = a.n;
-			this.mean         = a.mean;
-			this.sdPopulation = Math.sqrt(a.M2 / (a.n + 1 - 1));
-			this.sdSample     = Math.sqrt(a.M2 / (a.n + 1 - 2));
+			this.n        = (int)a.summary.getN();
+			this.min      = a.summary.getMin();
+			this.max      = a.summary.getMax();
+			this.mean     = a.summary.getMean();
 			
-			final double skew = a.M3 / Math.pow(a.M2, 1.5);
-			this.skewnessPopulation = Math.sqrt(a.n) * skew;
-			this.skewnessSample = (a.n * Math.sqrt(a.n - 1) / (a.n - 2)) * skew;
+			this.stdv     = a.summary.getStandardDeviation();
+			this.skewness = a.skew.getResult();
+			this.kurtosis = a.kurt.getResult();
 			
-			// TODO still kurtosis has wrong value
-			final double kurtosis = (a.n * a.M4) / (a.M2 * a.M2);
-			this.kurtosisPopulation = kurtosis - 3;
-			this.kurtosisSample     = kurtosis * ((a.n + 1.0) * (a.n - 1.0)) / ((a.n - 2.0) * (a.n - 3.0)) - 3;
+			// convert sample to population
+			this.population_stdv     = stdv     * Math.sqrt((double)(n - 1) / (double)(n));
+			this.population_skewness = skewness * ((double)n - 2) / Math.sqrt(n * (n - 1));
+			this.population_kurtosis = kurtosis * (double)((n - 2) * (n - 3)) / (double)((n + 1) * (n - 1));
 		}
 		public String toString() {
-			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, mean, max, sdPopulation, sdSample, skewnessPopulation, kurtosisPopulation);
+			return String.format("[%3d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", n, min, mean, max, stdv, skewness, kurtosis);
 		}
 	}
 	
@@ -119,29 +96,42 @@ public class StreamUtil {
 			for(double value: values) valueList.add(value);
 			Stats stats = valueList.stream().collect(toStats);
 			
-			logger.info("Data {}", valueList);
-
 			logger.info("---- mean");
+			logger.info("Data {}", valueList);
 			logger.info("Expect = {}", String.format("%10.7f", mean));
 			logger.info("Actual = {}", String.format("%10.7f", stats.mean));
 			
-			logger.info("---- standard deviation");
+			logger.info("---- standard deviation sample");
+			logger.info("Data {}", valueList);
 			logger.info("Expect = {}", String.format("%10.7f", Math.sqrt(var)));
-			logger.info("Actual = {}  sample", String.format("%10.7f", stats.sdSample));
-			logger.info("Actual = {}  population", String.format("%10.7f", stats.sdPopulation));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.stdv));
 
-			logger.info("---- skewness");
+			logger.info("---- skewness sample");
+			logger.info("Data {}", valueList);
 			logger.info("Expect = {}", String.format("%10.7f", skew));
-			logger.info("Actual = {}  sample", String.format("%10.7f", stats.skewnessSample));
-			logger.info("Actual = {}  population", String.format("%10.7f", stats.skewnessPopulation));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.skewness));
 
-			logger.info("---- kurtosis");
+			logger.info("---- kurtosis sample");
+			logger.info("Data {}", valueList);
 			logger.info("Expect = {}", String.format("%10.7f", kurt));
-			logger.info("Actual = {}  sample", String.format("%10.7f", stats.kurtosisSample));
-			logger.info("Actual = {}  population", String.format("%10.7f", stats.kurtosisPopulation));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.kurtosis));
 		}
 		
+		{
+		    double skew =  0.07925;
 
+			double[] values = {1, 2, 3, 4, 5, 6, 8, 8};
+			List<Double> valueList = new ArrayList<>();
+			for(double value: values) valueList.add(value);
+			Stats stats = valueList.stream().collect(toStats);
+			
+			logger.info("---- skewness population");
+			logger.info("Data {}", valueList);
+
+			logger.info("Expect = {}", String.format("%10.7f", skew));
+			logger.info("Actual = {}  populatin", String.format("%10.7f", stats.population_skewness));
+		}
+	
 		logger.info("STOP");
 	}
 }

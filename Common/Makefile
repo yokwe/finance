@@ -7,6 +7,7 @@ SLF4J_VERSION=1.7.12
 SQLITE_JDBC_VERSION=3.8.11.1
 COMMONS_CSV_VERSION=1.2
 HTTPCOMPONENTS_CLIENT_VERSION=4.5
+COMMONS_MATH3_VERSION=3.5
 
 
 all: fetch update
@@ -17,9 +18,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3
 
-update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client
+update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3
 
 
 fetch-logback:
@@ -42,6 +43,10 @@ fetch-httpcomponents-client:
 	rm -f tmp/http-httpcomponents-${HTTPCOMPONENTS_CLIENT_VERSION}-bin.zip
 	cd tmp; wget http://ftp.riken.jp/net/apache//httpcomponents/httpclient/binary/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}-bin.zip
 
+fetch-commons-math3:
+	rm -f tmp/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
+	cd tmp; wget http://ftp.kddilabs.jp/infosystems/apache//commons/math/binaries/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
+	
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
 	rm -rf jar/logback-*
@@ -74,3 +79,9 @@ update-httpcomponents-client:
 	    lib/httpcore-4.4.1.jar \
 	    lib/commons-logging-1.2.jar \
 	    ../../jar
+
+update-commons-math3:
+	rm -rf tmp/commons-math3-${COMMONS_MATH3_VERSION}
+	rm -rf jar/commons-math3-*
+	cd tmp; unzip commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
+	cd tmp/commons-math3-${COMMONS_MATH3_VERSION}; cp -p commons-math3-3.5.jar ../../jar

@@ -1,6 +1,6 @@
 package yokwe.finance.etf.util;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -56,7 +56,7 @@ public class StreamUtil {
 		public final double min;
 		public final double max;
 		public final int    count;
-		public final double avg;
+		public final double mean;
 		public final double sdPopulation;
 		public final double sdSample;
 		public final double skewnessPopulation;
@@ -71,7 +71,7 @@ public class StreamUtil {
 			this.min          = a.min;
 			this.max          = a.max;
 			this.count        = a.n;
-			this.avg          = a.mean;
+			this.mean         = a.mean;
 			this.sdPopulation = Math.sqrt(a.M2 / (a.n + 1 - 1));
 			this.sdSample     = Math.sqrt(a.M2 / (a.n + 1 - 2));
 			
@@ -81,11 +81,11 @@ public class StreamUtil {
 			
 			// TODO still kurtosis has wrong value
 			final double kurtosis = (a.n * a.M4) / (a.M2 * a.M2);
-			this.kurtosisPopulation = kurtosis;
-			this.kurtosisSample     = kurtosis * ((a.n + 1.0) * (a.n - 1.0)) / ((a.n - 2.0) * (a.n - 3.0));
+			this.kurtosisPopulation = kurtosis - 3;
+			this.kurtosisSample     = kurtosis * ((a.n + 1.0) * (a.n - 1.0)) / ((a.n - 2.0) * (a.n - 3.0)) - 3;
 		}
 		public String toString() {
-			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, avg, max, sdPopulation, sdSample, skewnessPopulation, kurtosisPopulation);
+			return String.format("[%d  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f  %.3f]", count, min, mean, max, sdPopulation, sdSample, skewnessPopulation, kurtosisPopulation);
 		}
 	}
 	
@@ -106,63 +106,41 @@ public class StreamUtil {
 		logger.info("START");
 		
 		{
-			Double[] values = {1.0, 2.0, 3.0, 4.0, 5.0};
-			List<Double> valueList = Arrays.asList(values);
-			Stats stats = valueList.stream().collect(toStats);
-			logger.info("Expect stats = [5  1.000  3.000  5.000  1.414  1.581]");
-			logger.info("Actual stats = {}", stats.toString());
-		}
-		
-		{
-			Double[] values = {70.0, 70.0, 70.0, 70.0, 85.0};
-			List<Double> valueList = Arrays.asList(values);
-			Stats stats = valueList.stream().collect(toStats);
-			logger.info("Actual avg = {}  skewness = {}  kurtosis = {}",
-					stats.avg, stats.sdPopulation, stats.skewnessPopulation, stats.kurtosisPopulation);
-		}
-		
-		{
-			Double[] values = {9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 20.0};
-			List<Double> valueList = Arrays.asList(values);
-			Stats stats = valueList.stream().collect(toStats);
-			logger.info("--  9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0, 20.0");
-			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  3.32  kurtosis = 11.10");
-			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
-					stats.count, stats.avg, stats.sdSample, stats.skewnessSample, stats.kurtosisSample));
-		}
-		{
-			Double[] values = {5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0};
-			List<Double> valueList = Arrays.asList(values);
-			Stats stats = valueList.stream().collect(toStats);
-			logger.info("-- 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0");
-			logger.info("Expect count = 11  avg = 10.00  sd =   3.32  skewness =  0.00  kurtosis = -1.20");
-			logger.info("{}", String.format("Actual count = %2d  avg = %5.2f  sd = %6.2f  skewness = %5.2f  kurtosis = %5.2f",
-					stats.count, stats.avg, stats.sdSample, stats.skewnessSample, stats.kurtosisSample));
-		}
-		
-		{
-			Double[] values = {8.0, 5.0, 2.0, 9.0, 5.0, 3.0, 7.0, 5.0};
-			List<Double> valueList = Arrays.asList(values);
-			Stats stats = valueList.stream().collect(toStats);
-			logger.info("-- 8.0, 5.0, 2.0, 9.0, 5.0, 3.0, 7.0, 5.0");
-			logger.info("Expect skewness  population = 0.033541  sample = 0.041833");
-			logger.info("{}", String.format("Actual skewness  population = %.6f  sample = %.6f", stats.skewnessPopulation, stats.skewnessSample));
-			logger.info("--");
-			logger.info("Expect kurtosis  population = 1.9175  sample = -0.87325");
-			logger.info("{}", String.format("Actual kurtosis  population = %.4f  sample = %8.5f", stats.kurtosisPopulation, stats.kurtosisSample));
-		}
+		    double mean = 12.40454545454550;
+		    double var  = 10.00235930735930;
+		    double skew =  1.437423729196190;
+		    double kurt =  2.377191264804700;
 
-		{
-			Double[] values = {1.0, 2.0, 3.0, 3.0};
-			List<Double> valueList = Arrays.asList(values);
+			double[] values = {
+					12.5, 12, 11.8, 14.2, 14.9, 14.5, 21, 8.2,
+					10.3, 11.3, 14.1, 9.9, 12.2, 12, 12.1, 11,
+					19.8, 11, 10, 8.8, 9, 12.3 };
+			List<Double> valueList = new ArrayList<>();
+			for(double value: values) valueList.add(value);
 			Stats stats = valueList.stream().collect(toStats);
-			logger.info("-- 1.0, 2.0, 3.0, 3.0");
-			logger.info("Expect skewness  sample = -0.855");
-			logger.info("{}", String.format("Actual skewness  sample = %.3f", stats.skewnessSample));
-			logger.info("--");
-			logger.info("Expect kurtosis  sample = -1.28926");
-			logger.info("{}", String.format("Actual kurtosis  sample = %.5f", stats.kurtosisSample));
+			
+			logger.info("Data {}", valueList);
+
+			logger.info("---- mean");
+			logger.info("Expect = {}", String.format("%10.7f", mean));
+			logger.info("Actual = {}", String.format("%10.7f", stats.mean));
+			
+			logger.info("---- standard deviation");
+			logger.info("Expect = {}", String.format("%10.7f", Math.sqrt(var)));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.sdSample));
+			logger.info("Actual = {}  population", String.format("%10.7f", stats.sdPopulation));
+
+			logger.info("---- skewness");
+			logger.info("Expect = {}", String.format("%10.7f", skew));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.skewnessSample));
+			logger.info("Actual = {}  population", String.format("%10.7f", stats.skewnessPopulation));
+
+			logger.info("---- kurtosis");
+			logger.info("Expect = {}", String.format("%10.7f", kurt));
+			logger.info("Actual = {}  sample", String.format("%10.7f", stats.kurtosisSample));
+			logger.info("Actual = {}  population", String.format("%10.7f", stats.kurtosisPopulation));
 		}
+		
 
 		logger.info("STOP");
 	}

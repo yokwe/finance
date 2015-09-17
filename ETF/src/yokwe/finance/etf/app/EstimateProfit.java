@@ -225,7 +225,7 @@ public class EstimateProfit {
 			
 			final int    rawCount = (int)rawList.stream().count();
 			final StreamUtil.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
-			final double rawAVG = rawStats.avg;
+			final double rawAVG = rawStats.mean;
 			final double rawSD  = rawStats.sdPopulation;
 			
 			final double lowLimit  = rawAVG - rawSD - rawSD;
@@ -236,7 +236,7 @@ public class EstimateProfit {
 			if (adjList.size() == 0) continue;
 			
 			final StreamUtil.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
-			final double adjAVG   = adjStats.avg;
+			final double adjAVG   = adjStats.mean;
 
 			final double profitPerYear = adjAVG * rawCount / years;
 			

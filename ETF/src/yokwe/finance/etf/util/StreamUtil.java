@@ -7,7 +7,6 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collector.Characteristics;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.moment.Kurtosis;
@@ -20,19 +19,30 @@ import yokwe.finance.etf.ETFException;
 public class StreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
 	
-	private static class StatsAccumlator {
-		SummaryStatistics summary = new SummaryStatistics();
-		Skewness          skew    = new Skewness();
-		Kurtosis          kurt    = new Kurtosis();
-		
-		void apply(double x) {
-			summary.addValue(x);
-			skew.increment(x);
-			kurt.increment(x);
-		}
-	}
-	
 	public static class Stats {
+		private static class StatsAccumlator {
+			SummaryStatistics summary = new SummaryStatistics();
+			Skewness          skew    = new Skewness();
+			Kurtosis          kurt    = new Kurtosis();
+			
+			void apply(double x) {
+				summary.addValue(x);
+				skew.increment(x);
+				kurt.increment(x);
+			}
+		}
+		
+		public static Collector<Double, StatsAccumlator, Stats> getInstance() {
+			Supplier<StatsAccumlator> supplier = () -> new StatsAccumlator();
+			BiConsumer<StatsAccumlator, Double> accumulator = (a, e) -> a.apply(e);
+			BinaryOperator<StatsAccumlator> combiner = (a1, a2) -> {
+				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
+				throw new ETFException("Not expected");
+			};
+			Function<StatsAccumlator, Stats> finisher = (a) -> new Stats(a);
+			return Collector.of(supplier, accumulator, combiner, finisher);
+		}
+		
 		public final int    n;
 		public final double min;
 		public final double max;
@@ -66,22 +76,7 @@ public class StreamUtil {
 		}
 	}
 	
-	public static final Collector<Double, StatsAccumlator, Stats> toStats;
-	static {
-		Supplier<StatsAccumlator> supplier = () -> new StatsAccumlator();
-		BiConsumer<StatsAccumlator, Double> accumulator = (a, e) -> a.apply(e);
-		BinaryOperator<StatsAccumlator> combiner = (a1, a2) -> {
-			logger.error("combiner  {}  {}", a1.toString(), a2.toString());
-			throw new ETFException("Not expected");
-		};
-		Function<StatsAccumlator, Stats> finisher = (a) -> new Stats(a);
-		toStats = Collector.of(supplier, accumulator, combiner, finisher, Characteristics.CONCURRENT);
-	}
-	
-	
-	public static void main(String[] args) {
-		logger.info("START");
-		
+	private static void testStats() {
 		{
 		    double mean = 12.40454545454550;
 		    double var  = 10.00235930735930;
@@ -94,7 +89,7 @@ public class StreamUtil {
 					19.8, 11, 10, 8.8, 9, 12.3 };
 			List<Double> valueList = new ArrayList<>();
 			for(double value: values) valueList.add(value);
-			Stats stats = valueList.stream().collect(toStats);
+			Stats stats = valueList.stream().collect(Stats.getInstance());
 			
 			logger.info("---- mean");
 			logger.info("Data {}", valueList);
@@ -123,7 +118,7 @@ public class StreamUtil {
 			double[] values = {1, 2, 3, 4, 5, 6, 8, 8};
 			List<Double> valueList = new ArrayList<>();
 			for(double value: values) valueList.add(value);
-			Stats stats = valueList.stream().collect(toStats);
+			Stats stats = valueList.stream().collect(Stats.getInstance());
 			
 			logger.info("---- skewness population");
 			logger.info("Data {}", valueList);
@@ -131,6 +126,11 @@ public class StreamUtil {
 			logger.info("Expect = {}", String.format("%10.7f", skew));
 			logger.info("Actual = {}  populatin", String.format("%10.7f", stats.population_skewness));
 		}
+	}
+	public static void main(String[] args) {
+		logger.info("START");
+		
+		testStats();
 	
 		logger.info("STOP");
 	}

@@ -224,7 +224,7 @@ public class EstimateProfit {
 			final double close = closeMap.get(symbol).close;
 			
 			final int    rawCount = (int)rawList.stream().count();
-			final StreamUtil.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
+			final StreamUtil.Stats rawStats = rawList.stream().map(o -> o.dividend).collect(StreamUtil.Stats.getInstance());
 			final double rawAVG = rawStats.mean;
 			final double rawSD  = rawStats.stdv;
 			
@@ -235,7 +235,7 @@ public class EstimateProfit {
 			List<SymbolDividend> adjList = rawList.stream().filter(o -> lowLimit <= o.dividend && o.dividend <= highLimit).collect(Collectors.toList());
 			if (adjList.size() == 0) continue;
 			
-			final StreamUtil.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StreamUtil.toStats);
+			final StreamUtil.Stats adjStats = adjList.stream().map(o -> o.dividend).collect(StreamUtil.Stats.getInstance());
 			final double adjAVG   = adjStats.mean;
 
 			final double profitPerYear = adjAVG * rawCount / years;

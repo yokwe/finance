@@ -20,7 +20,7 @@ public class StreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(StreamUtil.class);
 	
 	public static class Stats {
-		private static class StatsAccumlator {
+		private static class Accumlator {
 			SummaryStatistics summary = new SummaryStatistics();
 			Skewness          skew    = new Skewness();
 			Kurtosis          kurt    = new Kurtosis();
@@ -32,14 +32,14 @@ public class StreamUtil {
 			}
 		}
 		
-		public static Collector<Double, StatsAccumlator, Stats> getInstance() {
-			Supplier<StatsAccumlator> supplier = () -> new StatsAccumlator();
-			BiConsumer<StatsAccumlator, Double> accumulator = (a, e) -> a.apply(e);
-			BinaryOperator<StatsAccumlator> combiner = (a1, a2) -> {
+		public static Collector<Double, Accumlator, Stats> getInstance() {
+			Supplier<Accumlator> supplier = () -> new Accumlator();
+			BiConsumer<Accumlator, Double> accumulator = (a, e) -> a.apply(e);
+			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
 				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
 				throw new ETFException("Not expected");
 			};
-			Function<StatsAccumlator, Stats> finisher = (a) -> new Stats(a);
+			Function<Accumlator, Stats> finisher = (a) -> new Stats(a);
 			return Collector.of(supplier, accumulator, combiner, finisher);
 		}
 		
@@ -56,7 +56,7 @@ public class StreamUtil {
 		public final double population_skewness; // population
 		public final double population_kurtosis; // population  *NOT VERIFIED*
 		
-		private Stats(StatsAccumlator a) {
+		private Stats(Accumlator a) {
 			this.n        = (int)a.summary.getN();
 			this.min      = a.summary.getMin();
 			this.max      = a.summary.getMax();

@@ -38,17 +38,18 @@ public class CSVServlet extends HttpServlet {
 		
 		StringBuilder buf = new StringBuilder();
 		{
-			buf.append("A,B,C").append(CRLF);
-			buf.append("1,2,3").append(CRLF);
-			buf.append("11,22,33").append(CRLF);
-			buf.append("111,222,333").append(CRLF);
+			buf.append("date,New York,San Francisco,Austin").append(CRLF);
+			buf.append("2011-10-01,63.4,62.7,72.2").append(CRLF);
+			buf.append("2011-10-02,58.0,59.9,67.7").append(CRLF);
+			buf.append("2011-10-03,53.3,59.1,69.4").append(CRLF);
+			buf.append("2011-10-04,55.7,58.8,68.0").append(CRLF);
+			buf.append("2011-10-05,64.2,58.7,72.4").append(CRLF);
 		}
 		
 		resp.setContentType("text/csv; charset=UTF-8");
 		// No need to set content length of response.
 		// Catalina will use chunked encoding for unknown content length
 		try {
-			for(int i = 0; i < 1000; i++)
 			resp.getWriter().append(buf.toString());
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());

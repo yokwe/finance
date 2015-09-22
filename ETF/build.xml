@@ -4,16 +4,12 @@
 
 	<property name="dir.build" location="tmp/build" />
 	<property name="dir.build.bin" location="${dir.build}/bin" />
-        <property name="dir.build.jar" location="${dir.build}/jar" />
-        <property name="dir.build.web.etf" location="${dir.build}/web/etf" />
-	
+	<property name="dir.build.jar" location="${dir.build}/jar" />
+
 	<property name="dir.web" location="./web" />
-	
+
 	<property name="catalina.base" location="/var/lib/tomcat7" />
 	<property name="catalina.home" location="/usr/share/tomcat7" />
-	
-	<property name="servlet.name"         value="etf" />
-	<property name="servlet.context-path" value="etf" />
 
 	<path id="ext.jar">
 		<fileset dir="${dir.ext.jar}">
@@ -23,26 +19,30 @@
 			<include name="servlet-api.jar" />
 		</fileset>
 	</path>
-	
+
 	<property name="jar.yokwe" location="${dir.build.jar}/yokwe.jar" />
 
 	<target name="deploy">
-		<echo>${dir.web}</echo>
-                <!-- clean destination directories -->
-                <delete dir="${dir.build.web.etf}" quiet="true" />
-                <mkdir dir="${dir.build.web.etf}" />
-                <!-- create directory image of web app -->
-                <copy todir="${dir.build.web.etf}" includeEmptyDirs="no" verbose="yes">
-                        <fileset dir="${dir.web}" />
-                </copy>
-		<copy todir="${dir.build.web.etf}/WEB-INF/lib">
-			<fileset file="${jar.yokwe}" />
-	                <fileset dir="${dir.ext.jar}">
-	                        <include name="*.jar" />
-	                </fileset>
-		</copy>
+                <!-- delete war file -->
+		<delete file="${dir.build}/etf.war" quiet="true" />
+                <!-- create war file -->
+		<war destfile="${dir.build}/etf.war" webxml="${dir.web}/WEB-INF/web.xml">
+			<lib file="${jar.yokwe}" />
+			<lib dir="${dir.ext.jar}">
+				<include name="*.jar" />
+			</lib>
+			<classes dir="${dir.web}/WEB-INF/classes" />
+			<fileset dir="${dir.web}">
+                                <exclude name="WEB-INF/**" />
+			</fileset>
+		</war>
+
+		<!-- webapps directory has auto deploy feature (default on) -->
+		<!-- Use this feature to deploy etf.war -->
+		<!-- So deploing war file in tomcat is just copy war file to ${catalina.base}/webapps -->
+		<copy file="${dir.build}/etf.war" todir="${catalina.base}/webapps" />
 	</target>
-		
+
 	<target name="clean">
 		<delete includeemptydirs="true" quiet="true">
 			<fileset dir="${dir.build}" includes="**/*" />
@@ -86,19 +86,19 @@
 		</java>
 	</target>
 
-        <target name="run-update-yahoo-profile">
-                <java classname="yokwe.finance.etf.update.YahooProfile" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                </java>
-        </target>
+	<target name="run-update-yahoo-profile">
+		<java classname="yokwe.finance.etf.update.YahooProfile" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+		</java>
+	</target>
 
-        <target name="run-fetch">
-                <java classname="yokwe.finance.etf.Fetch" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch.list"/>
-                </java>
-        </target>
+	<target name="run-fetch">
+		<java classname="yokwe.finance.etf.Fetch" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch.list"/>
+		</java>
+	</target>
 
 </project>

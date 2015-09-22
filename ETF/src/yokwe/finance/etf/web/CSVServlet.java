@@ -1,7 +1,16 @@
 package yokwe.finance.etf.web;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -9,6 +18,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.LoggerFactory;
+
+import yokwe.finance.etf.ETFException;
+import yokwe.finance.etf.util.JDBCUtil;
 
 public class CSVServlet extends HttpServlet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
@@ -29,31 +41,103 @@ public class CSVServlet extends HttpServlet {
 		logger.info("destroy csv");
 	}
 	
+	public static class Data {
+		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' order by date";
+		public static String getSQL(String symbol) {
+			
+			return String.format(SQL, symbol);
+		}
+		public String date;
+		public String symbol;
+		public double close;
+	}
+	
 	private static String CRLF = "\r\n";
+	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
 		
 		logger.info("parameterMap = {}", req.getParameterMap());
 		
-		StringBuilder buf = new StringBuilder();
-		{
-			buf.append("date,New York,San Francisco,Austin").append(CRLF);
-			buf.append("2011-10-01,63.4,62.7,72.2").append(CRLF);
-			buf.append("2011-10-02,58.0,59.9,67.7").append(CRLF);
-			buf.append("2011-10-03,53.3,59.1,69.4").append(CRLF);
-			buf.append("2011-10-04,55.7,58.8,68.0").append(CRLF);
-			buf.append("2011-10-05,64.2,58.7,72.4").append(CRLF);
-		}
-		
 		resp.setContentType("text/csv; charset=UTF-8");
-		// No need to set content length of response.
-		// Catalina will use chunked encoding for unknown content length
+
 		try {
-			resp.getWriter().append(buf.toString());
-		} catch (IOException e) {
+			Class.forName("org.sqlite.JDBC");
+			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:/data1/home/hasegawa/git/finance/ETF/tmp/sqlite/etf.sqlite3")) {
+				Statement statement = connection.createStatement();
+				List<Data> listQQQ  = JDBCUtil.getResultAll(statement, Data.getSQL("QQQ"), Data.class);
+				List<Data> listSPY  = JDBCUtil.getResultAll(statement, Data.getSQL("SPY"), Data.class);
+				
+				logger.info("listQQQ = {}", listQQQ.size());
+				logger.info("listSPY = {}", listSPY.size());
+				
+				List<String> fieldNameList = new ArrayList<>();
+				fieldNameList.add("SPY");
+				fieldNameList.add("QQQ");
+				Collections.sort(fieldNameList);
+
+				Map<String, Map<String, Double>> dateMap = new TreeMap<>();
+				for(Data data: listQQQ) {
+					if (!dateMap.containsKey(data.date)) {
+						dateMap.put(data.date, new TreeMap<>());
+					}
+					dateMap.get(data.date).put(data.symbol, data.close);
+				}
+				for(Data data: listSPY) {
+					if (!dateMap.containsKey(data.date)) {
+						dateMap.put(data.date, new TreeMap<>());
+					}
+					dateMap.get(data.date).put(data.symbol, data.close);
+				}
+				
+				logger.info("dateMap  = {}", dateMap.size());
+
+				
+				try (BufferedWriter bw = new BufferedWriter(resp.getWriter(), 65536)) {					
+					StringBuilder line = new StringBuilder();
+					
+					// Output header
+					line.setLength(0);
+					line.append("date");
+					for(String fieldName: fieldNameList) {
+						if (0 < line.length()) line.append(",");
+						line.append(fieldName);
+					}
+					bw.append(line.toString()).append(CRLF);
+					logger.info("fieldNameList = {}", line.toString());
+
+					
+					for(String date: dateMap.keySet()) {
+						Map<String, Double> record = dateMap.get(date);
+						line.setLength(0);
+						line.append(date);
+						for(String symbol: fieldNameList) {
+							line.append(",");
+							if (record.containsKey(symbol)) {
+								line.append(record.get(symbol));
+							}
+						}
+						bw.append(line.toString()).append(CRLF);
+					}
+				} catch (IOException e) {
+					logger.error(e.getClass().getName());
+					logger.error(e.getMessage());
+					throw new ETFException();
+				}
+			}
+		} catch (ClassNotFoundException | SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
+		} catch (RuntimeException e) {
+			logger.error(e.getClass().getName());
+			logger.error(e.getMessage());
+			int n = 0;
+			for(StackTraceElement stackTrace: e.getStackTrace()) {
+				n++;
+				if (n == 5) break;
+				logger.info("stack {}", stackTrace);
+			}
 		}
 		logger.info("doGet STOP");
 	}

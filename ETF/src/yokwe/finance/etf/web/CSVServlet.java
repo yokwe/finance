@@ -1,7 +1,7 @@
 package yokwe.finance.etf.web;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.Writer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -45,11 +45,11 @@ public class CSVServlet extends HttpServlet {
 		}
 		
 		resp.setContentType("text/csv; charset=UTF-8");
-		resp.setContentLength(buf.length());
-		resp.setStatus(HttpServletResponse.SC_OK);
-		
+		// No need to set content length of response.
+		// Catalina will use chunked encoding for unknown content length
 		try {
-			resp.getWriter().append(buf.toString()).flush();
+			for(int i = 0; i < 1000; i++)
+			resp.getWriter().append(buf.toString());
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

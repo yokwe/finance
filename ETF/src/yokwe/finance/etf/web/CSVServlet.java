@@ -17,7 +17,6 @@ public class CSVServlet extends HttpServlet {
 	
 	static {
 		logger.info("load csv");
-		System.out.println("load CSV");
 	}
 	
 	@Override
@@ -30,21 +29,27 @@ public class CSVServlet extends HttpServlet {
 		logger.info("destroy csv");
 	}
 	
+	private static String CRLF = "\r\n";
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
 		
-		resp.setCharacterEncoding("UTF-9");
-		resp.setContentType("text/csv");
+		logger.info("parameterMap = {}", req.getParameterMap());
+		
+		StringBuilder buf = new StringBuilder();
+		{
+			buf.append("A,B,C").append(CRLF);
+			buf.append("1,2,3").append(CRLF);
+			buf.append("11,22,33").append(CRLF);
+			buf.append("111,222,333").append(CRLF);
+		}
+		
+		resp.setContentType("text/csv; charset=UTF-8");
+		resp.setContentLength(buf.length());
 		resp.setStatus(HttpServletResponse.SC_OK);
+		
 		try {
-			PrintWriter writer = resp.getWriter();
-			
-			writer.println("A,B,C");
-			writer.println("1,2,3");
-			writer.println("11,22,33");
-			writer.println("111,222,333");
-			writer.flush();
+			resp.getWriter().append(buf.toString()).flush();
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

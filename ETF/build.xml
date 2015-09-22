@@ -56,7 +56,8 @@
 		<delete dir="${dir.build.jar}" quiet="true" />
 		<mkdir dir="${dir.build.jar}" />
 		<!-- compile -->
-		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false" />
+		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false"
+		        debug="true" debuglevel="lines,vars,source"/>
 		<!-- copy resource file -->
 		<copy todir="${dir.build.bin}">
 			<fileset dir="${dir.src}" excludes="**/*.java" />

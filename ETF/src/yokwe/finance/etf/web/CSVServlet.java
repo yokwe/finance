@@ -7,7 +7,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,13 +27,16 @@ public class CSVServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
 	
-	static {
-		logger.info("load csv");
-	}
-	
 	@Override
 	public void init(ServletConfig config) {
 		logger.info("init csv");
+		try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			logger.error(e.getClass().getName());
+			logger.error(e.getMessage());
+			throw new ETFException();
+		}
 	}
 	
 	@Override
@@ -42,11 +45,24 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	public static class Data {
-		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' order by date";
-		public static String getSQL(String symbol) {
-			
-			return String.format(SQL, symbol);
+		private static String dateString(Calendar calendar) {
+			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
+					calendar.get(Calendar.DAY_OF_MONTH));
 		}
+
+		public static String getSQL(String symbol) {
+			return getSQL(symbol, 20 * 12);
+		}
+		
+		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
+		public static String getSQL(String symbol, int lastNMonth) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.add(Calendar.MONTH, -lastNMonth);
+			String fromDate = dateString(calendar);
+
+			return String.format(SQL, symbol, fromDate);
+		}
+		
 		public String date;
 		public String symbol;
 		public double close;
@@ -58,49 +74,62 @@ public class CSVServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
 		
-		logger.info("parameterMap = {}", req.getParameterMap());
-		
-		resp.setContentType("text/csv; charset=UTF-8");
+		final List<String> symbolList = new ArrayList<>();
+		int lastNMonth;
 
+		{
+			Map<String, String[]> paramMap = req.getParameterMap();
+			
+			if (paramMap.containsKey("symbol")) {
+				for(String symbol: paramMap.get("symbol")) {
+					symbolList.add(symbol);
+				}
+			}
+			if (symbolList.size() == 0) symbolList.add("SPY");
+			logger.info("symbolList = {}", symbolList);
+			
+			{
+				if (paramMap.containsKey("lastNMonth")) {
+					String s = paramMap.get("lastNMonth")[0];
+					try {
+						lastNMonth = Integer.parseInt(s);
+					} catch (NumberFormatException e) {
+						logger.error(e.getClass().getName());
+						logger.error(e.getMessage());
+						lastNMonth = 12;
+					}
+				} else {
+					lastNMonth = 12;
+				}
+			}
+			logger.info("lastNMonth = {}", lastNMonth);
+		}
+
+		resp.setContentType("text/csv; charset=UTF-8");
+		
 		try {
-			Class.forName("org.sqlite.JDBC");
 			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:/data1/home/hasegawa/git/finance/ETF/tmp/sqlite/etf.sqlite3")) {
 				Statement statement = connection.createStatement();
-				List<Data> listQQQ  = JDBCUtil.getResultAll(statement, Data.getSQL("QQQ"), Data.class);
-				List<Data> listSPY  = JDBCUtil.getResultAll(statement, Data.getSQL("SPY"), Data.class);
 				
-				logger.info("listQQQ = {}", listQQQ.size());
-				logger.info("listSPY = {}", listSPY.size());
-				
-				List<String> fieldNameList = new ArrayList<>();
-				fieldNameList.add("SPY");
-				fieldNameList.add("QQQ");
-				Collections.sort(fieldNameList);
-
 				Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-				for(Data data: listQQQ) {
-					if (!dateMap.containsKey(data.date)) {
-						dateMap.put(data.date, new TreeMap<>());
+				for(String symbol: symbolList) {
+					for(Data data: JDBCUtil.getResultAll(statement, Data.getSQL(symbol, lastNMonth), Data.class)) {
+						if (!dateMap.containsKey(data.date)) {
+							dateMap.put(data.date, new TreeMap<>());
+						}
+						dateMap.get(data.date).put(data.symbol, data.close);
 					}
-					dateMap.get(data.date).put(data.symbol, data.close);
-				}
-				for(Data data: listSPY) {
-					if (!dateMap.containsKey(data.date)) {
-						dateMap.put(data.date, new TreeMap<>());
-					}
-					dateMap.get(data.date).put(data.symbol, data.close);
 				}
 				
 				logger.info("dateMap  = {}", dateMap.size());
 
-				
 				try (BufferedWriter bw = new BufferedWriter(resp.getWriter(), 65536)) {					
 					StringBuilder line = new StringBuilder();
 					
 					// Output header
 					line.setLength(0);
 					line.append("date");
-					for(String fieldName: fieldNameList) {
+					for(String fieldName: symbolList) {
 						if (0 < line.length()) line.append(",");
 						line.append(fieldName);
 					}
@@ -112,7 +141,7 @@ public class CSVServlet extends HttpServlet {
 						Map<String, Double> record = dateMap.get(date);
 						line.setLength(0);
 						line.append(date);
-						for(String symbol: fieldNameList) {
+						for(String symbol: symbolList) {
 							line.append(",");
 							if (record.containsKey(symbol)) {
 								line.append(record.get(symbol));
@@ -125,10 +154,11 @@ public class CSVServlet extends HttpServlet {
 					logger.error(e.getMessage());
 					throw new ETFException();
 				}
+			} catch (SQLException e) {
+				logger.error(e.getClass().getName());
+				logger.error(e.getMessage());
+				throw new ETFException();
 			}
-		} catch (ClassNotFoundException | SQLException e) {
-			logger.error(e.getClass().getName());
-			logger.error(e.getMessage());
 		} catch (RuntimeException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
@@ -138,6 +168,7 @@ public class CSVServlet extends HttpServlet {
 				if (n == 5) break;
 				logger.info("stack {}", stackTrace);
 			}
+			throw new ETFException();
 		}
 		logger.info("doGet STOP");
 	}

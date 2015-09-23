@@ -62,7 +62,7 @@ var svg = d3.select("body").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.csv("csv", function(error, data) {
+d3.csv("csv?lastNMonth=6&symbol=SPY&symbol=VCIT", function(error, data) {
   if (error) throw error;
 
   color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
@@ -100,19 +100,19 @@ d3.csv("csv", function(error, data) {
       .attr("y", 6)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
-      .text("Temperature (ºF)");
+      .text("Price (USD)");
 
-  var city = svg.selectAll(".city")
+  var etf = svg.selectAll(".etf")
       .data(cities)
-    .enter().append("g")
-      .attr("class", "city");
+      .enter().append("g")
+      .attr("class", "etf");
 
-  city.append("path")
+  etf.append("path")
       .attr("class", "line")
       .attr("d", function(d) { return line(d.values); })
       .style("stroke", function(d) { return color(d.name); });
 
-  city.append("text")
+  etf.append("text")
       .datum(function(d) { return {name: d.name, value: d.values[d.values.length - 1]}; })
       .attr("transform", function(d) { return "translate(" + x(d.value.date) + "," + y(d.value.temperature) + ")"; })
       .attr("x", 3)

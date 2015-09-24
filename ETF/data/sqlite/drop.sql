@@ -14,3 +14,5 @@ DROP TABLE IF EXISTS etf;
 DROP TABLE IF EXISTS yahoo_profile;
 DROP TABLE IF EXISTS yahoo_daily;
 DROP TABLE IF EXISTS yahoo_dividend;
+
+VACCUM;

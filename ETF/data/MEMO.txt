@@ -1,4 +1,4 @@
-http://www.xtf.com/etf-explorer/
+http://www.xtf.com/ETF-Performance
 
 Candidate
   fixed income

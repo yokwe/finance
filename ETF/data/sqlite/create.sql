@@ -60,4 +60,8 @@ CREATE UNIQUE INDEX yahoo_profile_symbol       ON yahoo_profile(symbol);
 CREATE UNIQUE INDEX yahoo_daily_symbol_date    ON yahoo_daily(symbol, date);
 CREATE UNIQUE INDEX yahoo_dividend_symbol_date ON yahoo_dividend(symbol, date);
 
-VACUUM;
+select count(*) from etf;
+select count(*) from yahoo_profile;
+select count(*) from yahoo_daily;
+select count(*) from yahoo_dividend;
+select date, count(*) from yahoo_daily group by date order by date desc limit 5;

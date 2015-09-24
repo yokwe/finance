@@ -221,6 +221,10 @@ public class EstimateProfit {
 			final String name = info.name;
 			final double expense_ratio = info.expense_ratio;
 			
+			if (closeMap.get(symbol) == null) {
+				logger.info("closeMap null  {}", symbol);
+				continue;
+			}
 			final double close = closeMap.get(symbol).close;
 			
 			final int    rawCount = (int)rawList.stream().count();

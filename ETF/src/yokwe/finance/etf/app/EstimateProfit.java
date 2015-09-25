@@ -212,15 +212,17 @@ public class EstimateProfit {
 		}
 		
 		List<SymbolProfit> profitList = new ArrayList<>();
-		for(String symbol: candidateMap.keySet()) {
-//		for(String symbol: infoMap.keySet()) {
+//		for(String symbol: candidateMap.keySet()) {
+		for(String symbol: infoMap.keySet()) {
 			List<SymbolDividend> rawList = dividendlist.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
 			final SymbolInfo info = infoMap.get(symbol);
-			if (rawList.size() == 0) continue;
+			// Too few number of dividend
+			if (rawList.size() / (double)years < 1.0) continue;
 			
 			final String name = info.name;
 			final double expense_ratio = info.expense_ratio;
 			
+			// No daily data
 			if (closeMap.get(symbol) == null) {
 				logger.info("closeMap null  {}", symbol);
 				continue;

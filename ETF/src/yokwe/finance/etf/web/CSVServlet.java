@@ -45,7 +45,7 @@ public class CSVServlet extends HttpServlet {
 		logger.info("destroy csv");
 	}
 	
-	public static class Daily {
+	public static class DailyClose {
 		private static String dateString(Calendar calendar) {
 			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
 					calendar.get(Calendar.DAY_OF_MONTH));
@@ -69,6 +69,30 @@ public class CSVServlet extends HttpServlet {
 		public double close;
 	}
 	
+	public static class DailyVolume {
+		private static String dateString(Calendar calendar) {
+			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
+					calendar.get(Calendar.DAY_OF_MONTH));
+		}
+
+		public static String getSQL(String symbol) {
+			return getSQL(symbol, 20 * 12);
+		}
+		
+		private static String SQL = "select date, symbol, volume from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
+		public static String getSQL(String symbol, int lastNMonth) {
+			Calendar calendar = Calendar.getInstance();
+			calendar.add(Calendar.MONTH, -lastNMonth);
+			String fromDate = dateString(calendar);
+
+			return String.format(SQL, symbol, fromDate);
+		}
+		
+		public String date;
+		public String symbol;
+		public int    volume;
+	}
+
 	public static class Dividend {
 		private static String dateString(Calendar calendar) {
 			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
@@ -95,10 +119,10 @@ public class CSVServlet extends HttpServlet {
 	
 	private static String CRLF = "\r\n";
 	
-	private void doDaily(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+	private void doDailyClose(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
 		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 		for(String symbol: symbolList) {
-			for(Daily data: JDBCUtil.getResultAll(statement, Daily.getSQL(symbol, lastNMonth), Daily.class)) {
+			for(DailyClose data: JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class)) {
 				if (!dateMap.containsKey(data.date)) {
 					dateMap.put(data.date, new TreeMap<>());
 				}
@@ -135,16 +159,62 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 
+	private void doDailyVolume(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
+		for(String symbol: symbolList) {
+			for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, lastNMonth), DailyVolume.class)) {
+				if (!dateMap.containsKey(data.date)) {
+					dateMap.put(data.date, new TreeMap<>());
+				}
+				dateMap.get(data.date).put(data.symbol, (double)data.volume);
+			}
+		}
+		
+		logger.info("dateMap  = {}", dateMap.size());
+
+		StringBuilder line = new StringBuilder();
+		
+		// Output header
+		line.setLength(0);
+		line.append("date");
+		for(String fieldName: symbolList) {
+			if (0 < line.length()) line.append(",");
+			line.append(fieldName);
+		}
+		output.append(line.toString()).append(CRLF);
+		logger.info("fieldNameList = {}", line.toString());
+
+		
+		for(String date: dateMap.keySet()) {
+			Map<String, Double> record = dateMap.get(date);
+			line.setLength(0);
+			line.append(date);
+			for(String symbol: symbolList) {
+				line.append(",");
+				if (record.containsKey(symbol)) {
+					line.append(record.get(symbol));
+				}
+			}
+			output.append(line.toString()).append(CRLF);
+		}
+	}
+
 	private void doDividend(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
 		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 		for(String symbol: symbolList) {
 			for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, lastNMonth), Dividend.class)) {
-				if (!dateMap.containsKey(data.date)) {
-					dateMap.put(data.date, new TreeMap<>());
+				// Use pseudo date for dataMap
+				String pseudoDate = data.date.substring(0, 8) + "15";
+				if (!dateMap.containsKey(pseudoDate)) {
+					dateMap.put(pseudoDate, new TreeMap<>());
 				}
-				dateMap.get(data.date).put(data.symbol, data.dividend);
+				double oldValue = 0;
+				if (dateMap.get(pseudoDate).containsKey(data.symbol)) {
+					oldValue = dateMap.get(pseudoDate).get(data.symbol);
+				}
+				dateMap.get(pseudoDate).put(data.symbol, data.dividend + oldValue);
 			}
-		}
+		}		
 		
 		logger.info("dateMap  = {}", dateMap.size());
 
@@ -214,7 +284,8 @@ public class CSVServlet extends HttpServlet {
 				type = "daily";
 			}
 			switch(type) {
-			case "daily":
+			case "close":
+			case "volume":
 			case "dividend":
 				break;
 			default:
@@ -231,8 +302,11 @@ public class CSVServlet extends HttpServlet {
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
 			
 			switch(type) {
-			case "daily":
-				doDaily(statement, output, symbolList, lastNMonth);
+			case "close":
+				doDailyClose(statement, output, symbolList, lastNMonth);
+				break;
+			case "volume":
+				doDailyVolume(statement, output, symbolList, lastNMonth);
 				break;
 			case "dividend":
 				doDividend(statement, output, symbolList, lastNMonth);

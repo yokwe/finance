@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -59,9 +60,14 @@ public class CSVServlet extends HttpServlet {
 
 	
 	public static class DailyClose {
-		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
+		private static String SQL_1 = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
 		public static String getSQL(String symbol, Calendar fromDate) {
-			return String.format(SQL, symbol, dateString(fromDate));
+			return String.format(SQL_1, symbol, dateString(fromDate));
+		}
+		
+		private static String SQL_2 = "select date, symbol, close from yahoo_daily where symbol = '%s' and date < '%s' order by date desc limit %s";
+		public static String getSQL(String symbol, Calendar fromDate, int count) {
+			return String.format(SQL_2, symbol, dateString(fromDate), count);
 		}
 		
 		public DailyClose(String date, String symbol, double close) {
@@ -82,7 +88,7 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 	
-	public static class SampledData {
+	public static class SampledData implements Comparator<SampledData> {
 		public final String date;
 		public final String symbol;
 		public final double value;
@@ -99,6 +105,15 @@ public class CSVServlet extends HttpServlet {
 		@Override
 		public String toString() {
 			return String.format("[%s %s %6.3f", date, symbol, value);
+		}
+		
+		@Override
+		public int compare(SampledData o1, SampledData o2) {
+			int ret = o1.date.compareTo(o2.date);
+			if (ret == 0) {
+				ret = o1.symbol.compareTo(o2.symbol);
+			}
+			return ret;
 		}
 	}
 	

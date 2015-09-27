@@ -52,22 +52,15 @@ public class CSVServlet extends HttpServlet {
 		logger.info("destroy csv");
 	}
 	
+	private static String dateString(Calendar calendar) {
+		return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
+				calendar.get(Calendar.DAY_OF_MONTH));
+	}
+
+	
 	public static class DailyClose {
-		private static String dateString(Calendar calendar) {
-			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
-					calendar.get(Calendar.DAY_OF_MONTH));
-		}
-
-		public static String getSQL(String symbol) {
-			return getSQL(symbol, 20 * 12);
-		}
-		
 		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
-		public static String getSQL(String symbol, int lastNMonth) {
-			Calendar calendar = Calendar.getInstance();
-			calendar.add(Calendar.MONTH, -lastNMonth);
-			String fromDate = dateString(calendar);
-
+		public static String getSQL(String symbol, String fromDate) {
 			return String.format(SQL, symbol, fromDate);
 		}
 		
@@ -195,22 +188,32 @@ public class CSVServlet extends HttpServlet {
 	
 	private static String CRLF = "\r\n";
 	
-	private void doDailyClose(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
-		Map<String, List<SampledData>> rawData = new TreeMap<>();
-		{
-			List<String> newSymbolList = new ArrayList<>();
+	private interface ServletProcessor {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException;
+	}
+	private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
+	static {
+		processorMap.put("daily",    new DailyProcessRequest());
+		processorMap.put("volume",   new VolumeProcessor());
+		processorMap.put("dividend", new DividendProcessor());
+	}
+	
+	private static class DailyProcessRequest implements ServletProcessor {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+			final String fromDate;
+			{
+				Calendar calendar = Calendar.getInstance();
+				calendar.add(Calendar.MONTH, -lastNMonth);
+				fromDate = dateString(calendar);
+			}
+
+			Map<String, List<SampledData>> rawData = new TreeMap<>();
 			for(String symbol: symbolList) {
-				List<SampledData> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class).stream().map(o -> new SampledData(o)).collect(Collectors.toList());
+				List<SampledData> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, fromDate), DailyClose.class).stream().map(o -> new SampledData(o)).collect(Collectors.toList());
 				rawData.put(symbol, data);
-				
-				newSymbolList.add(symbol);
 			}
 			
-			symbolList = newSymbolList;
-		}
-		
-		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-		{
+			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
 				for(SampledData data: rawData.get(symbol)) {
 					if (!dateMap.containsKey(data.date)) {
@@ -219,121 +222,127 @@ public class CSVServlet extends HttpServlet {
 					dateMap.get(data.date).put(symbol, data.value);
 				}
 			}
-		}
-		
-		logger.info("dateMap  = {}", dateMap.size());
+			
+			logger.info("dateMap  = {}", dateMap.size());
 
-		StringBuilder line = new StringBuilder();
-		
-		// Output header
-		line.setLength(0);
-		line.append("date");
-		for(String fieldName: symbolList) {
-			if (0 < line.length()) line.append(",");
-			line.append(fieldName);
-		}
-		output.append(line.toString()).append(CRLF);
-		logger.info("fieldNameList = {}", line.toString());
-
-		
-		for(String date: dateMap.keySet()) {
-			Map<String, Double> record = dateMap.get(date);
+			StringBuilder line = new StringBuilder();
+			
+			// Output header
 			line.setLength(0);
-			line.append(date);
-			for(String symbol: symbolList) {
-				line.append(",");
-				if (record.containsKey(symbol)) {
-					line.append(record.get(symbol));
-				}
+			line.append("date");
+			for(String fieldName: symbolList) {
+				if (0 < line.length()) line.append(",");
+				line.append(fieldName);
 			}
 			output.append(line.toString()).append(CRLF);
+			logger.info("fieldNameList = {}", line.toString());
+
+			
+			for(String date: dateMap.keySet()) {
+				Map<String, Double> record = dateMap.get(date);
+				line.setLength(0);
+				line.append(date);
+				for(String symbol: symbolList) {
+					line.append(",");
+					if (record.containsKey(symbol)) {
+						line.append(record.get(symbol));
+					}
+				}
+				output.append(line.toString()).append(CRLF);
+			}
+		}
+
+	}
+
+	private static class VolumeProcessor implements ServletProcessor {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
+			for(String symbol: symbolList) {
+				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, lastNMonth), DailyVolume.class)) {
+					if (!dateMap.containsKey(data.date)) {
+						dateMap.put(data.date, new TreeMap<>());
+					}
+					dateMap.get(data.date).put(data.symbol, (double)data.volume);
+				}
+			}
+			
+			logger.info("dateMap  = {}", dateMap.size());
+
+			StringBuilder line = new StringBuilder();
+			
+			// Output header
+			line.setLength(0);
+			line.append("date");
+			for(String fieldName: symbolList) {
+				if (0 < line.length()) line.append(",");
+				line.append(fieldName);
+			}
+			output.append(line.toString()).append(CRLF);
+			logger.info("fieldNameList = {}", line.toString());
+
+			
+			for(String date: dateMap.keySet()) {
+				Map<String, Double> record = dateMap.get(date);
+				line.setLength(0);
+				line.append(date);
+				for(String symbol: symbolList) {
+					line.append(",");
+					if (record.containsKey(symbol)) {
+						line.append(record.get(symbol));
+					}
+				}
+				output.append(line.toString()).append(CRLF);
+			}
 		}
 	}
 
-	private void doDailyVolume(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
-		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-		for(String symbol: symbolList) {
-			for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, lastNMonth), DailyVolume.class)) {
-				if (!dateMap.containsKey(data.date)) {
-					dateMap.put(data.date, new TreeMap<>());
-				}
-				dateMap.get(data.date).put(data.symbol, (double)data.volume);
-			}
-		}
-		
-		logger.info("dateMap  = {}", dateMap.size());
-
-		StringBuilder line = new StringBuilder();
-		
-		// Output header
-		line.setLength(0);
-		line.append("date");
-		for(String fieldName: symbolList) {
-			if (0 < line.length()) line.append(",");
-			line.append(fieldName);
-		}
-		output.append(line.toString()).append(CRLF);
-		logger.info("fieldNameList = {}", line.toString());
-
-		
-		for(String date: dateMap.keySet()) {
-			Map<String, Double> record = dateMap.get(date);
-			line.setLength(0);
-			line.append(date);
+	private static class DividendProcessor implements ServletProcessor {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				line.append(",");
-				if (record.containsKey(symbol)) {
-					line.append(record.get(symbol));
+				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, lastNMonth), Dividend.class)) {
+					// Use pseudo date for dataMap
+					String pseudoDate = data.date.substring(0, 8) + "15";
+					if (!dateMap.containsKey(pseudoDate)) {
+						dateMap.put(pseudoDate, new TreeMap<>());
+					}
+					double oldValue = 0;
+					if (dateMap.get(pseudoDate).containsKey(data.symbol)) {
+						oldValue = dateMap.get(pseudoDate).get(data.symbol);
+					}
+					dateMap.get(pseudoDate).put(data.symbol, data.dividend + oldValue);
 				}
+			}		
+			
+			logger.info("dateMap  = {}", dateMap.size());
+
+			StringBuilder line = new StringBuilder();
+			
+			// Output header
+			line.setLength(0);
+			line.append("date");
+			for(String fieldName: symbolList) {
+				if (0 < line.length()) line.append(",");
+				line.append(fieldName);
 			}
 			output.append(line.toString()).append(CRLF);
-		}
-	}
+			logger.info("fieldNameList = {}", line.toString());
 
-	private void doDividend(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
-		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-		for(String symbol: symbolList) {
-			for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, lastNMonth), Dividend.class)) {
-				// Use pseudo date for dataMap
-				String pseudoDate = data.date.substring(0, 8) + "15";
-				if (!dateMap.containsKey(pseudoDate)) {
-					dateMap.put(pseudoDate, new TreeMap<>());
+			
+			for(String date: dateMap.keySet()) {
+				Map<String, Double> record = dateMap.get(date);
+				line.setLength(0);
+				line.append(date);
+				for(String symbol: symbolList) {
+					line.append(",");
+					if (record.containsKey(symbol)) {
+						line.append(record.get(symbol));
+					}
 				}
-				double oldValue = 0;
-				if (dateMap.get(pseudoDate).containsKey(data.symbol)) {
-					oldValue = dateMap.get(pseudoDate).get(data.symbol);
-				}
-				dateMap.get(pseudoDate).put(data.symbol, data.dividend + oldValue);
+				output.append(line.toString()).append(CRLF);
 			}
-		}		
-		
-		logger.info("dateMap  = {}", dateMap.size());
-
-		StringBuilder line = new StringBuilder();
-		
-		// Output header
-		line.setLength(0);
-		line.append("date");
-		for(String fieldName: symbolList) {
-			if (0 < line.length()) line.append(",");
-			line.append(fieldName);
 		}
-		output.append(line.toString()).append(CRLF);
-		logger.info("fieldNameList = {}", line.toString());
 
-		
-		for(String date: dateMap.keySet()) {
-			Map<String, Double> record = dateMap.get(date);
-			line.setLength(0);
-			line.append(date);
-			for(String symbol: symbolList) {
-				line.append(",");
-				if (record.containsKey(symbol)) {
-					line.append(record.get(symbol));
-				}
-			}
-			output.append(line.toString()).append(CRLF);
-		}
 	}
 
 	@Override
@@ -344,6 +353,7 @@ public class CSVServlet extends HttpServlet {
 		int lastNMonth;
 		String type = "daily";
 
+		final ServletProcessor processRequest;
 		{
 			Map<String, String[]> paramMap = req.getParameterMap();
 			
@@ -374,16 +384,13 @@ public class CSVServlet extends HttpServlet {
 			} else {
 				type = "daily";
 			}
-			switch(type) {
-			case "close":
-			case "volume":
-			case "dividend":
-				break;
-			default:
-				logger.info("Unknown type = {}", type);
-				type = "daily";
-			}
 			logger.info("t = {}", type);
+			
+			processRequest = processorMap.get(type);
+			if (processRequest == null) {
+				logger.error("Unknown type = {}", type);
+				throw new ETFException();
+			}
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -391,22 +398,7 @@ public class CSVServlet extends HttpServlet {
 		try (
 				Statement statement = DriverManager.getConnection(JDBC_CONNECTION_URL).createStatement();
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
-			
-			switch(type) {
-			case "close":
-				doDailyClose(statement, output, symbolList, lastNMonth);
-				break;
-			case "volume":
-				doDailyVolume(statement, output, symbolList, lastNMonth);
-				break;
-			case "dividend":
-				doDividend(statement, output, symbolList, lastNMonth);
-				break;
-			default:
-				logger.error("Unknown type = {}", type);
-				break;
-			}
-			
+			processRequest.process(statement, output, symbolList, lastNMonth);
 		} catch (SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

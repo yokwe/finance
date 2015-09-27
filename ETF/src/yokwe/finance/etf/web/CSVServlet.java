@@ -10,12 +10,18 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.etf.ETFException;
@@ -64,9 +70,22 @@ public class CSVServlet extends HttpServlet {
 			return String.format(SQL, symbol, fromDate);
 		}
 		
+		public DailyClose(String date, String symbol, double close) {
+			this.date   = date;
+			this.symbol = symbol;
+			this.close  = close;
+		}
+		public DailyClose() {
+			this("", "", 0);
+		}
 		public String date;
 		public String symbol;
 		public double close;
+		
+		@Override
+		public String toString() {
+			return String.format("[%s %s %6.3f", date, symbol, close);
+		}
 	}
 	
 	public static class DailyVolume {
@@ -117,16 +136,80 @@ public class CSVServlet extends HttpServlet {
 		public double dividend;
 	}
 	
+	public static class MovingAverage {
+		private static final class Accumlator {
+			final int                   interval;
+			final DescriptiveStatistics stats;
+			List<DailyClose>            result;
+			
+			Accumlator(int interval) {
+				this.interval = interval;
+				this.stats    = new DescriptiveStatistics(interval);
+				this.result   = new ArrayList<>();
+			}
+			
+			void apply(DailyClose x) {
+				stats.addValue(x.close);
+				if (interval <= stats.getN()) {
+					result.add(new DailyClose(x.date, x.symbol, stats.getMean()));
+				}
+			}
+			List<DailyClose> finish() {
+				return result;
+			}
+		}
+		
+		public static Collector<DailyClose, Accumlator, List<DailyClose>> getInstance(int interval) {
+			Supplier<Accumlator>               supplier    = () -> new Accumlator(interval);
+			BiConsumer<Accumlator, DailyClose> accumulator = (a, e) -> a.apply(e);
+			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
+				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
+				throw new ETFException("Not expected");
+			};
+			Function<Accumlator, List<DailyClose>> finisher    = (a) -> a.finish();
+			return Collector.of(supplier, accumulator, combiner, finisher);
+		}
+	}
+
+	
 	private static String CRLF = "\r\n";
 	
 	private void doDailyClose(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+		final int movingAverageDays = 200;
+		
+		Map<String, List<DailyClose>> rawData = new TreeMap<>();
+		{
+			List<String> newSymbolList = new ArrayList<>();
+			for(String symbol: symbolList) {
+				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class);
+				List<DailyClose> data_ma = data.stream().collect(MovingAverage.getInstance(200));
+				
+				logger.info("{}  data = {}  data_ma = {}", symbol, data.size(), data_ma.size());
+				
+				String symbol_ma = symbol + "-" + movingAverageDays;
+				
+				rawData.put(symbol,    data);
+				rawData.put(symbol_ma, data_ma);
+				
+				newSymbolList.add(symbol);
+				newSymbolList.add(symbol_ma);
+				
+				logger.info("data    = {}");
+				logger.info("data_ma = {}", data_ma);
+			}
+			
+			symbolList = newSymbolList;
+		}
+		
 		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-		for(String symbol: symbolList) {
-			for(DailyClose data: JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class)) {
-				if (!dateMap.containsKey(data.date)) {
-					dateMap.put(data.date, new TreeMap<>());
+		{
+			for(String symbol: symbolList) {
+				for(DailyClose data: rawData.get(symbol)) {
+					if (!dateMap.containsKey(data.date)) {
+						dateMap.put(data.date, new TreeMap<>());
+					}
+					dateMap.get(data.date).put(symbol, data.close);
 				}
-				dateMap.get(data.date).put(data.symbol, data.close);
 			}
 		}
 		

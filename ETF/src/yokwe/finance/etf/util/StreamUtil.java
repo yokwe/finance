@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.moment.Kurtosis;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
@@ -115,6 +116,40 @@ public class StreamUtil {
 		}
 	}
 
+	public static class MovingAverage {
+		private static final class Accumlator {
+			final int                   interval;
+			final DescriptiveStatistics stats;
+			List<Double> result = new ArrayList<>();
+			
+			Accumlator(int interval) {
+				this.interval = interval;
+				this.stats    = new DescriptiveStatistics(interval);
+			}
+			
+			void apply(double x) {
+				stats.addValue(x);
+				if (interval <= stats.getN()) {
+					result.add(stats.getMean());
+				}
+			}
+			List<Double> finish() {
+				return result;
+			}
+		}
+		
+		public static Collector<Double, Accumlator, List<Double>> getInstance(int interval) {
+			Supplier<Accumlator>               supplier    = () -> new Accumlator(interval);
+			BiConsumer<Accumlator, Double>     accumulator = (a, e) -> a.apply(e);
+			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
+				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
+				throw new ETFException("Not expected");
+			};
+			Function<Accumlator, List<Double>> finisher    = (a) -> a.finish();
+			return Collector.of(supplier, accumulator, combiner, finisher);
+		}
+	}
+
 	private static void testStats() {
 		{
 		    double mean = 12.40454545454550;
@@ -181,11 +216,23 @@ public class StreamUtil {
 		logger.info("sampling 12 = {}", valueList.stream().collect(Sampling.getInstance(12)));
 
 	}
+	private static void testMovingAverage() {
+		double[] values = {
+				1, 1, 1,   2, 2, 2,
+				3, 3, 3,   4, 4, 4,
+				5, 5, 5,   6, 6, 6,
+		};
+		List<Double> valueList = new ArrayList<>();
+		for(double value: values) valueList.add(value);
+		logger.info("valueList = {}", valueList);
+		logger.info("sampling  3 = {}", valueList.stream().collect(MovingAverage.getInstance(3)));
+	}
 	public static void main(String[] args) {
 		logger.info("START");
 		
 		testStats();
 		testSampling();
+		testMovingAverage();
 	
 		logger.info("STOP");
 	}

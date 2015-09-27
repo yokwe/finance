@@ -60,8 +60,8 @@ public class CSVServlet extends HttpServlet {
 	
 	public static class DailyClose {
 		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
-		public static String getSQL(String symbol, String fromDate) {
-			return String.format(SQL, symbol, fromDate);
+		public static String getSQL(String symbol, Calendar fromDate) {
+			return String.format(SQL, symbol, dateString(fromDate));
 		}
 		
 		public DailyClose(String date, String symbol, double close) {
@@ -103,22 +103,9 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	public static class DailyVolume {
-		private static String dateString(Calendar calendar) {
-			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
-					calendar.get(Calendar.DAY_OF_MONTH));
-		}
-
-		public static String getSQL(String symbol) {
-			return getSQL(symbol, 20 * 12);
-		}
-		
 		private static String SQL = "select date, symbol, volume from yahoo_daily where symbol = '%s' and '%s' <= date order by date";
-		public static String getSQL(String symbol, int lastNMonth) {
-			Calendar calendar = Calendar.getInstance();
-			calendar.add(Calendar.MONTH, -lastNMonth);
-			String fromDate = dateString(calendar);
-
-			return String.format(SQL, symbol, fromDate);
+		public static String getSQL(String symbol, Calendar fromDate) {
+			return String.format(SQL, symbol, dateString(fromDate));
 		}
 		
 		public String date;
@@ -127,22 +114,9 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	public static class Dividend {
-		private static String dateString(Calendar calendar) {
-			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
-					calendar.get(Calendar.DAY_OF_MONTH));
-		}
-
-		public static String getSQL(String symbol) {
-			return getSQL(symbol, 20 * 12);
-		}
-		
 		private static String SQL = "select date, symbol, dividend from yahoo_dividend where symbol = '%s' and '%s' <= date order by date";
-		public static String getSQL(String symbol, int lastNMonth) {
-			Calendar calendar = Calendar.getInstance();
-			calendar.add(Calendar.MONTH, -lastNMonth);
-			String fromDate = dateString(calendar);
-
-			return String.format(SQL, symbol, fromDate);
+		public static String getSQL(String symbol, Calendar fromDate) {
+			return String.format(SQL, symbol, dateString(fromDate));
 		}
 		
 		public String date;
@@ -189,7 +163,7 @@ public class CSVServlet extends HttpServlet {
 	private static String CRLF = "\r\n";
 	
 	private interface ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException;
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Calendar fromDate) throws IOException;
 	}
 	private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
 	static {
@@ -199,14 +173,7 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	private static class DailyProcessRequest implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
-			final String fromDate;
-			{
-				Calendar calendar = Calendar.getInstance();
-				calendar.add(Calendar.MONTH, -lastNMonth);
-				fromDate = dateString(calendar);
-			}
-
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Calendar fromDate) throws IOException {
 			Map<String, List<SampledData>> rawData = new TreeMap<>();
 			for(String symbol: symbolList) {
 				List<SampledData> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, fromDate), DailyClose.class).stream().map(o -> new SampledData(o)).collect(Collectors.toList());
@@ -251,14 +218,13 @@ public class CSVServlet extends HttpServlet {
 				output.append(line.toString()).append(CRLF);
 			}
 		}
-
 	}
 
 	private static class VolumeProcessor implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Calendar fromDate) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, lastNMonth), DailyVolume.class)) {
+				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, fromDate), DailyVolume.class)) {
 					if (!dateMap.containsKey(data.date)) {
 						dateMap.put(data.date, new TreeMap<>());
 					}
@@ -297,10 +263,10 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	private static class DividendProcessor implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Calendar fromDate) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, lastNMonth), Dividend.class)) {
+				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, fromDate), Dividend.class)) {
 					// Use pseudo date for dataMap
 					String pseudoDate = data.date.substring(0, 8) + "15";
 					if (!dateMap.containsKey(pseudoDate)) {
@@ -398,7 +364,10 @@ public class CSVServlet extends HttpServlet {
 		try (
 				Statement statement = DriverManager.getConnection(JDBC_CONNECTION_URL).createStatement();
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
-			processRequest.process(statement, output, symbolList, lastNMonth);
+			Calendar fromDate = Calendar.getInstance();
+			fromDate.add(Calendar.MONTH, -lastNMonth);
+			
+			processRequest.process(statement, output, symbolList, fromDate);
 		} catch (SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

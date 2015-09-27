@@ -15,6 +15,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -88,6 +89,26 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 	
+	public static class SampledData {
+		public final String date;
+		public final String symbol;
+		public final double value;
+
+		public SampledData(String date, String symbol, double value) {
+			this.date   = date;
+			this.symbol = symbol;
+			this.value  = value;
+		}
+		public SampledData(DailyClose that) {
+			this(that.date, that.symbol, that.close);
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("[%s %s %6.3f", date, symbol, value);
+		}
+	}
+	
 	public static class DailyVolume {
 		private static String dateString(Calendar calendar) {
 			return String.format("%4d-%02d-%02d", calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1,
@@ -140,7 +161,7 @@ public class CSVServlet extends HttpServlet {
 		private static final class Accumlator {
 			final int                   interval;
 			final DescriptiveStatistics stats;
-			List<DailyClose>            result;
+			List<SampledData>           result;
 			
 			Accumlator(int interval) {
 				this.interval = interval;
@@ -148,25 +169,25 @@ public class CSVServlet extends HttpServlet {
 				this.result   = new ArrayList<>();
 			}
 			
-			void apply(DailyClose x) {
-				stats.addValue(x.close);
+			void apply(SampledData x) {
+				stats.addValue(x.value);
 				if (interval <= stats.getN()) {
-					result.add(new DailyClose(x.date, x.symbol, stats.getMean()));
+					result.add(new SampledData(x.date, x.symbol, stats.getMean()));
 				}
 			}
-			List<DailyClose> finish() {
+			List<SampledData> finish() {
 				return result;
 			}
 		}
 		
-		public static Collector<DailyClose, Accumlator, List<DailyClose>> getInstance(int interval) {
-			Supplier<Accumlator>               supplier    = () -> new Accumlator(interval);
-			BiConsumer<Accumlator, DailyClose> accumulator = (a, e) -> a.apply(e);
-			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
+		public static Collector<SampledData, Accumlator, List<SampledData>> getInstance(int interval) {
+			final Supplier<Accumlator>               supplier      = () -> new Accumlator(interval);
+			final BiConsumer<Accumlator, SampledData> accumulator  = (a, e) -> a.apply(e);
+			final BinaryOperator<Accumlator> combiner = (a1, a2) -> {
 				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
 				throw new ETFException("Not expected");
 			};
-			Function<Accumlator, List<DailyClose>> finisher    = (a) -> a.finish();
+			final Function<Accumlator, List<SampledData>> finisher = (a) -> a.finish();
 			return Collector.of(supplier, accumulator, combiner, finisher);
 		}
 	}
@@ -175,27 +196,14 @@ public class CSVServlet extends HttpServlet {
 	private static String CRLF = "\r\n";
 	
 	private void doDailyClose(Statement statement, BufferedWriter output, List<String> symbolList, int lastNMonth) throws IOException {
-		final int movingAverageDays = 200;
-		
-		Map<String, List<DailyClose>> rawData = new TreeMap<>();
+		Map<String, List<SampledData>> rawData = new TreeMap<>();
 		{
 			List<String> newSymbolList = new ArrayList<>();
 			for(String symbol: symbolList) {
-				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class);
-				List<DailyClose> data_ma = data.stream().collect(MovingAverage.getInstance(200));
-				
-				logger.info("{}  data = {}  data_ma = {}", symbol, data.size(), data_ma.size());
-				
-				String symbol_ma = symbol + "-" + movingAverageDays;
-				
-				rawData.put(symbol,    data);
-				rawData.put(symbol_ma, data_ma);
+				List<SampledData> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, lastNMonth), DailyClose.class).stream().map(o -> new SampledData(o)).collect(Collectors.toList());
+				rawData.put(symbol, data);
 				
 				newSymbolList.add(symbol);
-				newSymbolList.add(symbol_ma);
-				
-				logger.info("data    = {}");
-				logger.info("data_ma = {}", data_ma);
 			}
 			
 			symbolList = newSymbolList;
@@ -204,11 +212,11 @@ public class CSVServlet extends HttpServlet {
 		Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 		{
 			for(String symbol: symbolList) {
-				for(DailyClose data: rawData.get(symbol)) {
+				for(SampledData data: rawData.get(symbol)) {
 					if (!dateMap.containsKey(data.date)) {
 						dateMap.put(data.date, new TreeMap<>());
 					}
-					dateMap.get(data.date).put(symbol, data.close);
+					dateMap.get(data.date).put(symbol, data.value);
 				}
 			}
 		}

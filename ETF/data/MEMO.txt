@@ -60,5 +60,5 @@ ITB    -1.80%   -2.54%  5.31%   17.86%  10.69%  18.51%  --      *home constructi
 
 Calculate profit for last one year
 ----
-select yahoo_dividend.symbol, yahoo_profile.name, yahoo_profile.category, yahoo_daily.close,count(*), round(sum(dividend), 3), round(sum(dividend)/yahoo_daily.close*100, 2) as P from yahoo_dividend, yahoo_daily, yahoo_profile where yahoo_profile.symbol = yahoo_dividend.symbol and yahoo_daily.symbol = yahoo_dividend.symbol and yahoo_daily.date = '2015-09-29' and '2014-09-10' < yahoo_dividend.date group by yahoo_dividend.symbol having 4 <= count(*) order by P desc;
+select yahoo_dividend.symbol, yahoo_profile.category, yahoo_daily.close,count(*), round(sum(dividend), 3), round(sum(dividend)/yahoo_daily.close*100, 2) as P, etf.adv, etf.asp, yahoo_profile.name from etf, yahoo_dividend, yahoo_daily, yahoo_profile where etf.symbol = yahoo_dividend.symbol and yahoo_profile.symbol = yahoo_dividend.symbol and yahoo_daily.symbol = yahoo_dividend.symbol and yahoo_daily.date = '2015-09-29' and '2014-09-10' < yahoo_dividend.date group by yahoo_dividend.symbol having 4 <= count(*) order by P desc;
 ----

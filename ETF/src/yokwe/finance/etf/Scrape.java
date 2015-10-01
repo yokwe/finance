@@ -174,7 +174,14 @@ public abstract class Scrape<E extends Enum<E>> {
 			String fract = String.format("%.0f", value * 1000.0);
 			ret = fract + suffix;
 		}
-		
+
+		// $31.95
+		if (ret.matches("^\\$([0-9]+\\.[0-9]+)$")) {
+			String str = ret.substring(1, ret.length());
+			Float value = Float.valueOf(str);
+			ret = String.format("%.2f", value);
+		}
+
 		// 998.14K
 		// 59.31M
 		// 144.98B

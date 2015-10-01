@@ -16,8 +16,9 @@ CREATE TABLE etf (
   issuer           TEXT     NOT NULL, -- name of issuer of ETF
   home_page        TEXT     NOT NULL, -- URL of ETF
   aum              INTEGER  NOT NULL, -- asset under management
-  index_tracked    TEXT     NOT NULL  -- relevant index of ETF
-);
+  adv              INTEGER  NOT NULL, -- average daily volume
+  asp              REAL     NOT NULL  -- average spread percent
+ );
 
 -- YahooProfile.Field SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO
 CREATE TABLE yahoo_profile (

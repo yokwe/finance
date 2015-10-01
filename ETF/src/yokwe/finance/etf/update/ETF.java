@@ -17,7 +17,7 @@ public class ETF {
 	private static final String CSV_PATH = "tmp/sqlite/etf.csv";
 	
 	public enum Field {
-		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, INDEX_TRACKED,
+		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP
 	}
 	
 	public static class ScrapeETF extends Scrape<Field> {
@@ -51,10 +51,18 @@ public class ETF {
 			add(Field.AUM,
 				"<span id=\"AssetsUnderManagementSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
 			
+			// <span id="AverageDailyVolumeSpan">				$735.72 			</span>
+			add(Field.ADV,
+				"<span id=\"AverageDailyVolumeSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+			
+			// <span id="AverageSpreadPercentSpan">				1.32%			</span>
+			add(Field.ASP,
+				"<span id=\"AverageSpreadPercentSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>");
+			
 			// <span id="IndexTrackedSpan">				NASDAQ-100 Index			</span>
-			add(Field.INDEX_TRACKED,
-				"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>",
-				"IndexTrackedSpan");
+//			add(Field.INDEX_TRACKED,
+//				"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>",
+//				"IndexTrackedSpan");
 		}
 	}
 	

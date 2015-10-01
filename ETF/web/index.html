@@ -62,7 +62,7 @@ var svg = d3.select("body").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-var match = /([?].+$)/.exec(window.location.href);
+var match = /([?&].+$)/.exec(window.location.href);
 var queryString = match ? match[1] : "";
 
 d3.csv("csv" + queryString, function(error, data) {

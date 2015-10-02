@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class ETF {
 	private static final String CSV_PATH = "tmp/sqlite/etf.csv";
 	
 	public enum Field {
-		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP
+		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SCORE, FIT,
 	}
 	
 	public static class ScrapeETF extends Scrape<Field> {
@@ -63,6 +64,25 @@ public class ETF {
 //			add(Field.INDEX_TRACKED,
 //				"(?s)<span id=\"IndexTrackedSpan\">(.+?)</span>",
 //				"IndexTrackedSpan");
+			
+//			<div class="price">
+//				<span class="infoHeader">Price</span><br />
+//				<span class="infofund">$35.64</span>
+//			</div>
+			add(Field.PRICE,
+				"<div class=\"price\">.+?<span class=\"infofund\">(.+?)</span>", Pattern.DOTALL);
+			
+//			<div class="overallScore">
+//			<div>F</div>
+//			<hr />
+//			<div>40</div>
+//			</div>
+			add(Field.SCORE,
+				"<div class=\"overallScore\">.+?<div>(.+?)</div>",
+				"overallScore", Pattern.DOTALL);
+			add(Field.FIT,
+				"<div class=\"overallScore\">.+?<hr />.+?<div>(.+?)</div>",
+				"overallScore", Pattern.DOTALL);
 		}
 	}
 	

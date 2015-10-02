@@ -20,7 +20,8 @@ CREATE TABLE etf (
   asp              REAL     NOT NULL, -- average spread percent
   price            REAL     NOT NULL, -- price
   score            TEXT     NOT NULL, -- overall score
-  fit              INTEGER  NOT NULL  -- rating of fit
+  fit              INTEGER  NOT NULL, -- rating of fit
+  segment          TEXT     NOT NULL  -- segment (category)
 );
 
 -- YahooProfile.Field SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO

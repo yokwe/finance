@@ -18,7 +18,7 @@ public class ETF {
 	private static final String CSV_PATH = "tmp/sqlite/etf.csv";
 	
 	public enum Field {
-		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SCORE, FIT,
+		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SCORE, FIT, SEGMENT,
 	}
 	
 	public static class ScrapeETF extends Scrape<Field> {
@@ -83,6 +83,12 @@ public class ETF {
 			add(Field.FIT,
 				"<div class=\"overallScore\">.+?<hr />.+?<div>(.+?)</div>",
 				"overallScore", Pattern.DOTALL);
+			
+//          <span>ETF.com segment:</span> Equity: Global Ex-U.S.  -  Total Market Growth
+//			<span>ETF.com segment:</span> <a href="http://www.etf.com/Equity_U_S_Large_Cap" target="_parent" title="Equity: U.S.  -  Large Cap">Equity: U.S.  -  Large Cap</a>
+			add(Field.SEGMENT,
+				"<span>ETF\\.com segment:</span> (.+)",
+				"<span>ETF.com segment:</span>");
 		}
 	}
 	

@@ -1,64 +1,10 @@
 http://www.xtf.com/ETF-Performance
 
-Candidate
-  fixed income
- 08:46:49.869 [main] INFO  EstimateProfit - BSV    11   0.10  80.28  12.46    0.96  11.964  Vanguard Short-Term Bond
- 08:46:49.989 [main] INFO  EstimateProfit - VGIT   12   0.12  65.19  15.34    1.01  15.473  Vanguard Intermediate-Term Government Bond
-*08:46:50.271 [main] INFO  EstimateProfit - BLV    11   0.10  88.91  11.25    3.67  41.307  Vanguard Long-Term Bond
-*08:46:50.239 [main] INFO  EstimateProfit - BIV    11   0.10  84.52  11.83    2.85  33.676  Vanguard Intermediate-Term Bond
- 08:46:50.328 [main] INFO  EstimateProfit - HYG    11   0.50  84.92  11.78    5.13  60.378  iShares iBoxx $ High Yield Corporate Bond
- 08:46:50.328 [main] INFO  EstimateProfit - PGX    12   0.50  14.60  68.49    0.89  61.127  PowerShares Preferred
-*08:46:50.335 [main] INFO  EstimateProfit - JNK    11   0.40  36.45  27.43    2.29  62.783  SPDR Barclays High Yield Bond
-
-  dividend
-    real estate
-*08:46:50.350 [main] INFO  EstimateProfit - REM     3   0.48  10.77  92.85    1.54 143.268  iShares Mortgage Real Estate Capped
- 08:46:50.350 [main] INFO  EstimateProfit - MORT    4   0.41  21.70  46.08    2.44 112.476  Market Vectors Mortgage REIT Income
-
-  return
-    insurance
-+08:46:49.898 [main] INFO  EstimateProfit - IAK     3   0.45  48.64  20.56    0.62  12.672  iShares U.S. Insurance
- 08:46:50.021 [main] INFO  EstimateProfit - SLYV    4   0.15  95.54  10.47    1.69  17.740  SPDR S&P SmallCap 600 Value
-
-    home construction
-*08:46:49.557 [main] INFO  EstimateProfit - ITB     4   0.45  27.14  36.85    0.07   2.452  iShares U.S. Home Construction
- 08:46:49.581 [main] INFO  EstimateProfit - XHB     4   0.35  35.79  27.94    0.14   3.983  SPDR S&P Homebuilders
- 
-    food
-*08:46:49.847 [main] INFO  EstimateProfit - PBJ     3   0.61  31.94  31.31    0.35  10.895  PowerShares Dynamic Food & Beverage
- 
-    consumer staples
- 08:46:50.059 [main] INFO  EstimateProfit - VDC     1   0.12 121.38   8.24    2.47  20.363  Vanguard Consumer Staples
-+08:46:50.165 [main] INFO  EstimateProfit - XLP     4   0.15  47.10  21.23    1.17  24.735  Consumer Staples Select SPDR
-
-    banking
- 08:46:49.966 [main] INFO  EstimateProfit - KBWB    4   0.35  35.77  27.96    0.51  14.155  PowerShares KBW Bank
- 08:46:49.986 [main] INFO  EstimateProfit - KBE     4   0.35  32.93  30.37    0.50  15.327  SPDR S&P Bank
-+08:46:49.994 [main] INFO  EstimateProfit - KRE     4   0.35  40.56  24.65    0.65  16.067  SPDR S&P Regional Banking
- 
-    mid cap
- 08:46:49.638 [main] INFO  EstimateProfit - RFG     4   0.35 128.44   7.79    0.76   5.948  Guggenheim S&P MidCap 400 Pure Growth
-+08:46:49.643 [main] INFO  EstimateProfit - IVOG    1   0.20  99.84  10.02    0.63   6.300  Vanguard S&P Mid-Cap 400 Growth
-
-    small cap
- 08:46:49.585 [main] INFO  EstimateProfit - RZG     4   0.35  84.90  11.78    0.35   4.086  Guggenheim S&P SmallCap 600 Pure Growth
- 08:46:49.682 [main] INFO  EstimateProfit - IJT     3   0.25 124.22   8.05    0.88   7.099  iShares S&P Small-Cap 600 Growth
- 08:46:49.661 [main] INFO  EstimateProfit - IWO     3   0.25 141.57   7.06    0.96   6.755  iShares Russell 2000 Growth
- 08:46:49.712 [main] INFO  EstimateProfit - VBK     2   0.09 123.93   8.07    1.00   8.088  Vanguard Small-Cap Growth
-+08:46:49.869 [main] INFO  EstimateProfit - IJH     3   0.12 139.88   7.15    1.67  11.903  iShares Core S&P Mid-Capb
-
-          1m       3m     YTD      1Y      3Y      5Y     10Y
-VBK     1.65%  -10.14% -2.28%    1.47%  11.92%  13.61%   8.37%  #small cap
-IJH     1.69%   -9.01% -3.24%    1.17%  13.09%  13.37%   8.53%  #small cap
-IAK     0.66%   -5.90% -2.23%    2.56%  16.08%  12.48%  --       insurance
-IVOG    2.81%   -6.72%  0.86%    5.13%  13.47%  13.92%  --       mid cap
-XLP     3.12%   -1.93% -0.86%    6.34%  12.37%  14.08%  10.40%   consumer staples
-KRE     4.10%   -9.20%  1.49%    7.35%  13.83%  14.34%  --      *banking
-PBJ     4.22%   -1.92%  6.27%   13.80%  17.67%  15.07%   8.96%  *food
-ITB    -1.80%   -2.54%  5.31%   17.86%  10.69%  18.51%  --      *home construction
-
-
 Calculate profit for last one year
 ----
-select yahoo_dividend.symbol, yahoo_profile.category, yahoo_daily.close,count(*), round(sum(dividend), 3), round(sum(dividend)/yahoo_daily.close*100, 2) as P, etf.adv, etf.asp, yahoo_profile.name from etf, yahoo_dividend, yahoo_daily, yahoo_profile where etf.symbol = yahoo_dividend.symbol and yahoo_profile.symbol = yahoo_dividend.symbol and yahoo_daily.symbol = yahoo_dividend.symbol and yahoo_daily.date = '2015-09-29' and '2014-09-10' < yahoo_dividend.date group by yahoo_dividend.symbol having 4 <= count(*) order by P desc;
+select etf.symbol, etf.score, etf.price, count(*), round(avg(dividend), 3), round(sum(dividend), 3), round(sum(dividend)/etf.price*100, 2) as P, round(etf.adv / etf.price), etf.asp, etf.segment, etf.name
+from etf, yahoo_dividend
+where etf.symbol = yahoo_dividend.symbol and '2014-09-15' < yahoo_dividend.date
+group by yahoo_dividend.symbol
+order by etf.symbol;
 ----

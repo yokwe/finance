@@ -26,11 +26,11 @@ public abstract class Scrape<E extends Enum<E>> {
 		protected final   String  expect;
 		protected final   Matcher matcher;
 		
-		protected Element(EE key, String pattern, String expect) {
+		protected Element(EE key, String pattern, String expect, int flag) {
 			this.key        = key;
 			this.expect     = expect;
 			
-			matcher         = Pattern.compile(pattern).matcher("");
+			matcher         = Pattern.compile(pattern, flag).matcher("");
 		}
 		
 		protected String read(String fileName, String contents) {
@@ -56,14 +56,20 @@ public abstract class Scrape<E extends Enum<E>> {
 	protected  TreeMap<E, Element<E>> map = new TreeMap<>();
 	
 	protected void add(E e, String pattern) {
-		add(e, pattern, null);
+		add(e, pattern, null, 0);
+	}
+	protected void add(E e, String pattern, int flag) {
+		add(e, pattern, null, flag);
 	}
 	protected void add(E e, String pattern, String expect) {
+		add(e, pattern, expect, 0);
+	}
+	protected void add(E e, String pattern, String expect, int flag) {
 		if (map.containsKey(e)) {
 			logger.error("DUPLICATE {}", e);
 			throw new ETFException("DUPLICATE");
 		}
-		Element<E> element = new Element<>(e, pattern, expect);
+		Element<E> element = new Element<>(e, pattern, expect, flag);
 		map.put(e, element);
 	}
 
@@ -231,7 +237,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		// Sanity check
 		if (ret.contains(";")) {
 			logger.error("SEMI {}", ret);
-			throw new ETFException("SEMI");
+			throw new RuntimeException("SEMI");
 		}
 		
 		if (ret.contains("\"")) {

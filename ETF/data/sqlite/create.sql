@@ -7,7 +7,7 @@
 .echo ON
 .open tmp/sqlite/etf.sqlite3
 
--- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, INDEX_TRACKED,
+-- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT
 CREATE TABLE etf (
   symbol           TEXT     NOT NULL, -- ticker symbol
   name             TEXT     NOT NULL, -- name of ETF
@@ -22,6 +22,14 @@ CREATE TABLE etf (
   score            TEXT     NOT NULL, -- overall score
   fit              INTEGER  NOT NULL, -- rating of fit
   segment          TEXT     NOT NULL  -- segment (category)
+);
+
+-- XTF.FIeld
+CREATE TABLE xtf (
+  symbol           TEXT     NOT NULL, -- ticker symbol
+  name             TEXT     NOT NULL, -- name of ETF
+  price            REAL     NOT NULL, -- price
+  rating           INTEGER  NOT NULL  -- rating
 );
 
 -- YahooProfile.Field SYMBOL, NAME, CATEGORY, FAMILY, NET_ASSETS, INCEPTION_DATE, EXPENSE_RATIO
@@ -56,16 +64,19 @@ CREATE TABLE yahoo_dividend (
 .separator ,
 
 .import tmp/sqlite/etf.csv            etf
+.import tmp/sqlite/xtf.csv            xtf
 .import tmp/sqlite/yahoo-profile.csv  yahoo_profile
 .import tmp/sqlite/yahoo-daily.csv    yahoo_daily
 .import tmp/sqlite/yahoo-dividend.csv yahoo_dividend
 
 CREATE UNIQUE INDEX etf_symbol                 ON etf(symbol);
+CREATE UNIQUE INDEX xtf_symbol                 ON xtf(symbol);
 CREATE UNIQUE INDEX yahoo_profile_symbol       ON yahoo_profile(symbol);
 CREATE UNIQUE INDEX yahoo_daily_symbol_date    ON yahoo_daily(symbol, date);
 CREATE UNIQUE INDEX yahoo_dividend_symbol_date ON yahoo_dividend(symbol, date);
 
 select count(*) from etf;
+select count(*) from xtf;
 select count(*) from yahoo_profile;
 select count(*) from yahoo_daily;
 select count(*) from yahoo_dividend;

@@ -6,6 +6,7 @@ COMMON_WGET_OPTIONS=-nv --wait=1 --random-wait
 
 DIR_FETCH_NASDAQ        =tmp/fetch/nasdaq
 DIR_FETCH_ETF           =tmp/fetch/etf
+DIR_FETCH_XTF           =tmp/fetch/xtf
 DIR_FETCH_YAHOO_DAILY   =tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND=tmp/fetch/yahoo-dividend
 DIR_FETCH_YAHOO_PROFILE =tmp/fetch/yahoo-profile
@@ -49,10 +50,11 @@ update-nasdaq:
 #
 
 fetch:
-	@echo make fetch-etf fetch-yahoo-daily fetch-yahoo-dividend fetch-yahoo-profile
+	@echo make fetch-etf fetch-xtf fetch-yahoo-daily fetch-yahoo-dividend fetch-yahoo-profile
 
 prepare-fetch:
 	rm    -f ${DIR_FETCH_ETF}/*
+	rm    -f ${DIR_FETCH_XTF}/*
 	rm    -f ${DIR_FETCH_YAHOO_DAILY}/*
 	rm    -f ${DIR_FETCH_YAHOO_DIVIDEND}/*
 	rm    -f ${DIR_FETCH_YAHOO_PROFILE}/*
@@ -60,6 +62,12 @@ prepare-fetch:
 fetch-etf:
 	mkdir -p ${DIR_FETCH_ETF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	ant run-fetch
+
+fetch-xtf:
+	mkdir -p ${DIR_FETCH_XTF}
+	awk -v DIR_OUTPUT="${DIR_FETCH_XTF}"            -f data/script/fetch-xtf.awk \
 	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
 	ant run-fetch
 

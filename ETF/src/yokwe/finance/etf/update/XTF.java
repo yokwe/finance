@@ -24,19 +24,23 @@ public class XTF {
 		public void init() {
 			// <td class="etfSymbol fn" align="left" nowrap="nowrap" style="white-space: nowrap">QQQ</td>
 			add(Field.SYMBOL,
-				"<td class=\"etfSymbol fn\".*?>(.+?)</td>");
+				"<td class=\"etfSymbol fn\".*?>(.+?)</td>",
+				"<td class=\"etfSymbol fn\"");
 			
 			// <td class="etfName" align="left" nowrap="nowrap" style="white-space: nowrap">PowerShares QQQ</td>
 			add(Field.NAME,
-				"<td class=\"etfName\".*?>(.+?)</td>");
+				"<td class=\"etfName\".*?>(.+?)</td>",
+				"<td class=\"etfName\"");
 			
 			// <span class="QLableP">Price:</span><span class="qDataP">$19.06</span>
 			add(Field.PRICE,
-				"<span class=\"qDataP\">(.+?)</span>");
+				"<span class=\"qDataP\">(.+?)</span>",
+				"<span class=\"qDataP\">");
 			
 			// <span class="rating"><img class='value' alt='nr' 
 			add(Field.RATING,
-				"<span class=\"rating\"><img class='value' alt='(.+?)' ");
+				"<span class=\"rating\"><img class='value' alt='(.+?)' ",
+				"<span class=\"rating\"><img class='value' alt='");
 		}
 	}
 	

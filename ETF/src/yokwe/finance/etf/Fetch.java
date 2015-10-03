@@ -27,6 +27,7 @@ public class Fetch {
 	
 	public static void download(String url, String fileName, List<String> messageList) {
 		HttpGet httpget = new HttpGet(url);
+		httpget.setHeader("User-Agent", "Mozilla");
 		try (CloseableHttpResponse response = httpclient.execute(httpget)) {
 			final int code = response.getStatusLine().getStatusCode();
 			final String reasonPhrase = response.getStatusLine().getReasonPhrase();

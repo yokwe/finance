@@ -73,6 +73,13 @@
 		</java>
 	</target>
 
+        <target name="run-update-xtf">
+                <java classname="yokwe.finance.etf.update.XTF" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                </java>
+        </target>
+
 	<target name="run-update-yahoo-daily">
 		<java classname="yokwe.finance.etf.update.YahooDaily" fork="true">
 			<classpath location="${jar.yokwe}" />

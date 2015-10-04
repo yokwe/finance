@@ -7,6 +7,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
@@ -116,7 +117,58 @@ public class StreamUtil {
 		}
 	}
 
-	public static class MovingAverage {
+	public static class MovingStats {
+		public final double mean;
+		public final double standardDeviation;
+		public final double kurtosis;
+		public final double skewness;
+		
+		private MovingStats(double mean, double standardDeviation, double kurtosis, double skewness) {
+			this.mean = mean;
+			this.standardDeviation = standardDeviation;
+			this.kurtosis = kurtosis;
+			this.skewness = skewness;
+		}
+		
+		private static final class Accumlator {
+			final int                   interval;
+			final DescriptiveStatistics stats;
+			List<MovingStats> result = new ArrayList<>();
+			
+			Accumlator(int interval) {
+				this.interval = interval;
+				this.stats    = new DescriptiveStatistics(interval);
+			}
+			
+			void apply(double x) {
+				// Before first data, fill stats with first value
+				if (stats.getN() == 0) {
+					for(int i = 0; i < interval; i++) {
+						stats.addValue(x);
+					}
+				}
+				
+				stats.addValue(x);
+				result.add(new MovingStats(stats.getMean(), stats.getStandardDeviation(), stats.getKurtosis(), stats.getSkewness()));
+			}
+			List<MovingStats> finish() {
+				return result;
+			}
+		}
+		
+		public static Collector<Double, Accumlator, List<MovingStats>> getInstance(int interval) {
+			Supplier<Accumlator>               supplier    = () -> new Accumlator(interval);
+			BiConsumer<Accumlator, Double>     accumulator = (a, e) -> a.apply(e);
+			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
+				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
+				throw new ETFException("Not expected");
+			};
+			Function<Accumlator, List<MovingStats>> finisher    = (a) -> a.finish();
+			return Collector.of(supplier, accumulator, combiner, finisher);
+		}
+	}
+
+	public static class MovingStandardDeviation {
 		private static final class Accumlator {
 			final int                   interval;
 			final DescriptiveStatistics stats;
@@ -130,7 +182,7 @@ public class StreamUtil {
 			void apply(double x) {
 				stats.addValue(x);
 				if (interval <= stats.getN()) {
-					result.add(stats.getMean());
+					result.add(stats.getStandardDeviation());
 				}
 			}
 			List<Double> finish() {
@@ -216,7 +268,7 @@ public class StreamUtil {
 		logger.info("sampling 12 = {}", valueList.stream().collect(Sampling.getInstance(12)));
 
 	}
-	private static void testMovingAverage() {
+	private static void testMovingStats() {
 		double[] values = {
 				1, 1, 1,   2, 2, 2,
 				3, 3, 3,   4, 4, 4,
@@ -225,14 +277,14 @@ public class StreamUtil {
 		List<Double> valueList = new ArrayList<>();
 		for(double value: values) valueList.add(value);
 		logger.info("valueList = {}", valueList);
-		logger.info("sampling  3 = {}", valueList.stream().collect(MovingAverage.getInstance(3)));
+		logger.info("sampling  3 = {}", valueList.stream().collect(MovingStats.getInstance(3)).stream().map(o -> o.mean).collect(Collectors.toList()));
 	}
 	public static void main(String[] args) {
 		logger.info("START");
 		
 		testStats();
 		testSampling();
-		testMovingAverage();
+		testMovingStats();
 	
 		logger.info("STOP");
 	}

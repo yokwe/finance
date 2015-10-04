@@ -11,11 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
@@ -23,11 +18,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.etf.ETFException;
 import yokwe.finance.etf.util.JDBCUtil;
+import yokwe.finance.etf.util.StreamUtil.MovingStats;
 
 public class CSVServlet extends HttpServlet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
@@ -139,42 +134,6 @@ public class CSVServlet extends HttpServlet {
 		public double dividend;
 	}
 	
-	public static class MovingAverage {
-		private static final class Accumlator {
-			final int                   interval;
-			final DescriptiveStatistics stats;
-			List<SampledData>           result;
-			
-			Accumlator(int interval) {
-				this.interval = interval;
-				this.stats    = new DescriptiveStatistics(interval);
-				this.result   = new ArrayList<>();
-			}
-			
-			void apply(SampledData x) {
-				stats.addValue(x.value);
-				if (interval <= stats.getN()) {
-					result.add(new SampledData(x.date, x.symbol, stats.getMean()));
-				}
-			}
-			List<SampledData> finish() {
-				return result;
-			}
-		}
-		
-		public static Collector<SampledData, Accumlator, List<SampledData>> getInstance(int interval) {
-			final Supplier<Accumlator>               supplier      = () -> new Accumlator(interval);
-			final BiConsumer<Accumlator, SampledData> accumulator  = (a, e) -> a.apply(e);
-			final BinaryOperator<Accumlator> combiner = (a1, a2) -> {
-				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
-				throw new ETFException("Not expected");
-			};
-			final Function<Accumlator, List<SampledData>> finisher = (a) -> a.finish();
-			return Collector.of(supplier, accumulator, combiner, finisher);
-		}
-	}
-
-	
 	private static String CRLF = "\r\n";
 	
 	private interface ServletProcessor {
@@ -189,24 +148,61 @@ public class CSVServlet extends HttpServlet {
 	
 	private static class DailyProcessRequest implements ServletProcessor {
 		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Calendar fromDate) throws IOException {
-			Map<String, List<SampledData>> rawData = new TreeMap<>();
+			// Build rawDataMap
+			Map<String, List<DailyClose>> rawDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				List<SampledData> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, fromDate), DailyClose.class).stream().map(o -> new SampledData(o)).collect(Collectors.toList());
-				rawData.put(symbol, data);
+				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, fromDate), DailyClose.class).stream().collect(Collectors.toList());
+				rawDataMap.put(symbol, data);
+				logger.info("rawDataMap {} {}", symbol, data.size());
 			}
 			
+			// Build dateList from rawDataMap
+			List<String> dateList = rawDataMap.get(symbolList.get(0)).stream().map(o -> o.date).collect(Collectors.toList());
+			logger.info("dateList {}", dateList.size());
+			
+			// Build doubleDataMap from rawDataMap
+			Map<String, List<Double>> doubleDataMap = new TreeMap<>();
+			for(String symbol: symbolList) {
+				List<Double> doubleList = rawDataMap.get(symbol).stream().map(o -> o.close).collect(Collectors.toList());
+				doubleDataMap.put(symbol,  doubleList);
+			}
+			
+			// Build statsMap from doubleDataMap
+			Map<String, List<MovingStats>> statsMap = new TreeMap<>();
+			for(String symbol: symbolList) {
+				List<MovingStats> result = doubleDataMap.get(symbol).stream().collect(MovingStats.getInstance(1));
+				statsMap.put(symbol, result);
+			}
+
+			// Apply statsMap result to doubleDataMap
+			for(String symbol: symbolList) {
+				doubleDataMap.put(symbol, statsMap.get(symbol).stream().map(o -> o.mean).collect(Collectors.toList()));
+			}
+			
+			//
+			// End of data processing
+			//
+			
+			// Build dateMap from doubleDataMap
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				for(SampledData data: rawData.get(symbol)) {
-					if (!dateMap.containsKey(data.date)) {
-						dateMap.put(data.date, new TreeMap<>());
+			{
+				int index = 0;
+				for(String date: dateList) {
+					Map<String, Double> doubleMap = new TreeMap<>();
+					for(String symbol: symbolList) {
+						List<Double> doubleList = doubleDataMap.get(symbol);
+						doubleMap.put(symbol, doubleList.get(index));
 					}
-					dateMap.get(data.date).put(symbol, data.value);
+					dateMap.put(date, doubleMap);
+					//
+					index++;
 				}
-			}
-			
+			}			
 			logger.info("dateMap  = {}", dateMap.size());
 
+			//
+		    // Start output data
+			//
 			StringBuilder line = new StringBuilder();
 			
 			// Output header

@@ -132,18 +132,8 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	private static String CRLF = "\r\n";
-	
-	private interface ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException;
-	}
-	private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
-	static {
-		processorMap.put("daily",    new DailyProcessRequest());
-		processorMap.put("volume",   new VolumeProcessor());
-		processorMap.put("dividend", new DividendProcessor());
-	}
-	
-	private static class DailyProcessRequest implements ServletProcessor {
+		
+	private static class DailyProcessRequest extends ServletProcessor {
 		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			// Build rawDataMap
 			Map<String, List<DailyClose>> rawDataMap = new TreeMap<>();
@@ -228,7 +218,7 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 
-	private static class VolumeProcessor implements ServletProcessor {
+	private static class VolumeProcessor extends ServletProcessor {
 		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
@@ -270,7 +260,7 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 
-	private static class DividendProcessor implements ServletProcessor {
+	private static class DividendProcessor extends ServletProcessor {
 		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
@@ -436,6 +426,25 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 
+	private static abstract class ServletProcessor {
+		private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
+		static {
+			processorMap.put("daily",    new DailyProcessRequest());
+			processorMap.put("volume",   new VolumeProcessor());
+			processorMap.put("dividend", new DividendProcessor());
+		}
+		public static ServletProcessor getInstance(String type) {
+			logger.info("type = {}", type);
+			ServletProcessor ret = processorMap.get(type);
+			if (ret == null) {
+				logger.error("Unknown type = {}", type);
+				throw new ETFException();
+			}
+			return ret;
+		}
+
+		public abstract void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException;
+	}
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
@@ -464,17 +473,12 @@ public class CSVServlet extends HttpServlet {
 			
 			// t - type (daily, dividend or volume)
 			type = paramMap.containsKey("t") ? paramMap.get("t")[0] : "daily";
-			logger.info("type = {}", type);
-			processor = processorMap.get(type);
-			if (processor == null) {
-				logger.error("Unknown type = {}", type);
-				throw new ETFException();
-			}
+			processor = ServletProcessor.getInstance(type);
 			
 			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
 			// f - filter
 			//     mavg[0-9]+  msd[0-9]+ mskew[0-9]+ mkurt[0-9]+
-			
+			// Filter filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "mavg1");
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");

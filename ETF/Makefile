@@ -5,6 +5,7 @@
 COMMON_WGET_OPTIONS=-nv --wait=1 --random-wait
 
 DIR_FETCH_NASDAQ        =tmp/fetch/nasdaq
+DIR_FETCH_NASDAQ_SYMBOL =tmp/fetch/nasdaq-symbol
 DIR_FETCH_ETF           =tmp/fetch/etf
 DIR_FETCH_XTF           =tmp/fetch/xtf
 DIR_FETCH_YAHOO_DAILY   =tmp/fetch/yahoo-daily
@@ -50,11 +51,12 @@ update-nasdaq:
 #
 
 fetch:
-	@echo make fetch-etf fetch-xtf fetch-yahoo-daily fetch-yahoo-dividend fetch-yahoo-profile
+	@echo make fetch-etf fetch-nasdaq-symbol fetch-xtf fetch-yahoo-daily fetch-yahoo-dividend fetch-yahoo-profile
 
 prepare-fetch:
 	rm    -f ${DIR_FETCH_ETF}/*
-	rm    -f ${DIR_FETCH_XTF}/*
+#	rm    -f ${DIR_FETCH_NASDAQ_SYMBOL}/*
+#	rm    -f ${DIR_FETCH_XTF}/*
 	rm    -f ${DIR_FETCH_YAHOO_DAILY}/*
 	rm    -f ${DIR_FETCH_YAHOO_DIVIDEND}/*
 	rm    -f ${DIR_FETCH_YAHOO_PROFILE}/*
@@ -62,6 +64,12 @@ prepare-fetch:
 fetch-etf:
 	mkdir -p ${DIR_FETCH_ETF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
+	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	ant run-fetch
+
+fetch-nasdaq-symbol:
+	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"        -f data/script/fetch-nasdaq-symbol.awk \
 	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
 	ant run-fetch
 
@@ -100,6 +108,10 @@ update:
 update-etf:
 	mkdir -p tmp/sqlite
 	ant run-update-etf
+
+update-xtf:
+	mkdir -p tmp/sqlite
+	ant run-update-xtf
 
 update-yahoo-daily:
 	mkdir -p tmp/sqlite

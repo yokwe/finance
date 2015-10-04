@@ -134,7 +134,7 @@ public class CSVServlet extends HttpServlet {
 	private static String CRLF = "\r\n";
 	
 	private interface ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, String fromDate, String toDate) throws IOException;
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException;
 	}
 	private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
 	static {
@@ -144,11 +144,11 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	private static class DailyProcessRequest implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, String fromDate, String toDate) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			// Build rawDataMap
 			Map<String, List<DailyClose>> rawDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, fromDate, toDate), DailyClose.class).stream().collect(Collectors.toList());
+				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, period.dateStart, period.dateEnd), DailyClose.class).stream().collect(Collectors.toList());
 				rawDataMap.put(symbol, data);
 				logger.info("rawDataMap {} {}", symbol, data.size());
 			}
@@ -229,10 +229,10 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	private static class VolumeProcessor implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, String fromDate, String toDate) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, fromDate, toDate), DailyVolume.class)) {
+				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, period.dateStart, period.dateEnd), DailyVolume.class)) {
 					if (!dateMap.containsKey(data.date)) {
 						dateMap.put(data.date, new TreeMap<>());
 					}
@@ -271,10 +271,10 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	private static class DividendProcessor implements ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, String fromDate, String toDate) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, fromDate, toDate), Dividend.class)) {
+				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, period.dateStart, period.dateEnd), Dividend.class)) {
 					// Use pseudo date for dataMap
 					String pseudoDate = data.date.substring(0, 8) + "15";
 					if (!dateMap.containsKey(pseudoDate)) {
@@ -316,7 +316,124 @@ public class CSVServlet extends HttpServlet {
 				output.append(line.toString()).append(CRLF);
 			}
 		}
+	}
+	
+	private static class Period {
+		private static Matcher matcherPeriod     = Pattern.compile("([0-9]+)([ymd])").matcher(""); // [0-9]+[ymd]
+		private static Matcher matcherDatePeriod = Pattern.compile("([0-9]{6})\\-([0-9]+)([ymd])").matcher(""); // yyyymm-[0-9]+[ymd]
+		
+		final String dateStart;
+		final String dateEnd;
+		
+		public Period(String value) {
+			Calendar today = Calendar.getInstance();
+			Calendar calFrom = Calendar.getInstance();
+			Calendar calTo   = Calendar.getInstance();
+			
+			calFrom.setTimeInMillis(today.getTimeInMillis());
+			calTo.setTimeInMillis(today.getTimeInMillis());
+			
+			matcherPeriod.reset(value); // [0-9]+[ymd]
+			matcherDatePeriod.reset(value); // yyyymm-[0-9]+[ymd]
+			if (matcherPeriod.matches()) {
+				// [0-9]+[ymd]
+				final int groupCount = matcherPeriod.groupCount();
+				if (groupCount != 2) {
+					logger.error("groupCount = {}", groupCount);
+					throw new ETFException("groupCount");
+				}
+				String number = matcherPeriod.group(1);
+				String mode   = matcherPeriod.group(2);
+				final int duration;
+				{
+					try {
+						duration = Integer.parseInt(number);
+					} catch (NumberFormatException e) {
+						logger.error("number = {}", number);
+						throw new ETFException("number");
+					}
+				}
+				
+				switch(mode) {
+				case "y":
+					calFrom.add(Calendar.YEAR, -duration);
+					break;
+				case "m":
+					calFrom.add(Calendar.MONTH, -duration);
+					break;
+				case "d":
+					calFrom.add(Calendar.DATE, -duration);
+					break;
+				default:
+					logger.error("mode = {}", mode);
+					throw new ETFException("mode");
+				}
+			} else if (matcherDatePeriod.matches()) {
+				// yyyymm-[0-9]+[ymd]
+				final int groupCount = matcherDatePeriod.groupCount();
+				if (groupCount != 3) {
+					logger.error("groupCount = {}", groupCount);
+					throw new ETFException("groupCount");
+				}
+				String yyyymm = matcherDatePeriod.group(1);
+				String number = matcherDatePeriod.group(2);
+				String mode   = matcherDatePeriod.group(3);
+				{
+					String yyyy = yyyymm.substring(0, 4);
+					String mm = yyyymm.substring(4, 6);
+					
+					int year = Integer.parseInt(yyyy);
+					int month = Integer.parseInt(mm);
+					
+					if (year < 1900 || 2100 < year) {
+						logger.error("year = {}", year);
+						throw new ETFException("year");
+					}
+					if (month < 1 || 12 < month) {
+						logger.error("month = {}", month);
+						throw new ETFException("month");
+					}
+					
+					calFrom.set(Calendar.YEAR, year);
+					calFrom.set(Calendar.MONTH, month - 1); // 0 base
+					calFrom.set(Calendar.DATE, 1); // 1 base
+				}
 
+				calTo.setTimeInMillis(calFrom.getTimeInMillis());
+
+				// [0-9]+[ymd]
+				{
+					int duration;
+					try {
+						duration = Integer.parseInt(number);
+					} catch (NumberFormatException e) {
+						logger.error("number = {}", number);
+						throw new ETFException("number");
+					}
+					switch(mode) {
+					case "y":
+						calTo.add(Calendar.YEAR, duration);
+						break;
+					case "m":
+						calTo.add(Calendar.MONTH, duration);
+						break;
+					case "d":
+						calTo.add(Calendar.DATE, duration);
+						break;
+					default:
+						logger.error("mode = {}", mode);
+						throw new ETFException("mode");
+					}
+				}
+			} else {
+				logger.error("value = {}", value);
+				throw new ETFException("period");
+			}
+			
+			dateStart = dateString(calFrom);
+			dateEnd   = dateString(calTo);
+			logger.info("period = {}  {} - {}", value, dateStart, dateEnd);
+		}
 	}
 
 	@Override
@@ -324,13 +441,9 @@ public class CSVServlet extends HttpServlet {
 		logger.info("doGet START");
 		
 		final List<String> symbolList = new ArrayList<>();
-		String type = "daily";
-		final String dateStart;
-		final String dateEnd;
-		Calendar today   = Calendar.getInstance();
-
-
-		final ServletProcessor processRequest;
+		final String type;
+		final Period period;
+		final ServletProcessor processor;
 		{
 			Map<String, String[]> paramMap = req.getParameterMap();
 			
@@ -347,147 +460,21 @@ public class CSVServlet extends HttpServlet {
 			//     date-range := date+period | period
 			//     period := [0-9]+[ymd]
 			//     date := yyyymm
-			if (paramMap.containsKey("p")) {
-				String value = paramMap.get("p")[0];
-
-				Calendar calFrom = Calendar.getInstance();
-				Calendar calTo   = Calendar.getInstance();
-				
-				calFrom.setTimeInMillis(today.getTimeInMillis());
-				calTo.setTimeInMillis(today.getTimeInMillis());
-				
-				Matcher matcherPeriod = Pattern.compile("([0-9]+)([ymd])").matcher(value); // [0-9]+[ymd]
-				Matcher matcherDatePeriod = Pattern.compile("([0-9]{6})\\-([0-9]+)([ymd])").matcher(value); // yyyymm-[0-9]+[ymd]
-				if (matcherPeriod.matches()) {
-					// [0-9]+[ymd]
-					final int groupCount = matcherPeriod.groupCount();
-					if (groupCount != 2) {
-						logger.error("groupCount = {}", groupCount);
-						throw new ETFException("groupCount");
-					}
-					String number = matcherPeriod.group(1);
-					String mode   = matcherPeriod.group(2);
-					final int duration;
-					{
-						try {
-							duration = Integer.parseInt(number);
-						} catch (NumberFormatException e) {
-							logger.error("number = {}", number);
-							throw new ETFException("number");
-						}
-					}
-					
-					switch(mode) {
-					case "y":
-						calFrom.add(Calendar.YEAR, -duration);
-						break;
-					case "m":
-						calFrom.add(Calendar.MONTH, -duration);
-						break;
-					case "d":
-						calFrom.add(Calendar.DATE, -duration);
-						break;
-					default:
-						logger.error("mode = {}", mode);
-						throw new ETFException("mode");
-					}
-				} else if (matcherDatePeriod.matches()) {
-					// yyyymm-[0-9]+[ymd]
-					final int groupCount = matcherDatePeriod.groupCount();
-					if (groupCount != 3) {
-						logger.error("groupCount = {}", groupCount);
-						throw new ETFException("groupCount");
-					}
-					String yyyymm = matcherDatePeriod.group(1);
-					String number = matcherDatePeriod.group(2);
-					String mode   = matcherDatePeriod.group(3);
-					{
-						String yyyy = yyyymm.substring(0, 4);
-						String mm = yyyymm.substring(4, 6);
-						
-						int year = Integer.parseInt(yyyy);
-						int month = Integer.parseInt(mm);
-						
-						if (year < 1900 || 2100 < year) {
-							logger.error("year = {}", year);
-							throw new ETFException("year");
-						}
-						if (month < 1 || 12 < month) {
-							logger.error("month = {}", month);
-							throw new ETFException("month");
-						}
-						
-						calFrom.set(Calendar.YEAR, year);
-						calFrom.set(Calendar.MONTH, month - 1); // 0 base
-						calFrom.set(Calendar.DATE, 1); // 1 base
-					}
-
-					calTo.setTimeInMillis(calFrom.getTimeInMillis());
-
-					// [0-9]+[ymd]
-					{
-						int duration;
-						try {
-							duration = Integer.parseInt(number);
-						} catch (NumberFormatException e) {
-							logger.error("number = {}", number);
-							throw new ETFException("number");
-						}
-						switch(mode) {
-						case "y":
-							calTo.add(Calendar.YEAR, duration);
-							break;
-						case "m":
-							calTo.add(Calendar.MONTH, duration);
-							break;
-						case "d":
-							calTo.add(Calendar.DATE, duration);
-							break;
-						default:
-							logger.error("mode = {}", mode);
-							throw new ETFException("mode");
-						}
-					}
-				} else {
-					logger.error("value = {}", value);
-					throw new ETFException("period");
-				}
-				
-				dateStart = dateString(calFrom);
-				dateEnd   = dateString(calTo);
-
-				logger.info("period = {}  {} - {}", value, dateStart, dateEnd);
-			} else {
-				Calendar calFrom = Calendar.getInstance();
-				Calendar calTo   = Calendar.getInstance();
-				
-				calFrom.setTimeInMillis(today.getTimeInMillis());
-				calTo.setTimeInMillis(today.getTimeInMillis());
-
-				calTo.add(Calendar.MONTH, -12);
-				
-				dateStart = dateString(calFrom);
-				dateEnd   = dateString(calTo);
-				logger.info("period = {} - {}", dateStart, dateEnd);
-			}
-
+			period = new Period(paramMap.containsKey("p") ? paramMap.get("p")[0] : "12m");
 			
 			// t - type (daily, dividend or volume)
-			if (paramMap.containsKey("t")) {
-				type = paramMap.get("t")[0];
-			} else {
-				type = "daily";
-			}
-			logger.info("t = {}", type);
-			
-			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
-			// f - filter
-			
-			processRequest = processorMap.get(type);
-			if (processRequest == null) {
+			type = paramMap.containsKey("t") ? paramMap.get("t")[0] : "daily";
+			logger.info("type = {}", type);
+			processor = processorMap.get(type);
+			if (processor == null) {
 				logger.error("Unknown type = {}", type);
 				throw new ETFException();
 			}
+			
+			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
+			// f - filter
+			//     mavg[0-9]+  msd[0-9]+ mskew[0-9]+ mkurt[0-9]+
+			
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -495,7 +482,7 @@ public class CSVServlet extends HttpServlet {
 		try (
 				Statement statement = DriverManager.getConnection(JDBC_CONNECTION_URL).createStatement();
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
-			processRequest.process(statement, output, symbolList, dateStart, dateEnd);
+			processor.process(statement, output, symbolList, period);
 		} catch (SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

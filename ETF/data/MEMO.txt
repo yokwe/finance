@@ -2,9 +2,25 @@ http://www.xtf.com/ETF-Performance
 
 Calculate profit for last one year
 ----
-select etf.symbol, etf.score, etf.price, count(*), round(avg(dividend), 3), round(sum(dividend), 3), round(sum(dividend)/etf.price*100, 2) as P, round(etf.adv / etf.price), etf.asp, etf.segment, etf.name
-from etf, yahoo_dividend
-where etf.symbol = yahoo_dividend.symbol and '2014-09-15' < yahoo_dividend.date
+select etf.symbol, etf.score, xtf.rating, etf.price, count(*), round(avg(dividend), 3), round(sum(dividend), 3), round(sum(dividend)/etf.price*100, 2) as P, round(etf.adv / etf.price), etf.asp, etf.segment, etf.name
+from etf, xtf, yahoo_dividend
+where etf.symbol = yahoo_dividend.symbol and etf.symbol = xtf.symbol and '2014-09-15' < yahoo_dividend.date
 group by yahoo_dividend.symbol
 order by etf.symbol;
 ----
+
+Data from NASDAQ
+  It should be origin of data source
+Summary of REM
+  http://www.nasdaq.com/symbol/rem
+  name, price, 90 days average daily volume, 52 week high and low, market cap, annualized dividend, ex dividend date, current yield%
+Detail of REM
+  http://www.nasdaq.com/symbol/rem/etf-detail
+  price change for 100 200 260 days, average daily volume 20 days, 65 days
+  can be blank (no data)
+Intra day sale of REM
+  http://www.nasdaq.com/symbol/rem/time-sales
+  list of recent actual trade of the symbol
+Dividend
+  http://www.nasdaq.com/symbol/rem/dividend-history
+  list of date and dividend

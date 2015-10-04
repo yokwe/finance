@@ -168,40 +168,6 @@ public class StreamUtil {
 		}
 	}
 
-	public static class MovingStandardDeviation {
-		private static final class Accumlator {
-			final int                   interval;
-			final DescriptiveStatistics stats;
-			List<Double> result = new ArrayList<>();
-			
-			Accumlator(int interval) {
-				this.interval = interval;
-				this.stats    = new DescriptiveStatistics(interval);
-			}
-			
-			void apply(double x) {
-				stats.addValue(x);
-				if (interval <= stats.getN()) {
-					result.add(stats.getStandardDeviation());
-				}
-			}
-			List<Double> finish() {
-				return result;
-			}
-		}
-		
-		public static Collector<Double, Accumlator, List<Double>> getInstance(int interval) {
-			Supplier<Accumlator>               supplier    = () -> new Accumlator(interval);
-			BiConsumer<Accumlator, Double>     accumulator = (a, e) -> a.apply(e);
-			BinaryOperator<Accumlator> combiner = (a1, a2) -> {
-				logger.error("combiner  {}  {}", a1.toString(), a2.toString());
-				throw new ETFException("Not expected");
-			};
-			Function<Accumlator, List<Double>> finisher    = (a) -> a.finish();
-			return Collector.of(supplier, accumulator, combiner, finisher);
-		}
-	}
-
 	private static void testStats() {
 		{
 		    double mean = 12.40454545454550;

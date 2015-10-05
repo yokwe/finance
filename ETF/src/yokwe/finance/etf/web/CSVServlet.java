@@ -63,9 +63,9 @@ public class CSVServlet extends HttpServlet {
 	private static abstract class Generator {
 		private static Map<String, Generator> generatorMap = new TreeMap<>();
 		static {
-			generatorMap.put("close",    new CloseData());
-			generatorMap.put("volume",   new VolumeData());
-			generatorMap.put("dividend", new DividendData());
+			generatorMap.put("price", new PriceData());
+			generatorMap.put("vol",   new VolumeData());
+			generatorMap.put("div",   new DividendData());
 		}
 		public static Generator getInstance(String type) {
 			logger.info("type = {}", type);
@@ -80,7 +80,7 @@ public class CSVServlet extends HttpServlet {
 		public abstract List<DailyData> generate(Statement statement, String symbol, Period period);
 	}
 	
-	public static class CloseData extends Generator {
+	public static class PriceData extends Generator {
 		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
 		private static String getSQL(String symbol, String fromDate, String toDate) {
 			return String.format(SQL, symbol, fromDate, toDate);
@@ -96,7 +96,7 @@ public class CSVServlet extends HttpServlet {
 		}
 		
 		public List<DailyData> generate(Statement statement, String symbol, Period period) {
-			List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, period.dateStart, period.dateEnd), CloseData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
+			List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, period.dateStart, period.dateEnd), PriceData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
 			return ret;
 		}
 
@@ -353,9 +353,8 @@ public class CSVServlet extends HttpServlet {
 			period = new Period(paramMap.containsKey("p") ? paramMap.get("p")[0] : "12m");
 			
 			// t - type (daily, dividend or volume)
-			generator = Generator.getInstance(paramMap.containsKey("t") ? paramMap.get("t")[0] : "daily");
+			generator = Generator.getInstance(paramMap.containsKey("t") ? paramMap.get("t")[0] : "price");
 			
-			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
 			// f - filter
 			//     avg[0-9]+  sd[0-9]+  skew[0-9]+ kurt[0-9]+
 			// Filter filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "mavg1");

@@ -7,12 +7,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.etf.ETFException;
 import yokwe.finance.etf.util.JDBCUtil;
 import yokwe.finance.etf.util.StreamUtil.MovingStats;
+import yokwe.finance.etf.util.StreamUtil.MovingStats.Accumlator;
 
 public class CSVServlet extends HttpServlet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
@@ -79,36 +81,7 @@ public class CSVServlet extends HttpServlet {
 			return String.format("[%s %s %6.3f", date, symbol, close);
 		}
 	}
-	
-	public static class SampledData implements Comparator<SampledData> {
-		public final String date;
-		public final String symbol;
-		public final double value;
 
-		public SampledData(String date, String symbol, double value) {
-			this.date   = date;
-			this.symbol = symbol;
-			this.value  = value;
-		}
-		public SampledData(DailyClose that) {
-			this(that.date, that.symbol, that.close);
-		}
-		
-		@Override
-		public String toString() {
-			return String.format("[%s %s %6.3f", date, symbol, value);
-		}
-		
-		@Override
-		public int compare(SampledData o1, SampledData o2) {
-			int ret = o1.date.compareTo(o2.date);
-			if (ret == 0) {
-				ret = o1.symbol.compareTo(o2.symbol);
-			}
-			return ret;
-		}
-	}
-	
 	public static class DailyVolume {
 		private static String SQL = "select date, symbol, volume from yahoo_daily where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
 		public static String getSQL(String symbol, String fromDate, String toDate) {
@@ -132,9 +105,29 @@ public class CSVServlet extends HttpServlet {
 	}
 	
 	private static String CRLF = "\r\n";
-		
-	private static class DailyProcessRequest extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
+
+	private static abstract class ServletProcessor {
+		private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
+		static {
+			processorMap.put("daily",    new DailyProcessor());
+			processorMap.put("volume",   new VolumeProcessor());
+			processorMap.put("dividend", new DividendProcessor());
+		}
+		public static ServletProcessor getInstance(String type) {
+			logger.info("type = {}", type);
+			ServletProcessor ret = processorMap.get(type);
+			if (ret == null) {
+				logger.error("Unknown type = {}", type);
+				throw new ETFException();
+			}
+			return ret;
+		}
+
+		public abstract void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException;
+	}
+
+	private static class DailyProcessor extends ServletProcessor {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
 			// Build rawDataMap
 			Map<String, List<DailyClose>> rawDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
@@ -154,16 +147,10 @@ public class CSVServlet extends HttpServlet {
 				doubleDataMap.put(symbol,  doubleList);
 			}
 			
-			// Build statsMap from doubleDataMap
-			Map<String, List<MovingStats>> statsMap = new TreeMap<>();
+			// Apply filter with doubleDataMap
 			for(String symbol: symbolList) {
-				List<MovingStats> result = doubleDataMap.get(symbol).stream().collect(MovingStats.getInstance(1));
-				statsMap.put(symbol, result);
-			}
-
-			// Apply statsMap result to doubleDataMap
-			for(String symbol: symbolList) {
-				doubleDataMap.put(symbol, statsMap.get(symbol).stream().map(o -> o.mean).collect(Collectors.toList()));
+				List<Double> filtered = filter.apply(doubleDataMap.get(symbol));
+				doubleDataMap.put(symbol, filtered);
 			}
 			
 			//
@@ -219,7 +206,7 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	private static class VolumeProcessor extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
 				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, period.dateStart, period.dateEnd), DailyVolume.class)) {
@@ -261,7 +248,7 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	private static class DividendProcessor extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException {
+		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
 			for(String symbol: symbolList) {
 				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, period.dateStart, period.dateEnd), Dividend.class)) {
@@ -335,13 +322,11 @@ public class CSVServlet extends HttpServlet {
 				String number = matcherPeriod.group(1);
 				String mode   = matcherPeriod.group(2);
 				final int duration;
-				{
-					try {
-						duration = Integer.parseInt(number);
-					} catch (NumberFormatException e) {
-						logger.error("number = {}", number);
-						throw new ETFException("number");
-					}
+				try {
+					duration = Integer.parseInt(number);
+				} catch (NumberFormatException e) {
+					logger.error("number = {}", number);
+					throw new ETFException("number");
 				}
 				
 				switch(mode) {
@@ -426,25 +411,55 @@ public class CSVServlet extends HttpServlet {
 		}
 	}
 
-	private static abstract class ServletProcessor {
-		private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
+	private static class Filter {
+		private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt)([0-9]+)").matcher("");
+
+		static Map<String, Function<MovingStats, Double>> mapperMap = new TreeMap<>();
 		static {
-			processorMap.put("daily",    new DailyProcessRequest());
-			processorMap.put("volume",   new VolumeProcessor());
-			processorMap.put("dividend", new DividendProcessor());
+			mapperMap.put("avg",  o -> o.mean);
+			mapperMap.put("sd",   o -> o.standardDeviation);
+			mapperMap.put("skew", o -> o.skewness);
+			mapperMap.put("kurt", o -> o.kurtosis);
 		}
-		public static ServletProcessor getInstance(String type) {
-			logger.info("type = {}", type);
-			ServletProcessor ret = processorMap.get(type);
-			if (ret == null) {
-				logger.error("Unknown type = {}", type);
-				throw new ETFException();
+		
+		private Function<MovingStats, Double>                    mapper;
+		private int                                              interval;
+		private Collector<Double, Accumlator, List<MovingStats>> collector;
+		public Filter(String value) {
+			matcher.reset(value);
+			if (matcher.matches()) {
+				if (matcher.groupCount() != 2) {
+					logger.error("groupCount = {}", matcher.groupCount());
+					throw new ETFException("groupCount");
+				}
+				String type   = matcher.group(1);
+				String number = matcher.group(2);
+				try {
+					interval = Integer.parseInt(number);
+				} catch (NumberFormatException e) {
+					logger.error("number = {}", number);
+					throw new ETFException("number");
+				}
+				mapper = mapperMap.get(type);
+				if (mapper == null) {
+					logger.error("type = {}", type);
+					throw new ETFException("type");
+				}
+				logger.info("filter {} {}", type, number);
+			} else {
+				logger.error("value = {}", value);
+				throw new ETFException("fiter");
 			}
+			collector = MovingStats.getInstance(interval);
+		}
+		
+		public List<Double> apply(List<Double> data) {
+			List<MovingStats> stats = data.stream().collect(collector);
+			List<Double> ret = stats.stream().map(mapper).collect(Collectors.toList());
 			return ret;
 		}
-
-		public abstract void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period) throws IOException;
 	}
+
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
@@ -453,6 +468,8 @@ public class CSVServlet extends HttpServlet {
 		final String type;
 		final Period period;
 		final ServletProcessor processor;
+		final Filter filter;
+		
 		{
 			Map<String, String[]> paramMap = req.getParameterMap();
 			
@@ -461,8 +478,9 @@ public class CSVServlet extends HttpServlet {
 				for(String symbol: paramMap.get("s")) {
 					symbolList.add(symbol);
 				}
+			} else {
+				symbolList.add("SPY");
 			}
-			if (symbolList.size() == 0) symbolList.add("SPY");
 			logger.info("symbolList = {}", symbolList);
 			
 			// p - period
@@ -477,8 +495,9 @@ public class CSVServlet extends HttpServlet {
 			
 			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
 			// f - filter
-			//     mavg[0-9]+  msd[0-9]+ mskew[0-9]+ mkurt[0-9]+
+			//     avg[0-9]+  sd[0-9]+  skew[0-9]+ kurt[0-9]+
 			// Filter filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "mavg1");
+			filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -486,7 +505,7 @@ public class CSVServlet extends HttpServlet {
 		try (
 				Statement statement = DriverManager.getConnection(JDBC_CONNECTION_URL).createStatement();
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
-			processor.process(statement, output, symbolList, period);
+			processor.process(statement, output, symbolList, period, filter);
 		} catch (SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

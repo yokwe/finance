@@ -130,7 +130,7 @@ public class StreamUtil {
 			this.skewness = skewness;
 		}
 		
-		private static final class Accumlator {
+		public static final class Accumlator {
 			final int                   interval;
 			final DescriptiveStatistics stats;
 			List<MovingStats> result = new ArrayList<>();

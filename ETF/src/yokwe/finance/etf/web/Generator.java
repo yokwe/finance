@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import yokwe.finance.etf.ETFException;
-import yokwe.finance.etf.web.CSVServlet.Generator;
 
 public abstract class Generator {
 	private static Map<String, Generator> generatorMap = new TreeMap<>();

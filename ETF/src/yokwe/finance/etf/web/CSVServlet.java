@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -374,9 +376,16 @@ public class CSVServlet extends HttpServlet {
 			}
 			
 			// Build dateList from dailyDataMap
-			List<String> dateList = dailyDataMap.get(symbolList.get(0)).stream().map(o -> o.date).collect(Collectors.toList());
-			logger.info("dateList {}", dateList.size());
-			
+			final List<String> dateList;
+			{
+				Set<String> dateSet = new TreeSet<>();
+				for(String symbol: symbolList) {
+					dailyDataMap.get(symbol).stream().forEach(o -> dateSet.add(o.date));
+				}
+				dateList = new ArrayList<>(dateSet);
+				logger.info("dateList {}", dateList.size());
+			}
+		
 			// Build doubleDataMap from dailyDataMap
 			Map<String, List<Double>> doubleDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
@@ -395,20 +404,26 @@ public class CSVServlet extends HttpServlet {
 			//
 			
 			// Build dateMap from doubleDataMap
-			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-			{
-				int index = 0;
-				for(String date: dateList) {
-					Map<String, Double> doubleMap = new TreeMap<>();
-					for(String symbol: symbolList) {
-						List<Double> doubleList = doubleDataMap.get(symbol);
-						doubleMap.put(symbol, doubleList.get(index));
-					}
-					dateMap.put(date, doubleMap);
-					//
-					index++;
+			Map<String, Map<String, Double>> dateMap = new TreeMap<>(); // date symbol value
+			for(String symbol: symbolList) {
+				// Sanity check
+				if (doubleDataMap.get(symbol).size() != dailyDataMap.get(symbol).size()) {
+					logger.error("size {}  {}  {}", symbol, doubleDataMap.get(symbol).size(), dailyDataMap.get(symbol).size());
+					throw new ETFException("size");
 				}
-			}			
+
+				int index = 0;
+				List<Double> doubleList = doubleDataMap.get(symbol);
+				for(DailyData dailyData: dailyDataMap.get(symbol)) {
+					final String date = dailyData.date;
+					Map<String, Double> map = dateMap.get(date);
+					if (map == null) {
+						map = new TreeMap<>();
+						dateMap.put(date, map);
+					}
+					map.put(symbol, doubleList.get(index++));
+				}
+			}
 			logger.info("dateMap  = {}", dateMap.size());
 
 			//

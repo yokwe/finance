@@ -58,20 +58,32 @@ public class CSVServlet extends HttpServlet {
 	}
 
 	
-	public static class DailyClose {
+	private static abstract class Generator {
+		private static Map<String, Generator> generatorMap = new TreeMap<>();
+		static {
+			generatorMap.put("close",    new CloseData());
+			generatorMap.put("volume",   new VolumeData());
+			generatorMap.put("dividend", new DividendData());
+		}
+		public static Generator getInstance(String type) {
+			logger.info("type = {}", type);
+			Generator ret = generatorMap.get(type);
+			if (ret == null) {
+				logger.error("Unknown type = {}", type);
+				throw new ETFException();
+			}
+			return ret;
+		}
+
+		public abstract List<DailyData> generate(Statement statement, String symbol, Period period);
+	}
+	
+	public static class CloseData extends Generator {
 		private static String SQL = "select date, symbol, close from yahoo_daily where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
-		public static String getSQL(String symbol, String fromDate, String toDate) {
+		private static String getSQL(String symbol, String fromDate, String toDate) {
 			return String.format(SQL, symbol, fromDate, toDate);
 		}
 		
-		public DailyClose(String date, String symbol, double close) {
-			this.date   = date;
-			this.symbol = symbol;
-			this.close  = close;
-		}
-		public DailyClose() {
-			this("", "", 0);
-		}
 		public String date;
 		public String symbol;
 		public double close;
@@ -80,220 +92,70 @@ public class CSVServlet extends HttpServlet {
 		public String toString() {
 			return String.format("[%s %s %6.3f", date, symbol, close);
 		}
+		
+		public List<DailyData> generate(Statement statement, String symbol, Period period) {
+			List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, period.dateStart, period.dateEnd), CloseData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
+			return ret;
+		}
+
+		private DailyData toDailyData() {
+			return new DailyData(date, symbol, close);
+		}
 	}
 
-	public static class DailyVolume {
+	public static class VolumeData extends Generator {
 		private static String SQL = "select date, symbol, volume from yahoo_daily where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
-		public static String getSQL(String symbol, String fromDate, String toDate) {
+		private static String getSQL(String symbol, String fromDate, String toDate) {
 			return String.format(SQL, symbol, fromDate, toDate);
 		}
 		
 		public String date;
 		public String symbol;
 		public int    volume;
+		
+		public List<DailyData> generate(Statement statement, String symbol, Period period) {
+			List<DailyData> ret = JDBCUtil.getResultAll(statement, VolumeData.getSQL(symbol, period.dateStart, period.dateEnd), VolumeData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
+			return ret;
+		}
+
+		private DailyData toDailyData() {
+			return new DailyData(date, symbol, volume);
+		}
 	}
 
-	public static class Dividend {
+	public static class DividendData extends Generator {
 		private static String SQL = "select date, symbol, dividend from yahoo_dividend where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
-		public static String getSQL(String symbol, String fromDate, String toDate) {
+		private static String getSQL(String symbol, String fromDate, String toDate) {
 			return String.format(SQL, symbol, fromDate, toDate);
 		}
 		
 		public String date;
 		public String symbol;
 		public double dividend;
-	}
-	
-	private static String CRLF = "\r\n";
-
-	private static abstract class ServletProcessor {
-		private static Map<String, ServletProcessor> processorMap = new TreeMap<>();
-		static {
-			processorMap.put("daily",    new DailyProcessor());
-			processorMap.put("volume",   new VolumeProcessor());
-			processorMap.put("dividend", new DividendProcessor());
-		}
-		public static ServletProcessor getInstance(String type) {
-			logger.info("type = {}", type);
-			ServletProcessor ret = processorMap.get(type);
-			if (ret == null) {
-				logger.error("Unknown type = {}", type);
-				throw new ETFException();
-			}
+		
+		public List<DailyData> generate(Statement statement, String symbol, Period period) {
+			List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, period.dateStart, period.dateEnd), DividendData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
 			return ret;
 		}
 
-		public abstract void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException;
-	}
-
-	private static class DailyProcessor extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
-			// Build rawDataMap
-			Map<String, List<DailyClose>> rawDataMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				List<DailyClose> data = JDBCUtil.getResultAll(statement, DailyClose.getSQL(symbol, period.dateStart, period.dateEnd), DailyClose.class).stream().collect(Collectors.toList());
-				rawDataMap.put(symbol, data);
-				logger.info("rawDataMap {} {}", symbol, data.size());
-			}
-			
-			// Build dateList from rawDataMap
-			List<String> dateList = rawDataMap.get(symbolList.get(0)).stream().map(o -> o.date).collect(Collectors.toList());
-			logger.info("dateList {}", dateList.size());
-			
-			// Build doubleDataMap from rawDataMap
-			Map<String, List<Double>> doubleDataMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				List<Double> doubleList = rawDataMap.get(symbol).stream().map(o -> o.close).collect(Collectors.toList());
-				doubleDataMap.put(symbol,  doubleList);
-			}
-			
-			// Apply filter with doubleDataMap
-			for(String symbol: symbolList) {
-				List<Double> filtered = filter.apply(doubleDataMap.get(symbol));
-				doubleDataMap.put(symbol, filtered);
-			}
-			
-			//
-			// End of data processing
-			//
-			
-			// Build dateMap from doubleDataMap
-			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-			{
-				int index = 0;
-				for(String date: dateList) {
-					Map<String, Double> doubleMap = new TreeMap<>();
-					for(String symbol: symbolList) {
-						List<Double> doubleList = doubleDataMap.get(symbol);
-						doubleMap.put(symbol, doubleList.get(index));
-					}
-					dateMap.put(date, doubleMap);
-					//
-					index++;
-				}
-			}			
-			logger.info("dateMap  = {}", dateMap.size());
-
-			//
-		    // Start output data
-			//
-			StringBuilder line = new StringBuilder();
-			
-			// Output header
-			line.setLength(0);
-			line.append("date");
-			for(String fieldName: symbolList) {
-				if (0 < line.length()) line.append(",");
-				line.append(fieldName);
-			}
-			output.append(line.toString()).append(CRLF);
-			logger.info("fieldNameList = {}", line.toString());
-
-			
-			for(String date: dateMap.keySet()) {
-				Map<String, Double> record = dateMap.get(date);
-				line.setLength(0);
-				line.append(date);
-				for(String symbol: symbolList) {
-					line.append(",");
-					if (record.containsKey(symbol)) {
-						line.append(record.get(symbol));
-					}
-				}
-				output.append(line.toString()).append(CRLF);
-			}
+		private DailyData toDailyData() {
+			return new DailyData(date, symbol, dividend);
 		}
 	}
-
-	private static class VolumeProcessor extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
-			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				for(DailyVolume data: JDBCUtil.getResultAll(statement, DailyVolume.getSQL(symbol, period.dateStart, period.dateEnd), DailyVolume.class)) {
-					if (!dateMap.containsKey(data.date)) {
-						dateMap.put(data.date, new TreeMap<>());
-					}
-					dateMap.get(data.date).put(data.symbol, (double)data.volume);
-				}
-			}
-			
-			logger.info("dateMap  = {}", dateMap.size());
-
-			StringBuilder line = new StringBuilder();
-			
-			// Output header
-			line.setLength(0);
-			line.append("date");
-			for(String fieldName: symbolList) {
-				if (0 < line.length()) line.append(",");
-				line.append(fieldName);
-			}
-			output.append(line.toString()).append(CRLF);
-			logger.info("fieldNameList = {}", line.toString());
-
-			
-			for(String date: dateMap.keySet()) {
-				Map<String, Double> record = dateMap.get(date);
-				line.setLength(0);
-				line.append(date);
-				for(String symbol: symbolList) {
-					line.append(",");
-					if (record.containsKey(symbol)) {
-						line.append(record.get(symbol));
-					}
-				}
-				output.append(line.toString()).append(CRLF);
-			}
+	
+	public static class DailyData {
+		public String date;
+		public String symbol;
+		public double value;
+		
+		public DailyData(String date, String symbol, double value) {
+			this.date   = date;
+			this.symbol = symbol;
+			this.value  = value;
 		}
 	}
-
-	private static class DividendProcessor extends ServletProcessor {
-		public void process(Statement statement, BufferedWriter output, List<String> symbolList, Period period, Filter filter) throws IOException {
-			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				for(Dividend data: JDBCUtil.getResultAll(statement, Dividend.getSQL(symbol, period.dateStart, period.dateEnd), Dividend.class)) {
-					// Use pseudo date for dataMap
-					String pseudoDate = data.date.substring(0, 8) + "15";
-					if (!dateMap.containsKey(pseudoDate)) {
-						dateMap.put(pseudoDate, new TreeMap<>());
-					}
-					double oldValue = 0;
-					if (dateMap.get(pseudoDate).containsKey(data.symbol)) {
-						oldValue = dateMap.get(pseudoDate).get(data.symbol);
-					}
-					dateMap.get(pseudoDate).put(data.symbol, data.dividend + oldValue);
-				}
-			}		
-			
-			logger.info("dateMap  = {}", dateMap.size());
-
-			StringBuilder line = new StringBuilder();
-			
-			// Output header
-			line.setLength(0);
-			line.append("date");
-			for(String fieldName: symbolList) {
-				if (0 < line.length()) line.append(",");
-				line.append(fieldName);
-			}
-			output.append(line.toString()).append(CRLF);
-			logger.info("fieldNameList = {}", line.toString());
-
-			
-			for(String date: dateMap.keySet()) {
-				Map<String, Double> record = dateMap.get(date);
-				line.setLength(0);
-				line.append(date);
-				for(String symbol: symbolList) {
-					line.append(",");
-					if (record.containsKey(symbol)) {
-						line.append(record.get(symbol));
-					}
-				}
-				output.append(line.toString()).append(CRLF);
-			}
-		}
-	}
+	
+	private static String CRLF = "\r\n";
 	
 	private static class Period {
 		private static Matcher matcherPeriod     = Pattern.compile("([0-9]+)([ymd])").matcher(""); // [0-9]+[ymd]
@@ -465,10 +327,9 @@ public class CSVServlet extends HttpServlet {
 		logger.info("doGet START");
 		
 		final List<String> symbolList = new ArrayList<>();
-		final String type;
-		final Period period;
-		final ServletProcessor processor;
-		final Filter filter;
+		final Generator    generator;
+		final Period       period;
+		final Filter       filter;
 		
 		{
 			Map<String, String[]> paramMap = req.getParameterMap();
@@ -490,8 +351,7 @@ public class CSVServlet extends HttpServlet {
 			period = new Period(paramMap.containsKey("p") ? paramMap.get("p")[0] : "12m");
 			
 			// t - type (daily, dividend or volume)
-			type = paramMap.containsKey("t") ? paramMap.get("t")[0] : "daily";
-			processor = ServletProcessor.getInstance(type);
+			generator = Generator.getInstance(paramMap.containsKey("t") ? paramMap.get("t")[0] : "daily");
 			
 			// TODO implement filter for moving average, sd, kurt or skew.  should be ma20 or ma200
 			// f - filter
@@ -505,7 +365,81 @@ public class CSVServlet extends HttpServlet {
 		try (
 				Statement statement = DriverManager.getConnection(JDBC_CONNECTION_URL).createStatement();
 				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
-			processor.process(statement, output, symbolList, period, filter);
+			// Build dailyDataMap
+			Map<String, List<DailyData>> dailyDataMap = new TreeMap<>();
+			for(String symbol: symbolList) {
+				List<DailyData> dailyDataList = generator.generate(statement, symbol, period);
+				dailyDataMap.put(symbol, dailyDataList);
+				logger.info("dailyDataMap {} {}", symbol, dailyDataList.size());
+			}
+			
+			// Build dateList from dailyDataMap
+			List<String> dateList = dailyDataMap.get(symbolList.get(0)).stream().map(o -> o.date).collect(Collectors.toList());
+			logger.info("dateList {}", dateList.size());
+			
+			// Build doubleDataMap from dailyDataMap
+			Map<String, List<Double>> doubleDataMap = new TreeMap<>();
+			for(String symbol: symbolList) {
+				List<Double> doubleList = dailyDataMap.get(symbol).stream().map(o -> o.value).collect(Collectors.toList());
+				doubleDataMap.put(symbol,  doubleList);
+			}
+			
+			// Apply filter with doubleDataMap
+			for(String symbol: symbolList) {
+				List<Double> filtered = filter.apply(doubleDataMap.get(symbol));
+				doubleDataMap.put(symbol, filtered);
+			}
+			
+			//
+			// End of data processing
+			//
+			
+			// Build dateMap from doubleDataMap
+			Map<String, Map<String, Double>> dateMap = new TreeMap<>();
+			{
+				int index = 0;
+				for(String date: dateList) {
+					Map<String, Double> doubleMap = new TreeMap<>();
+					for(String symbol: symbolList) {
+						List<Double> doubleList = doubleDataMap.get(symbol);
+						doubleMap.put(symbol, doubleList.get(index));
+					}
+					dateMap.put(date, doubleMap);
+					//
+					index++;
+				}
+			}			
+			logger.info("dateMap  = {}", dateMap.size());
+
+			//
+		    // Start output data
+			//
+			StringBuilder line = new StringBuilder();
+			
+			// Output header
+			line.setLength(0);
+			line.append("date");
+			for(String fieldName: symbolList) {
+				if (0 < line.length()) line.append(",");
+				line.append(fieldName);
+			}
+			output.append(line.toString()).append(CRLF);
+			logger.info("fieldNameList = {}", line.toString());
+
+			
+			for(String date: dateMap.keySet()) {
+				Map<String, Double> record = dateMap.get(date);
+				line.setLength(0);
+				line.append(date);
+				for(String symbol: symbolList) {
+					line.append(",");
+					if (record.containsKey(symbol)) {
+						line.append(record.get(symbol));
+					}
+				}
+				output.append(line.toString()).append(CRLF);
+			}
+		
 		} catch (SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

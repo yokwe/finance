@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import yokwe.finance.etf.util.JDBCUtil;
 
-public class VolumeData extends Generator {
+public class VolumeData extends Data {
 	private static String SQL = "select date, symbol, volume from yahoo_daily where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
 	private static String getSQL(String symbol, String fromDate, String toDate) {
 		return String.format(SQL, symbol, fromDate, toDate);

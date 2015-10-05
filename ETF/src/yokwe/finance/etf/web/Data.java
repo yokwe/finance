@@ -7,16 +7,16 @@ import java.util.TreeMap;
 
 import yokwe.finance.etf.ETFException;
 
-public abstract class Generator {
-	private static Map<String, Generator> generatorMap = new TreeMap<>();
+public abstract class Data {
+	private static Map<String, Data> dataMap = new TreeMap<>();
 	static {
-		generatorMap.put("price", new PriceData());
-		generatorMap.put("vol",   new VolumeData());
-		generatorMap.put("div",   new DividendData());
+		dataMap.put("price", new PriceData());
+		dataMap.put("vol",   new VolumeData());
+		dataMap.put("div",   new DividendData());
 	}
-	public static Generator getInstance(String type) {
+	public static Data getInstance(String type) {
 		CSVServlet.logger.info("type = {}", type);
-		Generator ret = generatorMap.get(type);
+		Data ret = dataMap.get(type);
 		if (ret == null) {
 			CSVServlet.logger.error("Unknown type = {}", type);
 			throw new ETFException();

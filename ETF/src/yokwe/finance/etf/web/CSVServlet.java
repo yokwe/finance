@@ -53,9 +53,9 @@ public class CSVServlet extends HttpServlet {
 		logger.info("doGet START");
 		
 		final List<String> symbolList = new ArrayList<>();
-		final Generator    generator;
-		final Period       period;
-		final Filter       filter;
+		final Data    data;
+		final Period  period;
+		final Filter  filter;
 		
 		{
 			final Map<String, String[]> paramMap = req.getParameterMap();
@@ -76,8 +76,8 @@ public class CSVServlet extends HttpServlet {
 			//     date := yyyymm
 			period = new Period(paramMap.containsKey("p") ? paramMap.get("p")[0] : "12m");
 			
-			// t - type (price, div or vol)
-			generator = Generator.getInstance(paramMap.containsKey("t") ? paramMap.get("t")[0] : "price");
+			// d - data (price, div or vol)
+			data = Data.getInstance(paramMap.containsKey("d") ? paramMap.get("d")[0] : "price");
 			
 			// f - filter
 			//     (avg|sd|skew|kurt)([0-9]+)
@@ -92,7 +92,7 @@ public class CSVServlet extends HttpServlet {
 			// Build dailyDataMap
 			Map<String, List<DailyData>> dailyDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				List<DailyData> dailyDataList = generator.generate(statement, symbol, period);
+				List<DailyData> dailyDataList = data.generate(statement, symbol, period);
 				dailyDataMap.put(symbol, dailyDataList);
 				logger.info("dailyDataMap {} {}", symbol, dailyDataList.size());
 			}

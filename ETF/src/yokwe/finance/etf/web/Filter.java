@@ -1,32 +1,30 @@
 package yokwe.finance.etf.web;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Function;
+import java.util.function.DoubleFunction;
+import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collector;
 
 import yokwe.finance.etf.ETFException;
-import yokwe.finance.etf.util.StreamUtil.MovingStats;
-import yokwe.finance.etf.util.StreamUtil.MovingStats.Accumlator;
+import yokwe.finance.etf.util.DoubleStreamUtil.MovingStats;
 
 class Filter {
 	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt)([0-9]+)").matcher("");
 
-	static Map<String, Function<MovingStats, Double>> mapperMap = new TreeMap<>();
+	static Map<String, ToDoubleFunction<MovingStats>> map = new TreeMap<>();
 	static {
-		mapperMap.put("avg",  o -> o.mean);
-		mapperMap.put("sd",   o -> o.standardDeviation);
-		mapperMap.put("skew", o -> o.skewness);
-		mapperMap.put("kurt", o -> o.kurtosis);
+		map.put("avg",  o -> o.mean);
+		map.put("sd",   o -> o.standardDeviation);
+		map.put("skew", o -> o.skewness);
+		map.put("kurt", o -> o.kurtosis);
 	}
 	
-	private Function<MovingStats, Double>                    mapper;
-	private int                                              interval;
-	private Collector<Double, Accumlator, List<MovingStats>> collector;
+	private ToDoubleFunction<MovingStats> mapToDouble;
+	private DoubleFunction<MovingStats>   mapToObj;
+	private int                           interval;
 	public Filter(String value) {
 		matcher.reset(value);
 		if (matcher.matches()) {
@@ -42,8 +40,8 @@ class Filter {
 				CSVServlet.logger.error("number = {}", number);
 				throw new ETFException("number");
 			}
-			mapper = mapperMap.get(type);
-			if (mapper == null) {
+			mapToDouble = map.get(type);
+			if (mapToDouble == null) {
 				CSVServlet.logger.error("type = {}", type);
 				throw new ETFException("type");
 			}
@@ -52,15 +50,10 @@ class Filter {
 			CSVServlet.logger.error("value = {}", value);
 			throw new ETFException("fiter");
 		}
-		collector = MovingStats.getInstance(interval);
+		mapToObj = MovingStats.mapToObj(interval);
 	}
 	
 	public double[] apply(double[] doubleData) {
-		List<Double> data = new ArrayList<>();
-		for(double value: doubleData) data.add(value);
-		
-		List<MovingStats> stats = data.stream().collect(collector);
-		double[] ret = stats.stream().map(mapper).mapToDouble(Double::doubleValue).toArray();
-		return ret;
+		return Arrays.stream(doubleData).mapToObj(mapToObj).mapToDouble(mapToDouble).toArray();
 	}
 }

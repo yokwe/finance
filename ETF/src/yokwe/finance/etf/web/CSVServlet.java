@@ -6,6 +6,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,17 +58,33 @@ public class CSVServlet extends HttpServlet {
 		final Period  period;
 		final Filter  filter;
 		
+		final String  baseSymbol;
+		
 		{
 			final Map<String, String[]> paramMap = req.getParameterMap();
 			
+			// n - normalize
+			if (paramMap.containsKey("n")) {
+				baseSymbol = paramMap.get("n")[0];
+			} else {
+				baseSymbol = "";
+			}
+			
 			// s - symbol
-			if (paramMap.containsKey("s")) {
-				for(String symbol: paramMap.get("s")) {
+			for(String symbol: paramMap.get("s")) {
+				if (symbol.contains(",")) {
+					for(String s: symbol.split(",")) {
+						symbolList.add(s);
+					}
+				} else {
 					symbolList.add(symbol);
 				}
-			} else {
+			}
+			if (symbolList.size() == 0) {
 				symbolList.add("SPY");
 			}
+			// Add baseSymbol to symbolList for normalization
+			if (!baseSymbol.equals("") && !symbolList.contains(baseSymbol)) symbolList.add(baseSymbol);
 			logger.info("symbolList = {}", symbolList);
 			
 			// p - period
@@ -114,6 +131,47 @@ public class CSVServlet extends HttpServlet {
 				List<Double> doubleList = dailyDataMap.get(symbol).stream().map(o -> o.value).collect(Collectors.toList());
 				doubleDataMap.put(symbol,  doubleList);
 			}
+			
+			// normalize to baseSymbol
+			if (!baseSymbol.equals("")){
+				double[] baseArray = doubleDataMap.get(baseSymbol).stream().mapToDouble(Double::doubleValue).toArray();
+				double   baseAvg   = Arrays.stream(baseArray).sum() / baseArray.length;
+				for(int i = 0; i < baseArray.length; i++) baseArray[i] = baseArray[i] / baseAvg; // ratio to average
+				
+				if (baseArray.length != dateList.size()) {
+					logger.error("baseArray {}  dateList {}", baseArray.length, dateList.size());
+					throw new ETFException("size");
+				}
+				
+				for(String symbol: symbolList) {
+					List<Double> targetData = doubleDataMap.get(symbol);
+					double[] targetArray = targetData.stream().mapToDouble(Double::doubleValue).toArray();
+					
+					if (targetArray.length != dateList.size()) {
+						logger.error("targetArray {}  dateList {}", targetArray.length, dateList.size());
+						throw new ETFException("size");
+					}
+
+					targetData.clear();
+					// normalize target with ratio of baseSymbol
+					for(int i = 0; i < targetArray.length; i++) targetData.add(targetArray[i] / baseArray[i]);
+				}
+			}
+			
+			{
+				Double zero = new Double(0);
+				List<Double> zeroData = new ArrayList<>();
+				for(int i = 0; i < dateList.size(); i++) zeroData.add(zero);
+				symbolList.add("0");
+				doubleDataMap.put("0", zeroData);
+				
+				List<DailyData> zeroList = new ArrayList<>();
+				for(String date: dateList) {
+					zeroList.add(new DailyData(date, "0", zero));
+				}
+				dailyDataMap.put("0", zeroList);
+			}
+			
 			
 			// Apply filter with doubleDataMap
 			for(String symbol: symbolList) {

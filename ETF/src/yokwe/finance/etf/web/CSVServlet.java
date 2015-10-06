@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.http.HttpServlet;
@@ -126,15 +125,14 @@ public class CSVServlet extends HttpServlet {
 			}
 		
 			// Build doubleDataMap from dailyDataMap
-			Map<String, List<Double>> doubleDataMap = new TreeMap<>();
+			Map<String, double[]> doubleDataMap = new TreeMap<>();
 			for(String symbol: symbolList) {
-				List<Double> doubleList = dailyDataMap.get(symbol).stream().map(o -> o.value).collect(Collectors.toList());
-				doubleDataMap.put(symbol,  doubleList);
+				doubleDataMap.put(symbol,  dailyDataMap.get(symbol).stream().mapToDouble(o -> o.value).toArray());
 			}
 			
 			// normalize to baseSymbol
 			if (!baseSymbol.equals("")){
-				double[] baseArray = doubleDataMap.get(baseSymbol).stream().mapToDouble(Double::doubleValue).toArray();
+				double[] baseArray = doubleDataMap.get(baseSymbol);
 				double   baseAvg   = Arrays.stream(baseArray).sum() / baseArray.length;
 				for(int i = 0; i < baseArray.length; i++) baseArray[i] = baseArray[i] / baseAvg; // ratio to average
 				
@@ -144,38 +142,36 @@ public class CSVServlet extends HttpServlet {
 				}
 				
 				for(String symbol: symbolList) {
-					List<Double> targetData = doubleDataMap.get(symbol);
-					double[] targetArray = targetData.stream().mapToDouble(Double::doubleValue).toArray();
+					double[] targetArray = doubleDataMap.get(symbol);
 					
 					if (targetArray.length != dateList.size()) {
 						logger.error("targetArray {}  dateList {}", targetArray.length, dateList.size());
 						throw new ETFException("size");
 					}
 
-					targetData.clear();
 					// normalize target with ratio of baseSymbol
-					for(int i = 0; i < targetArray.length; i++) targetData.add(targetArray[i] / baseArray[i]);
+					for(int i = 0; i < targetArray.length; i++) targetArray[i] /=  baseArray[i];
 				}
 			}
 			
 			{
-				Double zero = new Double(0);
-				List<Double> zeroData = new ArrayList<>();
-				for(int i = 0; i < dateList.size(); i++) zeroData.add(zero);
-				symbolList.add("0");
+				double[] zeroData = new double[dateList.size()];
+				for(int i = 0; i < dateList.size(); i++) zeroData[i] = 0;
 				doubleDataMap.put("0", zeroData);
 				
 				List<DailyData> zeroList = new ArrayList<>();
 				for(String date: dateList) {
-					zeroList.add(new DailyData(date, "0", zero));
+					zeroList.add(new DailyData(date, "0", 0.0));
 				}
 				dailyDataMap.put("0", zeroList);
+				
+				symbolList.add("0");
 			}
 			
 			
 			// Apply filter with doubleDataMap
 			for(String symbol: symbolList) {
-				List<Double> filtered = filter.apply(doubleDataMap.get(symbol));
+				double[] filtered = filter.apply(doubleDataMap.get(symbol));
 				doubleDataMap.put(symbol, filtered);
 			}
 			
@@ -187,13 +183,13 @@ public class CSVServlet extends HttpServlet {
 			Map<String, Map<String, Double>> dateMap = new TreeMap<>(); // date symbol value
 			for(String symbol: symbolList) {
 				// Sanity check
-				if (doubleDataMap.get(symbol).size() != dailyDataMap.get(symbol).size()) {
-					logger.error("size {}  {}  {}", symbol, doubleDataMap.get(symbol).size(), dailyDataMap.get(symbol).size());
+				if (doubleDataMap.get(symbol).length != dailyDataMap.get(symbol).size()) {
+					logger.error("size {}  {}  {}", symbol, doubleDataMap.get(symbol).length, dailyDataMap.get(symbol).size());
 					throw new ETFException("size");
 				}
 
 				int index = 0;
-				List<Double> doubleList = doubleDataMap.get(symbol);
+				double[] doubleData = doubleDataMap.get(symbol);
 				for(DailyData dailyData: dailyDataMap.get(symbol)) {
 					final String date = dailyData.date;
 					Map<String, Double> map = dateMap.get(date);
@@ -201,7 +197,7 @@ public class CSVServlet extends HttpServlet {
 						map = new TreeMap<>();
 						dateMap.put(date, map);
 					}
-					map.put(symbol, doubleList.get(index++));
+					map.put(symbol, doubleData[index++]);
 				}
 			}
 			logger.info("dateMap  = {}", dateMap.size());

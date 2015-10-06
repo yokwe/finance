@@ -1,5 +1,6 @@
 package yokwe.finance.etf.web;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -7,7 +8,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import yokwe.finance.etf.ETFException;
 import yokwe.finance.etf.util.StreamUtil.MovingStats;
@@ -55,9 +55,12 @@ class Filter {
 		collector = MovingStats.getInstance(interval);
 	}
 	
-	public List<Double> apply(List<Double> data) {
+	public double[] apply(double[] doubleData) {
+		List<Double> data = new ArrayList<>();
+		for(double value: doubleData) data.add(value);
+		
 		List<MovingStats> stats = data.stream().collect(collector);
-		List<Double> ret = stats.stream().map(mapper).collect(Collectors.toList());
+		double[] ret = stats.stream().map(mapper).mapToDouble(Double::doubleValue).toArray();
 		return ret;
 	}
 }

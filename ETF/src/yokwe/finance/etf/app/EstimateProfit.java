@@ -81,7 +81,7 @@ public class EstimateProfit {
 	}
 
 	public static class SymbolInfo implements Comparable<SymbolInfo> {
-		private static String SQL_STATEMENT = "select symbol, name, inception_date, expense_ratio, aum, index_tracked from etf";
+		private static String SQL_STATEMENT = "select symbol, name, inception_date, expense_ratio, aum from etf";
 		
 		public static String genSQL() {
 			return SQL_STATEMENT;
@@ -92,7 +92,6 @@ public class EstimateProfit {
 		public String inception_date;
 		public double expense_ratio;
 		public int    aum;
-		public String index_tracked;
 
 		@Override
 		public String toString() {

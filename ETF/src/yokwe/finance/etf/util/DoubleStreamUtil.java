@@ -32,7 +32,7 @@ public class DoubleStreamUtil {
 				return new MovingStats(stats.getMean(), stats.getStandardDeviation(), stats.getKurtosis(), stats.getSkewness());
 			}
 		}
-		public static MapToObj map(int interval) {
+		public static MapToObj mapToObj(int interval) {
 			return new MapToObj(interval);
 		}
 
@@ -59,7 +59,7 @@ public class DoubleStreamUtil {
 		
 		logger.info("values {}", Arrays.stream(values).boxed().collect(Collectors.toList()));
 		{
-			double[] result = Arrays.stream(values).mapToObj(MovingStats.map(3)).mapToDouble(o -> o.mean).toArray();
+			double[] result = Arrays.stream(values).mapToObj(MovingStats.mapToObj(3)).mapToDouble(o -> o.mean).toArray();
 			List<Double> listList = new ArrayList<>();
 			for(int i = 0; i < values.length; i++) {
 				if (((i + 1) % 3) == 0) listList.add(result[i]);
@@ -67,7 +67,7 @@ public class DoubleStreamUtil {
 			logger.info("stats 3 {}", listList);
 		}
 		{
-			double[] result = Arrays.stream(values).mapToObj(MovingStats.map(6)).mapToDouble(o -> o.mean).toArray();
+			double[] result = Arrays.stream(values).mapToObj(MovingStats.mapToObj(6)).mapToDouble(o -> o.mean).toArray();
 			List<Double> listList = new ArrayList<>();
 			for(int i = 0; i < values.length; i++) {
 				if (((i + 1) % 6) == 0) listList.add(result[i]);

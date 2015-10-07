@@ -56,6 +56,7 @@ public class CSVServlet extends HttpServlet {
 		final Data    data;
 		final Period  period;
 		final Filter  filter;
+		final boolean zero;
 		
 		final String  baseSymbol;
 		
@@ -98,6 +99,8 @@ public class CSVServlet extends HttpServlet {
 			// f - filter
 			//     (avg|sd|skew|kurt)([0-9]+)
 			filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
+			
+			zero = paramMap.containsKey("z");
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -152,9 +155,13 @@ public class CSVServlet extends HttpServlet {
 					// normalize target with ratio of baseSymbol
 					for(int i = 0; i < targetArray.length; i++) targetArray[i] /=  baseArray[i];
 				}
+				// remove baseSymbol, because value is always one
+				doubleDataMap.remove(baseSymbol);
+				symbolList.remove(baseSymbol);
 			}
 			
-			{
+			// Add zero data if requested
+			if (zero){
 				double[] zeroData = new double[dateList.size()];
 				for(int i = 0; i < dateList.size(); i++) zeroData[i] = 0;
 				doubleDataMap.put("0", zeroData);
@@ -164,7 +171,6 @@ public class CSVServlet extends HttpServlet {
 					zeroList.add(new DailyData(date, "0", 0.0));
 				}
 				dailyDataMap.put("0", zeroList);
-				
 				symbolList.add("0");
 			}
 			

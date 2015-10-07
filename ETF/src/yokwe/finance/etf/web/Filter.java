@@ -23,7 +23,7 @@ class Filter {
 	}
 	
 	private ToDoubleFunction<MovingStats> mapToDouble;
-	private DoubleFunction<MovingStats>   mapToObj;
+	private MovingStats.MapToObj          mapToObj;
 	private int                           interval;
 	public Filter(String value) {
 		matcher.reset(value);
@@ -54,6 +54,8 @@ class Filter {
 	}
 	
 	public double[] apply(double[] doubleData) {
+		// Need to call clear before processing data.
+		mapToObj.clear();
 		return Arrays.stream(doubleData).mapToObj(mapToObj).mapToDouble(mapToDouble).toArray();
 	}
 }

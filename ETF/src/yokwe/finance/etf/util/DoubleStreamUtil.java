@@ -20,6 +20,10 @@ public class DoubleStreamUtil {
 			public MapToObj(int interval) {
 				stats = new DescriptiveStatistics(interval);
 			}
+			
+			public void clear() {
+				stats.clear();
+			}
 
 			@Override
 			public MovingStats apply(double value) {

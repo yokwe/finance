@@ -3,7 +3,6 @@ package yokwe.finance.etf.web;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.DoubleFunction;
 import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +53,7 @@ class Filter {
 	}
 	
 	public double[] apply(double[] doubleData) {
-		// Need to call clear before processing data.
+		// Need to call clear before processing data after second time
 		mapToObj.clear();
 		return Arrays.stream(doubleData).mapToObj(mapToObj).mapToDouble(mapToDouble).toArray();
 	}

@@ -158,6 +158,12 @@ public class CSVServlet extends HttpServlet {
 				// remove baseSymbol, because value is always one
 				doubleDataMap.remove(baseSymbol);
 				symbolList.remove(baseSymbol);
+			}			
+			
+			// Apply filter with doubleDataMap
+			for(String symbol: symbolList) {
+				double[] filtered = filter.apply(doubleDataMap.get(symbol));
+				doubleDataMap.put(symbol, filtered);
 			}
 			
 			// Add zero data if requested
@@ -173,14 +179,7 @@ public class CSVServlet extends HttpServlet {
 				dailyDataMap.put("0", zeroList);
 				symbolList.add("0");
 			}
-			
-			
-			// Apply filter with doubleDataMap
-			for(String symbol: symbolList) {
-				double[] filtered = filter.apply(doubleDataMap.get(symbol));
-				doubleDataMap.put(symbol, filtered);
-			}
-			
+
 			//
 			// End of data processing
 			//

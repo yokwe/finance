@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import yokwe.finance.etf.util.JDBCUtil;
 
-public class DividendData extends Data {
+public final class DividendData extends Data {
 	private static String SQL = "select date, symbol, dividend from yahoo_dividend where symbol = '%s' and '%s' <= date and date <= '%s' order by date";
 	private static String getSQL(String symbol, String fromDate, String toDate) {
 		return String.format(SQL, symbol, fromDate, toDate);
@@ -21,11 +21,6 @@ public class DividendData extends Data {
 		return ret;
 	}
 	
-	public List<DailyData> generate(Statement statement, String symbol, String dateStart, String dateEnd) {
-		List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, dateStart, dateEnd), DividendData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
-		return ret;
-	}
-
 	private DailyData toDailyData() {
 		return new DailyData(date, symbol, dividend);
 	}

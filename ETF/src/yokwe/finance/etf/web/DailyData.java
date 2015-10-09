@@ -1,6 +1,6 @@
 package yokwe.finance.etf.web;
 
-public class DailyData {
+public final class DailyData {
 	public String date;
 	public String symbol;
 	public double value;

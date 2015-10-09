@@ -20,6 +20,11 @@ public class DividendData extends Data {
 		List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, period.dateStart, period.dateEnd), DividendData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
 		return ret;
 	}
+	
+	public List<DailyData> generate(Statement statement, String symbol, String dateStart, String dateEnd) {
+		List<DailyData> ret = JDBCUtil.getResultAll(statement, getSQL(symbol, dateStart, dateEnd), DividendData.class).stream().map(o -> o.toDailyData()).collect(Collectors.toList());
+		return ret;
+	}
 
 	private DailyData toDailyData() {
 		return new DailyData(date, symbol, dividend);

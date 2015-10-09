@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.etf.ETFException;
 
 public class CSVServlet extends HttpServlet {
-	static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
 	
 	private static final long serialVersionUID = 1L;
 	

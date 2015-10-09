@@ -4,9 +4,13 @@ import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.LoggerFactory;
+
 import yokwe.finance.etf.ETFException;
 
 class Period {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Period.class);
+
 	private static Matcher matcherPeriod     = Pattern.compile("([0-9]+)([ymd])").matcher(""); // [0-9]+[ymd]
 	private static Matcher matcherDatePeriod = Pattern.compile("([0-9]{6})\\-([0-9]+)([ymd])").matcher(""); // yyyymm-[0-9]+[ymd]
 
@@ -32,7 +36,7 @@ class Period {
 			// [0-9]+[ymd]
 			final int groupCount = matcherPeriod.groupCount();
 			if (groupCount != 2) {
-				CSVServlet.logger.error("groupCount = {}", groupCount);
+				logger.error("groupCount = {}", groupCount);
 				throw new ETFException("groupCount");
 			}
 			String number = matcherPeriod.group(1);
@@ -41,7 +45,7 @@ class Period {
 			try {
 				duration = Integer.parseInt(number);
 			} catch (NumberFormatException e) {
-				CSVServlet.logger.error("number = {}", number);
+				logger.error("number = {}", number);
 				throw new ETFException("number");
 			}
 			
@@ -56,14 +60,14 @@ class Period {
 				calFrom.add(Calendar.DATE, -duration);
 				break;
 			default:
-				CSVServlet.logger.error("mode = {}", mode);
+				logger.error("mode = {}", mode);
 				throw new ETFException("mode");
 			}
 		} else if (matcherDatePeriod.matches()) {
 			// yyyymm-[0-9]+[ymd]
 			final int groupCount = matcherDatePeriod.groupCount();
 			if (groupCount != 3) {
-				CSVServlet.logger.error("groupCount = {}", groupCount);
+				logger.error("groupCount = {}", groupCount);
 				throw new ETFException("groupCount");
 			}
 			String yyyymm = matcherDatePeriod.group(1);
@@ -77,11 +81,11 @@ class Period {
 				int month = Integer.parseInt(mm);
 				
 				if (year < 1900 || 2100 < year) {
-					CSVServlet.logger.error("year = {}", year);
+					logger.error("year = {}", year);
 					throw new ETFException("year");
 				}
 				if (month < 1 || 12 < month) {
-					CSVServlet.logger.error("month = {}", month);
+					logger.error("month = {}", month);
 					throw new ETFException("month");
 				}
 				
@@ -98,7 +102,7 @@ class Period {
 				try {
 					duration = Integer.parseInt(number);
 				} catch (NumberFormatException e) {
-					CSVServlet.logger.error("number = {}", number);
+					logger.error("number = {}", number);
 					throw new ETFException("number");
 				}
 				switch(mode) {
@@ -112,17 +116,17 @@ class Period {
 					calTo.add(Calendar.DATE, duration);
 					break;
 				default:
-					CSVServlet.logger.error("mode = {}", mode);
+					logger.error("mode = {}", mode);
 					throw new ETFException("mode");
 				}
 			}
 		} else {
-			CSVServlet.logger.error("value = {}", value);
+			logger.error("value = {}", value);
 			throw new ETFException("period");
 		}
 		
 		dateStart = dateString(calFrom);
 		dateEnd   = dateString(calTo);
-		CSVServlet.logger.info("period = {}  {} - {}", value, dateStart, dateEnd);
+		logger.info("period = {}  {} - {}", value, dateStart, dateEnd);
 	}
 }

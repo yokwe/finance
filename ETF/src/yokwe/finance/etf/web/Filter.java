@@ -7,10 +7,14 @@ import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.LoggerFactory;
+
 import yokwe.finance.etf.ETFException;
 import yokwe.finance.etf.util.DoubleStreamUtil.MovingStats;
 
 class Filter {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
+
 	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt)([0-9]+)").matcher("");
 
 	static Map<String, ToDoubleFunction<MovingStats>> map = new TreeMap<>();
@@ -28,7 +32,7 @@ class Filter {
 		matcher.reset(value);
 		if (matcher.matches()) {
 			if (matcher.groupCount() != 2) {
-				CSVServlet.logger.error("groupCount = {}", matcher.groupCount());
+				logger.error("groupCount = {}", matcher.groupCount());
 				throw new ETFException("groupCount");
 			}
 			String type   = matcher.group(1);
@@ -36,17 +40,17 @@ class Filter {
 			try {
 				interval = Integer.parseInt(number);
 			} catch (NumberFormatException e) {
-				CSVServlet.logger.error("number = {}", number);
+				logger.error("number = {}", number);
 				throw new ETFException("number");
 			}
 			mapToDouble = map.get(type);
 			if (mapToDouble == null) {
-				CSVServlet.logger.error("type = {}", type);
+				logger.error("type = {}", type);
 				throw new ETFException("type");
 			}
-			CSVServlet.logger.info("filter {} {}", type, number);
+			logger.info("filter {} {}", type, number);
 		} else {
-			CSVServlet.logger.error("value = {}", value);
+			logger.error("value = {}", value);
 			throw new ETFException("fiter");
 		}
 		mapToObj = MovingStats.mapToObj(interval);

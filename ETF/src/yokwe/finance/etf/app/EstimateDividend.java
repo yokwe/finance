@@ -43,7 +43,6 @@ public class EstimateDividend {
 		public final double avg;
 		public final double sum;
 		public final double sd;
-		public final double cv;
 		
 		public Stats(double[] data) {
 			SummaryStatistics stats = new SummaryStatistics();
@@ -52,12 +51,11 @@ public class EstimateDividend {
 			avg = stats.getMean();
 			sum = stats.getSum();
 			sd  = stats.getStandardDeviation();
-			cv  = sd / avg;
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("%d  %6.2f  %6.2f  %6.2f  %6.2f", n, avg, sum, sd, cv);
+			return String.format("%d  %6.2f  %6.2f  %6.2f", n, avg, sum, sd);
 		}
 	}
 	
@@ -136,7 +134,7 @@ public class EstimateDividend {
 			final double price = statsDaily.avg;
 			final double divLastYear = statsLastYear.sum / price * 100;
 			final double divThisYear = statsThisYear.sum / price * 100;
-			logger.info("{}", String.format("%-6s  %6.2f  %6.2f  -  %6.2f  %6.2f  %6.2f  %6.2f", symbol, divLastYear, divThisYear, price, statsThisYear.avg, statsThisYear.sd, statsThisYear.cv));			
+			logger.info("{}", String.format("%-6s  %6.2f  %6.2f  %6.2f  -  %6.2f  %6.2f  %6.2f", symbol, price, divLastYear, divThisYear, statsThisYear.avg, statsThisYear.sd, (statsThisYear.sd / statsThisYear.avg)));			
 		}
 	}
 

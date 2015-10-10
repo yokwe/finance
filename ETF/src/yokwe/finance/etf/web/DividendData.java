@@ -24,4 +24,9 @@ public final class DividendData extends Data {
 	private DailyData toDailyData() {
 		return new DailyData(date, symbol, dividend);
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("[%s %s %6.2f]", date, symbol, dividend);
+	}
 }

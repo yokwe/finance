@@ -10,4 +10,9 @@ public final class DailyData {
 		this.symbol = symbol;
 		this.value  = value;
 	}
+	public DailyData() {
+		this.date   = "";
+		this.symbol = "";
+		this.value  = 0;
+	}
 }

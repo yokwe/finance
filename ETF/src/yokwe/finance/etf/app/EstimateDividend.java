@@ -135,8 +135,6 @@ public class EstimateDividend {
 		logger.info("symbolList = {}", symbolList.size());
 		
 		StringBuffer line = new StringBuffer();
-		line.append("symbol,price,score,adv,aum,asp,d last,d this,d avg,d sd,d cv,p avg,p sd,p cv,name,segment").append(CRLF);
-		writer.write(line.toString());
 
 		for(String symbol: symbolList) {
 			ETFData etfData = etfMap.get(symbol);
@@ -189,20 +187,24 @@ public class EstimateDividend {
 
 			line.setLength(0);
 			line.append(symbol);
+			line.append(String.format(",%d",   freq));
 			line.append(String.format(",%.2f", price));
 			line.append(String.format(",%s",   etfData.score));
+			line.append(String.format(",%.3f", divLastYear));
+			line.append(String.format(",%.3f", divThisYear));
+			
 			line.append(String.format(",%d",   etfData.adv));
 			line.append(String.format(",%d",   etfData.aum));
 			line.append(String.format(",%.3f", etfData.asp));
 
-			line.append(String.format(",%.3f", divLastYear));
-			line.append(String.format(",%.3f", divThisYear));
 			line.append(String.format(",%.3f", statsThisYear.avg));
 			line.append(String.format(",%.3f", statsThisYear.sd));
 			line.append(String.format(",%.3f", statsThisYear.sd / statsThisYear.avg));
+			
 			line.append(String.format(",%.3f", statsYear.avg));
 			line.append(String.format(",%.3f", statsYear.sd));
 			line.append(String.format(",%.3f", statsYear.sd / statsYear.avg));
+			
 			line.append(String.format(",\"%s\"", etfData.name));
 			line.append(String.format(",\"%s\"", etfData.segment));
 			line.append(CRLF);
@@ -217,7 +219,13 @@ public class EstimateDividend {
 			Class.forName("org.sqlite.JDBC");
 			try (Statement statement = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3").createStatement();
 				Writer writer = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
+				StringBuffer line = new StringBuffer();
+				line.append("symbol,freq,price,score,d last,d this,adv,aum,asp,d avg,d sd,d cv,p avg,p sd,p cv,name,segment").append(CRLF);
+				writer.write(line.toString());
+
 				estimate(writer, statement, 12);
+				estimate(writer, statement,  6);
+				estimate(writer, statement,  4);
 			}
 		} catch (ClassNotFoundException | SQLException | IOException e) {
 			logger.error(e.getClass().getName());

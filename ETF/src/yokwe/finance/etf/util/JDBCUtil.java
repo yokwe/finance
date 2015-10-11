@@ -105,14 +105,16 @@ public class JDBCUtil {
 					}
 					break;
 				case Types.INTEGER:
-					if (!type.equals(java.lang.Integer.TYPE)) {
+					if (type.equals(java.lang.Integer.TYPE)) {
+						int value = Scrape.isValid(stringValue) ? resultSet.getInt(columnIndex) : -1;
+						columnInfo.field.setInt(ret, value);
+					} else if (type.equals(java.lang.Long.TYPE)) {
+						long value = Scrape.isValid(stringValue) ? resultSet.getLong(columnIndex) : -1;
+						columnInfo.field.setLong(ret, value);
+					} else {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);
 						throw new ETFException(message);
-					}
-					{
-						int value = Scrape.isValid(stringValue) ? resultSet.getInt(columnIndex) : -1;
-						columnInfo.field.setInt(ret, value);
 					}
 					break;
 				case Types.FLOAT:
@@ -191,7 +193,11 @@ public class JDBCUtil {
 					}
 					break;
 				case Types.INTEGER:
-					if (!type.equals(java.lang.Integer.TYPE)) {
+					if (type.equals(java.lang.Integer.TYPE)) {
+						//
+					} else if (type.equals(java.lang.Long.TYPE)) {
+						//
+					} else {
 						String message = String.format("Unexpected type %s %s %d", name, typeName, sqlType);
 						logger.error(message);
 						throw new ETFException(message);

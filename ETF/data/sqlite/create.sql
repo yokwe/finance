@@ -7,7 +7,7 @@
 .echo ON
 .open tmp/sqlite/etf.sqlite3
 
--- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT
+-- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT, NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD
 CREATE TABLE etf (
   symbol           TEXT     NOT NULL, -- ticker symbol
   name             TEXT     NOT NULL, -- name of ETF
@@ -21,7 +21,9 @@ CREATE TABLE etf (
   price            REAL     NOT NULL, -- price
   score            TEXT     NOT NULL, -- overall score
   fit              INTEGER  NOT NULL, -- rating of fit
-  segment          TEXT     NOT NULL  -- segment (category)
+  segment          TEXT     NOT NULL, -- segment (category)
+  next_ex_dividend TEXT     NOT NULL, -- next ex-dividend date
+  distribution_yield REAL   NOT NULL  -- distribution yield (of last 12 month)
 );
 
 -- XTF.FIeld

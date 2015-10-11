@@ -145,7 +145,11 @@ public abstract class Scrape<E extends Enum<E>> {
 			String mm = ret.substring(0, 2);
 			String dd = ret.substring(3, 5);
 			String yy = ret.substring(6, 8);
-			ret = String.format("20%s-%s-%s", yy, mm, dd);
+			
+			int yyyy = Integer.valueOf("20" + yy);
+			if (2070 <= yyyy) yyyy -= 100;
+			
+			ret = String.format("%d-%s-%s", yyyy, mm, dd);
 		}
 		
 		// 9.99%

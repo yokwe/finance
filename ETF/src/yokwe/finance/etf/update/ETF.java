@@ -19,6 +19,7 @@ public class ETF {
 	
 	public enum Field {
 		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SCORE, FIT, SEGMENT,
+		NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD,
 	}
 	
 	public static class ScrapeETF extends Scrape<Field> {
@@ -89,6 +90,16 @@ public class ETF {
 			add(Field.SEGMENT,
 				"<span>ETF\\.com segment:</span> (.+)",
 				"<span>ETF.com segment:</span>");
+			
+//			<span id="NextExDividendDateSpan">				12/18/15			</span>
+			add(Field.NEXT_EX_DIVIDEND_DATE,
+					"<span id=\"NextExDividendDateSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>",
+					"<span id=\"NextExDividendDateSpan\">");
+			
+//			<span id="DistributionYieldSpan">				2.05%			</span>
+		add(Field.DISTRIBUTION_YIELD,
+				"<span id=\"DistributionYieldSpan\">\\p{javaWhitespace}+(.+)\\p{javaWhitespace}+</span>",
+				"<span id=\"DistributionYieldSpan\">");
 		}
 	}
 	

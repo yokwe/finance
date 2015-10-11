@@ -1,11 +1,17 @@
 package yokwe.finance.etf.app;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
@@ -16,9 +22,13 @@ import yokwe.finance.etf.ETFException;
 import yokwe.finance.etf.util.JDBCUtil;
 import yokwe.finance.etf.web.DailyData;
 import yokwe.finance.etf.web.DividendData;
+import yokwe.finance.etf.web.ETFData;
 
 public class EstimateDividend {
 	private static final Logger logger = LoggerFactory.getLogger(EstimateDividend.class);
+	
+	private static final String OUTPUT_PATH = "tmp/estimateDividend.csv";
+	private static final String CRLF = "\r\n";
 		
 	public static class LastDailyDay {
 		private static String SQL_STATEMENT = "select max(date) as last_day from yahoo_daily";
@@ -104,8 +114,14 @@ public class EstimateDividend {
 		return ret;
 	}
 	
-
-	static void estimate(final Statement statement, final int freq) {
+	static Map<String, ETFData> getETFMap(final Statement statement) {
+		String sql = "select * from etf";
+		Map<String, ETFData> ret = new TreeMap<>();
+		JDBCUtil.getResultAll(statement, sql, ETFData.class).stream().forEach(o -> ret.put(o.symbol, o));
+		return ret;
+	}
+	
+	static void estimate(final Writer writer, final Statement statement, final int freq) throws IOException {
 		final Calendar origin = getLastTradedDay(statement);
 		
 		final int thisYearNo   = origin.get(Calendar.YEAR);
@@ -113,10 +129,22 @@ public class EstimateDividend {
 		final Calendar oneWeek = add(origin, Calendar.DATE, -7);
 		final Calendar oneYear = add(origin, Calendar.YEAR, -1);
 		
+		Map<String, ETFData> etfMap = getETFMap(statement);
+		
 		final List<String> symbolList = getSymbol(statement, lastYearNo, freq);
 		logger.info("symbolList = {}", symbolList.size());
 		
+		StringBuffer line = new StringBuffer();
+		line.append("symbol,price,score,adv,aum,asp,d last,d this,d avg,d sd,d cv,p avg,p sd,p cv,name,segment").append(CRLF);
+		writer.write(line.toString());
+
 		for(String symbol: symbolList) {
+			ETFData etfData = etfMap.get(symbol);
+			if (etfData == null) {
+				logger.error("symbol = {}", symbol);
+				throw new ETFException("etfData");
+			}
+			
 			// data of last year
 			List<DividendData> lastYear = getDividendData(statement, symbol, lastYearNo);
 			// data of this year
@@ -152,10 +180,34 @@ public class EstimateDividend {
 			final double price = statsWeek.avg;
 			final double divLastYear = statsLastYear.sum / price * 100;
 			final double divThisYear = statsThisYear.sum / price * 100;
-			logger.info("{}", String.format("%-6s  %6.2f  %6.2f  %6.2f  -  %6.2f  %6.2f  %6.2f  -  %6.2f  %6.2f  %6.3f",
+			logger.info("{}", String.format("%-6s  %6.2f  %6.3f  %6.3f  -  %6.3f  %6.3f  %6.3f  -  %6.2f  %6.3f  %6.3f",
 					symbol, price, divLastYear, divThisYear,
 					statsThisYear.avg, statsThisYear.sd, (statsThisYear.sd / statsThisYear.avg),
-					statsYear.avg,     statsYear.sd,     (statsYear.sd     / statsYear.avg)));			
+					statsYear.avg,     statsYear.sd,     (statsYear.sd     / statsYear.avg)));
+			
+			// 
+
+			line.setLength(0);
+			line.append(symbol);
+			line.append(String.format(",%.2f", price));
+			line.append(String.format(",%s",   etfData.score));
+			line.append(String.format(",%d",   etfData.adv));
+			line.append(String.format(",%d",   etfData.aum));
+			line.append(String.format(",%.3f", etfData.asp));
+
+			line.append(String.format(",%.3f", divLastYear));
+			line.append(String.format(",%.3f", divThisYear));
+			line.append(String.format(",%.3f", statsThisYear.avg));
+			line.append(String.format(",%.3f", statsThisYear.sd));
+			line.append(String.format(",%.3f", statsThisYear.sd / statsThisYear.avg));
+			line.append(String.format(",%.3f", statsYear.avg));
+			line.append(String.format(",%.3f", statsYear.sd));
+			line.append(String.format(",%.3f", statsYear.sd / statsYear.avg));
+			line.append(String.format(",\"%s\"", etfData.name));
+			line.append(String.format(",\"%s\"", etfData.segment));
+			line.append(CRLF);
+			
+			writer.write(line.toString());
 		}
 	}
 
@@ -163,10 +215,11 @@ public class EstimateDividend {
 		logger.info("START");
 		try {
 			Class.forName("org.sqlite.JDBC");
-			try (Statement statement = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3").createStatement()) {
-				estimate(statement, 12);
+			try (Statement statement = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3").createStatement();
+				Writer writer = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
+				estimate(writer, statement, 12);
 			}
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (ClassNotFoundException | SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
 			e.printStackTrace();

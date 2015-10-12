@@ -168,8 +168,9 @@ public class EstimateDividend {
 			double[] weekData  = getDailyData(statement, symbol, oneWeek, origin);
 			Stats    statsWeek = new Stats(weekData);
 			if (weekData.length < 5) {
-				logger.info("symbol = {}", symbol);
-				throw new ETFException("dailyData");
+				// Must be this symbol start this week
+				logger.info("symbol = {} {}", symbol, weekData.length);
+				continue;
 			}
 			
 			double[] yearData  = getDailyData(statement, symbol, oneYear, origin);
@@ -188,6 +189,7 @@ public class EstimateDividend {
 			line.setLength(0);
 			line.append(symbol);
 			line.append(String.format(",%d",   freq));
+			line.append(String.format(",%s",   etfData.next_ex_dividend));
 			line.append(String.format(",%.2f", price));
 			line.append(String.format(",%s",   etfData.score));
 			line.append(String.format(",%.3f", divLastYear));
@@ -220,7 +222,7 @@ public class EstimateDividend {
 			try (Statement statement = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/etf.sqlite3").createStatement();
 				Writer writer = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
 				StringBuffer line = new StringBuffer();
-				line.append("symbol,freq,price,score,d last,d this,adv,aum,asp,d avg,d sd,d cv,p avg,p sd,p cv,name,segment").append(CRLF);
+				line.append("symbol,freq,next-div,price,score,d last,d this,adv,aum,asp,d avg,d sd,d cv,p avg,p sd,p cv,name,segment").append(CRLF);
 				writer.write(line.toString());
 
 				estimate(writer, statement, 12);

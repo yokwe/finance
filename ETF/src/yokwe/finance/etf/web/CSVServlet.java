@@ -57,6 +57,7 @@ public class CSVServlet extends HttpServlet {
 		final Period  period;
 		final Filter  filter;
 		final boolean zero;
+		final boolean relative;
 		
 		final String  baseSymbol;
 		
@@ -100,7 +101,11 @@ public class CSVServlet extends HttpServlet {
 			//     (avg|sd|skew|kurt)([0-9]+)
 			filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
 			
+			// z - add zero data
 			zero = paramMap.containsKey("z");
+			
+			// r - show relative to first data
+			relative = paramMap.containsKey("r");
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -133,6 +138,14 @@ public class CSVServlet extends HttpServlet {
 				doubleDataMap.put(symbol,  dailyDataMap.get(symbol).stream().mapToDouble(o -> o.value).toArray());
 			}
 			
+			// make relative to first entry
+			if (relative) {
+				for(double[] values: doubleDataMap.values()) {
+					final double base = values[0] * 0.01;
+					for(int i = 0; i < values.length; i++) values[i] /= base;
+				}
+			}
+			
 			// normalize to baseSymbol
 			if (!baseSymbol.equals("")){
 				double[] baseArray = doubleDataMap.get(baseSymbol);
@@ -158,7 +171,7 @@ public class CSVServlet extends HttpServlet {
 				// remove baseSymbol, because value is always one
 				doubleDataMap.remove(baseSymbol);
 				symbolList.remove(baseSymbol);
-			}			
+			}
 			
 			// Apply filter with doubleDataMap
 			for(String symbol: symbolList) {

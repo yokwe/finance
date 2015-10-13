@@ -65,47 +65,58 @@
 		<!-- make jar -->
 		<jar destfile="${jar.yokwe}" basedir="${dir.build.bin}" />
 	</target>
-
-	<target name="run-update-etf">
-		<java classname="yokwe.finance.etf.update.ETF" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
-
-        <target name="run-update-xtf">
-                <java classname="yokwe.finance.etf.update.XTF" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                </java>
-        </target>
-
-	<target name="run-update-yahoo-daily">
-		<java classname="yokwe.finance.etf.update.YahooDaily" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
-
-	<target name="run-update-yahoo-dividend">
-		<java classname="yokwe.finance.etf.update.YahooDividend" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
-
-	<target name="run-update-yahoo-profile">
-		<java classname="yokwe.finance.etf.update.YahooProfile" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
+	
 
 	<target name="run-fetch">
-		<java classname="yokwe.finance.etf.Fetch" fork="true">
+		<java classname="yokwe.finance.securities.Fetch" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch.list"/>
+		</java>
+	</target>
+
+	<target name="run-update-etf-etf">
+		<java classname="yokwe.finance.securities.update.ETF" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/etf-etf"/>
+			<arg value="tmp/sqlite/etf-etf.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-etf-yahoo-daily">
+		<java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/etf-yahoo-daily"/>
+			<arg value="tmp/sqlite/etf-yahoo-daily.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-etf-yahoo-dividend">
+		<java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/etf-yahoo-dividend"/>
+			<arg value="tmp/sqlite/etf-yahoo-dividend.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-stock-yahoo-daily">
+		<java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/stock-yahoo-daily"/>
+			<arg value="tmp/sqlite/stock-yahoo-daily.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-stock-yahoo-dividend">
+		<java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/stock-yahoo-dividend"/>
+			<arg value="tmp/sqlite/stock-yahoo-dividend.csv"/>
 		</java>
 	</target>
 

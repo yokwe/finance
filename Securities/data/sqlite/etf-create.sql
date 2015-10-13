@@ -1,11 +1,11 @@
 --
--- etf.sql
+-- etf-create.sql
 --
 
-.read data/sqlite/drop.sql
+.read data/sqlite/etf-drop.sql
 
 .echo ON
-.open tmp/sqlite/securities.sqlite3
+.open tmp/sqlite/etf.sqlite3
 
 -- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT, NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD
 CREATE TABLE etf_etf (
@@ -46,9 +46,9 @@ CREATE TABLE etf_yahoo_dividend (
 
 .separator ,
 
-.import tmp/sqlite/etf-etf.csv            etf-etf
-.import tmp/sqlite/etf-yahoo-daily.csv    etf-yahoo_daily
-.import tmp/sqlite/etf-yahoo-dividend.csv etf-yahoo_dividend
+.import tmp/sqlite/etf-etf.csv            etf_etf
+.import tmp/sqlite/etf-yahoo-daily.csv    etf_yahoo_daily
+.import tmp/sqlite/etf-yahoo-dividend.csv etf_yahoo_dividend
 
 CREATE UNIQUE INDEX etf_etf_symbol                 ON etf_etf(symbol);
 CREATE UNIQUE INDEX etf_yahoo_daily_symbol_date    ON etf_yahoo_daily(symbol, date);

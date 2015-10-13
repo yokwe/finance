@@ -29,6 +29,14 @@ prepare-log:
 build-jar:
 	ant build
 
+load-data-etf:
+	sqlite3 < data/sqlite/etf-create.sql
+
+
+#
+# nasdaq
+#
+
 fetch-nasdaq:
 	mkdir -p ${DIR_FETCH_NASDAQ}
 	rm    -f ${DIR_FETCH_NASDAQ}/*
@@ -41,6 +49,11 @@ update-nasdaq:
 	awk '$$2 == "Y" {print}' ${DIR_NASDAQ}/nasdaq-all.txt >${DIR_NASDAQ}/nasdaq-etf.txt
 	awk '$$2 != "Y" {print}' ${DIR_NASDAQ}/nasdaq-all.txt >${DIR_NASDAQ}/nasdaq-stock.txt
 	wc -l ${DIR_NASDAQ}/*
+
+
+#
+# fetch-etf-*
+#
 
 prepare-fetch-etf:
 	mkdir -p tmp/fetch
@@ -64,16 +77,57 @@ fetch-etf-yahoo-dividend:
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
+#
+# fetch-stock-*
+#
+
+prepare-fetch-stock:
+	mkdir -p tmp/fetch
+	rm    -f tmp/fetch/stock-*
+
 fetch-stock-yahoo-daily:
 	mkdir -p ${DIR_FETCH_STOCK_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_STOCK_YAHOO_DAILY}"    -f data/script/fetch-yahoo-table.awk -v G="d" \
 	  tmp/nasdaq/nasdaq-stock.txt >tmp/fetch.list
-#	ant run-fetch
+	ant run-fetch
 
 fetch-stock-yahoo-dividend:
 	mkdir -p ${DIR_FETCH_STOCK_YAHOO_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_STOCK_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
 	  tmp/nasdaq/nasdaq-stock.txt >tmp/fetch.list
-#	ant run-fetch
+	ant run-fetch
 
-	
+#
+# update-etf-*
+#
+
+update-etf:
+	@echo make update-etf-etf update-etf-yahoo-daily update-etf-yahoo-dividend
+
+update-etf-etf:
+	mkdir -p tmp/sqlite
+	ant run-update-etf-etf
+
+update-etf-yahoo-daily:
+	mkdir -p tmp/sqlite
+	ant run-update-etf-yahoo-daily
+
+update-etf-yahoo-dividend:
+	mkdir -p tmp/sqlite
+	ant run-update-etf-yahoo-dividend
+
+
+#
+# update-stock-*
+#
+
+update-stock:
+	@echo make update-stock-yahoo-daily update-stock-yahoo-dividend
+
+update-stock-yahoo-daily:
+	mkdir -p tmp/sqlite
+	ant run-update-stock-yahoo-daily
+
+update-stock-yahoo-dividend:
+	mkdir -p tmp/sqlite
+	ant run-update-stock-yahoo-dividend

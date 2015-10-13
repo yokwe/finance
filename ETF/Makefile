@@ -44,7 +44,7 @@ update-nasdaq:
 	awk 'BEGIN{RS="\r\n";FS="|"};$$5=="Y"&&$$7=="N"{printf("%-8s %s\n", $$8, $$3)}'                      ${DIR_FETCH_NASDAQ}/otherlisted.txt  | sort | uniq >tmp/nasdaq/etf-other.txt
 	sort tmp/nasdaq/etf-nasdaq.txt tmp/nasdaq/etf-other.txt | sort | uniq | \
 	  awk 'BEGIN{X["A"]="NYSEMKT";X["N"]="NYSE";X["P"]="NYSEARCA";X["Q"]="NASDAQ";X["Z"]="BATS"}; {printf("%-8s %s\n", $$1, X[$$2])}'      | sort | uniq >tmp/nasdaq/etf-all.txt
-
+	awk -f data/script/update-nasdaqtraded.awk ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt >tmp/nasdaq/nasdaq-all.txt
 
 #
 # Fetch html and csv file
@@ -64,37 +64,37 @@ prepare-fetch:
 fetch-etf:
 	mkdir -p ${DIR_FETCH_ETF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 fetch-nasdaq-symbol:
 	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"        -f data/script/fetch-nasdaq-symbol.awk \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"  -f data/script/fetch-nasdaq-symbol.awk \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 fetch-xtf:
 	mkdir -p ${DIR_FETCH_XTF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_XTF}"            -f data/script/fetch-xtf.awk \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-profile:
 	mkdir -p ${DIR_FETCH_YAHOO_PROFILE}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_PROFILE}"  -f data/script/fetch-yahoo-profile.awk \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-daily:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"    -f data/script/fetch-yahoo-table.awk -v G="d" \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-dividend:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
-	  tmp/nasdaq/etf-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 

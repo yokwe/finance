@@ -16,11 +16,25 @@ BEGIN {
   # G = "d" for daily and "v" for dividend
  }
 
+# See link below for Ticker Symbol Convention of NASDAQ_SYMBOL
+#  http://www.nasdaqtrader.com/trader.aspx?id=CQSsymbolconvention
+# NASDAQ_SYMBOL  BAC-Y should read as BAC-PY  in yahoo finance and BAC.PRY in nasdaq
+# NASDAQ_SYMBOL  BAC+A should read as BAC-WTA in yahoo finance and BAC.WSA in nasdaq
+
 # http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
 {
-  NAME     = $1
-  EXCHANGE = $2
+  EXCHANGE = $1
+  ETF      = $2
+  CATEGORY = $3
+  SIZE     = $4
+  SYMBOL   = $5
   
+  if (ETF != "Y") next
+  
+  YAHOO_SYMBOL = SYMBOL
+  gsub(/-/, "-P",  YAHOO_SYMBOL)
+  gsub(/+/, "-WT", YAHOO_SYMBOL)
+    
   printf("%s/%-10s http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%s&b=%s&c=%s&d=%s&e=%s&f=%s&g=%s&ignore=.csv\n",
-    DIR_OUTPUT, (NAME ".csv"), NAME, A, B, C, D, E, F, G)
+    DIR_OUTPUT, (SYMBOL ".csv"), YAHOO_SYMBOL, A, B, C, D, E, F, G)
 }

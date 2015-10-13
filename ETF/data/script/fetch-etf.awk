@@ -2,8 +2,13 @@
 
 # http://www.etf.com/SPY
 {
-  NAME     = $1
-  EXCHANGE = $2
+  EXCHANGE = $1
+  ETF      = $2
+  CATEGORY = $3
+  SIZE     = $4
+  SYMBOL   = $5
   
-  printf("%s/%-11s http://www.etf.com/%s\n", DIR_OUTPUT, (NAME ".html"), NAME)
+  if (ETF != "Y") next
+
+  printf("%s/%-11s http://www.etf.com/%s\n", DIR_OUTPUT, (SYMBOL ".html"), SYMBOL)
 }

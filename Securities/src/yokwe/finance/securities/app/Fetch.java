@@ -36,8 +36,8 @@ public class Fetch {
 			final String reasonPhrase = response.getStatusLine().getReasonPhrase();
 			
 			if (code == HttpStatus.SC_NOT_FOUND) { // 404
-				String message = String.format("               %3d %s", code, reasonPhrase);
-				logger.error(message);
+				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
+				logger.error("               " + message);
 				messageList.add(message);
 				new File(fileName).createNewFile(); // create empty file
 				return;

@@ -8,7 +8,5 @@
   SIZE     = $4
   SYMBOL   = $5
   
-  if (ETF != "Y") next
-  
   printf("%s/%-11s http://www.xtf.com/ETF-Ratings/%s\n", DIR_OUTPUT, (SYMBOL ".html"), SYMBOL)
 }

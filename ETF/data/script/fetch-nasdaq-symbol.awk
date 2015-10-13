@@ -13,8 +13,6 @@
   SIZE     = $4
   SYMBOL   = $5
   
-  if (ETF != "Y") next
-  
   NASDAQ_SYMBOL = SYMBOL
   gsub(/-/, ".PR",  NASDAQ_SYMBOL)
   gsub(/+/, ".WS", NASDAQ_SYMBOL)

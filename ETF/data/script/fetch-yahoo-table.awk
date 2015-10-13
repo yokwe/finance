@@ -29,8 +29,6 @@ BEGIN {
   SIZE     = $4
   SYMBOL   = $5
   
-  if (ETF != "Y") next
-  
   YAHOO_SYMBOL = SYMBOL
   gsub(/-/, "-P",  YAHOO_SYMBOL)
   gsub(/+/, "-WT", YAHOO_SYMBOL)

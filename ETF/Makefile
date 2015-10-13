@@ -59,37 +59,37 @@ prepare-fetch:
 	rm    -f ${DIR_FETCH_YAHOO_DIVIDEND}/*
 	rm    -f ${DIR_FETCH_YAHOO_PROFILE}/*
 	
-fetch-etf:
+fetch-etf-etf:
 	mkdir -p ${DIR_FETCH_ETF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
-	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-nasdaq-symbol:
+fetch-etf-nasdaq-symbol:
 	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
 	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"  -f data/script/fetch-nasdaq-symbol.awk \
-	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-xtf:
+fetch-etf-xtf:
 	mkdir -p ${DIR_FETCH_XTF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_XTF}"            -f data/script/fetch-xtf.awk \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-profile:
+fetch-etf-yahoo-profile:
 	mkdir -p ${DIR_FETCH_YAHOO_PROFILE}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_PROFILE}"  -f data/script/fetch-yahoo-profile.awk \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-daily:
+fetch-etf-yahoo-daily:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"    -f data/script/fetch-yahoo-table.awk -v G="d" \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-dividend:
+fetch-etf-yahoo-dividend:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list

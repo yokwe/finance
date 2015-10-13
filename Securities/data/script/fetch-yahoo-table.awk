@@ -30,8 +30,8 @@ BEGIN {
   SYMBOL   = $5
   
   YAHOO_SYMBOL = SYMBOL
-  gsub(/-/, "-P",  YAHOO_SYMBOL)
-  gsub(/+/, "-WT", YAHOO_SYMBOL)
+  gsub(/\-/, "-P",  YAHOO_SYMBOL)
+  gsub(/\+/, "-WT", YAHOO_SYMBOL)
     
   printf("%s/%-10s http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%s&b=%s&c=%s&d=%s&e=%s&f=%s&g=%s&ignore=.csv\n",
     DIR_OUTPUT, (SYMBOL ".csv"), YAHOO_SYMBOL, A, B, C, D, E, F, G)

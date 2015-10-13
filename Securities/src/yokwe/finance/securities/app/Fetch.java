@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -34,13 +35,14 @@ public class Fetch {
 			final int code = response.getStatusLine().getStatusCode();
 			final String reasonPhrase = response.getStatusLine().getReasonPhrase();
 			
-			if (code == 404) {
-				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
-//				logger.error(message);
+			if (code == HttpStatus.SC_NOT_FOUND) { // 404
+				String message = String.format("               %3d %s", code, reasonPhrase);
+				logger.error(message);
 				messageList.add(message);
+				new File(fileName).createNewFile(); // create empty file
 				return;
 			}
-			if (code != 200) {
+			if (code != HttpStatus.SC_OK) { // 200
 				logger.debug("statusLine = {}", response.getStatusLine().toString());
 				logger.error("url {}", url);
 				logger.error("code {}", code);
@@ -85,7 +87,7 @@ public class Fetch {
 			this.file = file;
 		}
 	}
-	public static void download(String path) {
+	public static void download(final long waitPeriod, final String path) {
 		// Build entryList
 		List<Entry> entryList = new ArrayList<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
@@ -124,7 +126,7 @@ public class Fetch {
 				}
 				
 				long now = System.currentTimeMillis();
-				long waitTime = 1000 - (now - lastDownload);
+				long waitTime = waitPeriod - (now - lastDownload);
 				if (0 < waitTime) Thread.sleep(waitTime);
 				
 				String url = entry.url;
@@ -151,7 +153,10 @@ public class Fetch {
 	
 	public static void main(String[] args) {
 		logger.info("START");
-		for(String path: args) download(path);
+		final long waitPeriod = Long.valueOf(System.getProperty("waitPeriod", "1000"));
+		logger.info("waitPeriod = {}", waitPeriod);
+		
+		for(String path: args) download(waitPeriod, path);
 		logger.info("STOP");
 	}
 }

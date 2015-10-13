@@ -68,9 +68,10 @@
 	
 
 	<target name="run-fetch">
-		<java classname="yokwe.finance.securities.Fetch" fork="true">
+		<java classname="yokwe.finance.securities.app.Fetch" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
+                        <sysproperty key="waitPeriod" value="500"/>
 			<arg value="tmp/fetch.list"/>
 		</java>
 	</target>

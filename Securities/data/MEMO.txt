@@ -9,3 +9,30 @@ Use google finance to download historical price data of stock
   
   http://www.google.com/finance/getprices?q=AAPL&x=NASD&i=120&p=5d&f=d,c,v,o,h,l
 ----
+
+Source of information - Price
+----
+http://real-chart.finance.yahoo.com/table.csv?s=VCLT&a=00&b=01&c=2000&d=11&e=31&f=2050&g=d&ignore=.csv
+  ** d for daily data
+
+Google finance
+www.google.com/finance/historical?q=VCLT&startdate=Jan 1, 2015&enddate=Dec 31, 2050&output=csv
+  ** careful about space inside date string
+
+
+Source of information - Dividend
+----
+http://real-chart.finance.yahoo.com/table.csv?s=VCLT&a=00&b=01&c=2000&d=11&e=31&f=2050&g=v&ignore=.csv
+  ** v for dividend data
+http://www.nasdaq.com/symbol/vclt/dividend-history
+  ** result is up to 2000
+
+
+How to find high dividend ETF and stock?
+  There are 1601 ETF and 6765 stock as of 2015-10-14.
+  Not all securities provide dividend. So brute force attack is not efficient.
+  
+  1) Collect last 3 years dividend data of all ETF and stock.
+     And find out securities that generate periodical securities.
+     Above are candidates.
+  2) Get dividend of last 10 years 

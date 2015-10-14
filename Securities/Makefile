@@ -13,6 +13,9 @@ DIR_FETCH_STOCK_NASDAQ_SYMBOL	=tmp/fetch/stock-nasdaq-symbol
 DIR_FETCH_STOCK_YAHOO_DAILY	=tmp/fetch/stock-yahoo-daily
 DIR_FETCH_STOCK_YAHOO_DIVIDEND	=tmp/fetch/stock-yahoo-dividen
 
+DIR_FETCH_NASDAQ_DIVIDEND	=tmp/fetch/nasdaq-dividend
+DIR_FETCH_GOOGLE_HISTORICAL	=tmp/fetch/google-historical
+
 DIR_NASDAQ		=tmp/nasdaq
 DIR_SCRIPT		=data/script
 
@@ -66,7 +69,7 @@ fetch-etf-etf:
 
 fetch-etf-nasdaq-symbol:
 	mkdir -p ${DIR_FETCH_ETF_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_NASDAQ_SYMBOL}"    -f data/script/fetch-nasdaq-symbol.awk -v G="d" \
+	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_NASDAQ_SYMBOL}"  -f data/script/fetch-nasdaq.awk -v SUFFIX=""  \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
@@ -81,6 +84,19 @@ fetch-etf-yahoo-dividend:
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
+
+fetch-nasdaq-dividend:
+	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f data/script/fetch-nasdaq.awk  -v SUFFIX="dividend-history" \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+
+fetch-google-historical:
+	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"    -f data/script/fetch-google-historical.awk \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+
 
 #
 # fetch-stock-*

@@ -39,7 +39,14 @@ public class Fetch {
 				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
 				logger.error("               " + message);
 				messageList.add(message);
-				new File(fileName).createNewFile(); // create empty file
+				new File(fileName).createNewFile(); // create empty file to prevent process again
+				return;
+			}
+			if (code == HttpStatus.SC_BAD_REQUEST) { // 400
+				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
+				logger.error("               " + message);
+				messageList.add(message);
+				new File(fileName).createNewFile(); // create empty file to prevent process again
 				return;
 			}
 			if (code != HttpStatus.SC_OK) { // 200

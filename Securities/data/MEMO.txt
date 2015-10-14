@@ -1,0 +1,11 @@
+Downloading daily price data from yahoo takes too long time. So try use google finance.
+----
+6 ways to download free intraday and tick data for the U.S. stock market
+  http://www.quantshare.com/sa-426-6-ways-to-download-free-intraday-and-tick-data-for-the-us-stock-market
+
+Use google finance to download historical price data of stock
+  http://www.networkerror.org/component/content/article/1-technical-wootness/44-googles-undocumented-finance-api.html
+  http://trading.cheno.net/downloading-google-intraday-historical-data-with-python/
+  
+  http://www.google.com/finance/getprices?q=AAPL&x=NASD&i=120&p=5d&f=d,c,v,o,h,l
+----

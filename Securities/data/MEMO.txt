@@ -12,18 +12,22 @@ Use google finance to download historical price data of stock
 
 Source of information - Price
 ----
+Yahoo
 http://real-chart.finance.yahoo.com/table.csv?s=VCLT&a=00&b=01&c=2000&d=11&e=31&f=2050&g=d&ignore=.csv
   ** d for daily data
 
-Google finance
+Google
 www.google.com/finance/historical?q=VCLT&startdate=Jan 1, 2015&enddate=Dec 31, 2050&output=csv
   ** careful about space inside date string
 
 
 Source of information - Dividend
 ----
+Yahoo
 http://real-chart.finance.yahoo.com/table.csv?s=VCLT&a=00&b=01&c=2000&d=11&e=31&f=2050&g=v&ignore=.csv
   ** v for dividend data
+
+Nasdaq
 http://www.nasdaq.com/symbol/vclt/dividend-history
   ** result is up to 2000
 

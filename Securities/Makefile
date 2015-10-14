@@ -5,10 +5,9 @@
 DIR_FETCH_NASDAQ		=tmp/fetch/nasdaq
 
 DIR_FETCH_ETF_ETF		=tmp/fetch/etf-etf
+DIR_FETCH_ETF_NASDAQ_SYMBOL	=tmp/fetch/etf-nasdaq-symbol
 DIR_FETCH_ETF_YAHOO_DAILY	=tmp/fetch/etf-yahoo-daily
 DIR_FETCH_ETF_YAHOO_DIVIDEND	=tmp/fetch/etf-yahoo-dividen
-DIR_FETCH_ETF_NASDAQ_DIVIDEN	=tmp/fetch/etf-nasdaq-dividen
-DIR_FETCH_ETF_NASDAQ_SYMBOL	=tmp/fetch/etf-nasdaq-symbol
 
 DIR_FETCH_STOCK_NASDAQ_SYMBOL	=tmp/fetch/stock-nasdaq-symbol
 DIR_FETCH_STOCK_YAHOO_DAILY	=tmp/fetch/stock-yahoo-daily
@@ -62,6 +61,12 @@ prepare-fetch-etf:
 fetch-etf-etf:
 	mkdir -p ${DIR_FETCH_ETF_ETF}
 	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_ETF}"            -f data/script/fetch-etf.awk \
+	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
+	ant run-fetch
+
+fetch-etf-nasdaq-symbol:
+	mkdir -p ${DIR_FETCH_ETF_NASDAQ_SYMBOL}
+	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_NASDAQ_SYMBOL}"    -f data/script/fetch-nasdaq-symbol.awk -v G="d" \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 

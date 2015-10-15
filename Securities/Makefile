@@ -14,6 +14,7 @@ DIR_FETCH_STOCK_YAHOO_DAILY	=tmp/fetch/stock-yahoo-daily
 DIR_FETCH_STOCK_YAHOO_DIVIDEND	=tmp/fetch/stock-yahoo-dividen
 
 DIR_FETCH_NASDAQ_DIVIDEND	=tmp/fetch/nasdaq-dividend
+DIR_FETCH_GOOGLE_GETPRICES	=tmp/fetch/google-getprices
 DIR_FETCH_GOOGLE_HISTORICAL	=tmp/fetch/google-historical
 
 DIR_NASDAQ		=tmp/nasdaq
@@ -85,6 +86,8 @@ fetch-etf-yahoo-dividend:
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
+
+
 fetch-nasdaq-dividend:
 	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f data/script/fetch-nasdaq.awk  -v SUFFIX="dividend-history" \
@@ -94,6 +97,12 @@ fetch-nasdaq-dividend:
 fetch-google-historical:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"    -f data/script/fetch-google-historical.awk \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+	
+fetch-google-getprices:
+	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"    -f data/script/fetch-google-getprices.awk \
 	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 

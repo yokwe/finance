@@ -7,7 +7,7 @@ Use google finance to download historical price data of stock
   http://www.networkerror.org/component/content/article/1-technical-wootness/44-googles-undocumented-finance-api.html
   http://trading.cheno.net/downloading-google-intraday-historical-data-with-python/
   
-  http://www.google.com/finance/getprices?q=AAPL&x=NASD&i=120&p=5d&f=d,c,v,o,h,l
+  http://www.google.com/finance/getprices?q=IBM&x=NYSE&i=86400&p=15Y&f=d,c,v,o,h,l
 ----
 
 Source of information - Price
@@ -17,9 +17,15 @@ http://real-chart.finance.yahoo.com/table.csv?s=VCLT&a=00&b=01&c=2000&d=11&e=31&
   ** d for daily data
 
 Google
-www.google.com/finance/historical?q=VCLT&startdate=Jan 1, 2015&enddate=Dec 31, 2050&output=csv
+http://www.google.com/finance/historical?q=NYSE:IBM&&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
   ** careful about space inside date string
-
+  ** exchange is prepend with symbol
+  ** elapsed time is 1 sec
+  
+http://www.google.com/finance/getprices?q=IBM&x=NYSE&i=86400&p=15Y&f=d,c,v,o,h,l
+  ** careful about space inside date string
+  ** exchange need to be specified with x parameter
+  ** elapsed time is 0.7 sec
 
 Source of information - Dividend
 ----

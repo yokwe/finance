@@ -2,20 +2,22 @@
 #
 #
 
-DIR_FETCH_NASDAQ		=tmp/fetch/nasdaq
+# From etf.com
+DIR_FETCH_ETF			=tmp/fetch/etf
 
-DIR_FETCH_ETF_ETF		=tmp/fetch/etf-etf
-DIR_FETCH_ETF_NASDAQ_SYMBOL	=tmp/fetch/etf-nasdaq-symbol
-DIR_FETCH_ETF_YAHOO_DAILY	=tmp/fetch/etf-yahoo-daily
-DIR_FETCH_ETF_YAHOO_DIVIDEND	=tmp/fetch/etf-yahoo-dividen
-
-DIR_FETCH_STOCK_NASDAQ_SYMBOL	=tmp/fetch/stock-nasdaq-symbol
-DIR_FETCH_STOCK_YAHOO_DAILY	=tmp/fetch/stock-yahoo-daily
-DIR_FETCH_STOCK_YAHOO_DIVIDEND	=tmp/fetch/stock-yahoo-dividen
-
-DIR_FETCH_NASDAQ_DIVIDEND	=tmp/fetch/nasdaq-dividend
+# From google.com
 DIR_FETCH_GOOGLE_GETPRICES	=tmp/fetch/google-getprices
 DIR_FETCH_GOOGLE_HISTORICAL	=tmp/fetch/google-historical
+
+# From nasdaq.com
+DIR_FETCH_NASDAQ		=tmp/fetch/nasdaq
+DIR_FETCH_NASDAQ_DIVIDEND	=tmp/fetch/nasdaq-dividend
+DIR_FETCH_NASDAQ_SYMBOL		=tmp/fetch/nasdaq-symbol
+
+# Form yahoo.com
+DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
+DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividen
+
 
 DIR_NASDAQ		=tmp/nasdaq
 DIR_SCRIPT		=data/script
@@ -58,112 +60,90 @@ update-nasdaq:
 # fetch-etf-*
 #
 
-prepare-fetch-etf:
-	mkdir -p tmp/fetch
-	rm    -f tmp/fetch/etf-*
-
-fetch-etf-etf:
-	mkdir -p ${DIR_FETCH_ETF_ETF}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_ETF}"            -f data/script/fetch-etf.awk \
+fetch-etf:
+	mkdir -p ${DIR_FETCH_ETF}
+	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
 	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
 	ant run-fetch
 
-fetch-etf-nasdaq-symbol:
-	mkdir -p ${DIR_FETCH_ETF_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_NASDAQ_SYMBOL}"  -f data/script/fetch-nasdaq.awk -v SUFFIX=""  \
-	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
-	ant run-fetch
+#
+# fetch-yahoo-*
+#
 
-fetch-etf-yahoo-daily:
-	mkdir -p ${DIR_FETCH_ETF_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_YAHOO_DAILY}"    -f data/script/fetch-yahoo-table.awk -v G="d" \
-	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
-	ant run-fetch
-
-fetch-etf-yahoo-dividend:
-	mkdir -p ${DIR_FETCH_ETF_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
-	  tmp/nasdaq/nasdaq-etf.txt >tmp/fetch.list
-	ant run-fetch
-
-
-
-fetch-nasdaq-dividend:
-	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f data/script/fetch-nasdaq.awk  -v SUFFIX="dividend-history" \
+fetch-yahoo-daily:
+	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d" \
 	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
+fetch-yahoo-dividend:
+	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v" \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+
+#
+# fetch-nasdaq-*
+#
+
+fetch-nasdaq-symbol:
+	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"      -f data/script/fetch-nasdaq.awk  -v SUFFIX="" \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+
+fetch-nasdaq-dividend:
+	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f data/script/fetch-nasdaq.awk  -v SUFFIX="/dividend-history" \
+	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
+	ant run-fetch
+
+#
+# fetch-google-*
+#
+
 fetch-google-historical:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"    -f data/script/fetch-google-historical.awk \
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk \
 	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 	
 fetch-google-getprices:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"    -f data/script/fetch-google-getprices.awk \
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk \
 	  tmp/nasdaq/nasdaq-all.txt >tmp/fetch.list
 	ant run-fetch
 
 
-#
-# fetch-stock-*
-#
-
-prepare-fetch-stock:
-	mkdir -p tmp/fetch
-	rm    -f tmp/fetch/stock-*
-
-fetch-stock-nasdaq-symbol:
-	mkdir -p ${DIR_FETCH_STOCK_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_STOCK_NASDAQ_SYMBOL}"    -f data/script/fetch-nasdaq-symbol.awk -v G="d" \
-	  tmp/nasdaq/nasdaq-stock.txt >tmp/fetch.list
-	ant run-fetch
-
-fetch-stock-yahoo-daily:
-	mkdir -p ${DIR_FETCH_STOCK_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_STOCK_YAHOO_DAILY}"    -f data/script/fetch-yahoo-table.awk -v G="d" \
-	  tmp/nasdaq/nasdaq-stock.txt >tmp/fetch.list
-	ant run-fetch
-
-fetch-stock-yahoo-dividend:
-	mkdir -p ${DIR_FETCH_STOCK_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_STOCK_YAHOO_DIVIDEND}" -f data/script/fetch-yahoo-table.awk -v G="v" \
-	  tmp/nasdaq/nasdaq-stock.txt >tmp/fetch.list
-	ant run-fetch
 
 #
-# update-etf-*
+# update-*
 #
 
-update-etf:
-	@echo make update-etf-etf update-etf-yahoo-daily update-etf-yahoo-dividend
+update:
+	@echo make update-etf update-google-getprices update-google-historicla update-nasdaq-symbol update-nasdaq-dividend update-yahoo-daily update-yahoo-dividend
 
-update-etf-etf:
+prepare-update:
 	mkdir -p tmp/sqlite
-	ant run-update-etf-etf
 
-update-etf-yahoo-daily:
+update-etf: prepare-update
 	mkdir -p tmp/sqlite
-	ant run-update-etf-yahoo-daily
+	ant run-update-etf
 
-update-etf-yahoo-dividend:
-	mkdir -p tmp/sqlite
-	ant run-update-etf-yahoo-dividend
+update-google-getprices: prepare-update
+	ant run-update-google-prices
 
+update-google-historical: prepare-update
+	ant run-update-google-historical
+	
+update-nasdaq-symbol: prepare-update
+	ant run-update-nasdaq-symbol
+	
+update-nasdaq-dividend: prepare-update
+	ant run-update-nasdaq-dividend
+	
+update-yahoo-daily: prepare-update
+	ant run-update-yahoo-daily
 
-#
-# update-stock-*
-#
-
-update-stock:
-	@echo make update-stock-yahoo-daily update-stock-yahoo-dividend
-
-update-stock-yahoo-daily:
-	mkdir -p tmp/sqlite
-	ant run-update-stock-yahoo-daily
-
-update-stock-yahoo-dividend:
-	mkdir -p tmp/sqlite
-	ant run-update-stock-yahoo-dividend
+update-yahoo-dividend: prepare-update
+	ant run-update-yahoo-dividend

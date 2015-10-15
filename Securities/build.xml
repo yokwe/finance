@@ -76,48 +76,66 @@
 		</java>
 	</target>
 
-	<target name="run-update-etf-etf">
+	<target name="run-update-etf">
 		<java classname="yokwe.finance.securities.update.ETF" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/etf-etf"/>
-			<arg value="tmp/sqlite/etf-etf.csv"/>
+			<arg value="tmp/fetch/etf"/>
+			<arg value="tmp/sqlite/etf.csv"/>
 		</java>
 	</target>
 
-	<target name="run-update-etf-yahoo-daily">
+	<target name="run-update-yahoo-daily">
 		<java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/etf-yahoo-daily"/>
-			<arg value="tmp/sqlite/etf-yahoo-daily.csv"/>
+			<arg value="tmp/fetch/yahoo-daily"/>
+			<arg value="tmp/sqlite/yahoo-daily.csv"/>
 		</java>
 	</target>
 
-	<target name="run-update-etf-yahoo-dividend">
+	<target name="run-update-yahoo-dividend">
 		<java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/etf-yahoo-dividend"/>
-			<arg value="tmp/sqlite/etf-yahoo-dividend.csv"/>
+			<arg value="tmp/fetch/yahoo-dividend"/>
+			<arg value="tmp/sqlite/yahoo-dividend.csv"/>
 		</java>
 	</target>
 
-	<target name="run-update-stock-yahoo-daily">
-		<java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
+	<target name="run-update-nasdaq-symbol">
+		<java classname="yokwe.finance.securities.update.NasdaqSymbol" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/stock-yahoo-daily"/>
-			<arg value="tmp/sqlite/stock-yahoo-daily.csv"/>
+			<arg value="tmp/fetch/nasdaq-symbol"/>
+			<arg value="tmp/sqlite/nasdaq-symbol.csv"/>
 		</java>
 	</target>
 
-	<target name="run-update-stock-yahoo-dividend">
-		<java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+	<target name="run-update-nasdaq-dividend">
+		<java classname="yokwe.finance.securities.update.NasdaqDividend" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/stock-yahoo-dividend"/>
-			<arg value="tmp/sqlite/stock-yahoo-dividend.csv"/>
+			<arg value="tmp/fetch/nasdaq-dividend"/>
+			<arg value="tmp/sqlite/nasdaq-dividend.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-google-historical">
+		<java classname="yokwe.finance.securities.update.GoogleHistorical" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/google-historical"/>
+			<arg value="tmp/sqlite/google-historical.csv"/>
+		</java>
+	</target>
+
+	<target name="run-update-google-getprices">
+		<java classname="yokwe.finance.securities.update.GoogleGetPrices" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/google-getprices"/>
+			<arg value="tmp/sqlite/google-getprices.csv"/>
 		</java>
 	</target>
 

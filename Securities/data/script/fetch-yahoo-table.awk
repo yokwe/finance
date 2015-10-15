@@ -8,7 +8,7 @@ BEGIN {
   # From (Y - 11)-01-01
   A = "00"
   B = "01"
-  C = "1993" # SPY was started at 1993-01-29
+  C = "2000" # SPY was started at 1993-01-29
   # To Y-12-31
   D = "30"
   E = "12"

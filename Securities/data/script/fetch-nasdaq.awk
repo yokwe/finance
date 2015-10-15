@@ -18,5 +18,5 @@
   gsub(/\+/, ".WS", NASDAQ_SYMBOL)
   gsub(/\*/, ".CL", NASDAQ_SYMBOL)
  
-  printf("%s/%-11s http://www.nasdaq.com/symbol/%s/%s\n", DIR_OUTPUT, (SYMBOL ".html"), tolower(NASDAQ_SYMBOL), SUFFIX)
+  printf("%s/%-11s http://www.nasdaq.com/symbol/%s%s\n", DIR_OUTPUT, (SYMBOL ".html"), tolower(NASDAQ_SYMBOL), SUFFIX)
 }

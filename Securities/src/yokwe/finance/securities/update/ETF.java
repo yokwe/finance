@@ -1,6 +1,7 @@
 package yokwe.finance.securities.update;
 
-import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -8,12 +9,14 @@ import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.Scrape;
-import yokwe.finance.securities.util.CSVUtil;
 
 public class ETF {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(ETF.class);
 	
+	private static final String CRLF = "\r\n";
+
 	public enum Field {
 		SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SCORE, FIT, SEGMENT,
 		NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD,
@@ -105,7 +108,27 @@ public class ETF {
 	public static void save(String dirPath, String csvPath) {
 		List<Map<Field, String>> values = scrape.readDirectory(dirPath);
 		//
-		CSVUtil.save(new File(csvPath), values);
+		Field[] keys = Field.values();
+		
+		try (BufferedWriter br = new BufferedWriter(new FileWriter(csvPath))) {
+			for(Map<Field, String> map: values) {
+				int count = 0;
+				for(Field field: keys) {
+					if (count != 0) br.append(",");
+					String value = map.get(field);
+					if (value.contains(",")) {
+						br.append('"').append(map.get(field)).append('"');
+					} else {
+						br.append(map.get(field));
+					}
+					count++;
+				}
+				br.append(CRLF);
+			}
+		} catch (IOException e) {
+			logger.error("IOException {}", e);
+			throw new SecuritiesException("IOException");
+		}
 	}
 
 	public static void main(String[] args) throws IOException {

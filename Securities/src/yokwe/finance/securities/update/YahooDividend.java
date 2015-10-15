@@ -1,47 +1,43 @@
 package yokwe.finance.securities.update;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.CSVUtil;
 
 public class YahooDividend {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDividend.class);
-	
-	enum Field_In {
-		DATE("Date"), DIVIDENDS("Dividends");
+
+	public static final class CSVRecord {
+		public static final String HEADER = "Date,Dividends";
+		public static final int NUMBER_OF_FIELDS = 2;
 		
-		private final String name;
-		private Field_In(String name) {
-			this.name = name;
+		public static void checkHeader(String line) {
+			if (!line.equals(HEADER)) {
+				logger.error("header  line = {}", line);
+				throw new SecuritiesException("header");
+			}
 		}
-		public String toString() {
-			return name;
+		public static String toCSV(String symbol, String line) {
+			String[] fields = line.split(",");
+			if (fields.length != NUMBER_OF_FIELDS) {
+				logger.error("fields  {}  line = {}", symbol, line);
+				throw new SecuritiesException("fields");
+			}
+			String date     = fields[0];
+			double dividend = Double.valueOf(fields[1]);
+			return String.format("%s,%s,%.3f", date, symbol, dividend);
 		}
 	}
 
-	enum Field_Out {
-		SYMBOL("Symbol"), DATE("Date"), DIVIDENDS("Dividends");
-		
-		private final String name;
-		private Field_Out(String name) {
-			this.name = name;
-		}
-		public String toString() {
-			return name;
-		}
-	}
+	private static final String CRLF = "\r\n";
 
 	public static void save(String dirPath, String csvPath) {
 		File root = new File(dirPath);
@@ -53,8 +49,7 @@ public class YahooDividend {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536);
-			CSVPrinter printer = new CSVPrinter(bw, CSVFormat.DEFAULT)) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536)) {
 			
 			int totalSize = 0;
 			for(File file: fileList) {
@@ -63,23 +58,23 @@ public class YahooDividend {
 				String fileName = file.getName();
 				String symbol = fileName.substring(0, fileName.length() - 4);
 				
-				List<Map<Field_In, String>> inRecords = CSVUtil.load(file, Field_In.class);
-				
-				logger.info("SYMBOL {}", String.format("%-8s %6d", symbol, inRecords.size()));
-				totalSize += inRecords.size();
-				
-				for(Map<Field_In, String> inRecord: inRecords) {
-					Map<Field_Out, String> outRecord = new TreeMap<>();
-					outRecord.put(Field_Out.SYMBOL, symbol);
-					
-					// 1.022000 => 1.022
-					String dividend = String.format("%.3f", Float.valueOf(inRecord.get(Field_In.DIVIDENDS)));
-					
-					outRecord.put(Field_Out.DATE,      inRecord.get(Field_In.DATE));
-					outRecord.put(Field_Out.DIVIDENDS, dividend);
-
-					printer.printRecord(outRecord.values());
+				int size = 0;
+				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+					String header = br.readLine();
+					if (header == null) {
+						logger.error("{} header == null", file.getAbsolutePath());
+						throw new SecuritiesException("not directory");
+					}
+					CSVRecord.checkHeader(header);
+					for(;;) {
+						String line = br.readLine();
+						if (line == null) break;
+						bw.append(CSVRecord.toCSV(symbol, line)).append(CRLF);
+						size++;
+					}
 				}
+				totalSize += size;
+				logger.info(String.format("%-6s %6d", symbol, size));
 			}
 			
 			logger.info("TOTAL {}", totalSize);

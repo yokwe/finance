@@ -8,7 +8,7 @@
 .open tmp/sqlite/etf.sqlite3
 
 -- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT, NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD
-CREATE TABLE etf_etf (
+CREATE TABLE etf (
   symbol           TEXT     NOT NULL, -- ticker symbol
   name             TEXT     NOT NULL, -- name of ETF
   inception_date   TEXT     NOT NULL, -- inception date as YYYY-MM-DD
@@ -26,7 +26,7 @@ CREATE TABLE etf_etf (
   distribution_yield REAL   NOT NULL  -- distribution yield (of last 12 month)
 );
 
-CREATE TABLE etf_yahoo_daily (
+CREATE TABLE yahoo_daily (
   symbol    TEXT     NOT NULL, -- ticker symbol
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
   open      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
@@ -36,7 +36,7 @@ CREATE TABLE etf_yahoo_daily (
   volume    INTEGER  NOT NULL
 );
 
-CREATE TABLE etf_yahoo_dividend (
+CREATE TABLE yahoo_dividend (
   symbol    TEXT  NOT NULL, -- ticker symbol
   date      TEXT  NOT NULL, -- date is YYYY-MM-DD
   dividend  REAL  NOT NULL  -- in 1000th of value 1.234 = 1.234
@@ -46,16 +46,15 @@ CREATE TABLE etf_yahoo_dividend (
 
 .separator ,
 
-.import tmp/sqlite/etf-etf.csv            etf_etf
-.import tmp/sqlite/etf-yahoo-daily.csv    etf_yahoo_daily
-.import tmp/sqlite/etf-yahoo-dividend.csv etf_yahoo_dividend
+.import tmp/sqlite/etf.csv            etf
+.import tmp/sqlite/yahoo-daily.csv    yahoo_daily
+.import tmp/sqlite/yahoo-dividend.csv yahoo_dividend
 
-CREATE UNIQUE INDEX etf_etf_symbol                 ON etf_etf(symbol);
-CREATE UNIQUE INDEX etf_yahoo_daily_symbol_date    ON etf_yahoo_daily(symbol, date);
-CREATE UNIQUE INDEX etf_yahoo_dividend_symbol_date ON etf_yahoo_dividend(symbol, date);
+CREATE UNIQUE INDEX etf_symbol                 ON etf(symbol);
+CREATE UNIQUE INDEX yahoo_daily_symbol_date    ON yahoo_daily(symbol, date);
+CREATE UNIQUE INDEX yahoo_dividend_symbol_date ON yahoo_dividend(symbol, date);
 
-select count(*) from etf_etf;
-select count(*) from yahoo_profile;
-select count(*) from etf_yahoo_daily;
-select count(*) from etf_yahoo_dividend;
-select date, count(*) from etf_yahoo_daily group by date order by date desc limit 5;
+select count(*) from etf;
+select count(*) from yahoo_daily;
+select count(*) from yahoo_dividend;
+select date, count(*) from yahoo_daily group by date order by date desc limit 5;

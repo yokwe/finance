@@ -16,7 +16,7 @@ DIR_FETCH_NASDAQ_SYMBOL		=tmp/fetch/nasdaq-symbol
 
 # Form yahoo.com
 DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
-DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividen
+DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
 
 
 DIR_NASDAQ		=tmp/nasdaq

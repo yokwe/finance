@@ -46,3 +46,13 @@ How to find high dividend ETF and stock?
      And find out securities that generate periodical securities.
      Above are candidates.
   2) Get dividend of last 10 years 
+
+
+Download Time
+----
+google-getprices   46min
+google-historical  75min
+nasdaq-dividend   136min
+nasdaq-symbol     179min
+yahoo-daily       174min
+yahoo-dividend     35min

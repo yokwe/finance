@@ -19,6 +19,12 @@ BEGIN {
   SIZE     = $4
   SYMBOL   = $5
 
+  GOOGLE_SYMBOL = SYMBOL
+# gsub(/\-/, ".PR", GOOGLE_SYMBOL) # Treat "-" as "-"
+# gsub(/\+/, ".WS", GOOGLE_SYMBOL) # ???
+  gsub(/\*/, ".CL", GOOGLE_SYMBOL) # ARY*  =>  ARY.CL
+  gsub(/\=/, ".UN", GOOGLE_SYMBOL) # GRP=  =>  GRP.UN
+
   printf("%s/%-11s http://www.google.com/finance/historical?q=%s&startdate=Jan%%201,%%202000&enddate=Dec%%2031,%s&output=csv\n",
-    DIR_OUTPUT, (SYMBOL ".csv"), (EXCH_NAME[EXCH] ":" SYMBOL), Y)
+    DIR_OUTPUT, (SYMBOL ".csv"), (EXCH_NAME[EXCH] ":" GOOGLE_SYMBOL), Y)
 }

@@ -14,9 +14,10 @@
   SYMBOL   = $5
   
   NASDAQ_SYMBOL = SYMBOL
-  gsub(/\-/, ".PR",  NASDAQ_SYMBOL)
+  gsub(/\-/, ".PR", NASDAQ_SYMBOL)
   gsub(/\+/, ".WS", NASDAQ_SYMBOL)
   gsub(/\*/, ".CL", NASDAQ_SYMBOL)
+  gsub(/\=/, ".U",  NASDAQ_SYMBOL)
  
   printf("%s/%-11s http://www.nasdaq.com/symbol/%s%s\n", DIR_OUTPUT, (SYMBOL ".html"), tolower(NASDAQ_SYMBOL), SUFFIX)
 }

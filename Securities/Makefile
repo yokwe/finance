@@ -34,8 +34,9 @@ prepare-log:
 build-jar:
 	ant build
 
-load-data-etf:
-	sqlite3 < data/sqlite/etf-create.sql
+load-data:
+	rm -f tmp/sqlite/securities.sqlite3
+	sqlite3 < data/sqlite/table-create.sql
 
 
 #
@@ -53,6 +54,7 @@ update-nasdaq:
 	awk -f ${DIR_SCRIPT}/update-nasdaqtraded.awk ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt >${DIR_NASDAQ}/nasdaq-all.txt
 	awk '$$2 == "Y" {print}' ${DIR_NASDAQ}/nasdaq-all.txt >${DIR_NASDAQ}/nasdaq-etf.txt
 	awk '$$2 != "Y" {print}' ${DIR_NASDAQ}/nasdaq-all.txt >${DIR_NASDAQ}/nasdaq-stock.txt
+	awk -f ${DIR_SCRIPT}/update-nasdaq.awk ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt >tmp/sqlite/nasdaq.csv
 	wc -l ${DIR_NASDAQ}/*
 
 

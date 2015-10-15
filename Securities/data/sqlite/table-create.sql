@@ -1,11 +1,18 @@
 --
--- etf-create.sql
+-- table-create.sql
 --
 
-.read data/sqlite/etf-drop.sql
+-- .read data/sqlite/table-drop.sql
 
 .echo ON
-.open tmp/sqlite/etf.sqlite3
+.open tmp/sqlite/securities.sqlite3
+
+CREATE TABLE nasdaq (
+  etf              TEXT     NOT NULL, -- Y for ETF
+  exchange         TEXT     NOT NULL, -- name of exchange
+  symbol           TEXT     NOT NULL, -- ticker symbol
+  name             TEXT     NOT NULL  -- name of securities
+);
 
 -- ETF.Field SYMBOL, NAME, INCEPTION_DATE, EXPENSE_RATIO, ISSUER, HOME_PAGE, AUM, ADV, ASP, PRICE, SOCRE, FIT, SEGMENT, NEXT_EX_DIVIDEND_DATE, DISTRIBUTION_YIELD
 CREATE TABLE etf (
@@ -27,8 +34,8 @@ CREATE TABLE etf (
 );
 
 CREATE TABLE yahoo_daily (
-  symbol    TEXT     NOT NULL, -- ticker symbol
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
+  symbol    TEXT     NOT NULL, -- ticker symbol
   open      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
   high      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
   low       REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
@@ -37,8 +44,8 @@ CREATE TABLE yahoo_daily (
 );
 
 CREATE TABLE yahoo_dividend (
-  symbol    TEXT  NOT NULL, -- ticker symbol
   date      TEXT  NOT NULL, -- date is YYYY-MM-DD
+  symbol    TEXT  NOT NULL, -- ticker symbol
   dividend  REAL  NOT NULL  -- in 1000th of value 1.234 = 1.234
 );
 
@@ -46,13 +53,23 @@ CREATE TABLE yahoo_dividend (
 
 .separator ,
 
+.import tmp/sqlite/nasdaq.csv         nasdaq
 .import tmp/sqlite/etf.csv            etf
-.import tmp/sqlite/yahoo-daily.csv    yahoo_daily
 .import tmp/sqlite/yahoo-dividend.csv yahoo_dividend
+.import tmp/sqlite/yahoo-daily.csv    yahoo_daily
+
+CREATE UNIQUE INDEX nasdaq_etf                 ON nasdaq(etf);
+CREATE UNIQUE INDEX nasdaq_symbol              ON nasdaq(symbol);
 
 CREATE UNIQUE INDEX etf_symbol                 ON etf(symbol);
-CREATE UNIQUE INDEX yahoo_daily_symbol_date    ON yahoo_daily(symbol, date);
+
+CREATE        INDEX yahoo_dividend_date        ON yahoo_dividend(date);
+CREATE        INDEX yahoo_dividend_symbol      ON yahoo_dividend(symbol);
 CREATE UNIQUE INDEX yahoo_dividend_symbol_date ON yahoo_dividend(symbol, date);
+
+CREATE        INDEX yahoo_daily_date           ON yahoo_daily(date);
+CREATE        INDEX yahoo_daily_symbol         ON yahoo_daily(symbol);
+CREATE UNIQUE INDEX yahoo_daily_symbol_date    ON yahoo_daily(symbol, date);
 
 select count(*) from etf;
 select count(*) from yahoo_daily;

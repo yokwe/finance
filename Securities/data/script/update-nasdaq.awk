@@ -18,7 +18,9 @@ BEGIN {
 /File Creation Time/ { next }
 
 {
-  TRADED        = $1
+  # See link below for defintion of each feild
+  #   http://www.nasdaqtrader.com/trader.aspx?id=symboldirdefs
+  TRADED        = $1  # Y - trade
   ACT_SYMBOl    = $2
   NAME          = $3
   EXCH          = $4
@@ -26,7 +28,7 @@ BEGIN {
   ETF           = $6  # Y - ETF, N - STOCK
   LOT_SIZE      = $7
   TEST          = $8  # Y - test issue, N - not a test issue
-  STATUS        = $9
+  STATUS        = $9  # N - Normal Issuer Is NOT Deficient, Delinquent, or Bankrupt
   CQS_SYMBOL    = $10
   NASDAQ_SYMBOL = $11
   
@@ -35,8 +37,10 @@ BEGIN {
   # NASDAQ_SYMBOL  BAC-Y should read as BAC-PY  in yahoo finance and BAC.PRY in nasdaq
   # NASDAQ_SYMBOL  BAC+A should read as BAC-WTA in yahoo finance and BAC.WSA in nasdaq
   
-  if (CATEGORY == " ") CATEGORY = "-"
-   
+  if (STATUS == "") STATUS = "N"
   if (index(NAME, ",") != 0) NAME = "\"" NAME "\""
-  printf("%s,%s,%s,%s\n", ETF, EXCH_NAME[EXCH], NASDAQ_SYMBOL, NAME)
+    
+  if (TRADED == "Y" && STATUS == "N" && TEST == "N") {
+    printf("%s,%s,%s,%s\n", ETF, EXCH_NAME[EXCH], NASDAQ_SYMBOL, NAME)
+  }
 }

@@ -7,7 +7,7 @@ BEGIN {
   
   # From (Y - 11)-01-01
   A = "00"
-  B = "01"
+  B = "1"
   C = "2000" # SPY was started at 1993-01-29
   # To Y-12-31
   D = "30"
@@ -34,7 +34,8 @@ BEGIN {
   gsub(/\+/, "-WT", YAHOO_SYMBOL)
   gsub(/\*/, "-CL", YAHOO_SYMBOL)
   gsub(/\=/, "-U",  YAHOO_SYMBOL)
+  gsub(/\./, "-",   YAHOO_SYMBOL)
     
-  printf("%s/%-10s http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%s&b=%s&c=%s&d=%s&e=%s&f=%s&g=%s&ignore=.csv\n",
-    DIR_OUTPUT, (SYMBOL ".csv"), YAHOO_SYMBOL, A, B, C, D, E, F, G)
+  printf("%s/%-10s http://real-chart.finance.yahoo.com/table.csv?a=%s&b=%s&c=%s&d=%s&e=%s&f=%s&g=%s&ignore=.csv&s=%s\n",
+    DIR_OUTPUT, (SYMBOL ".csv"), A, B, C, D, E, F, G, YAHOO_SYMBOL)
 }

@@ -87,6 +87,7 @@ Within google-getprices
 
 Within google-historical
   File size is 0                   -  218  -- No data
-  File size is 35                  -   38  -- Only header line (No data line)
+  File size is 35                  -   38  -- No data(Only header line)
   FIle size is either 0 nor 35     - 7959  -- Has Data
- 
+
+ Use google-historical for price and yahoo-dividend

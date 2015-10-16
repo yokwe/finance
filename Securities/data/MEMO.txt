@@ -56,3 +56,37 @@ nasdaq-dividend   136min
 nasdaq-symbol     179min
 yahoo-daily       174min
 yahoo-dividend     35min
+
+Download Time
+----
+google-getprices   41min  8214    0
+google-historical  55min  8214  218
+nasdaq-dividend   119min  8214    0
+nasdaq-symbol     121min  8214    0
+yahoo-daily        97min  8214  517
+yahoo-dividend     27min  8214  517
+
+Within yahoo-daily
+  File size is 0                   -  517  -- No data
+  FIle size is not 0               - 7698  -- Has data
+  
+Within yahoo-dividend
+  Without "Community Rating"       -   46  -- Unknown symbol
+  Without "Eff Date"               - 2748  -- Has no data
+  With    "presently unavailable"  - 2703  -- Known symbol but has no data
+  With    "Eff Date"               - 5466  -- Known symbol and has data
+
+Within yahoo-symbol
+  Without "Community Rating"       -   46  -- Unknown symbol
+  With    "unknown symbol"         -   44  -- Unknown symbol  Two difference is come from JPN and AXON
+  With    "Community Ratign"       - 8168  -- Known symbol
+
+Within google-getprices
+  Without "TIMEZONE_OFFSET"        -  286  -- No data
+  With    "TIMEZONE_OFFSET"        - 7928  -- Has data
+
+Within google-historical
+  File size is 0                   -  218  -- No data
+  File size is 35                  -   38  -- Only header line (No data line)
+  FIle size is either 0 nor 35     - 7959  -- Has Data
+ 

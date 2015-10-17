@@ -133,7 +133,7 @@ update-etf: prepare-update
 	ant run-update-etf
 
 update-google-getprices: prepare-update
-	ant run-update-google-prices
+	ant run-update-google-getprices
 
 update-google-historical: prepare-update
 	ant run-update-google-historical

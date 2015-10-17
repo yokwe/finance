@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class GoogleHistorical {
+public final class GoogleHistorical {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(GoogleHistorical.class);
 	
 //	Date,Open,High,Low,Close,Volume
@@ -56,6 +56,11 @@ public class GoogleHistorical {
 			}
 			if (fields[3].equals("-")) {
 				fields[3] = fields[4];
+			}
+			
+			// Special when field (volume) contains dash
+			if (fields[5].equals("-")) {
+				fields[5] = "0";
 			}
 			
 			String date     = fields[0];

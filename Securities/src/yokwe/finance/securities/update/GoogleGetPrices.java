@@ -6,10 +6,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Calendar;
 
 import org.slf4j.LoggerFactory;
 
@@ -19,40 +19,38 @@ public class GoogleGetPrices {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(GoogleGetPrices.class);
 
 	static class MyDate {
-		int        interval   = 0;
-		Calendar   base       = Calendar.getInstance();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
 		
-		MyDate() {
-			dateFormat.setCalendar(base);
-		}
+		long       epochSecond    = 0;
+		long       intervalSecond = 0;
+		ZoneOffset zoneOffset     = ZoneOffset.ofHoursMinutes(0, 0);
 		
 		void setInterval(String number) {
-			this.interval = Integer.valueOf(number);
+			intervalSecond = Integer.valueOf(number);
 		}
 		
 		void setTimeZone(String number) {
-			final int offsetMillis = Integer.valueOf(number) * 1000;
-			base.getTimeZone().setRawOffset(offsetMillis);
+			final int offsetMinutes = Integer.valueOf(number);
+			zoneOffset = ZoneOffset.ofHoursMinutes(offsetMinutes / 60, offsetMinutes % 60);
 		}
 		
 		void setTime(String number) {
-			final int millis = Integer.valueOf(number) * 1000;
-			base.setTimeInMillis(millis);
+			epochSecond = Integer.valueOf(number);
 		}
 		
-		String toDate() {
-			return dateFormat.format(base);
+		long getTime(int count) {
+			return epochSecond + intervalSecond * count;
 		}
 		
 		String toDate(String number) {
 			if (number.charAt(0) == 'a') {
 				setTime(number.substring(1));
-				return dateFormat.format(base.getTime()); 
+				LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(getTime(0), 0, zoneOffset);
+				return formatter.format(localDateTime);
 			} else {
-				Calendar theDate = (Calendar)base.clone();
-				theDate.add(Calendar.SECOND, interval * Integer.valueOf(number));
-				return dateFormat.format(theDate.getTime());
+				final int count = Integer.valueOf(number);
+				LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(getTime(count), 0, zoneOffset);
+				return formatter.format(localDateTime);
 			}
 		}
 	}
@@ -162,7 +160,4 @@ public class GoogleGetPrices {
 		logger.info("csvPath = {}", csvPath);
 		save(dirPath, csvPath);
 	}
-
-
-
 }

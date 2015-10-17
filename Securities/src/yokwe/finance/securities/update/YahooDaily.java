@@ -38,6 +38,12 @@ public class YahooDaily {
 			double close    = Double.valueOf(fields[4]);
 			long   volume   = Long.valueOf(fields[5]);
 			// double adjClose = Double.valueOf(fields[6]);
+			
+			// Special when volume equals zero
+			if (volume == 0) {
+				high = low = open = close;
+			}
+
 			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);
 		}
 	}

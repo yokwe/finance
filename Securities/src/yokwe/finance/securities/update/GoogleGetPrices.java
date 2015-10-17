@@ -73,6 +73,11 @@ public class GoogleGetPrices {
 			double open     = Double.valueOf(fields[4]);
 			long   volume   = Long.valueOf(fields[5]);
 			
+			// Special when volume equals zero
+			if (volume == 0) {
+				high = low = open = close;
+			}
+			
 			String date = myDate.toDate(dateStr);
 
 			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);

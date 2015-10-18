@@ -12,8 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class YahooDaily {
+public final class YahooDaily {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDaily.class);
+	
+	private static final int BUFFER_SIZE = 256 * 1024;
 	
 	public static final class CSVRecord {
 		public static final String HEADER = "Date,Open,High,Low,Close,Volume,Adj Close";
@@ -60,7 +62,7 @@ public class YahooDaily {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536)) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 			
 			int totalSize = 0;
 			for(File file: fileList) {
@@ -70,7 +72,7 @@ public class YahooDaily {
 				String symbol = fileName.substring(0, fileName.length() - 4);
 				
 				int size = 0;
-				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+				try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
 					String header = br.readLine();
 					if (header == null) {
 						logger.error("{} header == null", file.getAbsolutePath());

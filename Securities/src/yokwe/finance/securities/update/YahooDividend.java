@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class YahooDividend {
+public final class YahooDividend {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDividend.class);
 
 	public static final class CSVRecord {

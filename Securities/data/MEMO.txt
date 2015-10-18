@@ -91,3 +91,9 @@ Within google-historical
   FIle size is either 0 nor 35     - 7959  -- Has Data
 
  Use google-historical for price and yahoo-dividend
+ 
+ GoogleGetPrices  TOTAL 17873716  20 minutes 18 seconds  19 minutes 29 seconds(256K buffer)  6 minutes  2 seconds(256K buffer single execution)
+ GoogleHistorical TOTAL 17838311  22 minutes 17 seconds  19 minutes 33 seconds(256K buffer)  8 minutes  0 seconds(256K buffer single execution)
+ YahooDaily       TOTAL 18094299  19 minutes 59 seconds  19 minutes 33 seconds(256K buffer)  6 minutes 47 seconds(256K buffer single execution)
+ 
+ 

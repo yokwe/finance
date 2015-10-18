@@ -15,10 +15,12 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class GoogleGetPrices {
+public final class GoogleGetPrices {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(GoogleGetPrices.class);
+	
+	private static final int BUFFER_SIZE = 256 * 1024;
 
-	static class MyDate {
+	static final class MyDate {
 		private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE;
 		
 		long       epochSecond    = 0;
@@ -96,7 +98,7 @@ public class GoogleGetPrices {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536)) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 			
 			int totalSize = 0;
 			for(File file: fileList) {
@@ -106,7 +108,7 @@ public class GoogleGetPrices {
 				String symbol = fileName.substring(0, fileName.length() - 4);
 				
 				int size = 0;
-				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+				try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
 					String header = br.readLine();
 					if (header == null) {
 						logger.error("{} header == null", file.getAbsolutePath());
@@ -128,6 +130,7 @@ public class GoogleGetPrices {
 					for(;;) {
 						String line = br.readLine();
 						if (line == null) break;
+						
 						if (line.startsWith("EXCHANGE")) continue;
 						if (line.startsWith("MARKET_")) continue;
 						
@@ -137,7 +140,12 @@ public class GoogleGetPrices {
 							continue;
 						}
 						if (line.startsWith("COLUMNS=")) continue;
-						if (line.startsWith("DATA=")) continue;
+						if (line.startsWith("DATA=")) break;
+					}
+					
+					for(;;) {
+						String line = br.readLine();
+						if (line == null) break;
 						if (line.startsWith("TIMEZONE_OFFSET=")) {
 							String[] values = line.split("=");
 							myDate.setTime(values[1]);

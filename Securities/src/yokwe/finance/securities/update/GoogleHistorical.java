@@ -16,6 +16,8 @@ import yokwe.finance.securities.SecuritiesException;
 public final class GoogleHistorical {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(GoogleHistorical.class);
 	
+	private static final int BUFFER_SIZE = 256 * 1024;
+
 //	Date,Open,High,Low,Close,Volume
 //	15-Oct-15,37.79,37.79,37.79,37.79,103
 //	14-Oct-15,-,-,-,37.83,0
@@ -86,7 +88,7 @@ public final class GoogleHistorical {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536)) {
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 			
 			int totalSize = 0;
 			for(File file: fileList) {
@@ -96,7 +98,7 @@ public final class GoogleHistorical {
 				String symbol = fileName.substring(0, fileName.length() - 4);
 				
 				int size = 0;
-				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+				try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
 					String header = br.readLine();
 					if (header == null) {
 						logger.error("{} header == null", file.getAbsolutePath());

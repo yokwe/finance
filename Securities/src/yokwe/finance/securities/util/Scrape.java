@@ -220,6 +220,11 @@ public abstract class Scrape<E extends Enum<E>> {
 			ret = fract + suffix;
 		}
 		
+		// 762,118.00
+		if (ret.matches("^([0-9]+,[0-9,\\.]+)$")) {
+			String str = ret.replace(",", "");
+			ret = str.replace(".00", "");
+		}
 		// Aug 19, 2015
 		if (ret.matches("^([A-Za-z]{3}) ([0-9]{1,2}), ([0-9]{4})$")) {
 			ret = formatInceptionDate.format(parseInceptionDate.parse(ret));

@@ -1,6 +1,9 @@
 #! /usr/bin/awk -f
 
 BEGIN {
+  FS = ","
+  RS = "[\r\n]+"
+  
   "date '+%Y'" | getline Y
   
   # Data for at least last 10 years
@@ -23,11 +26,9 @@ BEGIN {
 
 # http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
 {
-  EXCHANGE = $1
-  ETF      = $2
-  CATEGORY = $3
-  SIZE     = $4
-  SYMBOL   = $5
+  ETF      = $1
+  EXCH     = $2
+  SYMBOL   = $3
   
   YAHOO_SYMBOL = SYMBOL
   gsub(/\-/, "-P",  YAHOO_SYMBOL)

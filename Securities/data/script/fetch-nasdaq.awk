@@ -6,12 +6,16 @@
 # NASDAQ_SYMBOL  BAC+A should read as BAC-WTA in yahoo finance and BAC.WSA in nasdaq
 
 # http://www.nasdaq.com/symbol/vclt/dividend-history
+
+BEGIN {
+  FS = ","
+  RS = "[\r\n]+"
+}
+
 {
-  EXCHANGE = $1
-  ETF      = $2
-  CATEGORY = $3
-  SIZE     = $4
-  SYMBOL   = $5
+  ETF      = $1
+  EXCH     = $2
+  SYMBOL   = $3
   
   NASDAQ_SYMBOL = SYMBOL
   gsub(/\-/, ".PR", NASDAQ_SYMBOL)

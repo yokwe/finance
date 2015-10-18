@@ -90,10 +90,31 @@ Within google-historical
   File size is 35                  -   38  -- No data(Only header line)
   FIle size is either 0 nor 35     - 7959  -- Has Data
 
- Use google-historical for price and yahoo-dividend
+ Use google-getprices for price and yahoo-dividend for dividend
  
+ Duration time of processing data
+ ----
  GoogleGetPrices  TOTAL 17873716  20 minutes 18 seconds  19 minutes 29 seconds(256K buffer)  6 minutes  2 seconds(256K buffer single execution)
  GoogleHistorical TOTAL 17838311  22 minutes 17 seconds  19 minutes 33 seconds(256K buffer)  8 minutes  0 seconds(256K buffer single execution)
  YahooDaily       TOTAL 18094299  19 minutes 59 seconds  19 minutes 33 seconds(256K buffer)  6 minutes 47 seconds(256K buffer single execution)
  
- 
+ Duration time of downloading file
+ ----
+ GoogleFinance    download 8217 files takes  68 minutes 31 seconds
+ NasdaqSymbol     download 8217 files takes 135 minutes 50 seconds
+ NasdaqDividend   download 8217 files takes 122 minutes 44 seconds
+ ----
+ hasegawa@ubuntu:~/git/finance/Securities$ du -sh tmp/fetch/nasdaq*
+616K    tmp/fetch/nasdaq
+935M    tmp/fetch/nasdaq-dividend
+1.1G    tmp/fetch/nasdaq-symbol
+hasegawa@ubuntu:~/git/finance/Securities$ du -sh tmp/fetch/google-*
+1.1G    tmp/fetch/google-finance
+579M    tmp/fetch/google-getprices
+676M    tmp/fetch/google-historical
+hasegawa@ubuntu:~/git/finance/Securities$ 
+----
+
+Size of nasdaq-symbol and google-finance are both 1.1G.  Size of directories are same.
+But downloading time is different. GoogelFinance 68min and NasdaqSymbol 135min.
+

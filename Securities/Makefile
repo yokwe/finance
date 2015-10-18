@@ -6,6 +6,7 @@
 DIR_FETCH_ETF			=tmp/fetch/etf
 
 # From google.com
+DIR_FETCH_GOOGLE_FINANCE	=tmp/fetch/google-finance
 DIR_FETCH_GOOGLE_GETPRICES	=tmp/fetch/google-getprices
 DIR_FETCH_GOOGLE_HISTORICAL	=tmp/fetch/google-historical
 
@@ -53,19 +54,14 @@ update-nasdaq:
 
 
 #
-# fetch-etf-*
-#
-
-fetch-etf:
-	mkdir -p ${DIR_FETCH_ETF}
-	awk -v DIR_OUTPUT="${DIR_FETCH_ETF}"            -f data/script/fetch-etf.awk \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-
-#
 # fetch-google-*
 #
+
+fetch-google-finance:
+	mkdir -p ${DIR_FETCH_GOOGLE_FINANCE}
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_FINANCE}"   -f data/script/fetch-google-finance.awk \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
 
 fetch-google-getprices:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}

@@ -18,8 +18,8 @@ public class GoogleFinance {
 	private static final String CRLF = "\r\n";
 
 	public enum Field {
-		SYMBOL, EXCHANGE, NAME,
-		//NAME, EXCHANGE, VOLUME,
+		SYMBOL, EXCHANGE, NAME, AVG_VOL,
+		// SHARES, OPEN,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
@@ -44,6 +44,18 @@ public class GoogleFinance {
 				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
 				"<meta itemprop=\"name\"" ,
 				Pattern.DOTALL);
+
+//			<td class="key"
+//			          data-snapfield="vol_and_avg">Vol / Avg.
+//			</td>
+//			<td class="val">1.75M/2.25M
+//          or
+//			<td class="val">0.00
+			// 1.75M  762,118.00 0.00 
+			add(Field.AVG_VOL,
+					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">.*?([0-9,KMB\\.]+)\\p{javaWhitespace}",
+					"data-snapfield=\"vol_and_avg\">" ,
+					Pattern.DOTALL);
 		}
 	}
 	

@@ -139,4 +139,13 @@
 		</java>
 	</target>
 
+       <target name="run-update-google-finance">
+                <java classname="yokwe.finance.securities.update.GoogleFinance" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/google-finance"/>
+                        <arg value="tmp/sqlite/google-finance.csv"/>
+                </java>
+        </target>
+
 </project>

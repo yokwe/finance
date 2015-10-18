@@ -44,7 +44,6 @@ public class GoogleFinance {
 				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
 				"<meta itemprop=\"name\"" ,
 				Pattern.DOTALL);
-			
 		}
 	}
 	

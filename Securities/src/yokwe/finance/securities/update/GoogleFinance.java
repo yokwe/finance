@@ -42,7 +42,7 @@ public class GoogleFinance {
 //	           content="Vanguard Long Term Corporate Bond ETF" />
 			add(Field.NAME,
 				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
-				"<meta itemprop=\"name\"",
+				"<meta itemprop=\"name\"" ,
 				Pattern.DOTALL);
 			
 		}

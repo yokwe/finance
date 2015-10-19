@@ -18,31 +18,34 @@ public class GoogleFinance {
 	private static final String CRLF = "\r\n";
 
 	public enum Field {
-		SYMBOL, EXCHANGE, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
+		EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
 		public void init() {
+//			<meta itemprop="exchange"
+//	        content="NYSE" />
+			add(Field.EXCHANGE,
+				"<meta itemprop=\"exchange\"\\p{javaWhitespace}+content=\"(.+?)\" />",
+				"<meta itemprop=\"exchange\"",
+				Pattern.DOTALL);
+
 //			<meta itemprop="tickerSymbol"
 //			        content="A" />
 			add(Field.SYMBOL,
 					"<meta itemprop=\"tickerSymbol\"\\p{javaWhitespace}+content=\"(.+?)\" />",
 					"<meta itemprop=\"tickerSymbol\"",
 					Pattern.DOTALL);
-			
-//			<meta itemprop="exchange"
-//			        content="NYSE" />
-			add(Field.EXCHANGE,
-					"<meta itemprop=\"exchange\"\\p{javaWhitespace}+content=\"(.+?)\" />",
-					"<meta itemprop=\"exchange\"",
-					Pattern.DOTALL);
 
-//			<meta itemprop="name"
-//	           content="Vanguard Long Term Corporate Bond ETF" />
-			add(Field.NAME,
-				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
-				"<meta itemprop=\"name\"" ,
-				Pattern.DOTALL);
+//			<td class="key"
+//	          data-snapfield="market_cap">Mkt cap
+//	</td>
+//	<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
+			add(Field.PRICE,
+					"<div id=price-panel .+?<span id=\".+?\">(.+?)</span>",
+					"<div id=price-panel" ,
+					Pattern.DOTALL, Scrape.Type.INTEGER);
+
 
 //			<td class="key"
 //			          data-snapfield="vol_and_avg">Vol / Avg.
@@ -71,19 +74,17 @@ public class GoogleFinance {
 //			          data-snapfield="market_cap">Mkt cap
 //			</td>
 //			<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
-			add(Field.PRICE,
-					"<div id=price-panel .+?<span id=\".+?\">(.+?)</span>",
-					"<div id=price-panel" ,
-					Pattern.DOTALL, Scrape.Type.INTEGER);
-
-//			<td class="key"
-//			          data-snapfield="market_cap">Mkt cap
-//			</td>
-//			<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
 			add(Field.MKT_CAP,
 					"data-snapfield=\"market_cap\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
 					"data-snapfield=\"market_cap\">Mkt cap" ,
 					Pattern.DOTALL, Scrape.Type.INTEGER);
+
+//			<meta itemprop="name"
+//	           content="Vanguard Long Term Corporate Bond ETF" />
+			add(Field.NAME,
+				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
+				"<meta itemprop=\"name\"" ,
+				Pattern.DOTALL);
 		}
 	}
 	

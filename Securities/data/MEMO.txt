@@ -118,3 +118,27 @@ hasegawa@ubuntu:~/git/finance/Securities$
 Size of nasdaq-symbol and google-finance are both 1.1G.  Size of directories are same.
 But downloading time is different. GoogelFinance 68min and NasdaqSymbol 135min.
 
+File size of each data
+----
+hasegawa@ubuntu:~/git/finance/Securities$ du -sh tmp/fetch
+3.9G    tmp/fetch
+hasegawa@ubuntu:~/git/finance/Securities$ du -sh tmp/fetch/*
+1.1G    tmp/fetch/google-finance
+579M    tmp/fetch/google-getprices
+676M    tmp/fetch/google-historical
+616K    tmp/fetch/nasdaq
+971M    tmp/fetch/yahoo-daily
+31M     tmp/fetch/yahoo-dividend
+615M    tmp/fetch/yahoo-finance
+hasegawa@ubuntu:~/git/finance/Securities$ 
+----
+
+Download time of each data
+----
+google-finance     50 minutes 4 seconds
+google-getprices   43 minutes 47 seconds
+google-historical  62 minutes 39 seconds
+yahoo-daily       141 minutes 25 seconds
+yahoo-dividend     32 minutes 25 seconds
+yahoo-finance      44 minutes 33 seconds
+----

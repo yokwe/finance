@@ -216,8 +216,8 @@ public class EstimateProfit {
 			
 			final String name = info.name;
 			
-			// No daily data
-			if (closeMap.get(symbol) == null) {
+			// No close data
+			if (!closeMap.containsKey(symbol)) {
 				//logger.info("closeMap null  {}", symbol);
 				continue;
 			}

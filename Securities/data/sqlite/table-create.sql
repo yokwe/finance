@@ -14,6 +14,19 @@ CREATE TABLE nasdaq (
   name             TEXT     NOT NULL  -- name of securities
 );
 
+-- EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
+CREATE TABLE finance (
+  exchange         TEXT     NOT NULL, -- name of exchange
+  symbol           TEXT     NOT NULL, -- ticker symbol
+  --
+  price            REAL     NOT NULL, -- latest price
+  avg_vol          INTEGER  NOT NULL, -- 30 days average trade volume in share
+  shares           INTEGER  NOT NULL, -- shares outstanding
+  mkt_cap          INTEGER  NOT NULL, -- market capitalization
+  --
+  name             TEXT     NOT NULL  -- name of securities
+);
+
 CREATE TABLE price (
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
   symbol    TEXT     NOT NULL, -- ticker symbol
@@ -34,12 +47,15 @@ CREATE TABLE dividend (
 
 .separator ,
 
-.import tmp/sqlite/nasdaq.csv         nasdaq
-.import tmp/sqlite/yahoo-dividend.csv dividend
-.import tmp/sqlite/google-prices.csv  price
+.import tmp/sqlite/nasdaq.csv           nasdaq
+.import tmp/sqlite/google-finance.csv   finance
+.import tmp/sqlite/yahoo-dividend.csv   dividend
+.import tmp/sqlite/google-getprices.csv price
 
-CREATE UNIQUE INDEX nasdaq_etf           ON nasdaq(etf);
+CREATE        INDEX nasdaq_etf           ON nasdaq(etf);
 CREATE UNIQUE INDEX nasdaq_symbol        ON nasdaq(symbol);
+
+CREATE UNIQUE INDEX finance_symbol       ON finance(symbol);
 
 CREATE        INDEX dividend_date        ON dividend(date);
 CREATE        INDEX dividend_symbol      ON dividend(symbol);
@@ -49,6 +65,8 @@ CREATE        INDEX price_date           ON price(date);
 CREATE        INDEX price_symbol         ON price(symbol);
 CREATE UNIQUE INDEX price_symbol_date    ON price(symbol, date);
 
+select count(*) from nasdaq;
+select count(*) from finance;
 select count(*) from price;
 select count(*) from dividend;
 select date, count(*) from price group by date order by date desc limit 5;

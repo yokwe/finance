@@ -18,8 +18,7 @@ public class GoogleFinance {
 	private static final String CRLF = "\r\n";
 
 	public enum Field {
-		SYMBOL, EXCHANGE, NAME, AVG_VOL,
-		// SHARES, OPEN,
+		SYMBOL, EXCHANGE, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
@@ -55,7 +54,36 @@ public class GoogleFinance {
 			add(Field.AVG_VOL,
 					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">.*?([0-9,KMB\\.]+)\\p{javaWhitespace}",
 					"data-snapfield=\"vol_and_avg\">" ,
-					Pattern.DOTALL);
+					Pattern.DOTALL, Scrape.Type.INTEGER);
+
+//			<td class="key"
+//			          data-snapfield="shares">Shares
+//			</td>
+//			<td class="val">979.53M
+//			or
+//          <td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
+			add(Field.SHARES,
+					"data-snapfield=\"shares\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
+					"data-snapfield=\"shares\">" ,
+					Pattern.DOTALL, Scrape.Type.INTEGER);
+
+//			<td class="key"
+//			          data-snapfield="market_cap">Mkt cap
+//			</td>
+//			<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
+			add(Field.PRICE,
+					"<div id=price-panel .+?<span id=\".+?\">(.+?)</span>",
+					"<div id=price-panel" ,
+					Pattern.DOTALL, Scrape.Type.INTEGER);
+
+//			<td class="key"
+//			          data-snapfield="market_cap">Mkt cap
+//			</td>
+//			<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
+			add(Field.MKT_CAP,
+					"data-snapfield=\"market_cap\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
+					"data-snapfield=\"market_cap\">Mkt cap" ,
+					Pattern.DOTALL, Scrape.Type.INTEGER);
 		}
 	}
 	

@@ -114,26 +114,19 @@ fetch-nasdaq-dividend:
 #
 
 update:
-	@echo make update-etf update-google-getprices update-google-historicla update-nasdaq-symbol update-nasdaq-dividend update-yahoo-daily update-yahoo-dividend
+	@echo make update-google-getprices update-yahoo-dividend update-google-finance
 
 prepare-update:
 	mkdir -p tmp/sqlite
 
-update-etf: prepare-update
-	mkdir -p tmp/sqlite
-	ant run-update-etf
+update-google-finance: prepare-update
+	ant run-update-google-finance
 
 update-google-getprices: prepare-update
 	ant run-update-google-getprices
 
 update-google-historical: prepare-update
 	ant run-update-google-historical
-	
-update-nasdaq-symbol: prepare-update
-	ant run-update-nasdaq-symbol
-	
-update-nasdaq-dividend: prepare-update
-	ant run-update-nasdaq-dividend
 	
 update-yahoo-daily: prepare-update
 	ant run-update-yahoo-daily

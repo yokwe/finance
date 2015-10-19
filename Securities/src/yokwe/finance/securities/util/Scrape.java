@@ -268,8 +268,9 @@ public abstract class Scrape<E extends Enum<E>> {
 		}
 		
 		if (ret.contains("\"")) {
-			logger.error("DOUBLE_QUOTE {}", ret);
-			throw new SecuritiesException("DOUBLE_QUOTE");
+			ret = ret.replaceAll("\"", "\"\"");
+//			logger.error("DOUBLE_QUOTE {}", ret);
+//			throw new SecuritiesException("DOUBLE_QUOTE");
 		}
 		
 		return ret;

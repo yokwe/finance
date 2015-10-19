@@ -18,6 +18,7 @@ DIR_FETCH_NASDAQ_SYMBOL		=tmp/fetch/nasdaq-symbol
 # Form yahoo.com
 DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
+DIR_FETCH_YAHOO_FINANCE		=tmp/fetch/yahoo-finance
 
 
 DIR_SCRIPT		=data/script
@@ -89,6 +90,12 @@ fetch-yahoo-daily:
 fetch-yahoo-dividend:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v" \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
+fetch-yahoo-finance:
+	mkdir -p ${DIR_FETCH_YAHOO_FINANCE}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_FINANCE}"      -f data/script/fetch-yahoo-finance.awk \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 

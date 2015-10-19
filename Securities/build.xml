@@ -85,21 +85,30 @@
 		</java>
 	</target>
 
-	<target name="run-update-yahoo-daily">
-		<java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/yahoo-daily"/>
-			<arg value="tmp/sqlite/yahoo-daily.csv"/>
-		</java>
-	</target>
+        <target name="run-update-yahoo-daily">
+                <java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/yahoo-daily"/>
+                        <arg value="tmp/sqlite/yahoo-daily.csv"/>
+                </java>
+        </target>
 
-	<target name="run-update-yahoo-dividend">
-		<java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+        <target name="run-update-yahoo-dividend">
+                <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/yahoo-dividend"/>
+                        <arg value="tmp/sqlite/yahoo-dividend.csv"/>
+                </java>
+        </target>
+
+	<target name="run-update-yahoo-finance">
+		<java classname="yokwe.finance.securities.update.YahooFinance" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/yahoo-dividend"/>
-			<arg value="tmp/sqlite/yahoo-dividend.csv"/>
+			<arg value="tmp/fetch/yahoo-finance"/>
+			<arg value="tmp/sqlite/yahoo-finance.csv"/>
 		</java>
 	</target>
 

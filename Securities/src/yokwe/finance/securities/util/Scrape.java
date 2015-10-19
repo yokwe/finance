@@ -23,16 +23,22 @@ public abstract class Scrape<E extends Enum<E>> {
 		return value.compareTo(NO_VALUE) != 0;
 	}
 	
+	protected static enum Type {
+		NONE, INTEGER,
+	}
+
 	protected static class Element<EE extends Enum<EE>> {
 		protected final   EE      key;
 		protected final   String  expect;
 		protected final   Matcher matcher;
+		protected final   Type    type;
 		
-		protected Element(EE key, String pattern, String expect, int flag) {
+		protected Element(EE key, String pattern, String expect, int flag, Type type) {
 			this.key        = key;
 			this.expect     = expect;
 			
 			matcher         = Pattern.compile(pattern, flag).matcher("");
+			this.type       = type;
 		}
 		
 		protected String read(String fileName, String contents) {
@@ -58,20 +64,23 @@ public abstract class Scrape<E extends Enum<E>> {
 	protected  TreeMap<E, Element<E>> map = new TreeMap<>();
 	
 	protected void add(E e, String pattern) {
-		add(e, pattern, null, 0);
+		add(e, pattern, null, 0, Type.NONE);
 	}
 	protected void add(E e, String pattern, int flag) {
-		add(e, pattern, null, flag);
+		add(e, pattern, null, flag, Type.NONE);
 	}
 	protected void add(E e, String pattern, String expect) {
-		add(e, pattern, expect, 0);
+		add(e, pattern, expect, 0, Type.NONE);
 	}
 	protected void add(E e, String pattern, String expect, int flag) {
+		add(e, pattern, expect, flag, Type.NONE);
+	}
+	protected void add(E e, String pattern, String expect, int flag, Type type) {
 		if (map.containsKey(e)) {
 			logger.error("DUPLICATE {}", e);
 			throw new SecuritiesException("DUPLICATE");
 		}
-		Element<E> element = new Element<>(e, pattern, expect, flag);
+		Element<E> element = new Element<>(e, pattern, expect, flag, type);
 		map.put(e, element);
 	}
 
@@ -89,8 +98,14 @@ public abstract class Scrape<E extends Enum<E>> {
 		
 		int count = 0;
 		for(E key: map.keySet()) {
-			String value = map.get(key).read(fileName, contents);
+			Element<E> element = map.get(key);
+			
+			String value = element.read(fileName, contents);
 			value = normalize(value);
+			if (element.type == Type.INTEGER) {
+				value = value.replace(".00", "");
+				if (value.equals("-")) value = NO_VALUE;
+			}
 			if (!value.equals(NO_VALUE)) count++;
 			ret.put(key, value);
 		}
@@ -134,9 +149,10 @@ public abstract class Scrape<E extends Enum<E>> {
 	protected String normalize(String string) {
 		String ret = string;
 		
-		ret = ret.replace("&amp;", "&");
-		ret = ret.replace("&gt;",  ">");
+		ret = ret.replace("&amp;",   "&");
+		ret = ret.replace("&gt;",    ">");
 		ret = ret.replace("&rsquo;", "'");
+		ret = ret.replace("&nbsp;",  " ");
 		
 		ret = ret.replaceAll("<[^>]+>", " ");
 		ret = ret.replaceAll("\\p{javaWhitespace}+", " ");

@@ -3,6 +3,7 @@ package yokwe.finance.securities.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.DoubleConsumer;
 import java.util.function.DoubleFunction;
 import java.util.stream.Collectors;
 
@@ -12,8 +13,30 @@ import org.slf4j.LoggerFactory;
 
 public class DoubleStreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(DoubleStreamUtil.class);
+	
+	public static final class Stats implements DoubleConsumer {
+		final DescriptiveStatistics stats = new DescriptiveStatistics();
 
-	public static class MovingStats {
+		@Override
+		public void accept(double value) {
+			stats.addValue(value);
+		}
+
+		public double getMean() {
+			return stats.getMean();
+		}
+		public double getStandardDeviation() {
+			return stats.getStandardDeviation();
+		}
+		public double getKurtosis() {
+			return stats.getKurtosis();
+		}
+		public double getSkewnewss() {
+			return stats.getSkewness();
+		}
+	}
+	
+	public static final class MovingStats {
 		public static class MapToObj implements DoubleFunction<MovingStats> {
 			final DescriptiveStatistics stats;
 			boolean firstTime = true;
@@ -80,7 +103,30 @@ public class DoubleStreamUtil {
 		}
 	}
 	
+	private static void testStats() {
+		{
+			double[] values = {
+					1, 1, 1,   2, 2, 2,
+			};
+			Stats stats = new Stats();
+			Arrays.stream(values).forEach(stats);
+			logger.info("stats mean {}", stats.getMean());
+		}
+		{
+			double[] values = {
+					1, 1, 1,   2, 2, 2,
+					3, 3, 3,   4, 4, 4,
+					5, 5, 5,   6, 6, 6,
+			};
+			Stats stats = new Stats();
+			Arrays.stream(values).forEach(stats);
+			logger.info("stats mean {}", stats.getMean());
+		}
+
+	}
+	
 	public static void main(String[] args) {
 		testMovingStats();
+		testStats();
 	}
 }

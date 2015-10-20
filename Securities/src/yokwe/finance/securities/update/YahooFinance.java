@@ -28,11 +28,10 @@ public class YahooFinance {
 				"<span class=\"rtq_exch\">.+?</span>(.+?)</span>",
 				"<span class=\"rtq_exch\">");
 
-//			<div class="title"><h2>International Business Machines Corporation (IBM)</h2>
+//			<title>VCLT: Summary for Vanguard Long-Term Corporate Bo- Yahoo! Finance</title>
 			add(Field.SYMBOL,
-					"<div class=\"title\"><h2>.+?\\((.+?)\\)</h2>",
-					"<div class=\"title\"><h2>",
-					Pattern.DOTALL);
+					"<title>(.+?):",
+					"<title>");
 
 //			<span class="time_rtq_ticker"><span id="yfs_l84_ibm">150.39</span>
 			add(Field.PRICE,
@@ -54,10 +53,10 @@ public class YahooFinance {
 					"Market Cap:</th>.+?<span .+?>(.+?)</span>",
 					"Market Cap:</th>");
 
-//			<div class="title"><h2>International Business Machines Corporation (IBM)</h2>
+//			<meta property="og:title" content="Vanguard Long-Term Corporate Bond ETF">
 			add(Field.NAME,
-					"<div class=\"title\"><h2>(.+?)\\(.+?\\)</h2>",
-					"<div class=\"title\"><h2>",
+					"<meta property=\"og:title\" content=\"(.+?)\">",
+					"<meta property=\"og:title\" content=",
 					Pattern.DOTALL);
 		}
 	}

@@ -2,9 +2,6 @@
 #
 #
 
-# From etf.com
-DIR_FETCH_ETF			=tmp/fetch/etf
-
 # From google.com
 DIR_FETCH_GOOGLE_FINANCE	=tmp/fetch/google-finance
 DIR_FETCH_GOOGLE_GETPRICES	=tmp/fetch/google-getprices
@@ -19,6 +16,8 @@ DIR_FETCH_NASDAQ_SYMBOL		=tmp/fetch/nasdaq-symbol
 DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
 DIR_FETCH_YAHOO_FINANCE		=tmp/fetch/yahoo-finance
+
+DIR_SQLITE			=tmp/sqlite
 
 
 DIR_SCRIPT		=data/script
@@ -50,8 +49,7 @@ fetch-nasdaq:
 	wget -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
 	
 update-nasdaq:
-	awk -f ${DIR_SCRIPT}/update-nasdaq.awk ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt >tmp/sqlite/nasdaq.csv
-	wc -l tmp/sqlite/nasdaq.csv
+	ant run-update-nasdaq
 
 
 #

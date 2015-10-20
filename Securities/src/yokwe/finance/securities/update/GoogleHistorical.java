@@ -104,6 +104,11 @@ public final class GoogleHistorical {
 						logger.error("{} header == null", file.getAbsolutePath());
 						throw new SecuritiesException("not directory");
 					}
+					// file can be html file when symbol is not found
+					if (header.contains("DOCTYPE")) {
+						logger.warn(String.format("%-6s %s", symbol, "DOCTYPE"));
+						continue;
+					}
 					CSVRecord.checkHeader(header);
 					for(;;) {
 						String line = br.readLine();

@@ -19,6 +19,7 @@ BEGIN {
 # gsub(/\+/, ".WS", GOOGLE_SYMBOL) # ???
   gsub(/\*/, ".CL", GOOGLE_SYMBOL) # ARY*  =>  ARY.CL
   gsub(/\=/, ".UN", GOOGLE_SYMBOL) # GRP=  =>  GRP.UN
+  gsub(/\#/, "*",   GOOGLE_SYMBOL) # HPE#  =>  HPE*
 
   printf("%s/%-11s http://www.google.com/finance/historical?q=%s&startdate=Jan%%201,%%202000&enddate=Dec%%2031,%s&output=csv\n",
     DIR_OUTPUT, (SYMBOL ".csv"), (EXCH ":" GOOGLE_SYMBOL), Y)

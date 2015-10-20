@@ -39,7 +39,22 @@ BEGIN {
   
   if (STATUS == "") STATUS = "N"
   if (index(NAME, ",") != 0) NAME = "\"" NAME "\""
-    
+  
+  #
+  # symbol conversion from nasdaq to yahoo and google
+  #
+  # NASDAQ                                NASDAQ   YAHOO     GOOGLE
+  # X     X                               IBM      IBM       IBM
+  # X=    X units                         GRP=     GRP-U     GRP.UN
+  # X-    X preferred                     AA-      AA-P      AA-
+  # X*    X called                        ARY*     ARY-CL    ARY.CL
+  # X#    X when issued                   HPE#     HPE-WI    HPE*
+  # X+    X warrants                      AIG+     AIG-WT    ???
+  # X-A   X preferred class A             ABR-A    ABR-PA    ABR-A
+  # X-A*  X preferred class A called      BIR-A*   BIR-PA.A  BIR-A.CL
+  # X.A   X class A                       AKO.A    AKO-A     AKO.A
+  # X+A   X warrants class A              GM+A     GM-WTA    ???
+
   if (TRADED == "Y" && STATUS == "N" && TEST == "N") {
     printf("%s,%s,%s,%s\n", ETF, EXCH_NAME[EXCH], NASDAQ_SYMBOL, NAME)
   }

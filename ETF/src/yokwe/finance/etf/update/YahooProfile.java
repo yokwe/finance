@@ -38,7 +38,7 @@ public class YahooProfile {
 			//
 			// <a href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24FG%24%24">Foreign Large Growth</a>
 			
-			// TODO handle <a data-rapid_p="4" href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24WS%24%24">World Stock</a>
+			// handle <a data-rapid_p="4" href="/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=%24FECA%24WS%24%24">World Stock</a>
 		    add(Field.CATEGORY,
 	    		"<a href=\"/etf/lists/\\?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=[^>]+>(.+?)</a>",
 				"<td class=\"yfnc_tabledata1\"><a href=\"/etf/lists/?mod_id=mediaquotesetf&amp;tab=tab6&amp;cat=");

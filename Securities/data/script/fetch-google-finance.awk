@@ -1,23 +1,19 @@
 #! /usr/bin/awk -f
 
-# http://www.google.com/finance?q=NASDAQ:AMZN
-
 BEGIN {
   FS = ","
   RS = "[\r\n]+"
 }
 
+# http://www.google.com/finance?q=NASDAQ:AMZN
 {
-  ETF      = $1
-  EXCH     = $2
-  SYMBOL   = $3
-
-  GOOGLE_SYMBOL = SYMBOL
-# gsub(/\-/, ".PR", GOOGLE_SYMBOL) # Treat "-" as "-"
-# gsub(/\+/, ".WS", GOOGLE_SYMBOL) # ???
-  gsub(/\*/, ".CL", GOOGLE_SYMBOL) # ARY*  =>  ARY.CL
-  gsub(/\=/, ".UN", GOOGLE_SYMBOL) # GRP=  =>  GRP.UN
-
+  ETF           = $1
+  EXCH          = $2
+  SYMBOL        = $3
+  YAHOO_SYMBOL  = $4
+  GOOGLE_SYMBOL = $5
+  NASDAQ_SYMBOL = $6
+  
   printf("%s/%-11s http://www.google.com/finance?q=%s\n",
     DIR_OUTPUT, (SYMBOL ".html"), (EXCH ":" GOOGLE_SYMBOL))
 }

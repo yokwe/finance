@@ -2,9 +2,7 @@ package yokwe.finance.securities.util;
 
 import java.io.File;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -113,7 +111,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		return (count == 0) ? null : ret;
 	}
 	
-	public List<Map<E, String>> readDirectory(String path) {
+	public Map<String, Map<E, String>> readDirectory(String path) {
 		File root = new File(path);
 		if (!root.isDirectory()) {
 			logger.error("Not directory  path = {}", path);
@@ -123,15 +121,17 @@ public abstract class Scrape<E extends Enum<E>> {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		List<Map<E, String>> ret = new ArrayList<>();
+		Map<String, Map<E, String>> ret = new TreeMap<>();
 		for(File file: fileList) {
 			if (file.length() == 0) continue;
+			String fileName = file.getName();
+			String symbol = fileName.substring(0, fileName.length() - 4);
 			
 			try {
 				Map<E, String> values = readFile(file);
 				if (values == null) continue;
 				
-				ret.add(values);
+				ret.put(symbol, values);
 			} catch (SecuritiesException e) {
 				logger.error(e.toString());
 			}

@@ -3,7 +3,6 @@ package yokwe.finance.securities.update;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -29,6 +28,7 @@ public class YahooFinance {
 				"<span class=\"rtq_exch\">");
 
 //			<title>VCLT: Summary for Vanguard Long-Term Corporate Bo- Yahoo! Finance</title>
+			// TODO  This symbol use yahoo format. Should I convert to commons symbol format?
 			add(Field.SYMBOL,
 					"<title>(.+?):",
 					"<title>");
@@ -64,16 +64,20 @@ public class YahooFinance {
 	private static ScrapeGoogleFinance scrape = new ScrapeGoogleFinance();
 	
 	public static void save(String dirPath, String csvPath) {
-		List<Map<Field, String>> values = scrape.readDirectory(dirPath);
+		Map<String, Map<Field, String>> values = scrape.readDirectory(dirPath);
 		//
 		Field[] keys = Field.values();
 		
 		try (BufferedWriter br = new BufferedWriter(new FileWriter(csvPath))) {
-			for(Map<Field, String> map: values) {
+			for(String symbol: values.keySet()) {
+				Map<Field, String> map = values.get(symbol);
 				int count = 0;
 				for(Field field: keys) {
 					if (count != 0) br.append(",");
+					
 					String value = map.get(field);
+					if (field.equals(Field.SYMBOL)) value = symbol;
+					
 					if (value.contains(",")) {
 						br.append('"').append(map.get(field)).append('"');
 					} else {

@@ -138,3 +138,6 @@ update-yahoo-daily: prepare-update
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend
+
+update-yahoo-finance: prepare-update
+	ant run-update-yahoo-finance

@@ -24,9 +24,9 @@
 
 	<target name="deploy">
                 <!-- delete war file -->
-		<delete file="${dir.build}/etf.war" quiet="true" />
+		<delete file="${dir.build}/securities.war" quiet="true" />
                 <!-- create war file -->
-		<war destfile="${dir.build}/etf.war" webxml="${dir.web}/WEB-INF/web.xml">
+		<war destfile="${dir.build}/securities.war" webxml="${dir.web}/WEB-INF/web.xml">
 			<lib file="${jar.yokwe}" />
 			<lib dir="${dir.ext.jar}">
 				<include name="*.jar" />
@@ -38,9 +38,9 @@
 		</war>
 
 		<!-- webapps directory has auto deploy feature (default on) -->
-		<!-- Use this feature to deploy etf.war -->
+		<!-- Use this feature to deploy securities.war -->
 		<!-- So deploing war file in tomcat is just copy war file to ${catalina.base}/webapps -->
-		<copy file="${dir.build}/etf.war" todir="${catalina.base}/webapps" />
+		<copy file="${dir.build}/securities.war" todir="${catalina.base}/webapps" />
 	</target>
 
 	<target name="clean">
@@ -75,15 +75,6 @@
 			<arg value="tmp/fetch.list"/>
 		</java>
 	</target>
-
-        <target name="run-update-etf">
-                <java classname="yokwe.finance.securities.update.ETF" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/etf"/>
-                        <arg value="tmp/sqlite/etf.csv"/>
-                </java>
-        </target>
 
         <target name="run-update-nasdaq">
                 <java classname="yokwe.finance.securities.update.Nasdaq" fork="true">

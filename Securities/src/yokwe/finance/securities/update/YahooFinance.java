@@ -28,7 +28,6 @@ public class YahooFinance {
 				"<span class=\"rtq_exch\">");
 
 //			<title>VCLT: Summary for Vanguard Long-Term Corporate Bo- Yahoo! Finance</title>
-			// TODO  This symbol use yahoo format. Should I convert to commons symbol format?
 			add(Field.SYMBOL,
 					"<title>(.+?):",
 					"<title>");
@@ -76,7 +75,11 @@ public class YahooFinance {
 					if (count != 0) br.append(",");
 					
 					String value = map.get(field);
+					// Use symbol from file name
 					if (field.equals(Field.SYMBOL)) value = symbol;
+					if (field.equals(Field.EXCHANGE)) {
+						// TODO use exchange name in nasdaq.csv
+					}
 					
 					if (value.contains(",")) {
 						br.append('"').append(map.get(field)).append('"');

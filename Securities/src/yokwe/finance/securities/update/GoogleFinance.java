@@ -31,7 +31,6 @@ public class GoogleFinance {
 
 //			<meta itemprop="tickerSymbol"
 //			        content="A" />
-			// TODO  This symbol use google format. Should I convert to commons symbol format?
 			add(Field.SYMBOL,
 					"<meta itemprop=\"tickerSymbol\"\\p{javaWhitespace}+content=\"(.+?)\" />",
 					"<meta itemprop=\"tickerSymbol\"",
@@ -103,8 +102,12 @@ public class GoogleFinance {
 					if (count != 0) br.append(",");
 					
 					String value = map.get(field);
+					// Use symbol from file name
 					if (field.equals(Field.SYMBOL)) value = symbol;
-					
+					if (field.equals(Field.EXCHANGE)) {
+						// TODO use exchange name in nasdaq.csv
+					}
+
 					if (value.contains(",")) {
 						br.append('"').append(map.get(field)).append('"');
 					} else {

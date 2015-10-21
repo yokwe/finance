@@ -106,6 +106,7 @@ public class GoogleFinance {
 					if (field.equals(Field.SYMBOL)) value = symbol;
 					if (field.equals(Field.EXCHANGE)) {
 						// TODO use exchange name in nasdaq.csv
+						// TODO use FielUtil.getNasdaqInfo
 					}
 
 					if (value.contains(",")) {

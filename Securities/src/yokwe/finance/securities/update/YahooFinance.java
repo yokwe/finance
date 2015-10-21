@@ -83,6 +83,10 @@ public class YahooFinance {
 					if (field.equals(Field.SYMBOL)) value = symbol;
 					// Use exch from nasdaqInfo
 					if (field.equals(Field.EXCHANGE)) {
+						if (!nasdaqInfoMap.containsKey(symbol)) {
+							logger.warn("nasdaqInfoMap symbol = {}", symbol);
+							continue;
+						}
 						value = nasdaqInfoMap.get(symbol).exch;
 					}
 					

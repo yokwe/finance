@@ -51,14 +51,15 @@ public final class YahooDividend {
 		
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), 65536)) {
 			
-			int totalSize = 0;
+			int totalRecord = 0;
+			int totalSymbol = 0;
 			for(File file: fileList) {
 				if (file.length() == 0) continue;
 				
 				String fileName = file.getName();
-				String symbol = fileName.substring(0, fileName.length() - 4);
+				String symbol = fileName.substring(0, fileName.lastIndexOf('.'));
 				
-				int size = 0;
+				int count = 0;
 				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
 					String header = br.readLine();
 					if (header == null) {
@@ -70,14 +71,16 @@ public final class YahooDividend {
 						String line = br.readLine();
 						if (line == null) break;
 						bw.append(CSVRecord.toCSV(symbol, line)).append(CRLF);
-						size++;
+						count++;
 					}
 				}
-				totalSize += size;
-				logger.info(String.format("%-6s %6d", symbol, size));
+				totalRecord += count;
+				if (0 < count) totalSymbol++;
+				logger.info(String.format("%-6s %6d", symbol, count));
 			}
 			
-			logger.info("TOTAL {}", totalSize);
+			logger.info("RECORD {}", totalRecord);
+			logger.info("SYMBOL {}", totalSymbol);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
 			throw new SecuritiesException("IOException");

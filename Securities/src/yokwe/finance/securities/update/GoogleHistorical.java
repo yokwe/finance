@@ -90,12 +90,13 @@ public final class GoogleHistorical {
 		
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 			
-			int totalSize = 0;
+			int totalRecord = 0;
+			int totalSymbol = 0;
 			for(File file: fileList) {
 				if (file.length() == 0) continue;
 				
 				String fileName = file.getName();
-				String symbol = fileName.substring(0, fileName.length() - 4);
+				String symbol = fileName.substring(0, fileName.lastIndexOf('.'));
 				
 				int size = 0;
 				try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
@@ -117,11 +118,13 @@ public final class GoogleHistorical {
 						size++;
 					}
 				}
-				totalSize += size;
+				totalRecord += size;
+				if (0 < size) totalSymbol++;
 				logger.info(String.format("%-6s %6d", symbol, size));
 			}
 			
-			logger.info("TOTAL {}", totalSize);
+			logger.info("RECORD {}", totalRecord);
+			logger.info("SYMBOL {}", totalSymbol);
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
 			throw new SecuritiesException("IOException");

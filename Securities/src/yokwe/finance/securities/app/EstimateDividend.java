@@ -19,6 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.table.DividendTable;
+import yokwe.finance.securities.table.FinanceTable;
+import yokwe.finance.securities.table.NasdaqTable;
+import yokwe.finance.securities.table.PriceTable;
 import yokwe.finance.securities.util.JDBCUtil;
 
 public class EstimateDividend {
@@ -93,35 +97,35 @@ public class EstimateDividend {
 	static List<String> getSymbol(final Statement statement, final int year, final int freq) {
 		final String sql_template = "select * from dividend where date like '%d%%' group by symbol having count(*) = %d order by symbol, date";
 		final String sql = String.format(sql_template, year, freq);
-		List<String> ret = JDBCUtil.getResultAll(statement, sql, DividendData.class).stream().map(o -> o.symbol).collect(Collectors.toList());
+		List<String> ret = JDBCUtil.getResultAll(statement, sql, DividendTable.class).stream().map(o -> o.symbol).collect(Collectors.toList());
 		return ret;
 	}
 	
-	static List<DividendData> getDividendData(final Statement statement, final String symbol, final int year) {
+	static List<DividendTable> getDividendData(final Statement statement, final String symbol, final int year) {
 		final String sql_template = "select * from dividend where date like '%d%%' and symbol = '%s' order by date";
 		final String sql = String.format(sql_template, year, symbol);
-		List<DividendData> ret = JDBCUtil.getResultAll(statement, sql, DividendData.class).stream().collect(Collectors.toList());
+		List<DividendTable> ret = JDBCUtil.getResultAll(statement, sql, DividendTable.class).stream().collect(Collectors.toList());
 		return ret;
 	}
 	
 	static double[] getDailyData(final Statement statement, final String symbol, final Calendar dateBegin, final Calendar dateEnd) {
 		String sql_template = "select date, symbol, close as value from price where symbol = '%s' and '%s' < date and date <= '%s'";
 		String sql = String.format(sql_template, symbol, dateString(dateBegin), dateString(dateEnd));
-		double[] ret = JDBCUtil.getResultAll(statement, sql, PriceData.class).stream().mapToDouble(o -> o.value).toArray();
+		double[] ret = JDBCUtil.getResultAll(statement, sql, PriceTable.class).stream().mapToDouble(o -> o.close).toArray();
 		return ret;
 	}
 	
-	static Map<String, FinanceData> getFinanceMap(final Statement statement) {
+	static Map<String, FinanceTable> getFinanceMap(final Statement statement) {
 		String sql = "select * from finance";
-		Map<String, FinanceData> ret = new TreeMap<>();
-		JDBCUtil.getResultAll(statement, sql, FinanceData.class).stream().forEach(o -> ret.put(o.symbol, o));
+		Map<String, FinanceTable> ret = new TreeMap<>();
+		JDBCUtil.getResultAll(statement, sql, FinanceTable.class).stream().forEach(o -> ret.put(o.symbol, o));
 		return ret;
 	}
 	
-	static Map<String, NasdaqData> getNasdaqMap(final Statement statement) {
+	static Map<String, NasdaqTable> getNasdaqMap(final Statement statement) {
 		String sql = "select * from nasdaq";
-		Map<String, NasdaqData> ret = new TreeMap<>();
-		JDBCUtil.getResultAll(statement, sql, NasdaqData.class).stream().forEach(o -> ret.put(o.symbol, o));
+		Map<String, NasdaqTable> ret = new TreeMap<>();
+		JDBCUtil.getResultAll(statement, sql, NasdaqTable.class).stream().forEach(o -> ret.put(o.symbol, o));
 		return ret;
 	}
 	
@@ -134,7 +138,7 @@ public class EstimateDividend {
 		final Calendar oneYear = add(origin, Calendar.YEAR, -1);
 		
 //		Map<String, FinanceData> financeMap = getFinanceMap(statement);
-		Map<String, NasdaqData>  nasdaqMap  = getNasdaqMap(statement);
+		Map<String, NasdaqTable>  nasdaqMap  = getNasdaqMap(statement);
 		
 		final List<String> symbolList = getSymbol(statement, lastYearNo, freq);
 		logger.info("symbolList = {}", symbolList.size());
@@ -146,7 +150,7 @@ public class EstimateDividend {
 //			if (financeData == null) {
 //			    throw new SecuritiesException("financeData");
 //		    }
-			NasdaqData nasdaqData = nasdaqMap.get(symbol);
+			NasdaqTable nasdaqData = nasdaqMap.get(symbol);
 			if (nasdaqData == null) {
 				logger.error("NO DATA  symbol = {}", symbol);
 				throw new RuntimeException();
@@ -154,9 +158,9 @@ public class EstimateDividend {
 			}
 			
 			// data of last year
-			List<DividendData> lastYear = getDividendData(statement, symbol, lastYearNo);
+			List<DividendTable> lastYear = getDividendData(statement, symbol, lastYearNo);
 			// data of this year
-			List<DividendData> thisYear = getDividendData(statement, symbol, thisYearNo);
+			List<DividendTable> thisYear = getDividendData(statement, symbol, thisYearNo);
 			
 			// sanity check
 			if (lastYear.size() != freq) {

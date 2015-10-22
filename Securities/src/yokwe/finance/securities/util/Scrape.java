@@ -246,6 +246,11 @@ public abstract class Scrape<E extends Enum<E>> {
 			ret = formatInceptionDate.format(parseInceptionDate.parse(ret));
 		}
 		
+		// 000
+		if (ret.compareTo("000") == 0) {
+			ret = "0";
+		}
+		
 		// --
 		if (ret.compareTo("--") == 0) {
 			ret = NO_VALUE;

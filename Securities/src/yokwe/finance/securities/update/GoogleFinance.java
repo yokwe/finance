@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.NasdaqUtil;
 import yokwe.finance.securities.util.Scrape;
 
 public class GoogleFinance {
@@ -94,8 +94,6 @@ public class GoogleFinance {
 		Map<String, Map<Field, String>> values = scrape.readDirectory(dirPath);
 		//
 		Field[] keys = Field.values();
-		//
-		Map<String, FileUtil.NasdaqInfo> nasdaqInfoMap = FileUtil.getNasdaqInfo();
 		
 		try (BufferedWriter br = new BufferedWriter(new FileWriter(csvPath))) {
 			for(String symbol: values.keySet()) {
@@ -107,9 +105,9 @@ public class GoogleFinance {
 					String value = map.get(field);
 					// Use symbol from file name
 					if (field.equals(Field.SYMBOL)) value = symbol;
-					// Use exch from nasdaqInfo
+					// Use exch from nasdaq
 					if (field.equals(Field.EXCHANGE)) {
-						value = nasdaqInfoMap.get(symbol).exch;
+						value = NasdaqUtil.get(symbol).exch;
 					}
 
 					if (value.contains(",")) {

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.NasdaqUtil;
 import yokwe.finance.securities.util.Scrape;
 
 public class YahooFinance {
@@ -67,9 +67,6 @@ public class YahooFinance {
 		Map<String, Map<Field, String>> values = scrape.readDirectory(dirPath);
 		//
 		Field[] keys = Field.values();
-		//
-		Map<String, FileUtil.NasdaqInfo> nasdaqInfoMap = FileUtil.getNasdaqInfo();
-
 		
 		try (BufferedWriter br = new BufferedWriter(new FileWriter(csvPath))) {
 			for(String symbol: values.keySet()) {
@@ -81,13 +78,9 @@ public class YahooFinance {
 					String value = map.get(field);
 					// Use symbol from file name
 					if (field.equals(Field.SYMBOL)) value = symbol;
-					// Use exch from nasdaqInfo
+					// Use exch of nasdaq
 					if (field.equals(Field.EXCHANGE)) {
-						if (!nasdaqInfoMap.containsKey(symbol)) {
-							logger.warn("nasdaqInfoMap symbol = {}", symbol);
-							continue;
-						}
-						value = nasdaqInfoMap.get(symbol).exch;
+						value = NasdaqUtil.get(symbol).exch;
 					}
 					
 					if (value.contains(",")) {

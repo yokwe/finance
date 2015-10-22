@@ -142,3 +142,14 @@ yahoo-daily       141 minutes 25 seconds
 yahoo-dividend     32 minutes 25 seconds
 yahoo-finance      44 minutes 33 seconds
 ----
+
+Number of symbol in each csv files
+----
+google-finance    7950
+google-getprices  7932 
+google-historical 7935
+yahoo-daily       7702
+yahoo-dividend    5103
+----
+
+Use google-getprices data for price table.

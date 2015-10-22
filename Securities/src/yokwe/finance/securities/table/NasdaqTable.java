@@ -18,4 +18,13 @@ public final class NasdaqTable {
 		nasdaq   = "";
 		name     = "";
 	}
+	public NasdaqTable(String etf, String exchange, String symbol, String yahoo, String google, String nasdaq, String name) {
+		this.etf      = etf;
+		this.exchange = exchange;
+		this.symbol   = symbol;
+		this.yahoo    = yahoo;
+		this.google   = google;
+		this.nasdaq   = nasdaq;
+		this.name     = name;
+	}
 }

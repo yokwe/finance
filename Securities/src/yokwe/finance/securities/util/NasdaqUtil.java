@@ -11,37 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.table.NasdaqTable;
 
 public class NasdaqUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 	
 	private static final String NASDAQ_FILE_PATH = "tmp/sqlite/nasdaq.csv";
 
-	public static class Entry {
-		public final String etf;
-		public final String exch;
-		public final String symbol;
-		public final String yahoo;
-		public final String google;
-		public final String nasdaq;
-		public final String name;
-		
-		Entry(String etf, String exch, String symbol, String yahoo, String google, String nasdaq, String name) {
-			this.etf    = etf;
-			this.exch   = exch;
-			this.symbol = symbol;
-			this.yahoo  = yahoo;
-			this.google = google;
-			this.nasdaq = nasdaq;
-			this.name   = name;
-		}
-		
-		public String toString() {
-			return String.format("%s,%s,%s,%s,%s,%s,%s", etf, exch, symbol, yahoo, google, nasdaq, name);
-		}
-	}
-	
-	private static Map<String, Entry> map = new TreeMap<>();
+	private static Map<String, NasdaqTable> map = new TreeMap<>();
 	
 	static {
 		char[] buffer = new char[65536];
@@ -63,7 +40,7 @@ public class NasdaqUtil {
 				if (name.charAt(0) == '"') name = name.substring(1, name.length() - 1);
 				if (name.contains("\"\"")) name = name.replace("\"\"", "\"");
 				
-				map.put(symbol, new Entry(etf, exch, symbol, yahoo, google, nasdaq, name));
+				map.put(symbol, new NasdaqTable(etf, exch, symbol, yahoo, google, nasdaq, name));
 			}
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());
@@ -72,12 +49,11 @@ public class NasdaqUtil {
 		}
 	}
 	
-	public static Entry get(String symbol) {
+	public static NasdaqTable get(String symbol) {
 		if (!map.containsKey(symbol)) {
 			logger.error("symbol = {}", symbol);
 			throw new SecuritiesException();
 		}
-		
 		return map.get(symbol);
 	}
 }

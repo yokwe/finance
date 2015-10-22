@@ -19,11 +19,10 @@ CREATE TABLE nasdaq (
 
 CREATE TABLE finance (
   symbol           TEXT     NOT NULL, -- ticker symbol
-  --
   price            REAL     NOT NULL, -- latest price
   vol              INTEGER  NOT NULL, -- latest day trade volume in share
   avg_vol          INTEGER  NOT NULL, -- 30 days average trade volume in share
-  mkt_cap          INTEGER  NOT NULL, -- market capitalization
+  mkt_cap          INTEGER  NOT NULL  -- market capitalization
 );
 
 CREATE TABLE price (

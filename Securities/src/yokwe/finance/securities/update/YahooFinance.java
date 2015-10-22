@@ -54,8 +54,9 @@ public class YahooFinance {
 					"Market Cap:</th>");
 
 //			<meta property="og:title" content="Vanguard Long-Term Corporate Bond ETF">
+//			<meta property="og:title" content='Etablissements Delhaize Frères et Cie "Le Lion" (Groupe Delhaize) SA'>
 			add(Field.NAME,
-					"<meta property=\"og:title\" content=\"(.+?)\">",
+					"<meta property=\"og:title\" content=[\"\'](.+?)[\"\']>",
 					"<meta property=\"og:title\" content=",
 					Pattern.DOTALL);
 		}

@@ -104,16 +104,18 @@ public class GoogleFinance {
 					
 					String value = map.get(field);
 					// Use symbol from file name
-					if (field.equals(Field.SYMBOL)) value = symbol;
+					if (field.equals(Field.SYMBOL)) {
+						value = symbol;
+					}
 					// Use exch from nasdaq
 					if (field.equals(Field.EXCHANGE)) {
 						value = NasdaqUtil.get(symbol).exch;
 					}
 
 					if (value.contains(",")) {
-						br.append('"').append(map.get(field)).append('"');
+						br.append('"').append(value).append('"');
 					} else {
-						br.append(map.get(field));
+						br.append(value);
 					}
 					count++;
 				}

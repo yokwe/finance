@@ -11,20 +11,19 @@ CREATE TABLE nasdaq (
   etf              TEXT     NOT NULL, -- Y for ETF
   exchange         TEXT     NOT NULL, -- name of exchange
   symbol           TEXT     NOT NULL, -- ticker symbol
+  yahoo            TEXT     NOT NULL, -- ticker symbol of yahoo
+  google           TEXT     NOT NULL, -- ticker symbol of google
+  nasdaq           TEXT     NOT NULL, -- ticker symbol of nasdaq
   name             TEXT     NOT NULL  -- name of securities
 );
 
--- EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
 CREATE TABLE finance (
-  exchange         TEXT     NOT NULL, -- name of exchange
   symbol           TEXT     NOT NULL, -- ticker symbol
   --
   price            REAL     NOT NULL, -- latest price
+  vol              INTEGER  NOT NULL, -- latest day trade volume in share
   avg_vol          INTEGER  NOT NULL, -- 30 days average trade volume in share
-  shares           INTEGER  NOT NULL, -- shares outstanding
   mkt_cap          INTEGER  NOT NULL, -- market capitalization
-  --
-  name             TEXT     NOT NULL  -- name of securities
 );
 
 CREATE TABLE price (

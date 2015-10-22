@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.NasdaqUtil;
 import yokwe.finance.securities.util.Scrape;
 
 public class GoogleFinance {
@@ -18,18 +17,11 @@ public class GoogleFinance {
 	private static final String CRLF = "\r\n";
 
 	public enum Field {
-		EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
+		SYMBOL, PRICE, VOL, AVG_VOL, MKT_CAP,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
 		public void init() {
-//			<meta itemprop="exchange"
-//	        content="NYSE" />
-			add(Field.EXCHANGE,
-				"<meta itemprop=\"exchange\"\\p{javaWhitespace}+content=\"(.+?)\" />",
-				"<meta itemprop=\"exchange\"",
-				Pattern.DOTALL);
-
 //			<meta itemprop="tickerSymbol"
 //			        content="A" />
 			add(Field.SYMBOL,
@@ -54,20 +46,13 @@ public class GoogleFinance {
 //          or
 //			<td class="val">0.00
 			// 1.75M  762,118.00 0.00 
-			add(Field.AVG_VOL,
-					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">.*?([0-9,KMB\\.]+)\\p{javaWhitespace}",
+			add(Field.VOL,
+					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">([0-9,KMB\\.]+)",
 					"data-snapfield=\"vol_and_avg\">" ,
 					Pattern.DOTALL, Scrape.Type.INTEGER);
-
-//			<td class="key"
-//			          data-snapfield="shares">Shares
-//			</td>
-//			<td class="val">979.53M
-//			or
-//          <td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
-			add(Field.SHARES,
-					"data-snapfield=\"shares\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
-					"data-snapfield=\"shares\">" ,
+			add(Field.AVG_VOL,
+					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">.*?/([0-9,KMB\\.]+)\\p{javaWhitespace}",
+					"data-snapfield=\"vol_and_avg\">Vol / Avg",
 					Pattern.DOTALL, Scrape.Type.INTEGER);
 
 //			<td class="key"
@@ -78,13 +63,6 @@ public class GoogleFinance {
 					"data-snapfield=\"market_cap\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
 					"data-snapfield=\"market_cap\">Mkt cap" ,
 					Pattern.DOTALL, Scrape.Type.INTEGER);
-
-//			<meta itemprop="name"
-//	           content="Vanguard Long Term Corporate Bond ETF" />
-			add(Field.NAME,
-				"<meta itemprop=\"name\"\\p{javaWhitespace}+content=\"(.+?)\" />",
-				"<meta itemprop=\"name\"" ,
-				Pattern.DOTALL);
 		}
 	}
 	
@@ -106,10 +84,6 @@ public class GoogleFinance {
 					// Use symbol from file name
 					if (field.equals(Field.SYMBOL)) {
 						value = symbol;
-					}
-					// Use exch from nasdaq
-					if (field.equals(Field.EXCHANGE)) {
-						value = NasdaqUtil.get(symbol).exch;
 					}
 
 					if (value.contains(",")) {

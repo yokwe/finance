@@ -125,7 +125,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		for(File file: fileList) {
 			if (file.length() == 0) continue;
 			String fileName = file.getName();
-			String symbol = fileName.substring(0, fileName.length() - 4);
+			String symbol = fileName.substring(0, fileName.lastIndexOf('.'));
 			
 			try {
 				Map<E, String> values = readFile(file);

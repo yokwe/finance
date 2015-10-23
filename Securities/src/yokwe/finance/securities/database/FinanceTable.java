@@ -1,4 +1,4 @@
-package yokwe.finance.securities.table;
+package yokwe.finance.securities.database;
 
 public final class FinanceTable {
 	public String symbol;

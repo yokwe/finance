@@ -81,9 +81,9 @@ public class YahooFinance {
 					if (field.equals(Field.SYMBOL)) {
 						value = symbol;
 					}
-					// Use exch of nasdaq
+					// Use exchange of nasdaq
 					if (field.equals(Field.EXCHANGE)) {
-						value = NasdaqUtil.get(symbol).exch;
+						value = NasdaqUtil.get(symbol).exchange;
 					}
 					
 					if (value.contains(",")) {

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.table.NasdaqTable;
+import yokwe.finance.securities.database.NasdaqTable;
 
 public class NasdaqUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);

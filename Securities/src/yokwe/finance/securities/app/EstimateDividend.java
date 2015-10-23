@@ -19,10 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.table.DividendTable;
-import yokwe.finance.securities.table.FinanceTable;
-import yokwe.finance.securities.table.NasdaqTable;
-import yokwe.finance.securities.table.PriceTable;
+import yokwe.finance.securities.database.DividendTable;
+import yokwe.finance.securities.database.FinanceTable;
+import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.util.JDBCUtil;
 
 public class EstimateDividend {

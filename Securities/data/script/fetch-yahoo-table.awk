@@ -4,20 +4,20 @@ BEGIN {
   FS = ","
   RS = "[\r\n]+"
   
-  "date '+%Y'" | getline Y
+#  P = "-10 years"
+#  P = "-10 days"
+
+  CMD = "date '+%m,%d,%Y' -d '" P "'"
+  CMD | getline
+  A = sprintf("%02d", $1 - 1) # Need to minus one for month number
+  B = $2
+  C = $3
   
-  # Data for at least last 10 years
-  
-  # From (Y - 11)-01-01
-  A = "00"
-  B = "1"
-  C = "2000" # SPY was started at 1993-01-29
-  # To Y-12-31
-  D = "30"
-  E = "12"
-  F = Y
-  # G = "d" for daily and "v" for dividend
- }
+  "date '+%m,%d,%Y'" | getline
+  D = sprintf("%02d", $1 - 1) # Need to minus one for month number
+  E = $2
+  F = $3
+}
 
 # http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
 {

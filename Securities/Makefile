@@ -17,10 +17,9 @@ DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
 DIR_FETCH_YAHOO_FINANCE		=tmp/fetch/yahoo-finance
 
-DIR_SQLITE			=tmp/sqlite
-
-
-DIR_SCRIPT		=data/script
+DIR_SCRIPT			=data/script
+DIR_SQLITE			=data/sqlite
+DIR_DATABASE			=tmp/database
 
 all:
 	@echo all
@@ -36,7 +35,7 @@ build-jar:
 
 load-data:
 	rm -f tmp/sqlite/securities.sqlite3
-	sqlite3 < data/sqlite/table-create.sql
+	sqlite3 < ${DIR_SQLITE}/table-create.sql
 
 
 #
@@ -58,32 +57,32 @@ update-nasdaq:
 
 fetch-google-finance:
 	mkdir -p ${DIR_FETCH_GOOGLE_FINANCE}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_FINANCE}"   -f data/script/fetch-google-finance.awk \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_FINANCE}"   -f ${DIR_SCRIPT}/fetch-google-finance.awk \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-google-getprices-1m:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -v P="1M" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f ${DIR_SCRIPT}/fetch-google-getprices.awk  -v P="1M" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-google-getprices-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -v P="40Y" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f ${DIR_SCRIPT}/fetch-google-getprices.awk  -v P="40Y" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-google-historical-1m:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk  -v P="-1 month" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f ${DIR_SCRIPT}/fetch-google-historical.awk  -v P="-1 month" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 	
 fetch-google-historical-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk  -v P="-40 years" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f ${DIR_SCRIPT}/fetch-google-historical.awk  -v P="-40 years" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 	
 
@@ -93,32 +92,32 @@ fetch-google-historical-40y:
 
 fetch-yahoo-daily-1m:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d"  -v P="-1 month" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-1 month" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-daily-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d"  -v P="-40 days" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 days" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-dividend-7d:
+fetch-yahoo-dividend-1m:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v"  -v P="-7 days" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-1 month" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-dividend-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v"  -v P="-40 years" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-40 years" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-yahoo-finance:
 	mkdir -p ${DIR_FETCH_YAHOO_FINANCE}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_FINANCE}"      -f data/script/fetch-yahoo-finance.awk \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_FINANCE}"      -f ${DIR_SCRIPT}/fetch-yahoo-finance.awk \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 #
@@ -127,14 +126,14 @@ fetch-yahoo-finance:
 
 fetch-nasdaq-symbol:
 	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"      -f data/script/fetch-nasdaq.awk  -v SUFFIX="" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"      -f ${DIR_SCRIPT}/fetch-nasdaq.awk  -v SUFFIX="" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 fetch-nasdaq-dividend:
 	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f data/script/fetch-nasdaq.awk  -v SUFFIX="/dividend-history" \
-	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f ${DIR_SCRIPT}/fetch-nasdaq.awk  -v SUFFIX="/dividend-history" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
 
@@ -146,27 +145,26 @@ update:
 	@echo make update-google-getprices update-yahoo-dividend update-google-finance
 
 prepare-update:
-	mkdir -p tmp/sqlite
-	mkdir -p tmp/database
+	mkdir -p ${DIR_DATABASE}
 
 update-google-finance: prepare-update
 	ant run-update-google-finance
 
 update-google-getprices: prepare-update
 	ant run-update-google-getprices
-	sort tmp/database/google-getprices-update.csv >tmp/database/google-getprices-update-sorted.csv
-	mv tmp/database/google-getprices-update-sorted.csv tmp/database/google-getprices-update.csv
-	touch tmp/database/google-getprices.csv
-	sort -m tmp/database/google-getprices-update.csv tmp/database/google-getprices.csv >tmp/database/google-getprices-new.csv
-	mv tmp/database/google-getprices-new.csv tmp/database/google-getprices.csv
+	sort ${DIR_DATABASE}/google-getprices-update.csv >${DIR_DATABASE}/google-getprices-update-sorted.csv
+	mv ${DIR_DATABASE}/google-getprices-update-sorted.csv ${DIR_DATABASE}/google-getprices-update.csv
+	touch ${DIR_DATABASE}/google-getprices.csv
+	sort -m ${DIR_DATABASE}/google-getprices-update.csv ${DIR_DATABASE}/google-getprices.csv >${DIR_DATABASE}/google-getprices-new.csv
+	mv ${DIR_DATABASE}/google-getprices-new.csv ${DIR_DATABASE}/google-getprices.csv
 	
 update-google-historical: prepare-update
 	ant run-update-google-historical
-	sort tmp/database/google-historical-update.csv >tmp/database/google-historical-update-sorted.csv
-	mv tmp/database/google-historical-update-sorted.csv tmp/database/google-historical-update.csv
-	touch tmp/database/google-historical.csv
-	sort -m tmp/database/google-historical-update.csv tmp/database/google-historical.csv >tmp/database/google-historical-new.csv
-	mv tmp/database/google-historical-new.csv tmp/database/google-historical.csv
+	sort ${DIR_DATABASE}/google-historical-update.csv >${DIR_DATABASE}/google-historical-update-sorted.csv
+	mv ${DIR_DATABASE}/google-historical-update-sorted.csv ${DIR_DATABASE}/google-historical-update.csv
+	touch ${DIR_DATABASE}/google-historical.csv
+	sort -m ${DIR_DATABASE}/google-historical-update.csv ${DIR_DATABASE}/google-historical.csv >${DIR_DATABASE}/google-historical-new.csv
+	mv ${DIR_DATABASE}/google-historical-new.csv ${DIR_DATABASE}/google-historical.csv
 	
 
 update-yahoo-daily: prepare-update
@@ -174,11 +172,11 @@ update-yahoo-daily: prepare-update
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend
-	sort tmp/database/yahoo-dividend-update.csv >tmp/database/yahoo-dividend-update-sorted.csv
-	mv tmp/database/yahoo-dividend-update-sorted.csv tmp/database/yahoo-dividend-update.csv
-	touch tmp/database/yahoo-dividend.csv
-	sort -m tmp/database/yahoo-dividend-update.csv tmp/database/yahoo-dividend.csv >tmp/database/yahoo-dividend-new.csv
-	mv tmp/database/yahoo-dividend-new.csv tmp/database/yahoo-dividend.csv
+	sort ${DIR_DATABASE}/yahoo-dividend-update.csv >${DIR_DATABASE}/yahoo-dividend-update-sorted.csv
+	mv ${DIR_DATABASE}/yahoo-dividend-update-sorted.csv ${DIR_DATABASE}/yahoo-dividend-update.csv
+	touch ${DIR_DATABASE}/yahoo-dividend.csv
+	sort -m ${DIR_DATABASE}/yahoo-dividend-update.csv ${DIR_DATABASE}/yahoo-dividend.csv >${DIR_DATABASE}/yahoo-dividend-new.csv
+	mv ${DIR_DATABASE}/yahoo-dividend-new.csv ${DIR_DATABASE}/yahoo-dividend.csv
 
 update-yahoo-finance: prepare-update
 	ant run-update-yahoo-finance

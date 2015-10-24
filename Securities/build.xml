@@ -81,7 +81,7 @@
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <arg value="tmp/fetch/nasdaq/nasdaqtraded.txt"/>
-                        <arg value="tmp/sqlite/nasdaq.csv"/>
+                        <arg value="tmp/database/nasdaq.csv"/>
                 </java>
         </target>
 
@@ -110,7 +110,7 @@
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <arg value="tmp/fetch/yahoo-daily"/>
-                        <arg value="tmp/sqlite/yahoo-daily.csv"/>
+                        <arg value="tmp/database/yahoo-daily.csv"/>
                 </java>
         </target>
 
@@ -119,7 +119,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/yahoo-finance"/>
-			<arg value="tmp/sqlite/yahoo-finance.csv"/>
+			<arg value="tmp/database/yahoo-finance.csv"/>
 		</java>
 	</target>
 
@@ -128,7 +128,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/nasdaq-symbol"/>
-			<arg value="tmp/sqlite/nasdaq-symbol.csv"/>
+			<arg value="tmp/database/nasdaq-symbol.csv"/>
 		</java>
 	</target>
 
@@ -137,7 +137,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/nasdaq-dividend"/>
-			<arg value="tmp/sqlite/nasdaq-dividend.csv"/>
+			<arg value="tmp/database/nasdaq-dividend.csv"/>
 		</java>
 	</target>
 
@@ -155,7 +155,7 @@
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <arg value="tmp/fetch/google-finance"/>
-                        <arg value="tmp/sqlite/google-finance.csv"/>
+                        <arg value="tmp/database/google-finance.csv"/>
                 </java>
         </target>
 

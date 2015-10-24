@@ -42,9 +42,9 @@ CREATE TABLE dividend (
 
 .separator ,
 
-.import tmp/sqlite/nasdaq.csv             nasdaq
-.import tmp/sqlite/google-finance.csv     finance
-.import tmp/sqlite/yahoo-dividend.csv     dividend
+.import tmp/database/nasdaq.csv           nasdaq
+.import tmp/database/google-finance.csv   finance
+.import tmp/database/yahoo-dividend.csv   dividend
 .import tmp/database/google-getprices.csv price
 
 CREATE        INDEX nasdaq_etf           ON nasdaq(etf);

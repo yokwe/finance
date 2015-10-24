@@ -28,9 +28,6 @@ CREATE TABLE finance (
 CREATE TABLE price (
   date      TEXT     NOT NULL, -- date is YYYY-MM-DD
   symbol    TEXT     NOT NULL, -- ticker symbol
-  open      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
-  high      REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
-  low       REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
   close     REAL     NOT NULL, -- in 100th of value  123.45 = 123.45
   volume    INTEGER  NOT NULL
 );
@@ -45,10 +42,10 @@ CREATE TABLE dividend (
 
 .separator ,
 
-.import tmp/sqlite/nasdaq.csv           nasdaq
-.import tmp/sqlite/google-finance.csv   finance
-.import tmp/sqlite/yahoo-dividend.csv   dividend
-.import tmp/sqlite/google-getprices.csv price
+.import tmp/sqlite/nasdaq.csv             nasdaq
+.import tmp/sqlite/google-finance.csv     finance
+.import tmp/sqlite/yahoo-dividend.csv     dividend
+.import tmp/database/google-getprices.csv price
 
 CREATE        INDEX nasdaq_etf           ON nasdaq(etf);
 CREATE UNIQUE INDEX nasdaq_symbol        ON nasdaq(symbol);

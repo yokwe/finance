@@ -4,7 +4,7 @@ BEGIN {
   FS = ","
   RS = "[\r\n]+"
   
-  "date '+%Y'" | getline Y
+#  P = "7d"
 }
 
 # http://www.google.com/finance/getprices?q=IBM&x=NYSE&i=86400&p=15Y&f=d,c,v,o,h,l
@@ -16,6 +16,6 @@ BEGIN {
   GOOGLE_SYMBOL = $5
   NASDAQ_SYMBOL = $6
   
-  printf("%s/%-11s http://www.google.com/finance/getprices?q=%s&x=%s&i=86400&p=%dY&f=d,c,v,o,h,l\n",
-    DIR_OUTPUT, (SYMBOL ".csv"), GOOGLE_SYMBOL, EXCH, (Y - 1999))
+  printf("%s/%-11s http://www.google.com/finance/getprices?q=%s&x=%s&i=86400&p=%s&f=d,c,v\n",
+    DIR_OUTPUT, (SYMBOL ".csv"), GOOGLE_SYMBOL, EXCH, P)
 }

@@ -60,7 +60,7 @@ public final class GoogleGetPrices {
 	private static MyDate myDate = new MyDate();
 	
 	public static final class CSVRecord {
-		public static final int NUMBER_OF_FIELDS = 6;
+		public static final int NUMBER_OF_FIELDS = 3;
 		
 		public static String toCSV(String symbol, String line) {
 			String[] fields = line.split(",");
@@ -70,19 +70,11 @@ public final class GoogleGetPrices {
 			}
 			String dateStr  = fields[0];
 			double close    = Double.valueOf(fields[1]);
-			double high     = Double.valueOf(fields[2]);
-			double low      = Double.valueOf(fields[3]);
-			double open     = Double.valueOf(fields[4]);
-			long   volume   = Long.valueOf(fields[5]);
-			
-			// Special when volume equals zero
-			if (volume == 0) {
-				high = low = open = close;
-			}
+			long   volume   = Long.valueOf(fields[2]);
 			
 			String date = myDate.toDate(dateStr);
 
-			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);
+			return String.format("%s,%s,%.4f,%d", date, symbol, close, volume);
 		}
 	}
 	

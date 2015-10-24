@@ -144,7 +144,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/google-getprices"/>
-			<arg value="tmp/sqlite/google-getprices.csv"/>
+			<arg value="tmp/database/google-getprices-update.csv"/>
 		</java>
 	</target>
 

@@ -62,9 +62,15 @@ fetch-google-finance:
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-google-getprices:
+fetch-google-getprices-7d:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk \
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -V P="7d" \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
+fetch-google-getprices-40Y:
+	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -v P="40Y" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
@@ -123,12 +129,19 @@ update:
 
 prepare-update:
 	mkdir -p tmp/sqlite
+	mkdir -p tmp/database
 
 update-google-finance: prepare-update
 	ant run-update-google-finance
 
 update-google-getprices: prepare-update
 	ant run-update-google-getprices
+	sort tmp/database/google-getprices-update.csv >tmp/database/google-getprices-update-sorted.csv
+	mv tmp/database/google-getprices-update-sorted.csv tmp/database/google-getprices-update.csv
+	touch tmp/database/google-getprices.csv
+	sort -m tmp/database/google-getprices-update.csv tmp/database/google-getprices.csv >tmp/database/google-getprices-new.csv
+	mv tmp/database/google-getprices-new.csv tmp/database/google-getprices.csv
+	
 
 update-google-historical: prepare-update
 	ant run-update-google-historical

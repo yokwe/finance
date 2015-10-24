@@ -153,3 +153,9 @@ yahoo-dividend    5103
 ----
 
 Use google-getprices data for price table.
+
+
+google-getprices
+  40Y  796M  74 minutes 48 seconds
+   1w   33M  14 minutes 18 seconds
+  40Y  381M  46 minutes 54 seconds  date close volume    update 4 minutes 43 seconds

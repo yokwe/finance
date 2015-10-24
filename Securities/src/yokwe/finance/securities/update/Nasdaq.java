@@ -34,7 +34,7 @@ public final class Nasdaq {
 	private static final String HEADER           = "Nasdaq Traded|Symbol|Security Name|Listing Exchange|Market Category|ETF|Round Lot Size|Test Issue|Financial Status|CQS Symbol|NASDAQ Symbol";
 	private static final int    NUMBER_OF_FIELDS = 11;
 
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 	
 	//  # NASDAQ                                NASDAQ   YAHOO     GOOGLE    NASDAQ-WEB
 	//  # X     X                               IBM      IBM       IBM       IBM
@@ -251,7 +251,7 @@ public final class Nasdaq {
 					bw.append(",").append(googleSymbol);
 					bw.append(",").append(nasdaqSymbol);
 					bw.append(",").append(name);
-					bw.append(CRLF);
+					bw.append(NEWLINE);
 				}
 			}
 		} catch (IOException e) {

@@ -4,7 +4,18 @@ BEGIN {
   FS = ","
   RS = "[\r\n]+"
   
-  "date '+%Y'" | getline Y
+  
+#  P = "-10 years"
+#  P = "-10 month"
+#  P = "-10 days"
+
+  CMD = "date '+%b %e, %Y' -d '" P "'"
+  CMD | getline START_DATE
+  
+  "date '+%b %e, %Y'" | getline END_DATE
+  
+  gsub(" ", "%20", START_DATE)
+  gsub(" ", "%20", END_DATE)
 }
 
 # http://www.google.com/finance/historical?q=NYSE:IBM&&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
@@ -16,6 +27,6 @@ BEGIN {
   GOOGLE_SYMBOL = $5
   NASDAQ_SYMBOL = $6
   
-  printf("%s/%-11s http://www.google.com/finance/historical?q=%s&startdate=Jan%%201,%%202000&enddate=Dec%%2031,%s&output=csv\n",
-    DIR_OUTPUT, (SYMBOL ".csv"), (EXCH ":" GOOGLE_SYMBOL), Y)
+  printf("%s/%-11s http://www.google.com/finance/historical?startdate=%s&enddate=%s&output=csv&q=%s\n",
+    DIR_OUTPUT, (SYMBOL ".csv"), START_DATE, END_DATE, (EXCH ":" GOOGLE_SYMBOL))
 }

@@ -37,7 +37,7 @@ public final class YahooDividend {
 		}
 	}
 
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 
 	public static void save(String dirPath, String csvPath) {
 		File root = new File(dirPath);
@@ -70,7 +70,7 @@ public final class YahooDividend {
 					for(;;) {
 						String line = br.readLine();
 						if (line == null) break;
-						bw.append(CSVRecord.toCSV(symbol, line)).append(CRLF);
+						bw.append(CSVRecord.toCSV(symbol, line)).append(NEWLINE);
 						count++;
 					}
 				}

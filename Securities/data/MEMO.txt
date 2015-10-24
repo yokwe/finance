@@ -157,5 +157,13 @@ Use google-getprices data for price table.
 
 google-getprices
   40Y  796M  74 minutes 48 seconds
-   1w   33M  14 minutes 18 seconds
+   7d   33M  14 minutes 18 seconds
   40Y  381M  46 minutes 54 seconds  date close volume    update 4 minutes 43 seconds
+   
+yahoo-dividend
+  40Y   31M  44 minutes 40 seconds
+   7d   31M  33 minutes 13 seconds
+
+1 month data
+  google-historical  32M   21 minutes 54 seconds
+  google-dividend    33M   25 minutes 4 seconds

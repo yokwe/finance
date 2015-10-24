@@ -62,21 +62,27 @@ fetch-google-finance:
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-google-getprices-7d:
+fetch-google-getprices-1m:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -V P="7d" \
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -v P="1M" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-google-getprices-40Y:
+fetch-google-getprices-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f data/script/fetch-google-getprices.awk  -v P="40Y" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-google-historical:
+fetch-google-historical-1m:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk \
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk  -v P="-1 month" \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+	
+fetch-google-historical-40y:
+	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
+	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f data/script/fetch-google-historical.awk  -v P="-40 years" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 	
@@ -85,15 +91,27 @@ fetch-google-historical:
 # fetch-yahoo-*
 #
 
-fetch-yahoo-daily:
+fetch-yahoo-daily-1m:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d" \
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d"  -v P="-1 month" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-dividend:
+fetch-yahoo-daily-40y:
+	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f data/script/fetch-yahoo-table.awk -v G="d"  -v P="-40 days" \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
+fetch-yahoo-dividend-7d:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v" \
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v"  -v P="-7 days" \
+	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
+fetch-yahoo-dividend-40y:
+	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f data/script/fetch-yahoo-table.awk -v G="v"  -v P="-40 years" \
 	  tmp/sqlite/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
@@ -142,15 +160,25 @@ update-google-getprices: prepare-update
 	sort -m tmp/database/google-getprices-update.csv tmp/database/google-getprices.csv >tmp/database/google-getprices-new.csv
 	mv tmp/database/google-getprices-new.csv tmp/database/google-getprices.csv
 	
-
 update-google-historical: prepare-update
 	ant run-update-google-historical
+	sort tmp/database/google-historical-update.csv >tmp/database/google-historical-update-sorted.csv
+	mv tmp/database/google-historical-update-sorted.csv tmp/database/google-historical-update.csv
+	touch tmp/database/google-historical.csv
+	sort -m tmp/database/google-historical-update.csv tmp/database/google-historical.csv >tmp/database/google-historical-new.csv
+	mv tmp/database/google-historical-new.csv tmp/database/google-historical.csv
 	
+
 update-yahoo-daily: prepare-update
 	ant run-update-yahoo-daily
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend
+	sort tmp/database/yahoo-dividend-update.csv >tmp/database/yahoo-dividend-update-sorted.csv
+	mv tmp/database/yahoo-dividend-update-sorted.csv tmp/database/yahoo-dividend-update.csv
+	touch tmp/database/yahoo-dividend.csv
+	sort -m tmp/database/yahoo-dividend-update.csv tmp/database/yahoo-dividend.csv >tmp/database/yahoo-dividend-new.csv
+	mv tmp/database/yahoo-dividend-new.csv tmp/database/yahoo-dividend.csv
 
 update-yahoo-finance: prepare-update
 	ant run-update-yahoo-finance

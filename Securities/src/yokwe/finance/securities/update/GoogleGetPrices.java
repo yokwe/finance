@@ -74,11 +74,11 @@ public final class GoogleGetPrices {
 			
 			String date = myDate.toDate(dateStr);
 
-			return String.format("%s,%s,%.4f,%d", date, symbol, close, volume);
+			return String.format("%s,%s,%.2f,%d", date, symbol, close, volume);
 		}
 	}
 	
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 
 	public static void save(String dirPath, String csvPath) {
 		File root = new File(dirPath);
@@ -144,7 +144,7 @@ public final class GoogleGetPrices {
 							myDate.setTime(values[1]);
 							continue;
 						}
-						bw.append(CSVRecord.toCSV(symbol, line)).append(CRLF);
+						bw.append(CSVRecord.toCSV(symbol, line)).append(NEWLINE);
 						count++;
 					}
 				}

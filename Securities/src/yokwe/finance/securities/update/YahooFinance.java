@@ -15,7 +15,7 @@ import yokwe.finance.securities.util.Scrape;
 public class YahooFinance {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooFinance.class);
 	
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 
 	public enum Field {
 		EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
@@ -93,7 +93,7 @@ public class YahooFinance {
 					}
 					count++;
 				}
-				br.append(CRLF);
+				br.append(NEWLINE);
 			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e);

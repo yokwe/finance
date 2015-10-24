@@ -14,7 +14,7 @@ import yokwe.finance.securities.util.Scrape;
 public class GoogleFinance {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(GoogleFinance.class);
 	
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 
 	public enum Field {
 		SYMBOL, PRICE, VOL, AVG_VOL, MKT_CAP,
@@ -93,7 +93,7 @@ public class GoogleFinance {
 					}
 					count++;
 				}
-				br.append(CRLF);
+				br.append(NEWLINE);
 			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e);

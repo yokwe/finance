@@ -85,21 +85,32 @@
                 </java>
         </target>
 
+        <target name="run-update-yahoo-dividend">
+                <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/yahoo-dividend"/>
+                        <arg value="tmp/database/yahoo-dividend-update.csv"/>
+                </java>
+        </target>
+	
+        <target name="run-update-google-getprices">
+                <java classname="yokwe.finance.securities.update.GoogleGetPrices" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/google-getprices"/>
+                        <arg value="tmp/database/google-getprices-update.csv"/>
+                </java>
+        </target>
+
+
+
         <target name="run-update-yahoo-daily">
                 <java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <arg value="tmp/fetch/yahoo-daily"/>
                         <arg value="tmp/sqlite/yahoo-daily.csv"/>
-                </java>
-        </target>
-
-        <target name="run-update-yahoo-dividend">
-                <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/yahoo-dividend"/>
-                        <arg value="tmp/sqlite/yahoo-dividend.csv"/>
                 </java>
         </target>
 
@@ -135,16 +146,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/google-historical"/>
-			<arg value="tmp/sqlite/google-historical.csv"/>
-		</java>
-	</target>
-
-	<target name="run-update-google-getprices">
-		<java classname="yokwe.finance.securities.update.GoogleGetPrices" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/google-getprices"/>
-			<arg value="tmp/database/google-getprices-update.csv"/>
+			<arg value="tmp/database/google-historical-update.csv"/>
 		</java>
 	</target>
 

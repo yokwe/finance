@@ -5,6 +5,7 @@ BEGIN {
   RS = "[\r\n]+"
   
 #  P = "-10 years"
+#  P = "-10 month"
 #  P = "-10 days"
 
   CMD = "date '+%m,%d,%Y' -d '" P "'"

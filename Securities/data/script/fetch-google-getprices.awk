@@ -4,7 +4,9 @@ BEGIN {
   FS = ","
   RS = "[\r\n]+"
   
-#  P = "7d"
+#  P = "7d"  # 7 days
+#  P = "1M"  # 1 month
+#  P = "40Y" # 40 years
 }
 
 # http://www.google.com/finance/getprices?q=IBM&x=NYSE&i=86400&p=15Y&f=d,c,v,o,h,l

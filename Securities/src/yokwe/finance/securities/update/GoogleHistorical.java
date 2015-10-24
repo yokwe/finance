@@ -72,11 +72,12 @@ public final class GoogleHistorical {
 			double close    = Double.valueOf(fields[4]);
 			long   volume   = Long.valueOf(fields[5]);
 			
-			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);
+//			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);
+			return String.format("%s,%s,%.2f,%d", date, symbol, close, volume);
 		}
 	}
 	
-	private static final String CRLF = "\r\n";
+	private static final String NEWLINE = "\n";
 
 	public static void save(String dirPath, String csvPath) {
 		File root = new File(dirPath);
@@ -114,7 +115,7 @@ public final class GoogleHistorical {
 					for(;;) {
 						String line = br.readLine();
 						if (line == null) break;
-						bw.append(CSVRecord.toCSV(symbol, line)).append(CRLF);
+						bw.append(CSVRecord.toCSV(symbol, line)).append(NEWLINE);
 						size++;
 					}
 				}

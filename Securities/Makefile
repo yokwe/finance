@@ -98,7 +98,7 @@ fetch-yahoo-daily-1m:
 
 fetch-yahoo-daily-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 days" \
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 years" \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 

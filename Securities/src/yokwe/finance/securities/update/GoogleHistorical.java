@@ -66,9 +66,9 @@ public final class GoogleHistorical {
 			}
 			
 			String date     = fields[0];
-			double open     = Double.valueOf(fields[1]);
-			double high     = Double.valueOf(fields[2]);
-			double low      = Double.valueOf(fields[3]);
+//			double open     = Double.valueOf(fields[1]);
+//			double high     = Double.valueOf(fields[2]);
+//			double low      = Double.valueOf(fields[3]);
 			double close    = Double.valueOf(fields[4]);
 			long   volume   = Long.valueOf(fields[5]);
 			

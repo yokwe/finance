@@ -169,6 +169,11 @@ update-google-historical: prepare-update
 
 update-yahoo-daily: prepare-update
 	ant run-update-yahoo-daily
+	sort ${DIR_DATABASE}/yahoo-daily-update.csv >${DIR_DATABASE}/yahoo-daily-update-sorted.csv
+	mv ${DIR_DATABASE}/yahoo-daily-update-sorted.csv ${DIR_DATABASE}/yahoo-daily-update.csv
+	touch ${DIR_DATABASE}/yahoo-daily.csv
+	sort -m ${DIR_DATABASE}/yahoo-daily-update.csv ${DIR_DATABASE}/yahoo-daily.csv >${DIR_DATABASE}/yahoo-daily-new.csv
+	mv ${DIR_DATABASE}/yahoo-daily-new.csv ${DIR_DATABASE}/yahoo-daily.csv
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend

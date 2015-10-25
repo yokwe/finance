@@ -99,6 +99,7 @@ public class ScreenSecurities {
 				if (!yearMap.containsKey(lastYear)) continue;
 				
 				// TODO google-getprices return no data for some symbol (AMT)
+				// TODO create symbol list that should take data from yahoo-daily. Because google-getprices does'nt have data.
 				
 				if (!priceMap.containsKey(symbol)) {
 					logger.info("XXXX {} {}", symbol, yearMap.get(thisYear));

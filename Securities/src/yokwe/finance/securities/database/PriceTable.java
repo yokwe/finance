@@ -1,6 +1,39 @@
 package yokwe.finance.securities.database;
 
+import java.sql.Connection;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.JDBCUtil;
+
 public final class PriceTable {
+	private static final Logger logger = LoggerFactory.getLogger(PriceTable.class);
+
+	public static List<PriceTable> getAll(Connection connection, String sql) {
+		return JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+	}
+	
+	public static class DateTable {
+		public String date;
+	}
+	public static String getLastTradeDate(Connection connection) {
+		String sql = "select max(date) as date from price";
+		List<DateTable> result = JDBCUtil.getResultAll(connection, sql, DateTable.class);
+		if (result.size() != 1) {
+			logger.error("result = {}", result);
+			throw new SecuritiesException("result");
+		}
+		return result.get(0).date;
+	}
+	
+	public static List<PriceTable> getAllByDate(Connection connection, String date) {
+		String sql = String.format("select * from price where date = '%s'", date);
+		return getAll(connection, sql);
+	}
+
 	public String date;
 	public String symbol;
 	public double close;

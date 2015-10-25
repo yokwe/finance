@@ -3,6 +3,7 @@ package yokwe.finance.securities.app;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +16,18 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.FinanceTable;
 import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.database.PriceTable;
 
 public class ScreenSecurities {
 	private static final Logger logger = LoggerFactory.getLogger(ScreenSecurities.class);
 	
 	static void calculate(Connection connection) {
+		final String lastTradeDate = PriceTable.getLastTradeDate(connection);
+		logger.info("lastTradeDate = {}", lastTradeDate);
+		
+		Map<String, Double> priceMap = new TreeMap<>();
+		PriceTable.getAllByDate(connection, lastTradeDate).stream().forEach(o -> priceMap.put(o.symbol, o.close));
+		
 		Map<String, NasdaqTable>  nasdaqMap  = NasdaqTable.getMap(connection);
 		Map<String, FinanceTable> financeMap = FinanceTable.getMap(connection);
 		
@@ -73,13 +81,47 @@ public class ScreenSecurities {
 				if (0 < notEqualCount) continue;
 				
 				newCandidateList.add(symbol);
-				logger.info("{}", String.format("%-6s  %4d  %2d", symbol, commonCount, yearMap.size()));
+//				logger.info("{}", String.format("%-6s  %4d  %2d", symbol, commonCount, yearMap.size()));
 			}
 			candidateList = newCandidateList;
 		}
-		
-		
 		logger.info("candidateList = {}", candidateList.size());
+		
+		// Calculate dividend of last year and this year
+		{
+			final int thisYearNumber = LocalDate.now().getYear();
+			final String thisYear = String.format("%d", thisYearNumber);
+			final String lastYear = String.format("%d", thisYearNumber - 1);
+			
+			for(String symbol: candidateList) {
+				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
+				if (!yearMap.containsKey(thisYear)) continue;
+				if (!yearMap.containsKey(lastYear)) continue;
+				
+				// TODO google-getprices return no data for some symbol (AMT)
+				
+				if (!priceMap.containsKey(symbol)) {
+					logger.info("XXXX {} {}", symbol, yearMap.get(thisYear));
+					continue;
+				}
+				
+				final double priceRatio = 1000.0 / priceMap.get(symbol);
+				
+				if (yearMap.containsKey(thisYear) && yearMap.containsKey(lastYear)) {
+					double[] lastYearArray = yearMap.get(lastYear).stream().mapToDouble(o -> o).toArray();
+					double[] thisYearArray = yearMap.get(thisYear).stream().mapToDouble(o -> o).toArray();
+					
+					double dividendThisYear = 0;				
+					for(int i = 0; i < thisYearArray.length; i++) dividendThisYear += thisYearArray[i];
+					for(int i = thisYearArray.length; i < lastYearArray.length; i++) dividendThisYear += lastYearArray[i];
+
+					double dividendLastYear = 0;
+					for(int i = 0; i < lastYearArray.length; i++) dividendLastYear += lastYearArray[i];
+
+	//				logger.info("{}", String.format("%-6s  %8.3f  %8.3f", symbol, dividendLastYear * priceRatio, dividendThisYear * priceRatio));
+				}
+			}
+		}
 	}
 	
 	public static void main(String[] args) {

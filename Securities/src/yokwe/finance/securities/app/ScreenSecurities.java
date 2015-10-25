@@ -100,6 +100,7 @@ public class ScreenSecurities {
 				
 				// TODO google-getprices return no data for some symbol (AMT)
 				// TODO create symbol list that should take data from yahoo-daily. Because google-getprices does'nt have data.
+				// TODO find symbol that has dividend but doesn't have daily quote. try yahoo-daily to get price not google-getprices.
 				
 				if (!priceMap.containsKey(symbol)) {
 					logger.info("XXXX {} {}", symbol, yearMap.get(thisYear));

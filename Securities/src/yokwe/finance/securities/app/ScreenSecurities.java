@@ -29,6 +29,7 @@ public class ScreenSecurities {
 		List<String> candidateList = financeMap.keySet().stream().collect(Collectors.toList());
 		logger.info("candidateList = {}", candidateList.size());
 		
+		// Filter out the securities that has no trade history
 		{
 			List<String> newCandidateList = new ArrayList<>();
 			for(String symbol: candidateList) {
@@ -40,42 +41,44 @@ public class ScreenSecurities {
 			candidateList = newCandidateList;
 		}
 		logger.info("candidateList = {}", candidateList.size());
-		
+
+		// Build dividendMap
+		Map<String, Map<String, List<Double>>> dividendMap = new TreeMap<>();
+		for(String symbol: candidateList) {
+			List<DividendTable> dividendList = DividendTable.getAllBySymbol(connection, symbol);
+			Map<String, List<Double>> yearMap = new TreeMap<>();
+			for(DividendTable dividendTable: dividendList) {
+				String year = dividendTable.date.substring(0, 4);
+				if (!yearMap.containsKey(year)) yearMap.put(year, new ArrayList<>());
+				yearMap.get(year).add(dividendTable.dividend);
+			}
+			dividendMap.put(symbol,  yearMap);
+		}
+
+		// Filter out the securities that has irregular dividend
 		{
 			List<String> newCandidateList = new ArrayList<>();
+			
 			for(String symbol: candidateList) {
-				List<DividendTable> dividendList = DividendTable.getAllBySymbol(connection, symbol);
+				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
 				
-				Map<String, Integer> yearMap = new TreeMap<>();
-				for(DividendTable table: dividendList) {
-					String year = table.date.substring(0, 4);
-					if (yearMap.containsKey(year)) {
-						Integer count = yearMap.get(year);
-						yearMap.put(year, count + 1);
-					} else {
-						yearMap.put(year, 1);
-					}
-				}
-				
-				// TODO create more accurate countList
-				//   first create from all data
-				//   find common number of data count
-				//   omit first and last year data count if that is not equals to common data count.
-				int[] countList = yearMap.values().stream().mapToInt(o -> o).toArray();
-				if (countList.length <= 1) continue;
-				
+				int[] countList = yearMap.values().stream().mapToInt(o -> o.size()).toArray();				
+				if (countList.length <= 3) continue;
+				int commonCount = countList[1]; // Should be count in common
 				int notEqualCount = 0;
-				int firstCount = countList[0];
-				for(int count : countList) {
-					if (count != firstCount) notEqualCount++;
+				// Skip first and last year
+				for(int i = 1; i < (countList.length - 1); i++) {
+					if (countList[i] != commonCount) notEqualCount++;
 				}
-				if (2 < notEqualCount) continue;
+				if (0 < notEqualCount) continue;
 				
 				newCandidateList.add(symbol);
-				logger.info("{}", String.format("%-6s  %4d  %4d", symbol, dividendList.size(), countList.length));
+				logger.info("{}", String.format("%-6s  %4d  %2d", symbol, commonCount, yearMap.size()));
 			}
 			candidateList = newCandidateList;
 		}
+		
+		
 		logger.info("candidateList = {}", candidateList.size());
 	}
 	

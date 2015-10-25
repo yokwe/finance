@@ -1,6 +1,22 @@
 package yokwe.finance.securities.database;
 
+import java.sql.Connection;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import yokwe.finance.securities.util.JDBCUtil;
+
 public final class NasdaqTable {
+	public static List<NasdaqTable> getAll(Connection connection, String sql) {
+		return JDBCUtil.getResultAll(connection, sql, NasdaqTable.class);
+	}
+	public static Map<String, NasdaqTable> getMap(Connection connection) {
+		final Map<String, NasdaqTable> ret = new TreeMap<>();
+		getAll(connection, "select * from nasdaq").stream().forEach(o -> ret.put(o.symbol, o));
+		return ret;
+	}
+
 	public String etf;
 	public String exchange;
 	public String symbol;

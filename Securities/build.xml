@@ -110,7 +110,7 @@
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <arg value="tmp/fetch/yahoo-daily"/>
-                        <arg value="tmp/database/yahoo-daily.csv"/>
+                        <arg value="tmp/database/yahoo-daily-update.csv"/>
                 </java>
         </target>
 

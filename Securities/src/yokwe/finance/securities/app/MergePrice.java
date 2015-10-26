@@ -80,10 +80,9 @@ public class MergePrice {
 				return null;
 			}
 			
-			int t0 = line.indexOf(',', 0);
-			int t1 = line.indexOf(',', t0);
-			
-			dateSymbol = line.substring(0, t1);
+			// YYYY-MM-DD,A
+			// 012345678901
+			dateSymbol = line.substring(0, line.indexOf(',', 11));
 			return line;
 		}
 		
@@ -170,6 +169,7 @@ public class MergePrice {
 				} else {
 					out.write(lineB);
 					lineB = inB.readLine();
+					continue;
 				}
 			}
 			if (lineA != null) {

@@ -166,9 +166,10 @@ yahoo-dividend
 
 yahoo-daily
   40d   31M  22 minutes 23 seconds
+  40Y  1.3G 150 minutes 42 seconds
 
 1 month data
-  google-getprices   33M  16 minutes 31 seconds
-  google-historical  32M  21 minutes 51 seconds
-  yahoo-dividend     31M  23 minutes 24 seconds
-  yahoo-daily        31M  22 minutes 23 seconds
+  google-getprices   33M  20 minutes 22 seconds
+  yahoo-dividend     31M  32 minutes 12 seconds
+  yahoo-daily        31M  31 minutes 46 seconds
+--google-historical  32M  21 minutes 51 seconds

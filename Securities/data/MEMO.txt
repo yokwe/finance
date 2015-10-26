@@ -153,7 +153,7 @@ yahoo-dividend    5103
 ----
 
 Use google-getprices data for price table.
-
+  Some recent data is missing (AMT). Should I use yahoo-daily for price data/
 
 google-getprices
   40Y  796M  74 minutes 48 seconds
@@ -170,4 +170,5 @@ yahoo-daily
 1 month data
   google-getprices   33M  16 minutes 31 seconds
   google-historical  32M  21 minutes 51 seconds
-  google-dividend    31M  23 minutes 24 seconds
+  yahoo-dividend     31M  23 minutes 24 seconds
+  yahoo-daily        31M  22 minutes 23 seconds

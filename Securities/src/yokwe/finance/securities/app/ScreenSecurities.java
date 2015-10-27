@@ -103,6 +103,9 @@ public class ScreenSecurities {
 			final String y4 = String.format("%d", y0Number - 4);
 			final String y5 = String.format("%d", y0Number - 5);
 			
+			// Output title line
+			w.append("etf,freq,symbol,y5,y4,y3,y2,y1,y0,name\n");
+
 			int count = 0;
 			for(String symbol: candidateList) {
 				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
@@ -145,7 +148,7 @@ public class ScreenSecurities {
 				String name = nasdaqTable.name;
 				if (name.contains("\"")) name = name.replace("\"", "\"\"");
 				if (name.contains(",")) name = "\"" + name + "\"";
-				w.append(String.format("%s,%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%s\n", nasdaqTable.etf, y1Array.length, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, name));
+				w.append(String.format("%s,%d,%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%s\n", nasdaqTable.etf, y1Array.length, symbol, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, name));
 				count++;
 			}
 			

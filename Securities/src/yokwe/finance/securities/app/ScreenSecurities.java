@@ -1,10 +1,15 @@
 package yokwe.finance.securities.app;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -17,11 +22,12 @@ import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.FinanceTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
+import yokwe.finance.securities.util.NasdaqUtil;
 
 public class ScreenSecurities {
 	private static final Logger logger = LoggerFactory.getLogger(ScreenSecurities.class);
 	
-	static void calculate(Connection connection) {
+	static void calculate(Connection connection, Writer w) throws IOException {
 		final String lastTradeDate = PriceTable.getLastTradeDate(connection);
 		logger.info("lastTradeDate = {}", lastTradeDate);
 		
@@ -89,51 +95,74 @@ public class ScreenSecurities {
 		
 		// Calculate dividend of last year and this year
 		{
-			final int thisYearNumber = LocalDate.now().getYear();
-			final String thisYear = String.format("%d", thisYearNumber);
-			final String lastYear = String.format("%d", thisYearNumber - 1);
+			final int y0Number = LocalDate.now().getYear();
+			final String y0 = String.format("%d", y0Number);
+			final String y1 = String.format("%d", y0Number - 1);
+			final String y2 = String.format("%d", y0Number - 2);
+			final String y3 = String.format("%d", y0Number - 3);
+			final String y4 = String.format("%d", y0Number - 4);
+			final String y5 = String.format("%d", y0Number - 5);
 			
+			int count = 0;
 			for(String symbol: candidateList) {
 				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
-				if (!yearMap.containsKey(thisYear)) continue;
-				if (!yearMap.containsKey(lastYear)) continue;
+				if (!yearMap.containsKey(y0)) continue;
+				if (!yearMap.containsKey(y1)) continue;
+				if (!yearMap.containsKey(y2)) continue;
+				if (!yearMap.containsKey(y3)) continue;
+				if (!yearMap.containsKey(y4)) continue;
+				if (!yearMap.containsKey(y5)) continue;
+				
+				NasdaqTable nasdaqTable = NasdaqUtil.get(symbol);
 				
 				// TODO google-getprices return no data for some symbol (AMT)
 				// TODO create symbol list that should take data from yahoo-daily. Because google-getprices does'nt have data.
 				// TODO find symbol that has dividend but doesn't have daily quote. try yahoo-daily to get price not google-getprices.
 				
 				if (!priceMap.containsKey(symbol)) {
-					logger.info("XXXX {} {}", symbol, yearMap.get(thisYear));
+//					logger.info("XXXX {} {}", symbol, yearMap.get(y0));
 					continue;
 				}
 				
 				final double priceRatio = 1000.0 / priceMap.get(symbol);
 				
-				if (yearMap.containsKey(thisYear) && yearMap.containsKey(lastYear)) {
-					double[] lastYearArray = yearMap.get(lastYear).stream().mapToDouble(o -> o).toArray();
-					double[] thisYearArray = yearMap.get(thisYear).stream().mapToDouble(o -> o).toArray();
-					
-					double dividendThisYear = 0;				
-					for(int i = 0; i < thisYearArray.length; i++) dividendThisYear += thisYearArray[i];
-					for(int i = thisYearArray.length; i < lastYearArray.length; i++) dividendThisYear += lastYearArray[i];
+				double[] y0Array = yearMap.get(y0).stream().mapToDouble(o -> o).toArray();
+				double[] y1Array = yearMap.get(y1).stream().mapToDouble(o -> o).toArray();
+				
+				double y0Profit = Arrays.stream(y0Array).sum();
+				for(int i = y0Array.length; i < y1Array.length; i++) y0Profit += y1Array[i];
+				y0Profit *= priceRatio;
 
-					double dividendLastYear = 0;
-					for(int i = 0; i < lastYearArray.length; i++) dividendLastYear += lastYearArray[i];
+				double y1Profit = priceRatio * Arrays.stream(y1Array).sum();
+				double y2Profit = priceRatio * yearMap.get(y2).stream().mapToDouble(o -> o).sum();
+				double y3Profit = priceRatio * yearMap.get(y3).stream().mapToDouble(o -> o).sum();
+				double y4Profit = priceRatio * yearMap.get(y4).stream().mapToDouble(o -> o).sum();
+				double y5Profit = priceRatio * yearMap.get(y5).stream().mapToDouble(o -> o).sum();
 
-	//				logger.info("{}", String.format("%-6s  %8.3f  %8.3f", symbol, dividendLastYear * priceRatio, dividendThisYear * priceRatio));
-				}
+//				logger.info("{}", String.format("%s %2d %-6s  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %s",
+//					nasdaqTable.etf, y1Array.length, symbol, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, nasdaqTable.name));
+
+				String name = nasdaqTable.name;
+				if (name.contains("\"")) name = name.replace("\"", "\"\"");
+				if (name.contains(",")) name = "\"" + name + "\"";
+				w.append(String.format("%s,%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%s\n", nasdaqTable.etf, y1Array.length, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, name));
+				count++;
 			}
+			
+			logger.info("count = {}", count);
 		}
 	}
 	
+	private static final String OUTPUT_PATH = "tmp/screen.csv";
 	public static void main(String[] args) {
 		logger.info("START");
 		try {
 			Class.forName("org.sqlite.JDBC");
-			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/securities.sqlite3")) {
-				calculate(connection);
+			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/securities.sqlite3");
+				BufferedWriter bw = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
+				calculate(connection, bw);
 			}
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (ClassNotFoundException | SQLException | IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
 			e.printStackTrace();

@@ -17,6 +17,12 @@ public final class PriceTable {
 	public static List<PriceTable> getAll(Connection connection, String sql) {
 		return JDBCUtil.getResultAll(connection, sql, PriceTable.class);
 	}
+		
+	public static List<PriceTable>  getAllBySymbolDateLike(Connection connection, String symbol, String dateLikeString) {
+		String sql = String.format("select * from price where symbol = '%s' and date like '%s'", symbol, dateLikeString);
+		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+		return result;
+	}
 	
 	public static class SymbolCountTable {
 		public String symbol;

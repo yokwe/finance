@@ -173,3 +173,7 @@ yahoo-daily
   yahoo-dividend     31M  32 minutes 12 seconds
   yahoo-daily        31M  31 minutes 46 seconds
 --google-historical  32M  21 minutes 51 seconds
+
+If we use yahoo-dividend, the data yahoo-daily should has correspondent stock data found in yahoo-dividend.
+The some data in google-getprices doesn't match with yahoo-dividend (AMT).
+So we should use yahoo-daily for price table.

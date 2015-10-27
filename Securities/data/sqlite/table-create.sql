@@ -45,7 +45,8 @@ CREATE TABLE dividend (
 .import tmp/database/nasdaq.csv           nasdaq
 .import tmp/database/google-finance.csv   finance
 .import tmp/database/yahoo-dividend.csv   dividend
-.import tmp/database/google-getprices.csv price
+.import tmp/database/yahoo-daily.csv      price
+-- .import tmp/database/google-getprices.csv price
 
 CREATE        INDEX nasdaq_etf           ON nasdaq(etf);
 CREATE UNIQUE INDEX nasdaq_symbol        ON nasdaq(symbol);

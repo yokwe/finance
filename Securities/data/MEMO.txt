@@ -169,9 +169,9 @@ yahoo-daily
   40Y  1.3G 150 minutes 42 seconds
 
 1 month data
-  google-getprices   33M  20 minutes 22 seconds
-  yahoo-dividend     31M  32 minutes 12 seconds
-  yahoo-daily        31M  31 minutes 46 seconds
+--google-getprices   33M  20 minutes 22 seconds
+  yahoo-dividend     31M  32 minutes 12 seconds   23 minutes 51 seconds
+  yahoo-daily        31M  31 minutes 46 seconds   24 minutes  7 seconds
 --google-historical  32M  21 minutes 51 seconds
 
 If we use yahoo-dividend, the data yahoo-daily should has correspondent stock data found in yahoo-dividend.

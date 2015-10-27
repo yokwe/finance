@@ -16,7 +16,7 @@ import yokwe.finance.securities.database.NasdaqTable;
 public class NasdaqUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 	
-	private static final String NASDAQ_FILE_PATH = "tmp/sqlite/nasdaq.csv";
+	private static final String NASDAQ_FILE_PATH = "tmp/database/nasdaq.csv";
 
 	private static Map<String, NasdaqTable> map = new TreeMap<>();
 	

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalDouble;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -93,62 +94,88 @@ public class ScreenSecurities {
 		}
 		logger.info("candidateList = {}", candidateList.size());
 		
+		final int LAST_N_YEARS = 5;  // Y4 Y3 Y2 Y1 Y0
+		
 		// Calculate dividend of last year and this year
 		{
 			final int y0Number = LocalDate.now().getYear();
 			final String y0 = String.format("%d", y0Number);
 			final String y1 = String.format("%d", y0Number - 1);
-			final String y2 = String.format("%d", y0Number - 2);
-			final String y3 = String.format("%d", y0Number - 3);
-			final String y4 = String.format("%d", y0Number - 4);
-			final String y5 = String.format("%d", y0Number - 5);
 			
 			// Output title line
-			w.append("etf,freq,symbol,y5,y4,y3,y2,y1,y0,name\n");
+			w.append("etf,freq,price,symbol");
+			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
+			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",a%d", i));
+			w.append(",name\n");
 
 			int count = 0;
 			for(String symbol: candidateList) {
+				if (!priceMap.containsKey(symbol)) continue;
+				
+				final double price = priceMap.get(symbol);
+				final double priceRatio = 1000.0 / price;
+
 				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
 				if (!yearMap.containsKey(y0)) continue;
 				if (!yearMap.containsKey(y1)) continue;
-				if (!yearMap.containsKey(y2)) continue;
-				if (!yearMap.containsKey(y3)) continue;
-				if (!yearMap.containsKey(y4)) continue;
-				if (!yearMap.containsKey(y5)) continue;
 				
-				NasdaqTable nasdaqTable = NasdaqUtil.get(symbol);
-				
-				// TODO google-getprices return no data for some symbol (AMT)
-				// TODO create symbol list that should take data from yahoo-daily. Because google-getprices does'nt have data.
-				// TODO find symbol that has dividend but doesn't have daily quote. try yahoo-daily to get price not google-getprices.
-				
-				if (!priceMap.containsKey(symbol)) {
-//					logger.info("XXXX {} {}", symbol, yearMap.get(y0));
-					continue;
+				final String name;
+				final String etf;
+				final int    freq;
+				{
+					NasdaqTable nasdaqTable = NasdaqUtil.get(symbol);
+					etf  = nasdaqTable.etf;
+					freq = yearMap.get(y1).size();
+					
+					String nasdaqName = nasdaqTable.name;
+					if (nasdaqName.contains("\"")) nasdaqName = nasdaqName.replace("\"", "\"\"");
+					if (nasdaqName.contains(",")) nasdaqName = "\"" + nasdaqName + "\"";
+					name = nasdaqName;
 				}
 				
-				final double priceRatio = 1000.0 / priceMap.get(symbol);
+				double[] average = new double[LAST_N_YEARS];
+				double[] profit  = new double[LAST_N_YEARS];
+				for(int i = 0; i < profit.length; i++) profit[i] = average[i] = -1;
 				
-				double[] y0Array = yearMap.get(y0).stream().mapToDouble(o -> o).toArray();
-				double[] y1Array = yearMap.get(y1).stream().mapToDouble(o -> o).toArray();
+				// special for Y0
+				{
+					double[] y0Array = yearMap.get(y0).stream().mapToDouble(o -> o).toArray();
+					double[] y1Array = yearMap.get(y1).stream().mapToDouble(o -> o).toArray();
+					
+					double y0Profit = Arrays.stream(y0Array).sum();
+					for(int i = y0Array.length; i < y1Array.length; i++) y0Profit += y1Array[i];
+					y0Profit *= priceRatio;
+					profit[0] = y0Profit;
+				}
 				
-				double y0Profit = Arrays.stream(y0Array).sum();
-				for(int i = y0Array.length; i < y1Array.length; i++) y0Profit += y1Array[i];
-				y0Profit *= priceRatio;
+				for(int i = 1; i < LAST_N_YEARS; i++) {
+					String yyyy = String.format("%d", y0Number - i);
+					if (yearMap.containsKey(yyyy)) {
+						profit[i] = priceRatio * yearMap.get(yyyy).stream().mapToDouble(o -> o).sum();
+					}
+				}
+				
+				for(int i = 0; i < LAST_N_YEARS; i++) {
+					String yyyy = String.format("%d", y0Number - i);
+					List<PriceTable> result = PriceTable.getAllBySymbolDateLike(connection, symbol, yyyy + "%");
+					if (result.size() == 0) {
+						average[i] = -1;
+					} else {
+						OptionalDouble od = result.stream().mapToDouble(o -> o.close).average();
+						average[i] = od.getAsDouble();
+					}
+				}
 
-				double y1Profit = priceRatio * Arrays.stream(y1Array).sum();
-				double y2Profit = priceRatio * yearMap.get(y2).stream().mapToDouble(o -> o).sum();
-				double y3Profit = priceRatio * yearMap.get(y3).stream().mapToDouble(o -> o).sum();
-				double y4Profit = priceRatio * yearMap.get(y4).stream().mapToDouble(o -> o).sum();
-				double y5Profit = priceRatio * yearMap.get(y5).stream().mapToDouble(o -> o).sum();
-
-//				logger.info("{}", String.format("%s %2d %-6s  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %s",
-//					nasdaqTable.etf, y1Array.length, symbol, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, nasdaqTable.name));
-
-				String name = nasdaqTable.name;
-				if (name.contains("\"")) name = name.replace("\"", "\"\"");
-				if (name.contains(",")) name = "\"" + name + "\"";
-				w.append(String.format("%s,%d,%s,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%s\n", nasdaqTable.etf, y1Array.length, symbol, y5Profit, y4Profit, y3Profit, y2Profit, y1Profit, y0Profit, name));
+				w.append(String.format("%s,%d,%.2f,%s", etf, freq, price, symbol));
+				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
+					final double p = profit[i];
+					w.append((0 <= p) ? String.format(",%.3f", p) : ",");
+				}
+				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
+					final double a = average[i];
+					w.append((0 <= a) ? String.format(",%.3f", a) : ",");
+				}
+				w.append(String.format(",%s\n", name));
 				count++;
 			}
 			

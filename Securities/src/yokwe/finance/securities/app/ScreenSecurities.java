@@ -71,30 +71,30 @@ public class ScreenSecurities {
 		}
 
 		// Filter out the securities that has irregular dividend
-		{
-			List<String> newCandidateList = new ArrayList<>();
-			
-			for(String symbol: candidateList) {
-				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
-				
-				int[] countList = yearMap.values().stream().mapToInt(o -> o.size()).toArray();				
-				if (countList.length <= 3) continue;
-				int commonCount = countList[1]; // Should be count in common
-				int notEqualCount = 0;
-				// Skip first and last year
-				for(int i = 1; i < (countList.length - 1); i++) {
-					if (countList[i] != commonCount) notEqualCount++;
-				}
-				if (0 < notEqualCount) continue;
-				
-				newCandidateList.add(symbol);
-//				logger.info("{}", String.format("%-6s  %4d  %2d", symbol, commonCount, yearMap.size()));
-			}
-			candidateList = newCandidateList;
-		}
-		logger.info("candidateList = {}", candidateList.size());
+//		{
+//			List<String> newCandidateList = new ArrayList<>();
+//			
+//			for(String symbol: candidateList) {
+//				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
+//				
+//				int[] countList = yearMap.values().stream().mapToInt(o -> o.size()).toArray();				
+//				if (countList.length <= 3) continue;
+//				int commonCount = countList[1]; // Should be count in common
+//				int notEqualCount = 0;
+//				// Skip first and last year
+//				for(int i = 1; i < (countList.length - 1); i++) {
+//					if (countList[i] != commonCount) notEqualCount++;
+//				}
+//				if (0 < notEqualCount) continue;
+//				
+//				newCandidateList.add(symbol);
+////				logger.info("{}", String.format("%-6s  %4d  %2d", symbol, commonCount, yearMap.size()));
+//			}
+//			candidateList = newCandidateList;
+//		}
+//		logger.info("candidateList = {}", candidateList.size());
 		
-		final int LAST_N_YEARS = 5;  // Y4 Y3 Y2 Y1 Y0
+		final int LAST_N_YEARS = 10;  // Y4 Y3 Y2 Y1 Y0
 		
 		// Calculate dividend of last year and this year
 		{
@@ -105,7 +105,7 @@ public class ScreenSecurities {
 			// Output title line
 			w.append("etf,freq,price,symbol");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
-			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",a%d", i));
+//			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",a%d", i));
 			w.append(",name\n");
 
 			int count = 0;
@@ -133,9 +133,10 @@ public class ScreenSecurities {
 					name = nasdaqName;
 				}
 				
-				double[] average = new double[LAST_N_YEARS];
+//				double[] average = new double[LAST_N_YEARS];
+//				for(int i = 0; i < profit.length; i++) average[i] = -1;
 				double[] profit  = new double[LAST_N_YEARS];
-				for(int i = 0; i < profit.length; i++) profit[i] = average[i] = -1;
+				for(int i = 0; i < profit.length; i++) profit[i] = -1;
 				
 				// special for Y0
 				{
@@ -155,26 +156,26 @@ public class ScreenSecurities {
 					}
 				}
 				
-				for(int i = 0; i < LAST_N_YEARS; i++) {
-					String yyyy = String.format("%d", y0Number - i);
-					List<PriceTable> result = PriceTable.getAllBySymbolDateLike(connection, symbol, yyyy + "%");
-					if (result.size() == 0) {
-						average[i] = -1;
-					} else {
-						OptionalDouble od = result.stream().mapToDouble(o -> o.close).average();
-						average[i] = od.getAsDouble();
-					}
-				}
+//				for(int i = 0; i < LAST_N_YEARS; i++) {
+//					String yyyy = String.format("%d", y0Number - i);
+//					List<PriceTable> result = PriceTable.getAllBySymbolDateLike(connection, symbol, yyyy + "%");
+//					if (result.size() == 0) {
+//						average[i] = -1;
+//					} else {
+//						OptionalDouble od = result.stream().mapToDouble(o -> o.close).average();
+//						average[i] = od.getAsDouble();
+//					}
+//				}
 
 				w.append(String.format("%s,%d,%.2f,%s", etf, freq, price, symbol));
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
 					final double p = profit[i];
 					w.append((0 <= p) ? String.format(",%.3f", p) : ",");
 				}
-				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
-					final double a = average[i];
-					w.append((0 <= a) ? String.format(",%.3f", a) : ",");
-				}
+//				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
+//					final double a = average[i];
+//					w.append((0 <= a) ? String.format(",%.3f", a) : ",");
+//				}
 				w.append(String.format(",%s\n", name));
 				count++;
 			}

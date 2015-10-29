@@ -96,6 +96,12 @@ fetch-google-historical-40y:
 # fetch-yahoo-*
 #
 
+fetch-yahoo-daily-1w:
+	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-1 week" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
 fetch-yahoo-daily-1m:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-1 month" \
@@ -105,6 +111,12 @@ fetch-yahoo-daily-1m:
 fetch-yahoo-daily-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 years" \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	ant run-fetch
+
+fetch-yahoo-dividend-1w:
+	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
+	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-1 week" \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 

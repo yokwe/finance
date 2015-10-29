@@ -18,7 +18,6 @@ DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
 DIR_FETCH_YAHOO_FINANCE		=tmp/fetch/yahoo-finance
 
 DIR_SCRIPT			=data/script
-DIR_SQLITE			=data/sqlite
 DIR_DATABASE			=tmp/database
 
 all:
@@ -34,8 +33,9 @@ build-jar:
 	ant build
 
 load-data:
+	mkdir -p tmp/sqlite
 	rm -f tmp/sqlite/securities.sqlite3
-	sqlite3 < ${DIR_SQLITE}/table-create.sql
+	sqlite3 < data/sqlite/table-create.sql
 
 
 #

@@ -39,7 +39,7 @@ load-data:
 
 
 #
-# nasdaq
+# nasdaq 
 #
 
 fetch-nasdaq:

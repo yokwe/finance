@@ -32,6 +32,12 @@ prepare-log:
 build-jar:
 	ant build
 
+prepare-deploy-jar:
+	sudo chmod 777 /var/lib/tomcat7/webapps/
+	
+deploy-jar: prepare-deploy-jar
+	ant deploy
+
 load-data:
 	mkdir -p tmp/sqlite
 	rm -f tmp/sqlite/securities.sqlite3

@@ -41,6 +41,19 @@ public final class PriceTable {
 		return ret;
 	}
 	
+	public static Map<String, Integer> getAverageVolume(Connection connection, String dateFrom, String dateTo) {
+		String sql = String.format("select symbol, cast(avg(volume) as INTEGER) as count from price where date between '%s' and '%s' group by symbol", dateFrom, dateTo);
+		List<SymbolCountTable> result = JDBCUtil.getResultAll(connection, sql, SymbolCountTable.class);
+		if (result.size() == 0) {
+			logger.error("result = {}", result);
+			throw new SecuritiesException("result");
+		}
+		Map<String, Integer> ret = new TreeMap<>();
+		result.stream().forEach(o -> ret.put(o.symbol, o.count));
+		
+		return ret;
+	}
+	
 	public static class DateTable {
 		public String date;
 	}

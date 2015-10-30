@@ -33,6 +33,10 @@ public class ScreenSecurities {
 		final double min;
 		final double max;
 
+		// TODO How to eliminate data like 
+		//   [0.32, 74.04, 0.26, 0.26]
+		//   mean =  18.72  sd  =  36.88
+		//   min  = -55.04  max =  92.48
 		{
 			final Stats stats = new Stats();
 			Arrays.stream(values).forEach(stats);

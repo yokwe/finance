@@ -40,10 +40,17 @@ public class ScreenSecurities {
 		{
 			final Stats stats = new Stats();
 			Arrays.stream(values).forEach(stats);
+			
 			final double mean = stats.getMean();
 			final double sd   = stats.getStandardDeviation();
-			min = mean - (2 * sd);
-			max = mean + (2 * sd);
+			
+			if ((2 * sd) < mean) { // Normal case
+				min = mean - (2 * sd);
+				max = mean + (2 * sd);
+			} else {               // Very large value stay in values
+				min = stats.getMin();
+				max = stats.getMax() - 0.01; // To remove very large, set max as less than stats.getMax()
+			}
 		}
 
 		double avg = 0;

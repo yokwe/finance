@@ -21,7 +21,13 @@ public class DoubleStreamUtil {
 		public void accept(double value) {
 			stats.addValue(value);
 		}
-
+		
+		public double getMin() {
+			return stats.getMin();
+		}
+		public double getMax() {
+			return stats.getMax();
+		}
 		public double getMean() {
 			return stats.getMean();
 		}

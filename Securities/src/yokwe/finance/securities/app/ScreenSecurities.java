@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
@@ -28,28 +29,60 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class ScreenSecurities {
 	private static final Logger logger = LoggerFactory.getLogger(ScreenSecurities.class);
 	
-	// replace value more than avg +- 2sd with mean
-	static double[] adjust(double[] values) {
-		final double min;
-		final double max;
-
-		// TODO How to eliminate data like 
-		//   [0.32, 74.04, 0.26, 0.26]
-		//   mean =  18.72  sd  =  36.88
-		//   min  = -55.04  max =  92.48
+	// Remove out of bound value from values data
+	static double[] adjust(final double[] values) {
+		// Handle special case
+		if (values.length <= 2) return values;
 		{
 			final Stats stats = new Stats();
-			Arrays.stream(values).forEach(stats);
+			for(double value: values) {
+				if (0.0001 <= value) stats.accept(value);
+			}
+			if (Double.isNaN(stats.getMean())) {
+//				logger.info("AAA  values = {}", Arrays.stream(values).mapToObj(o -> new Double(o)).collect(Collectors.toList()));
+				return values;
+			}
+		}
+		
+		final double min;
+		final double max;
+		for(int j = 0;; j++) {
+			final Stats stats = new Stats();
+			for(double value: values) {
+				if (0.0001 <= value) stats.accept(value);
+			}
 			
 			final double mean = stats.getMean();
 			final double sd   = stats.getStandardDeviation();
 			
-			if ((2 * sd) < mean) { // Normal case
+			if (Double.isNaN(mean)) {
+				logger.info("XXX {}  values = {}", j, Arrays.stream(values).mapToObj(o -> new Double(o)).collect(Collectors.toList()));
+				throw new SecuritiesException();
+			}
+			
+			// Half of values is set to -1
+			if (j == (values.length / 2)) {
 				min = mean - (2 * sd);
 				max = mean + (2 * sd);
-			} else {               // Very large value stay in values
-				min = stats.getMin();
-				max = stats.getMax() - 0.01; // To remove very large, set max as less than stats.getMax()
+//				logger.info("XXX {}  values = {}", j, Arrays.stream(values).mapToObj(o -> new Double(o)).collect(Collectors.toList()));
+				break;
+			}
+			
+			if ((sd * 1) < mean) { // Normal case
+				min = mean - (2 * sd);
+				max = mean + (2 * sd);
+				break;
+			}
+			final double diffMin = stats.getMean() - stats.getMin();
+			final double diffMax = stats.getMax()  - stats.getMean();
+			if (diffMin < diffMax) {
+				for(int i = 0; i < values.length; i++) {
+					if (values[i] == stats.getMax()) values[i] = -1;
+				}
+			} else {
+				for(int i = 0; i < values.length; i++) {
+					if (values[i] == stats.getMin()) values[i] = -1;
+				}
 			}
 		}
 
@@ -89,12 +122,30 @@ public class ScreenSecurities {
 		// candidateList has all
 		List<String> candidateList = nasdaqMap.keySet().stream().collect(Collectors.toList());
 		
-		// Filter out securities that has average volume for last 90 days is less than 100,000
+		// Build priceMap
+		Map<String, Double> priceMap = new TreeMap<>();
+		PriceTable.getAllByDate(connection, lastTradeDate.format(DateTimeFormatter.ISO_LOCAL_DATE)).stream().forEach(o -> priceMap.put(o.symbol, o.close));
+
+		// Filter out securities that has no price in lastTradedDate
+		{
+			List<String> newCandidateList = new ArrayList<>();
+			
+			for(String symbol: candidateList) {
+				if (priceMap.containsKey(symbol)) {
+					newCandidateList.add(symbol);
+				}
+			}
+			candidateList = newCandidateList;
+		}
+		logger.info("candidateList = {}", candidateList.size());
+		logger.info("AKP = {}", candidateList.contains("AKP"));
+		
+		// Filter out securities that has average volume for last 90 days is less than 50,000
 		{
 			List<String> newCandidateList = new ArrayList<>();
 
 			final int DURATION_DAYS = 90;
-			final int MIN_AVG_VOL   = 100000;
+			final int MIN_AVG_VOL   = 50_000;
 			logger.info("DURATION_DAYS = {}", DURATION_DAYS);
 			logger.info("MIN_AVG_VOL   = {}", MIN_AVG_VOL);
 			
@@ -106,6 +157,7 @@ public class ScreenSecurities {
 				if (!avgVolumeMap.containsKey(symbol)) continue;
 				
 				final int averageVolume = avgVolumeMap.get(symbol);
+				if (symbol.equals("AKP")) logger.info("AKP = {}", averageVolume);
 				if (averageVolume < MIN_AVG_VOL) continue;
 				
 				newCandidateList.add(symbol);
@@ -145,23 +197,6 @@ public class ScreenSecurities {
 		}
 		logger.info("candidateList = {}", candidateList.size());
 		
-		// Build priceMap
-		Map<String, Double> priceMap = new TreeMap<>();
-		PriceTable.getAllByDate(connection, lastTradeDate.format(DateTimeFormatter.ISO_LOCAL_DATE)).stream().forEach(o -> priceMap.put(o.symbol, o.close));
-
-		// Filter out securities that has no price in lastTradedDate
-		{
-			List<String> newCandidateList = new ArrayList<>();
-			
-			for(String symbol: candidateList) {
-				if (priceMap.containsKey(symbol)) {
-					newCandidateList.add(symbol);
-				}
-			}
-			candidateList = newCandidateList;
-		}
-		logger.info("candidateList = {}", candidateList.size());
-
 				
 		// Calculate dividend of last year and this year
 		final int LAST_N_YEARS = 10;  // Y4 Y3 Y2 Y1 Y0

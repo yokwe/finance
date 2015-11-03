@@ -25,13 +25,9 @@ public class CheckPrice {
 	static final int YEAR_FIRST = 1975;
 	static final int YEAR_LAST  = LocalDate.now().getYear();
 	
-	static final String[] KNOWN_OLDTES_SYMBOLS = {"BA", "IBM", "NYT", "PG"};
-	
 	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {		
-		logger.info("dateSet {}  {}", dateFrom, dateTo);
-		
 		List<PriceTable> data = PriceTable.getAllByDateRange(connection, dateFrom, dateTo);
-		logger.info("data {}", data.size());
+		logger.info("data {}  {}  {}", dateFrom, dateTo, data.size());
 		wr.append(String.format("# data  %s  %s  %d\n", dateFrom, dateTo, data.size()));
 
 		List<String> dateList = data.stream().filter(o -> o.symbol.equals("IBM")).map(o -> o.date).collect(Collectors.toList());

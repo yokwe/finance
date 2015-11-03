@@ -84,8 +84,9 @@ public class CheckPrice {
 				String lastDate = null;
 				for(String date: dateList2) {
 					if (lastDate != null && date.equals(lastDate)) {
-						logger.error("duplicate dateList2 {}", date);
-						throw new SecuritiesException("duplicate date");
+						logger.info("dup      {}  {}", date, symbol);
+						wr.append(String.format("dup      %s  %s\n", date, symbol));
+//						throw new SecuritiesException("duplicate date");
 					}
 					lastDate = date;
 				}
@@ -98,7 +99,6 @@ public class CheckPrice {
 				if (dateList2.contains(date)) continue;
 				logger.info("missing  {} {}", date, symbol);
 				wr.append(String.format("missing  %s  %s\n", date, symbol));
-
 //				throw new SecurityException("dateSet");
 			}
 			for(String date: dateList2) {

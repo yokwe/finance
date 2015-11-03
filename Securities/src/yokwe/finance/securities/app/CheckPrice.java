@@ -1,8 +1,10 @@
 package yokwe.finance.securities.app;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -27,7 +29,11 @@ public class CheckPrice {
 	static final int YEAR_FIRST = 1975;
 	static final int YEAR_LAST  = LocalDate.now().getYear();
 	
-	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {		
+	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {
+		String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
+		File saveFile = new File(saveFilePath);
+		if (saveFile.isFile()) return;
+		
 		List<PriceTable> data = PriceTable.getAllByDateRange(connection, dateFrom, dateTo);
 		logger.info("data {}  {}  {}", dateFrom, dateTo, data.size());
 		wr.append(String.format("# data  %s  %s  %d\n", dateFrom, dateTo, data.size()));
@@ -80,6 +86,7 @@ public class CheckPrice {
 			}
 		}
 		
+		int errorCount = 0;
 		for(String symbol: nasdaqMap.keySet()) {
 			List<String> dateList2 = data.stream().filter(o -> o.symbol.equals(symbol)).map(o -> o.date).collect(Collectors.toList());
 			if (dateList2.size() == 0) continue;
@@ -92,6 +99,7 @@ public class CheckPrice {
 					if (lastDate != null && date.equals(lastDate)) {
 						logger.info("dup      {} {}", date, symbol);
 						wr.append(String.format("dup      %s  %s\n", date, symbol));
+						errorCount++;
 //						throw new SecuritiesException("duplicate date");
 					}
 					lastDate = date;
@@ -105,13 +113,25 @@ public class CheckPrice {
 				if (dateSet2.contains(date)) continue;
 				logger.info("missing  {} {}", date, symbol);
 				wr.append(String.format("missing  %s  %s\n", date, symbol));
+				errorCount++;
 //				throw new SecurityException("dateSet");
 			}
 			for(String date: dateList2) {
 				if (dateSet.contains(date)) continue;
 				logger.info("surplus  {} {}", date, symbol);
 				wr.append(String.format("surplus  %s  %s\n", date, symbol));
+				errorCount++;
 //				throw new SecurityException("dateSet");
+			}
+		}
+		
+		if (errorCount == 0) {
+			// Save content of data to saveFile
+			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
+				for(PriceTable table: data) {
+					// 1975-10-27,AA,36.25,276800
+					save.write(String.format("%s,%s,%.2f,%d\n", table.date, table.symbol, table.close, table.volume));
+				}
 			}
 		}
 	}

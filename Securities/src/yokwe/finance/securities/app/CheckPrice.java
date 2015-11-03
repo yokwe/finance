@@ -8,8 +8,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -32,6 +34,7 @@ public class CheckPrice {
 
 		List<String> dateList = data.stream().filter(o -> o.symbol.equals("IBM")).map(o -> o.date).collect(Collectors.toList());
 		Collections.sort(dateList);
+		Set<String> dateSet = new HashSet<>(dateList);
 		
 		// check duplicate
 		{
@@ -48,13 +51,14 @@ public class CheckPrice {
 		// check with NYT
 		{
 			List<String> dateList2 = data.stream().filter(o -> o.symbol.equals("NYT")).map(o -> o.date).collect(Collectors.toList());
+			Set<String> dateSet2 = new HashSet<>(dateList2);
 			for(String date: dateList) {
-				if (dateList2.contains(date)) continue;
+				if (dateSet2.contains(date)) continue;
 				logger.info("dateSet date is missing  date = {}", date);
 				throw new SecurityException("dateSet");
 			}
 			for(String date: dateList2) {
-				if (dateList.contains(date)) continue;
+				if (dateSet.contains(date)) continue;
 				logger.info("dateSet2 date is missing  date = {}", date);
 				throw new SecurityException("dateSet");
 			}
@@ -63,13 +67,14 @@ public class CheckPrice {
 		// check with PG
 		{
 			List<String> dateList2 = data.stream().filter(o -> o.symbol.equals("PG")).map(o -> o.date).collect(Collectors.toList());
+			Set<String> dateSet2 = new HashSet<>(dateList2);
 			for(String date: dateList) {
-				if (dateList2.contains(date)) continue;
+				if (dateSet2.contains(date)) continue;
 				logger.info("dateSet date is missing  date = {}", date);
 				throw new SecurityException("dateSet");
 			}
 			for(String date: dateList2) {
-				if (dateList.contains(date)) continue;
+				if (dateSet.contains(date)) continue;
 				logger.info("dateSet2 date is missing  date = {}", date);
 				throw new SecurityException("dateSet");
 			}
@@ -78,13 +83,14 @@ public class CheckPrice {
 		for(String symbol: nasdaqMap.keySet()) {
 			List<String> dateList2 = data.stream().filter(o -> o.symbol.equals(symbol)).map(o -> o.date).collect(Collectors.toList());
 			if (dateList2.size() == 0) continue;
+			Set<String> dateSet2 = new HashSet<>(dateList2);
 			
 			Collections.sort(dateList2);
 			{
 				String lastDate = null;
 				for(String date: dateList2) {
 					if (lastDate != null && date.equals(lastDate)) {
-						logger.info("dup      {}  {}", date, symbol);
+						logger.info("dup      {} {}", date, symbol);
 						wr.append(String.format("dup      %s  %s\n", date, symbol));
 //						throw new SecuritiesException("duplicate date");
 					}
@@ -96,13 +102,13 @@ public class CheckPrice {
 			
 			for(String date: dateList) {
 				if (date.compareTo(dateFirst) < 0) continue;
-				if (dateList2.contains(date)) continue;
+				if (dateSet2.contains(date)) continue;
 				logger.info("missing  {} {}", date, symbol);
 				wr.append(String.format("missing  %s  %s\n", date, symbol));
 //				throw new SecurityException("dateSet");
 			}
 			for(String date: dateList2) {
-				if (dateList.contains(date)) continue;
+				if (dateSet.contains(date)) continue;
 				logger.info("surplus  {} {}", date, symbol);
 				wr.append(String.format("surplus  %s  %s\n", date, symbol));
 //				throw new SecurityException("dateSet");

@@ -1,6 +1,8 @@
 package yokwe.finance.securities.database;
 
 import java.sql.Connection;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -16,6 +18,21 @@ public final class PriceTable {
 
 	public static List<PriceTable> getAll(Connection connection, String sql) {
 		return JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+	}
+	
+	public static PriceTable getBySymbolDate(Connection connection, String symbol, LocalDate date) {
+		String dateString = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		
+		String sql = String.format("select * from price where symbol = '%s' and date = '%s'", symbol, dateString);
+		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+		if (result.size() == 0) {
+			return null;
+		}
+		if (result.size() != 1) {
+			logger.error("result = {}", result);
+			throw new SecuritiesException("result");
+		}
+		return result.get(0);
 	}
 		
 	public static List<PriceTable>  getAllBySymbolDateLike(Connection connection, String symbol, String dateLikeString) {
@@ -88,5 +105,9 @@ public final class PriceTable {
 		this.symbol = "";
 		this.close  = 0;
 		this.volume = 0;
+	}
+	@Override
+	public String toString() {
+		return String.format("{%s  %s  %6.2f, %d}", date, symbol, close, volume);
 	}
 }

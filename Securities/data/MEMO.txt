@@ -177,3 +177,9 @@ yahoo-daily
 If we use yahoo-dividend, the data yahoo-daily should has correspondent stock data found in yahoo-dividend.
 The some data in google-getprices doesn't match with yahoo-dividend (AMT).
 So we should use yahoo-daily for price table.
+
+Price table has inconsistency.
+  Number of data of each month should be same for every symbol except month of inception date.
+    Delete file in tmp/fetch/yahoo-daily/* and get date from source.
+  Some date of some symbol contains more than one data.
+    Remove duplicate date and get data from source.

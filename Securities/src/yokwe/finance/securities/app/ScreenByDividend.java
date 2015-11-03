@@ -26,8 +26,8 @@ import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.util.DoubleStreamUtil.Stats;
 import yokwe.finance.securities.util.NasdaqUtil;
 
-public class ScreenSecurities {
-	private static final Logger logger = LoggerFactory.getLogger(ScreenSecurities.class);
+public class ScreenByDividend {
+	private static final Logger logger = LoggerFactory.getLogger(ScreenByDividend.class);
 	
 	// Remove out of bound value from values data
 	static double[] adjust(final double[] values) {
@@ -276,7 +276,7 @@ public class ScreenSecurities {
 		}
 	}
 	
-	private static final String OUTPUT_PATH = "tmp/screen.csv";
+	private static final String OUTPUT_PATH = "tmp/screenByDividend.csv";
 	public static void main(String[] args) {
 		logger.info("START");
 		try {

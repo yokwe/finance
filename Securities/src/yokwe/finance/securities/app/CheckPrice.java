@@ -31,7 +31,10 @@ public class CheckPrice {
 	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {
 		String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
 		File saveFile = new File(saveFilePath);
-		if (saveFile.isFile()) return;
+		if (saveFile.isFile()) {
+			logger.info("# skip {}", saveFilePath);
+			return;
+		}
 		
 		List<PriceTable> data = PriceTable.getAllByDateRange(connection, dateFrom, dateTo);
 		logger.info("data {}  {}  {}", dateFrom, dateTo, data.size());
@@ -126,6 +129,7 @@ public class CheckPrice {
 		
 		if (errorCount == 0) {
 			// Save content of data to saveFile
+			logger.info("# save {}", saveFilePath);
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
 				for(PriceTable table: data) {
 					// 1975-10-27,AA,36.25,276800

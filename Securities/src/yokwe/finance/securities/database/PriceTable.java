@@ -35,6 +35,15 @@ public final class PriceTable {
 		return result.get(0);
 	}
 		
+	public static List<PriceTable>  getAllByDateRange(Connection connection, LocalDate dateFrom, LocalDate dateTo) {
+		final String stringFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		final String stringTo   = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+		String sql = String.format("select * from price where '%s' <= date and date <= '%s'", stringFrom, stringTo);
+		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+		return result;
+	}
+	
 	public static List<PriceTable>  getAllBySymbolDateLike(Connection connection, String symbol, String dateLikeString) {
 		String sql = String.format("select * from price where symbol = '%s' and date like '%s'", symbol, dateLikeString);
 		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);

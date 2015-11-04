@@ -64,12 +64,12 @@ public class CheckPrice {
 	}
 	
 	static List<PriceTable> getFromGoogle(final String exch, final String symbol, final String googleSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
-		// http://www.google.com/finance/historical?q=NYSE:IBM&&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
+		// http://www.google.com/finance/historical?q=NYSE:IBM&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
 		final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 
 		final String startdate = dateFrom.format(dateFormatter).replace(" ", "%20");
 		final String enddate   = dateTo.format(dateFormatter).replace(" ", "%20");
-		final String url = String.format("http://www.google.com/finance/historical?q=%s:%s&&startdate=%s&enddate=%s&output=csv", exch, googleSymbol, startdate, enddate);
+		final String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, googleSymbol, startdate, enddate);
 		List<String> lines = HttpUtil.download(url);
 
 		final List<PriceTable> ret = new ArrayList<>();

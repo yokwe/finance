@@ -214,8 +214,6 @@ public class CheckPrice {
 				
 				List<PriceTable> googleData = getFromGoogle(exch, symbol, dateFrom, dateTo);
 				googleData.stream().forEach(o -> googleMap.put(o.date, o));
-				
-//				logger.info("badSymbols {}  yahoo {}  google {}", symbol, yahooData.size(), googleData.size());
 			}
 			
 			List<String> missingDate = new ArrayList<>();
@@ -253,7 +251,7 @@ public class CheckPrice {
 			final String badSaveFilePath = String.format("tmp/database/price-%d.BAD", dateFrom.getYear());
 			File badSaveFile = new File(badSaveFilePath);
 			if (!badSaveFile.exists()) badSaveFile.createNewFile();
-			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
+			try (BufferedWriter save = new BufferedWriter(new FileWriter(badSaveFile))) {
 				for(PriceTable table: goodData) {
 					save.write(table.toCSV());
 				}

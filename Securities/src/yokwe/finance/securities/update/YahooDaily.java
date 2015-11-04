@@ -11,6 +11,7 @@ import java.util.Arrays;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.PriceTable;
 
 public final class YahooDaily {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDaily.class);
@@ -27,7 +28,7 @@ public final class YahooDaily {
 				throw new SecuritiesException("header");
 			}
 		}
-		public static String toCSV(String symbol, String line) {
+		public static PriceTable toPriceTable(String symbol, String line) {
 			String[] fields = line.split(",");
 			if (fields.length != NUMBER_OF_FIELDS) {
 				logger.error("fields  {}  line = {}", symbol, line);
@@ -46,8 +47,10 @@ public final class YahooDaily {
 //				high = low = open = close;
 //			}
 
-//			return String.format("%s,%s,%.2f,%.2f,%.2f,%.2f,%d", date, symbol, open, high, low, close, volume);
-			return String.format("%s,%s,%.2f,%d", date, symbol, close, volume);
+			return new PriceTable(date, symbol, close, volume);
+		}
+		public static String toCSV(String symbol, String line) {
+			return toPriceTable(symbol, line).toCSV();
 		}
 	}
 	

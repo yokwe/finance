@@ -8,9 +8,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,12 +25,66 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
+import yokwe.finance.securities.update.GoogleHistorical;
+import yokwe.finance.securities.update.YahooDaily;
+import yokwe.finance.securities.util.HttpUtil;
 
 public class CheckPrice {
 	private static final Logger logger = LoggerFactory.getLogger(CheckPrice.class);
 	
 	static final int YEAR_FIRST = 1975;
 	static final int YEAR_LAST  = LocalDate.now().getYear();
+
+	// Use yahoo-table
+	static List<PriceTable> getFromYahoo(final String exch, final String symbol, final LocalDate dateFrom, final LocalDate dateTo) {
+		// http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
+		final String s = symbol;
+		final int a = dateFrom.getMonthValue() - 1;
+		final int b = dateFrom.getDayOfMonth();
+		final int c = dateFrom.getYear();
+		final int d = dateTo.getMonthValue() - 1;
+		final int e = dateTo.getDayOfMonth();
+		final int f = dateTo.getYear();
+		
+		final String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%d&d=%02d&e=%02d&f=%d&g=d&ignore=.csv", s, a, b, c, d, e, f);
+		final List<String> lines = HttpUtil.download(url);
+		
+		final List<PriceTable> ret = new ArrayList<>();
+		if (lines == null) return ret;
+		
+		int count = 0;
+		for(String line: lines) {
+			if (count++ == 0) {
+				YahooDaily.CSVRecord.checkHeader(line);
+			} else {
+				ret.add(YahooDaily.CSVRecord.toPriceTable(symbol, line));
+			}
+		}
+		return ret;
+	}
+	
+	static List<PriceTable> getFromGoogle(final String exch, final String symbol, final LocalDate dateFrom, final LocalDate dateTo) {
+		// http://www.google.com/finance/historical?q=NYSE:IBM&&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
+		final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
+
+		final String startdate = dateFrom.format(dateFormatter).replace(" ", "%20");
+		final String enddate   = dateTo.format(dateFormatter).replace(" ", "%20");
+		final String url = String.format("http://www.google.com/finance/historical?q=%s:%s&&startdate=%s&enddate=%s&output=csv", exch, symbol, startdate, enddate);
+		List<String> lines = HttpUtil.download(url);
+
+		final List<PriceTable> ret = new ArrayList<>();
+		if (lines == null) return ret;
+		
+		int count = 0;
+		for(String line: lines) {
+			if (count++ == 0) {
+				GoogleHistorical.CSVRecord.checkHeader(line);
+			} else {
+				ret.add(GoogleHistorical.CSVRecord.toPriceTable(symbol, line));
+			}
+		}
+		return ret;
+	}
 	
 	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {
 		String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
@@ -88,54 +146,112 @@ public class CheckPrice {
 			}
 		}
 		
-		int errorCount = 0;
+		List<PriceTable> goodData   = new ArrayList<>();
+		List<String>     badSymbols = new ArrayList<>();
 		for(String symbol: nasdaqMap.keySet()) {
-			List<String> dateList2 = data.stream().filter(o -> o.symbol.equals(symbol)).map(o -> o.date).collect(Collectors.toList());
-			if (dateList2.size() == 0) continue;
-			Set<String> dateSet2 = new HashSet<>(dateList2);
+			final List<PriceTable> data2 = data.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
 			
-			Collections.sort(dateList2);
+			// Skip symbol that has no data
+			if (data2.size() == 0) continue;
+			
+			// create map
+			Map<String, PriceTable> map = new HashMap<>();
 			{
-				String lastDate = null;
-				for(String date: dateList2) {
-					if (lastDate != null && date.equals(lastDate)) {
-						logger.info("dup      {} {}", date, symbol);
-						wr.append(String.format("dup      %s  %s\n", date, symbol));
-						errorCount++;
-//						throw new SecuritiesException("duplicate date");
+				boolean foundError = false;
+				for(PriceTable table: data2) {
+					if (map.containsKey(table.date)) {
+						// duplicate date
+						logger.info("dup      {} {}", table.date, symbol);
+						badSymbols.add(symbol);
+						foundError = true;
+						break;
 					}
-					lastDate = date;
+					map.put(table.date, table);
 				}
+				// skip to next symbol if found error
+				if (foundError) continue;
+			}
+			
+			final List<String> dateList2 = data2.stream().map(o -> o.date).collect(Collectors.toList());
+			final String dateFirst2 = dateList2.get(0);
+			
+			{
+				boolean foundError = false;
+				for(String date: dateList) {
+					// Skip data before dateFirst2 -- before inception date
+					if (date.compareTo(dateFirst2) < 0) continue;
+					if (!map.containsKey(date)) {
+						// missing date
+						logger.info("missing  {} {}", date, symbol);
+						badSymbols.add(symbol);
+						foundError = true;
+						break;
+					}
+				}
+				// skip to next symbol if found error
+				if (foundError) continue;
 			}
 
-			String dateFirst = dateList2.get(0);
-			
+			// build goodData to remove surplus date
 			for(String date: dateList) {
-				if (date.compareTo(dateFirst) < 0) continue;
-				if (dateSet2.contains(date)) continue;
-				logger.info("missing  {} {}", date, symbol);
-				wr.append(String.format("missing  %s  %s\n", date, symbol));
-				errorCount++;
-//				throw new SecurityException("dateSet");
+				// Skip data before dateFirst2 -- before inception date
+				if (date.compareTo(dateFirst2) < 0) continue;
+				goodData.add(map.get(date));
 			}
-			for(String date: dateList2) {
-				if (dateSet.contains(date)) continue;
-				logger.info("surplus  {} {}", date, symbol);
-				wr.append(String.format("surplus  %s  %s\n", date, symbol));
-				errorCount++;
-//				throw new SecurityException("dateSet");
+		}
+		if (0 < badSymbols.size()) logger.info("badSymbols     {}", badSymbols);
+
+		List<String> stillBadSymbols = new ArrayList<>();
+		for(String symbol: badSymbols) {
+			final Map<String, PriceTable> yahooMap = new HashMap<>();
+			final Map<String, PriceTable> googleMap = new HashMap<>();
+
+			{
+				String exch = nasdaqMap.get(symbol).exchange;
+				
+				List<PriceTable> yahooData = getFromYahoo(exch, symbol, dateFrom, dateTo);
+				yahooData.stream().forEach(o -> yahooMap.put(o.date, o));
+				
+				List<PriceTable> googleData = getFromGoogle(exch, symbol, dateFrom, dateTo);
+				googleData.stream().forEach(o -> googleMap.put(o.date, o));
+				
+//				logger.info("badSymbols {}  yahoo {}  google {}", symbol, yahooData.size(), googleData.size());
+			}
+			
+			List<String> missingDate = new ArrayList<>();
+			List<PriceTable> myGoodData = new ArrayList<>();
+			for(String date: dateList) {
+				if (yahooMap.containsKey(date)) {
+					myGoodData.add(yahooMap.get(date));
+				} else {
+					if (googleMap.containsKey(date)) {
+						myGoodData.add(googleMap.get(date));
+					} else {
+						missingDate.add(date);
+					}
+				}
+			}
+			if (missingDate.size() == 0) {
+				// repaired from yahoo and google
+				goodData.addAll(myGoodData);
+			} else {
+//				logger.info("MISSING  {} {} {}", symbol, missingDate.size(), missingDate);
+				stillBadSymbols.add(symbol);
 			}
 		}
 		
-		if (errorCount == 0) {
+		if (stillBadSymbols.size() == 0) {
 			// Save content of data to saveFile
 			logger.info("# save {}", saveFilePath);
+			saveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
-				for(PriceTable table: data) {
+				for(PriceTable table: goodData) {
 					// 1975-10-27,AA,36.25,276800
 					save.write(String.format("%s,%s,%.2f,%d\n", table.date, table.symbol, table.close, table.volume));
 				}
 			}
+		} else {
+			logger.info("# missing data {}", stillBadSymbols);
 		}
 	}
 
@@ -153,6 +269,7 @@ public class CheckPrice {
 				for(int year = YEAR_FIRST; year <= YEAR_LAST; year++) {
 					LocalDate dateFrom = LocalDate.of(year, 1, 1);
 					LocalDate dateTo = dateFrom.plusYears(1).minusDays(1);
+
 					check(connection, bw, nasdaqMap, dateFrom, dateTo);
 				}
 			}

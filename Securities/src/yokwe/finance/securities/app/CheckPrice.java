@@ -87,8 +87,8 @@ public class CheckPrice {
 	}
 	
 	static void check(Connection connection, final BufferedWriter wr, final Map<String, NasdaqTable>  nasdaqMap, final LocalDate dateFrom, final LocalDate dateTo) throws IOException {
-		String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
-		File saveFile = new File(saveFilePath);
+		final String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
+		final File saveFile = new File(saveFilePath);
 		if (saveFile.isFile()) {
 			logger.info("# skip {}", saveFilePath);
 			return;
@@ -231,27 +231,33 @@ public class CheckPrice {
 					}
 				}
 			}
-			if (missingDate.size() == 0) {
-				// repaired from yahoo and google
-				goodData.addAll(myGoodData);
-			} else {
-//				logger.info("MISSING  {} {} {}", symbol, missingDate.size(), missingDate);
+			goodData.addAll(myGoodData);
+			if (0 < missingDate.size()) {
+				// repair failed with yahoo and google (some data is still missing)
 				stillBadSymbols.add(symbol);
 			}
 		}
 		
 		if (stillBadSymbols.size() == 0) {
-			// Save content of data to saveFile
+			// Save content of goodData as saveFile
 			logger.info("# save {}", saveFilePath);
 			saveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
 				for(PriceTable table: goodData) {
-					// 1975-10-27,AA,36.25,276800
-					save.write(String.format("%s,%s,%.2f,%d\n", table.date, table.symbol, table.close, table.volume));
+					save.write(table.toCSV());
 				}
 			}
 		} else {
 			logger.info("# missing data {}", stillBadSymbols);
+			// Save content of goodData as bad saveFile
+			final String badSaveFilePath = String.format("tmp/database/price-%d.BAD", dateFrom.getYear());
+			File badSaveFile = new File(badSaveFilePath);
+			if (!badSaveFile.exists()) badSaveFile.createNewFile();
+			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
+				for(PriceTable table: goodData) {
+					save.write(table.toCSV());
+				}
+			}
 		}
 	}
 

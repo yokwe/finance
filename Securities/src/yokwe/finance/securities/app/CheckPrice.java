@@ -175,7 +175,7 @@ public class CheckPrice {
 					if (date.compareTo(dateFirst2) < 0) continue;
 					if (!map.containsKey(date)) {
 						// missing date
-						logger.info("missing  {} {}", date, symbol);
+//						logger.info("missing  {} {}", date, symbol);
 						badSymbols.add(symbol);
 						foundError = true;
 						break;
@@ -236,7 +236,7 @@ public class CheckPrice {
 			saveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
 				for(PriceTable table: goodData) {
-					save.write(table.toCSV());
+					save.append(table.toCSV()).append("\n");
 				}
 			}
 		} else {
@@ -247,7 +247,7 @@ public class CheckPrice {
 			if (!badSaveFile.exists()) badSaveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(badSaveFile))) {
 				for(PriceTable table: goodData) {
-					save.write(table.toCSV());
+					save.append(table.toCSV()).append("\n");
 				}
 			}
 		}

@@ -183,3 +183,48 @@ Price table has inconsistency.
     Delete file in tmp/fetch/yahoo-daily/* and get date from source.
   Some date of some symbol contains more than one data.
     Remove duplicate date and get data from source.
+
+----
+hasegawa@ubuntu:~/git/finance/Securities/tmp/database$ ls -l price-*
+-rw-rw-r-- 1 hasegawa hasegawa   111706 Nov  4 20:08 price-1975.csv
+-rw-rw-r-- 1 hasegawa hasegawa   620887 Nov  4 20:08 price-1976.csv
+-rw-rw-r-- 1 hasegawa hasegawa   692514 Nov  4 20:08 price-1977.csv
+-rw-rw-r-- 1 hasegawa hasegawa   712109 Nov  4 20:08 price-1978.csv
+-rw-rw-r-- 1 hasegawa hasegawa   722054 Nov  4 20:08 price-1979.csv
+-rw-rw-r-- 1 hasegawa hasegawa   863588 Nov  4 20:09 price-1980.csv
+-rw-rw-r-- 1 hasegawa hasegawa   963155 Nov  4 20:09 price-1981.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  1184998 Nov  4 20:09 price-1982.csv
+-rw-rw-r-- 1 hasegawa hasegawa  1384382 Nov  4 20:09 price-1983.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  1732765 Nov  4 20:10 price-1984.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  2376330 Nov  4 20:10 price-1985.csv
+-rw-rw-r-- 1 hasegawa hasegawa  2714179 Nov  4 20:11 price-1986.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  3148721 Nov  4 20:11 price-1987.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  4287150 Nov  4 20:12 price-1988.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  4600984 Nov  4 20:13 price-1989.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  6266901 Nov  4 20:14 price-1990.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  7006804 Nov  4 20:15 price-1991.BAD
+-rw-rw-r-- 1 hasegawa hasegawa  8503095 Nov  4 20:17 price-1992.csv
+-rw-rw-r-- 1 hasegawa hasegawa  9668480 Nov  4 20:18 price-1993.csv
+-rw-rw-r-- 1 hasegawa hasegawa 10763327 Nov  4 20:20 price-1994.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 11995501 Nov  4 20:23 price-1995.csv
+-rw-rw-r-- 1 hasegawa hasegawa 13621277 Nov  4 20:25 price-1996.csv
+-rw-rw-r-- 1 hasegawa hasegawa 14852416 Nov  4 20:28 price-1997.csv
+-rw-rw-r-- 1 hasegawa hasegawa 15895997 Nov  4 20:31 price-1998.csv
+-rw-rw-r-- 1 hasegawa hasegawa 17183666 Nov  4 20:34 price-1999.csv
+-rw-rw-r-- 1 hasegawa hasegawa 18599723 Nov  4 20:37 price-2000.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 19234281 Nov  4 20:41 price-2001.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 20414876 Nov  4 20:45 price-2002.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 21521598 Nov  4 20:49 price-2003.csv
+-rw-rw-r-- 1 hasegawa hasegawa 23176874 Nov  4 20:54 price-2004.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 24786667 Nov  4 20:58 price-2005.csv
+-rw-rw-r-- 1 hasegawa hasegawa 26703860 Nov  4 21:03 price-2006.csv
+-rw-rw-r-- 1 hasegawa hasegawa 29690984 Nov  4 21:09 price-2007.csv
+-rw-rw-r-- 1 hasegawa hasegawa 32272610 Nov  4 21:15 price-2008.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 33322257 Nov  4 21:22 price-2009.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 35409856 Nov  4 21:33 price-2010.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 38117835 Nov  4 21:44 price-2011.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 40224381 Nov  4 21:54 price-2012.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 43647390 Nov  4 22:05 price-2013.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 47805973 Nov  4 22:17 price-2014.BAD
+-rw-rw-r-- 1 hasegawa hasegawa 43616378 Nov  5 06:07 price-2015.BAD
+----

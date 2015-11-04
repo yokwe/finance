@@ -101,9 +101,9 @@ public final class PriceTable {
 	public String date;
 	public String symbol;
 	public double close;
-	public int    volume;
+	public long   volume;
 	
-	public PriceTable(String date, String symbol, double close, int volume) {
+	public PriceTable(String date, String symbol, double close, long volume) {
 		this.date   = date;
 		this.symbol = symbol;
 		this.close  = close;
@@ -117,6 +117,10 @@ public final class PriceTable {
 	}
 	@Override
 	public String toString() {
-		return String.format("{%s  %s  %6.2f, %d}", date, symbol, close, volume);
+		return String.format("{%s %s %6.2f, %d}", date, symbol, close, volume);
+	}
+	
+	public String toCSV() {
+		return String.format("%s,%s,%.2f,%d", date, symbol, close, volume);
 	}
 }

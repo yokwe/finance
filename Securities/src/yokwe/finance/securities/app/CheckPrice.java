@@ -32,9 +32,6 @@ import yokwe.finance.securities.util.HttpUtil;
 public class CheckPrice {
 	private static final Logger logger = LoggerFactory.getLogger(CheckPrice.class);
 	
-	static final int YEAR_FIRST = 1975;
-	static final int YEAR_LAST  = LocalDate.now().getYear();
-
 	// Use yahoo-table
 	static List<PriceTable> getFromYahoo(final String exch, final String symbol, final String yahooSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
 		// http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
@@ -257,16 +254,21 @@ public class CheckPrice {
 	
 	public static void main(String[] args) {
 		logger.info("START");
+		final int years     = Integer.valueOf(args[0]);
+		final int lastYear  = LocalDate.now().getYear();
+		final int firstYear = lastYear - years + 1;
+		logger.info("year {} - {}", firstYear, lastYear);
+		
 		try {
 			Class.forName("org.sqlite.JDBC");
 			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/securities.sqlite3");
 				BufferedWriter bw = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
-				Map<String, NasdaqTable>  nasdaqMap  = NasdaqTable.getMap(connection);
+				Map<String, NasdaqTable> nasdaqMap = NasdaqTable.getMap(connection);
 				logger.info("nasdaqMap     = {}", nasdaqMap.size());
-
-				for(int year = YEAR_FIRST; year <= YEAR_LAST; year++) {
+				
+				for(int year = firstYear; year <= lastYear; year++) {
 					LocalDate dateFrom = LocalDate.of(year, 1, 1);
-					LocalDate dateTo = dateFrom.plusYears(1).minusDays(1);
+					LocalDate dateTo   = dateFrom.plusYears(1).minusDays(1);
 
 					check(connection, bw, nasdaqMap, dateFrom, dateTo);
 				}

@@ -153,6 +153,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		ret = ret.replace("&gt;",    ">");
 		ret = ret.replace("&rsquo;", "'");
 		ret = ret.replace("&nbsp;",  " ");
+		ret = ret.replace("&#39;",   "'");
 		
 		ret = ret.replaceAll("<[^>]+>", " ");
 		ret = ret.replaceAll("\\p{javaWhitespace}+", " ");

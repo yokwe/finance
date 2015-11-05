@@ -22,86 +22,118 @@ import yokwe.finance.securities.database.PriceTable;
 
 public class ScreenByPrice {
 	private static final Logger logger = LoggerFactory.getLogger(ScreenByPrice.class);
-	
-	private static class DateRange {
-		public static LocalDate getTradingDate(Connection connection, final LocalDate date) {
-			LocalDate tradingDate = date.minusDays(0);
-			if (isTradingDay(connection, tradingDate)) return tradingDate;
-			tradingDate = tradingDate.minusDays(1);
-			if (isTradingDay(connection, tradingDate)) return tradingDate;
-			tradingDate = tradingDate.minusDays(1);
-			if (isTradingDay(connection, tradingDate)) return tradingDate;
-			
-			logger.error("date = {}  tradingDate = {}", date, tradingDate);
-			throw new SecuritiesException("tradingDate");
-		}
-
-		public final int       days;
-		public final LocalDate fromDate;
-		public final LocalDate toDate;
-		public DateRange(Connection connection, LocalDate date, int daysToSubtract) {
-			days     = daysToSubtract;
-			toDate   = getTradingDate(connection, date);
-			fromDate = getTradingDate(connection, toDate.minusDays(daysToSubtract));
-		}
-		@Override
-		public String toString() {
-			return String.format("{%d  %s  %s}", days, fromDate, toDate);
-		}
+		
+	public static LocalDate getTradingDate(Connection connection, final LocalDate date) {
+		LocalDate tradingDate = date.minusDays(0);
+		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		tradingDate = tradingDate.minusDays(1);
+		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		tradingDate = tradingDate.minusDays(1);
+		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		
+		logger.error("date = {}  tradingDate = {}", date, tradingDate);
+		throw new SecuritiesException("tradingDate");
 	}
-	
+
 	static boolean isTradingDay(Connection connection, LocalDate date) {
 		PriceTable priceTable = PriceTable.getBySymbolDate(connection, "NYT", date);
 		return priceTable != null;
 	}
+	
+	static Map<String, PriceTable> getPriceMap(Connection connection, LocalDate date) {
+		Map<String, PriceTable> ret = new TreeMap<>();
+		PriceTable.getAllByDate(connection, date).stream().forEach(o -> ret.put(o.symbol, o));
+		return ret;
+	}
+	
+	static class PriceMap {
+		final String                  name;
+		final LocalDate               date;
+		final Map<String, PriceTable> map;
+		PriceMap(Connection connection, String name, LocalDate date) {
+			this.name = name;
+			this.date = getTradingDate(connection, date);
+			this.map  = new TreeMap<>();
+			List<PriceTable> result = PriceTable.getAllByDate(connection, this.date);
+			if (result == null) {
+				logger.error("no data  {}", this.date);
+				throw new SecuritiesException("no data");
+			} else {
+				result.stream().forEach(o -> map.put(o.symbol, o));
+			}
+		}
+	}
 	// Remove out of bound value from values data
 	static void calculate(Connection connection, Writer w) throws IOException {
-		String lastTradedDate = PriceTable.getLastTradeDate(connection);
-		
-		Map<String, DateRange> dateMap = new TreeMap<>();
-		{
-			// Sometime yahoo daily data is not complete for last day. So use previous date of last traded day
-			LocalDate origin = LocalDate.parse(lastTradedDate).minusDays(1);
-			dateMap.put("10", new DateRange(connection, origin, 10));
-			dateMap.put("20", new DateRange(connection, origin, 20));
-			dateMap.put("30", new DateRange(connection, origin, 30));
-			dateMap.put("90", new DateRange(connection, origin, 90));
-		}
-		
-		logger.info("dateMap = {}", dateMap);
-		
-		Map<String, NasdaqTable>  nasdaqMap  = NasdaqTable.getMap(connection);
-		
+		Map<String, NasdaqTable> nasdaqMap = NasdaqTable.getMap(connection);
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());
-		
-		// candidateList has all symbols
-		List<String> candidateList = nasdaqMap.keySet().stream().collect(Collectors.toList());
+
+		// symbolList has all symbols
+		List<String> symbolList = nasdaqMap.keySet().stream().collect(Collectors.toList());
+		logger.info("symbolList    = {}", symbolList.size());
+
+		LocalDate origin = LocalDate.parse(PriceTable.getLastTradeDate(connection));
+		logger.info("origin        = {}", origin);
+
+		PriceMap originMap = new PriceMap(connection, "origin", origin);
+		logger.info("originMap     = {}", originMap.map.size());
+
+		Map<String, PriceMap> priceMapMap = new TreeMap<>();
+		priceMapMap.put("A 365", new PriceMap(connection, "A 365", origin.minusDays(365)));
+		priceMapMap.put("B  90", new PriceMap(connection, "B  90", origin.minusDays(90)));
+		priceMapMap.put("C  30", new PriceMap(connection, "C  30", origin.minusDays(30)));
+		priceMapMap.put("D  10", new PriceMap(connection, "D  10", origin.minusDays(10)));
 		
 		// Calculate price change of each period
-		Map<String, Map<String, Double>> priceMap = new TreeMap<>();
-		for(String symbol: candidateList) {
-			Map<String, Double> map = new TreeMap<>();
-			for(String key: dateMap.keySet()) {
-				PriceTable fromTable = PriceTable.getBySymbolDate(connection, symbol, dateMap.get(key).fromDate);
-				PriceTable toTable   = PriceTable.getBySymbolDate(connection, symbol, dateMap.get(key).toDate);
-				
-				if (symbol.equals("YYY")) {
-					logger.info("{}  {}  {}  {}", symbol, key, fromTable, toTable);
+		//  symbol      name    ratio to origin
+		Map<String, Map<String, String>> ratioMap = new TreeMap<>();
+		for(PriceMap targetMap: priceMapMap.values()) {
+			final String name = targetMap.name;
+			for(String symbol: originMap.map.keySet()) {
+				final String ratio;
+				if (targetMap.map.containsKey(symbol)) {
+					final double originClose = originMap.map.get(symbol).close;
+					final double targetClose = targetMap.map.get(symbol).close;
+					ratio = String.format("%.2f", (originClose - targetClose) / originClose);
+				} else {
+					ratio = "";
 				}
-				if (toTable == null)   continue;
-				if (fromTable == null) continue;
 				
-				map.put(key, fromTable.close - toTable.close);
-			}
-			if (0 < map.size()) {
-				priceMap.put(symbol, map);
-			} else {
-//				logger.info("no price  {}", symbol);
+				if (!ratioMap.containsKey(symbol)) ratioMap.put(symbol, new TreeMap<>());
+				Map<String, String> map = ratioMap.get(symbol);
+				map.put(name, ratio);
 			}
 		}
-		logger.info("priceMap = {}", priceMap.size());
+				
+		// Output header
+		w.append("symbol");
+		w.append(",price");
+		for(String name: priceMapMap.keySet()) {
+			w.append(",").append(name);
+		}
+		w.append(",name\n");
 		
-		logger.info("candidateList = {}", candidateList.size());
+		// Output data of each symbol
+		for(String symbol: ratioMap.keySet()) {
+			w.append(symbol);
+			w.append(",").append(String.format("%.2f", originMap.map.get(symbol).close));
+			for(String name: priceMapMap.keySet()) {
+				Map<String, String> map = ratioMap.get(name);
+				if (map == null) {
+					logger.error("null  {}  {}", symbol, name);
+					throw new SecuritiesException("null");
+				}
+				for(String ratio: map.values()) {
+					w.append(",").append(ratio);
+				}
+			}
+			
+			String name = nasdaqMap.get(symbol).name;
+			if (name.contains("\"")) name = name.replace("\"", "\"\"");
+			if (name.contains(","))  name = "\"" + name + "\"";
+			
+			w.append(",").append(name).append("\n");
+		}
 	}
 	
 	private static final String OUTPUT_PATH = "tmp/screenByPrice.csv";

@@ -20,6 +20,17 @@ public final class PriceTable {
 		return JDBCUtil.getResultAll(connection, sql, PriceTable.class);
 	}
 	
+	public static List<PriceTable> getAllByDate(Connection connection, LocalDate date) {
+		String dateString = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		
+		String sql = String.format("select * from price where date = '%s'", dateString);
+		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
+		if (result.size() == 0) {
+			return null;
+		}
+		return result;
+	}
+
 	public static PriceTable getBySymbolDate(Connection connection, String symbol, LocalDate date) {
 		String dateString = date.format(DateTimeFormatter.ISO_LOCAL_DATE);
 		

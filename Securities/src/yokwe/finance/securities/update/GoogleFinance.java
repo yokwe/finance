@@ -17,16 +17,23 @@ public class GoogleFinance {
 	private static final String NEWLINE = "\n";
 
 	public enum Field {
-		SYMBOL, SECTOR, INDUSTRY,
+		SYMBOL, EXCHANGE, SECTOR, INDUSTRY,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
 		public void init() {
 //			<meta itemprop="tickerSymbol"
-//			        content="A" />
+//	        content="A" />
 			add(Field.SYMBOL,
 					"<meta itemprop=\"tickerSymbol\"\\p{javaWhitespace}+content=\"(.+?)\" />",
 					"<meta itemprop=\"tickerSymbol\"",
+					Pattern.DOTALL);
+
+//          <meta itemprop="exchange"
+//	                content="NYSEARCA" />
+			add(Field.EXCHANGE,
+					"<meta itemprop=\"exchange\"\\p{javaWhitespace}+content=\"(.+?)\" />",
+					"<meta itemprop=\"exchange\"",
 					Pattern.DOTALL);
 
 // <a id=sector href="?catid=us-TRBC:52&amp;ei=Bwc7VsnQB6jBigLn55mYBg">Industrials</a>

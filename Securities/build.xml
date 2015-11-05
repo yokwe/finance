@@ -79,7 +79,7 @@
 		<java classname="yokwe.finance.securities.app.Fetch" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-                        <sysproperty key="waitPeriod" value="500"/>
+                        <sysproperty key="waitPeriod" value="1000"/>
 			<arg value="tmp/fetch.list"/>
 		</java>
 	</target>

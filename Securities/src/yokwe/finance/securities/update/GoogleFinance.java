@@ -17,7 +17,7 @@ public class GoogleFinance {
 	private static final String NEWLINE = "\n";
 
 	public enum Field {
-		SYMBOL, PRICE, VOL, AVG_VOL, MKT_CAP,
+		SYMBOL, SECTOR, INDUSTRY,
 	}
 	
 	public static class ScrapeGoogleFinance extends Scrape<Field> {
@@ -29,40 +29,17 @@ public class GoogleFinance {
 					"<meta itemprop=\"tickerSymbol\"",
 					Pattern.DOTALL);
 
-//			<td class="key"
-//	          data-snapfield="market_cap">Mkt cap
-//	</td>
-//	<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
-			add(Field.PRICE,
-					"<div id=price-panel .+?<span id=\".+?\">(.+?)</span>",
-					"<div id=price-panel" ,
-					Pattern.DOTALL, Scrape.Type.INTEGER);
+// <a id=sector href="?catid=us-TRBC:52&amp;ei=Bwc7VsnQB6jBigLn55mYBg">Industrials</a>
+// <a id=sector href="?catid=us-TRBC:55&amp;ei=4Ac7VqqiDJC0iALJ86TwCg">Financials</a>
+			add(Field.SECTOR,
+					"<a id=sector href=\"\\?catid=us-TRBC.+?>(.+?)</a>",
+					"<a id=sector href=\"?catid=us-TRBC");
 
-
-//			<td class="key"
-//			          data-snapfield="vol_and_avg">Vol / Avg.
-//			</td>
-//			<td class="val">1.75M/2.25M
-//          or
-//			<td class="val">0.00
-			// 1.75M  762,118.00 0.00 
-			add(Field.VOL,
-					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">([0-9,KMB\\.]+)",
-					"data-snapfield=\"vol_and_avg\">" ,
-					Pattern.DOTALL, Scrape.Type.INTEGER);
-			add(Field.AVG_VOL,
-					"data-snapfield=\"vol_and_avg\">.+?<td class=\"val\">.*?/([0-9,KMB\\.]+)\\p{javaWhitespace}",
-					"data-snapfield=\"vol_and_avg\">Vol / Avg",
-					Pattern.DOTALL, Scrape.Type.INTEGER);
-
-//			<td class="key"
-//			          data-snapfield="market_cap">Mkt cap
-//			</td>
-//			<td class="val">&nbsp;&nbsp;&nbsp;&nbsp;-
-			add(Field.MKT_CAP,
-					"data-snapfield=\"market_cap\">.+?<td class=\"val\">(.+?)\\p{javaWhitespace}",
-					"data-snapfield=\"market_cap\">Mkt cap" ,
-					Pattern.DOTALL, Scrape.Type.INTEGER);
+// <a href="?catid=us-TRBC:5210202014&amp;ei=Bwc7VsnQB6jBigLn55mYBg">Locomotive Engines &amp; Rolling Stock</a>
+// <a href="?catid=us-TRBC:5550104010&amp;ei=4Ac7VqqiDJC0iALJ86TwCg">Exchange Traded Funds - NEC</a>
+			add(Field.INDUSTRY,
+					"<a href=\"\\?catid=us-TRBC.+?>(.+?)</a>",
+					"<a href=\"?catid=us-TRBC");
 		}
 	}
 	

@@ -62,6 +62,10 @@ public class ScreenByPrice {
 				result.stream().forEach(o -> map.put(o.symbol, o));
 			}
 		}
+		@Override
+		public String toString() {
+			return String.format("{%s %s %s}", name, date, map);
+		}
 	}
 	// Remove out of bound value from values data
 	static void calculate(Connection connection, Writer w) throws IOException {
@@ -79,10 +83,12 @@ public class ScreenByPrice {
 		logger.info("originMap     = {}", originMap.map.size());
 
 		Map<String, PriceMap> priceMapMap = new TreeMap<>();
-		priceMapMap.put("A 365", new PriceMap(connection, "A 365", origin.minusDays(365)));
-		priceMapMap.put("B  90", new PriceMap(connection, "B  90", origin.minusDays(90)));
-		priceMapMap.put("C  30", new PriceMap(connection, "C  30", origin.minusDays(30)));
-		priceMapMap.put("D  10", new PriceMap(connection, "D  10", origin.minusDays(10)));
+		priceMapMap.put("A 180", new PriceMap(connection, "A 180", origin.minusDays(180)));
+		priceMapMap.put("B 150", new PriceMap(connection, "B 150", origin.minusDays(150)));
+		priceMapMap.put("C 120", new PriceMap(connection, "C 120", origin.minusDays(120)));
+		priceMapMap.put("D  90", new PriceMap(connection, "D  90", origin.minusDays(90)));
+		priceMapMap.put("E  60", new PriceMap(connection, "E  60", origin.minusDays(60)));
+		priceMapMap.put("F  30", new PriceMap(connection, "F  30", origin.minusDays(30)));
 		
 		// Calculate price change of each period
 		//  symbol      name    ratio to origin
@@ -94,7 +100,8 @@ public class ScreenByPrice {
 				if (targetMap.map.containsKey(symbol)) {
 					final double originClose = originMap.map.get(symbol).close;
 					final double targetClose = targetMap.map.get(symbol).close;
-					ratio = String.format("%.2f", (originClose - targetClose) / originClose);
+					ratio = String.format("%.2f", (originClose / targetClose) * 100.0);
+//					ratio = String.format("%.2f", (originClose - targetClose) / targetClose);
 				} else {
 					ratio = "";
 				}
@@ -104,9 +111,12 @@ public class ScreenByPrice {
 				map.put(name, ratio);
 			}
 		}
-				
+		
 		// Output header
 		w.append("symbol");
+		for(String name: priceMapMap.keySet()) {
+			w.append(",").append(name);
+		}
 		w.append(",price");
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
@@ -116,16 +126,23 @@ public class ScreenByPrice {
 		// Output data of each symbol
 		for(String symbol: ratioMap.keySet()) {
 			w.append(symbol);
-			w.append(",").append(String.format("%.2f", originMap.map.get(symbol).close));
+			Map<String, String> map = ratioMap.get(symbol);
+			if (map == null) {
+				logger.error("null  {}  {}", symbol, map);
+				throw new SecuritiesException("null");
+			}
+
 			for(String name: priceMapMap.keySet()) {
-				Map<String, String> map = ratioMap.get(name);
-				if (map == null) {
-					logger.error("null  {}  {}", symbol, name);
-					throw new SecuritiesException("null");
-				}
-				for(String ratio: map.values()) {
-					w.append(",").append(ratio);
-				}
+				final PriceMap priceMap = priceMapMap.get(name);
+				final PriceTable priceTable = priceMap.map.get(symbol);
+				final String value = (priceTable != null) ? String.format("%.2f", priceTable.close) : "";
+				w.append(",").append(value);
+			}
+			
+			w.append(",").append(String.format("%.2f", originMap.map.get(symbol).close));
+
+			for(String name: priceMapMap.keySet()) {
+				w.append(",").append(map.get(name));
 			}
 			
 			String name = nasdaqMap.get(symbol).name;

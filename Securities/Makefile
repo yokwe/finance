@@ -43,6 +43,10 @@ load-data:
 	rm -f tmp/sqlite/securities.sqlite3
 	sqlite3 < data/sqlite/table-create.sql
 
+download-price:
+	touch tmp/download-price.log
+	ant run-download-price
+	cat ${DIR_DATABASE}/price-????.??? >${DIR_DATABASE}/price-all.csv
 
 #
 # nasdaq

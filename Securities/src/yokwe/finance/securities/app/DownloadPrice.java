@@ -29,8 +29,8 @@ import yokwe.finance.securities.update.GoogleHistorical;
 import yokwe.finance.securities.update.YahooDaily;
 import yokwe.finance.securities.util.HttpUtil;
 
-public class CheckPrice {
-	private static final Logger logger = LoggerFactory.getLogger(CheckPrice.class);
+public class DownloadPrice {
+	private static final Logger logger = LoggerFactory.getLogger(DownloadPrice.class);
 	
 	// Use yahoo-table
 	static List<PriceTable> getFromYahoo(final String exch, final String symbol, final String yahooSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
@@ -189,9 +189,9 @@ public class CheckPrice {
 				goodData.add(map.get(date));
 			}
 		}
-		if (0 < badSymbols.size()) logger.info("badSymbols     {}", badSymbols);
+		if (0 < badSymbols.size()) logger.info("badSymbols     {} {}", badSymbols.size(), badSymbols);
 
-		List<String> stillBadSymbols = new ArrayList<>();
+		List<String> missingSymbols = new ArrayList<>();
 		for(String symbol: badSymbols) {
 			final Map<String, PriceTable> yahooMap = new HashMap<>();
 			final Map<String, PriceTable> googleMap = new HashMap<>();
@@ -223,11 +223,11 @@ public class CheckPrice {
 			goodData.addAll(myGoodData);
 			if (0 < missingDate.size()) {
 				// repair failed with yahoo and google (some data is still missing)
-				stillBadSymbols.add(symbol);
+				missingSymbols.add(symbol);
 			}
 		}
 		
-		if (stillBadSymbols.size() == 0) {
+		if (missingSymbols.size() == 0) {
 			// Save content of goodData as saveFile
 			logger.info("# save {}", saveFilePath);
 			saveFile.createNewFile();
@@ -237,7 +237,7 @@ public class CheckPrice {
 				}
 			}
 		} else {
-			logger.info("# missing data {}", stillBadSymbols);
+			logger.info("# missing data {} {}", missingSymbols.size(), missingSymbols);
 			// Save content of goodData as bad saveFile
 			final String badSaveFilePath = String.format("tmp/database/price-%d.BAD", dateFrom.getYear());
 			File badSaveFile = new File(badSaveFilePath);
@@ -250,7 +250,7 @@ public class CheckPrice {
 		}
 	}
 
-	private static final String OUTPUT_PATH = "tmp/checkPrice.log";
+	private static final String OUTPUT_PATH = "tmp/downloadPrice.log";
 	
 	public static void main(String[] args) {
 		logger.info("START");

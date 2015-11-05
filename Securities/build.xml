@@ -67,6 +67,14 @@
 	</target>
 	
 
+	<target name="run-download-price">
+		<java classname="yokwe.finance.securities.app.DownloadPrice" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="1"/>
+		</java>
+	</target>
+
 	<target name="run-fetch">
 		<java classname="yokwe.finance.securities.app.Fetch" fork="true">
 			<classpath location="${jar.yokwe}" />

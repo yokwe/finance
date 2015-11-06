@@ -46,4 +46,9 @@ public final class NasdaqTable {
 		this.nasdaq   = nasdaq;
 		this.name     = name;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("{%s %s %s %s %s %s %s %s}", etf, exchange, symbol, base, yahoo, google, nasdaq, name);
+	}
 }

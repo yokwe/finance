@@ -58,6 +58,7 @@ fetch-nasdaq:
 
 update-nasdaq:
 	ant run-update-nasdaq
+	ant run-update-nasdaq-company
 
 
 #

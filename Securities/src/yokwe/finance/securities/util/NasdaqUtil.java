@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -28,7 +29,7 @@ public class NasdaqUtil {
 				String line = br.readLine();
 				if (line == null) break;
 				
-				String[] fields = line.split(",", 7);
+				String[] fields = line.split(",", 8);
 				String etf    = fields[0];
 				String exch   = fields[1];
 				String symbol = fields[2];
@@ -56,5 +57,9 @@ public class NasdaqUtil {
 			throw new SecuritiesException();
 		}
 		return map.get(symbol);
+	}
+	
+	public static Collection<NasdaqTable> getAll() {
+		return map.values();
 	}
 }

@@ -93,6 +93,15 @@
                 </java>
         </target>
 	
+        <target name="run-update-nasdaq-company">
+                <java classname="yokwe.finance.securities.update.NasdaqCompany" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/nasdaq/"/>
+                        <arg value="tmp/database/nasdaq-company.csv"/>
+                </java>
+        </target>
+	
         <target name="run-update-yahoo-dividend">
                 <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
                         <classpath location="${jar.yokwe}" />

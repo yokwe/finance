@@ -18,11 +18,11 @@ CREATE TABLE nasdaq (
   name             TEXT     NOT NULL  -- name of securities
 );
 
-CREATE TABLE finance (
+CREATE TABLE company (
   symbol           TEXT     NOT NULL, -- ticker symbol
-  exchange         TEXT     NOT NULL, -- exchange of securities
   sector           TEXT     NOT NULL, -- sector of securities
-  industry         TEXT     NOT NULL  -- industry of securities
+  industry         TEXT     NOT NULL, -- industry of securities
+  name             TEXT     NOT NULL  -- name of securities
 );
 
 CREATE TABLE price (

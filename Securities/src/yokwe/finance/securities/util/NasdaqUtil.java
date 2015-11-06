@@ -32,15 +32,16 @@ public class NasdaqUtil {
 				String etf    = fields[0];
 				String exch   = fields[1];
 				String symbol = fields[2];
-				String yahoo  = fields[3];
-				String google = fields[4];
-				String nasdaq = fields[5];
-				String name   = fields[6];
+				String base   = fields[3];
+				String yahoo  = fields[4];
+				String google = fields[5];
+				String nasdaq = fields[6];
+				String name   = fields[7];
 				
 				if (name.charAt(0) == '"') name = name.substring(1, name.length() - 1);
 				if (name.contains("\"\"")) name = name.replace("\"\"", "\"");
 				
-				map.put(symbol, new NasdaqTable(etf, exch, symbol, yahoo, google, nasdaq, name));
+				map.put(symbol, new NasdaqTable(etf, exch, symbol, base, yahoo, google, nasdaq, name));
 			}
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());

@@ -11,6 +11,7 @@ CREATE TABLE nasdaq (
   etf              TEXT     NOT NULL, -- Y for ETF
   exchange         TEXT     NOT NULL, -- name of exchange
   symbol           TEXT     NOT NULL, -- ticker symbol
+  base             TEXT     NOT NULL, -- base of symbol
   yahoo            TEXT     NOT NULL, -- ticker symbol of yahoo
   google           TEXT     NOT NULL, -- ticker symbol of google
   nasdaq           TEXT     NOT NULL, -- ticker symbol of nasdaq

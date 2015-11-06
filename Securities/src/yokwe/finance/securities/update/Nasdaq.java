@@ -60,11 +60,14 @@ public final class Nasdaq {
 	private static String PAT_CLASS             = "^([A-Z]+)\\.([A-Z])$";
 	private static String PAT_WAR_CLASS         = "^([A-Z]+)\\+([A-Z])$";
 	
+	static ConverterList baseConverter   = new ConverterList();
 	static ConverterList yahooConverter  = new ConverterList();
 	static ConverterList googleConverter = new ConverterList();
 	static ConverterList nasdaqConverter = new ConverterList();
 	
 	static {
+		baseConverter.addConverter1("^([A-Z]+).*$", "%s");
+		
 		//
 		yahooConverter.addConverter1(PAT_NORMAL,            "%s");       // Normal
 		yahooConverter.addConverter1(PAT_UNIT,              "%s-U");     // Units
@@ -240,6 +243,7 @@ public final class Nasdaq {
 					}
 					String exchName = exchNameMap.get(exch);
 					
+					String baseSymbol   = baseConverter.convert(symbol);
 					String yahooSymbol  = yahooConverter.convert(symbol);
 					String googleSymbol = googleConverter.convert(symbol);
 					String nasdaqSymbol = nasdaqConverter.convert(symbol);
@@ -247,6 +251,7 @@ public final class Nasdaq {
 					bw.append(etf);
 					bw.append(",").append(exchName);
 					bw.append(",").append(symbol);
+					bw.append(",").append(baseSymbol);
 					bw.append(",").append(yahooSymbol);
 					bw.append(",").append(googleSymbol);
 					bw.append(",").append(nasdaqSymbol);

@@ -3,19 +3,15 @@
 #
 
 # From google.com
-DIR_FETCH_GOOGLE_FINANCE	=tmp/fetch/google-finance
 DIR_FETCH_GOOGLE_GETPRICES	=tmp/fetch/google-getprices
 DIR_FETCH_GOOGLE_HISTORICAL	=tmp/fetch/google-historical
 
 # From nasdaq.com
 DIR_FETCH_NASDAQ		=tmp/fetch/nasdaq
-DIR_FETCH_NASDAQ_DIVIDEND	=tmp/fetch/nasdaq-dividend
-DIR_FETCH_NASDAQ_SYMBOL		=tmp/fetch/nasdaq-symbol
 
 # Form yahoo.com
 DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
-DIR_FETCH_YAHOO_FINANCE		=tmp/fetch/yahoo-finance
 
 DIR_SCRIPT			=data/script
 DIR_DATABASE			=tmp/database
@@ -55,8 +51,11 @@ download-price:
 fetch-nasdaq:
 	mkdir -p ${DIR_FETCH_NASDAQ}
 	rm    -f ${DIR_FETCH_NASDAQ}/*
-	wget -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
-	
+	wget -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt     ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-nasdaq.csv 'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=NASDAQ'
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-nyse.csv   'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=NYSE'
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-amex.csv   'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=AMEX'
+
 update-nasdaq:
 	ant run-update-nasdaq
 
@@ -64,12 +63,6 @@ update-nasdaq:
 #
 # fetch-google-*
 #
-
-fetch-google-finance:
-	mkdir -p ${DIR_FETCH_GOOGLE_FINANCE}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_FINANCE}"   -f ${DIR_SCRIPT}/fetch-google-finance.awk \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
 
 fetch-google-getprices-1m:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
@@ -136,28 +129,6 @@ fetch-yahoo-dividend-40y:
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-yahoo-finance:
-	mkdir -p ${DIR_FETCH_YAHOO_FINANCE}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_FINANCE}"      -f ${DIR_SCRIPT}/fetch-yahoo-finance.awk \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-#
-# fetch-nasdaq-*
-#
-
-fetch-nasdaq-symbol:
-	mkdir -p ${DIR_FETCH_NASDAQ_SYMBOL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_SYMBOL}"      -f ${DIR_SCRIPT}/fetch-nasdaq.awk  -v SUFFIX="" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-fetch-nasdaq-dividend:
-	mkdir -p ${DIR_FETCH_NASDAQ_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_NASDAQ_DIVIDEND}"    -f ${DIR_SCRIPT}/fetch-nasdaq.awk  -v SUFFIX="/dividend-history" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
 
 #
 # update-*
@@ -208,6 +179,3 @@ update-yahoo-dividend: prepare-update
 	sort -m ${DIR_DATABASE}/yahoo-dividend-update.csv ${DIR_DATABASE}/yahoo-dividend.csv | uniq >${DIR_DATABASE}/yahoo-dividend-new.csv
 	wc -l ${DIR_DATABASE}/yahoo-dividend*.csv
 	mv ${DIR_DATABASE}/yahoo-dividend-new.csv ${DIR_DATABASE}/yahoo-dividend.csv
-
-update-yahoo-finance: prepare-update
-	ant run-update-yahoo-finance

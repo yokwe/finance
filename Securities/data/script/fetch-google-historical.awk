@@ -23,9 +23,10 @@ BEGIN {
   ETF           = $1
   EXCH          = $2
   SYMBOL        = $3
-  YAHOO_SYMBOL  = $4
-  GOOGLE_SYMBOL = $5
-  NASDAQ_SYMBOL = $6
+  BASE_SYMBOL   = $4
+  YAHOO_SYMBOL  = $5
+  GOOGLE_SYMBOL = $6
+  NASDAQ_SYMBOL = $7
   
   printf("%s/%-11s http://www.google.com/finance/historical?startdate=%s&enddate=%s&output=csv&q=%s\n",
     DIR_OUTPUT, (SYMBOL ".csv"), START_DATE, END_DATE, (EXCH ":" GOOGLE_SYMBOL))

@@ -20,6 +20,7 @@ public final class NasdaqTable {
 	public String etf;
 	public String exchange;
 	public String symbol;
+	public String base;
 	public String yahoo;
 	public String google;
 	public String nasdaq;
@@ -29,15 +30,17 @@ public final class NasdaqTable {
 		etf      = "";
 		exchange = "";
 		symbol   = "";
+		base     = "";
 		yahoo    = "";
 		google   = "";
 		nasdaq   = "";
 		name     = "";
 	}
-	public NasdaqTable(String etf, String exchange, String symbol, String yahoo, String google, String nasdaq, String name) {
+	public NasdaqTable(String etf, String exchange, String symbol, String base, String yahoo, String google, String nasdaq, String name) {
 		this.etf      = etf;
 		this.exchange = exchange;
 		this.symbol   = symbol;
+		this.base     = base;
 		this.yahoo    = yahoo;
 		this.google   = google;
 		this.nasdaq   = nasdaq;

@@ -25,9 +25,10 @@ BEGIN {
   ETF           = $1
   EXCH          = $2
   SYMBOL        = $3
-  YAHOO_SYMBOL  = $4
-  GOOGLE_SYMBOL = $5
-  NASDAQ_SYMBOL = $6
+  BASE_SYMBOL   = $4
+  YAHOO_SYMBOL  = $5
+  GOOGLE_SYMBOL = $6
+  NASDAQ_SYMBOL = $7
   
   printf("%s/%-10s http://real-chart.finance.yahoo.com/table.csv?a=%s&b=%s&c=%s&d=%s&e=%s&f=%s&g=%s&ignore=.csv&s=%s\n",
     DIR_OUTPUT, (SYMBOL ".csv"), A, B, C, D, E, F, G, YAHOO_SYMBOL)

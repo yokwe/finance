@@ -92,7 +92,16 @@
                         <arg value="tmp/database/nasdaq.csv"/>
                 </java>
         </target>
-
+	
+        <target name="run-update-nasdaq-symbol">
+                <java classname="yokwe.finance.securities.update.NasdaqSymbol" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <arg value="tmp/fetch/nasdaq-symbol"/>
+                        <arg value="tmp/database/nasdaq-symbol.csv"/>
+                </java>
+        </target>
+	
         <target name="run-update-yahoo-dividend">
                 <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
                         <classpath location="${jar.yokwe}" />
@@ -128,24 +137,6 @@
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/yahoo-finance"/>
 			<arg value="tmp/database/yahoo-finance.csv"/>
-		</java>
-	</target>
-
-	<target name="run-update-nasdaq-symbol">
-		<java classname="yokwe.finance.securities.update.NasdaqSymbol" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/nasdaq-symbol"/>
-			<arg value="tmp/database/nasdaq-symbol.csv"/>
-		</java>
-	</target>
-
-	<target name="run-update-nasdaq-dividend">
-		<java classname="yokwe.finance.securities.update.NasdaqDividend" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/nasdaq-dividend"/>
-			<arg value="tmp/database/nasdaq-dividend.csv"/>
 		</java>
 	</target>
 

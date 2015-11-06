@@ -21,7 +21,7 @@ public class YahooFinance {
 		EXCHANGE, SYMBOL, PRICE, AVG_VOL, SHARES, MKT_CAP, NAME,
 	}
 	
-	public static class ScrapeGoogleFinance extends Scrape<Field> {
+	public static class ScrapeYahooFinance extends Scrape<Field> {
 		public void init() {
 //			<span class="rtq_exch"><span class="rtq_dash">-</span>NYSE  </span><span class="wl_sign">
 			add(Field.EXCHANGE,
@@ -62,7 +62,7 @@ public class YahooFinance {
 		}
 	}
 	
-	private static ScrapeGoogleFinance scrape = new ScrapeGoogleFinance();
+	private static ScrapeYahooFinance scrape = new ScrapeYahooFinance();
 	
 	public static void save(String dirPath, String csvPath) {
 		Map<String, Map<Field, String>> values = scrape.readDirectory(dirPath);

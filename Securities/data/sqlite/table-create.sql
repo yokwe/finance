@@ -43,7 +43,7 @@ CREATE TABLE dividend (
 .separator ,
 
 .import tmp/database/nasdaq.csv           nasdaq
-.import tmp/database/google-finance.csv   finance
+.import tmp/database/nasdaq-company.csv   company
 .import tmp/database/yahoo-dividend.csv   dividend
 .import tmp/database/price-all.csv        price
 
@@ -53,7 +53,7 @@ CREATE TABLE dividend (
 CREATE        INDEX nasdaq_etf           ON nasdaq(etf);
 CREATE UNIQUE INDEX nasdaq_symbol        ON nasdaq(symbol);
 
-CREATE UNIQUE INDEX finance_symbol       ON finance(symbol);
+CREATE UNIQUE INDEX company_symbol       ON company(symbol);
 
 CREATE        INDEX dividend_date        ON dividend(date);
 CREATE        INDEX dividend_symbol      ON dividend(symbol);
@@ -64,7 +64,7 @@ CREATE        INDEX price_symbol         ON price(symbol);
 CREATE UNIQUE INDEX price_symbol_date    ON price(symbol, date);
 
 select count(*) from nasdaq;
-select count(*) from finance;
+select count(*) from company;
 select count(*) from price;
 select count(*) from dividend;
 select date, count(*) from price group by date order by date desc limit 5;

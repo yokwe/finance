@@ -56,7 +56,7 @@ public final class NasdaqCompany {
 			// Translate nasdaq web symbol to symbol
 			NasdaqTable nasdaqTable = nasdaqMap.get(nasdaq);
 			if (nasdaqTable == null) {
-				logger.error("Unknown nasdaq symbol = {}", nasdaq);
+				logger.warn("Unknown = {}|{}|{}|{}", nasdaq, sector, industry, name);
 				return null;
 			}
 			return new CompanyTable(nasdaqTable.symbol, sector, industry, name);

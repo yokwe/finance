@@ -48,6 +48,8 @@ public final class Nasdaq {
 	//  # X.A   X class A                       AKO.A    AKO-A     AKO.A     AKO.A
 	//  # X+A   X warrants class A              GM+A     GM-WTA    ???       GM.WS.A
 	
+	//  TODO                                                                 DRI$      What is this?
+	
 	private static String PAT_NORMAL            = "^([A-Z]+)$";
 	private static String PAT_UNIT              = "^([A-Z]+)=$";
 	private static String PAT_PREF              = "^([A-Z]+)-$";

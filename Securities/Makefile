@@ -146,37 +146,13 @@ update-google-finance: prepare-update
 
 update-google-getprices: prepare-update
 	ant run-update-google-getprices
-	sort ${DIR_DATABASE}/google-getprices-update.csv >${DIR_DATABASE}/google-getprices-update-sorted.csv
-	mv ${DIR_DATABASE}/google-getprices-update-sorted.csv ${DIR_DATABASE}/google-getprices-update.csv
-	touch ${DIR_DATABASE}/google-getprices.csv
-	sort -m ${DIR_DATABASE}/google-getprices-update.csv ${DIR_DATABASE}/google-getprices.csv | uniq >${DIR_DATABASE}/google-getprices-new.csv
-	wc -l ${DIR_DATABASE}/google-getprices*.csv
-	mv ${DIR_DATABASE}/google-getprices-new.csv ${DIR_DATABASE}/google-getprices.csv
 	
 update-google-historical: prepare-update
 	ant run-update-google-historical
-	sort ${DIR_DATABASE}/google-historical-update.csv >${DIR_DATABASE}/google-historical-update-sorted.csv
-	mv ${DIR_DATABASE}/google-historical-update-sorted.csv ${DIR_DATABASE}/google-historical-update.csv
-	touch ${DIR_DATABASE}/google-historical.csv
-	sort -m ${DIR_DATABASE}/google-historical-update.csv ${DIR_DATABASE}/google-historical.csv | uniq >${DIR_DATABASE}/google-historical-new.csv
-	wc -l ${DIR_DATABASE}/google-historical*.csv
-	mv ${DIR_DATABASE}/google-historical-new.csv ${DIR_DATABASE}/google-historical.csv
 	
 
 update-yahoo-daily: prepare-update
 	ant run-update-yahoo-daily
-	sort ${DIR_DATABASE}/yahoo-daily-update.csv >${DIR_DATABASE}/yahoo-daily-update-sorted.csv
-	mv ${DIR_DATABASE}/yahoo-daily-update-sorted.csv ${DIR_DATABASE}/yahoo-daily-update.csv
-	touch ${DIR_DATABASE}/yahoo-daily.csv
-	sort -m ${DIR_DATABASE}/yahoo-daily-update.csv ${DIR_DATABASE}/yahoo-daily.csv | uniq >${DIR_DATABASE}/yahoo-daily-new.csv
-	wc -l ${DIR_DATABASE}/yahoo-daily*.csv
-	mv ${DIR_DATABASE}/yahoo-daily-new.csv ${DIR_DATABASE}/yahoo-daily.csv
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend
-	sort ${DIR_DATABASE}/yahoo-dividend-update.csv >${DIR_DATABASE}/yahoo-dividend-update-sorted.csv
-	mv ${DIR_DATABASE}/yahoo-dividend-update-sorted.csv ${DIR_DATABASE}/yahoo-dividend-update.csv
-	touch ${DIR_DATABASE}/yahoo-dividend.csv
-	sort -m ${DIR_DATABASE}/yahoo-dividend-update.csv ${DIR_DATABASE}/yahoo-dividend.csv | uniq >${DIR_DATABASE}/yahoo-dividend-new.csv
-	wc -l ${DIR_DATABASE}/yahoo-dividend*.csv
-	mv ${DIR_DATABASE}/yahoo-dividend-new.csv ${DIR_DATABASE}/yahoo-dividend.csv

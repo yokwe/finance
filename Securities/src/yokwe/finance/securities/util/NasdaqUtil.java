@@ -62,4 +62,8 @@ public class NasdaqUtil {
 	public static Collection<NasdaqTable> getAll() {
 		return map.values();
 	}
+	
+	public static Map<String, NasdaqTable> getMap() {
+		return map;
+	}
 }

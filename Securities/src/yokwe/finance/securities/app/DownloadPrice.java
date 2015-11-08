@@ -12,11 +12,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -33,7 +31,7 @@ public class DownloadPrice {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadPrice.class);
 	
 	// Use yahoo-table
-	static List<PriceTable> getFromYahoo(final String exch, final String symbol, final String yahooSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
+	static Map<String, PriceTable> getFromYahoo(final String exch, final String symbol, final String yahooSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
 		// http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
 		final String s = yahooSymbol;
 		final int a = dateFrom.getMonthValue() - 1;
@@ -46,7 +44,7 @@ public class DownloadPrice {
 		final String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%d&d=%02d&e=%02d&f=%d&g=d&ignore=.csv", s, a, b, c, d, e, f);
 		final List<String> lines = HttpUtil.download(url);
 		
-		final List<PriceTable> ret = new ArrayList<>();
+		final Map<String, PriceTable> ret = new HashMap<>();
 		if (lines == null) return ret;
 		
 		int count = 0;
@@ -54,13 +52,14 @@ public class DownloadPrice {
 			if (count++ == 0) {
 				YahooDaily.CSVRecord.checkHeader(line);
 			} else {
-				ret.add(YahooDaily.CSVRecord.toPriceTable(symbol, line));
+				final PriceTable priceTable = YahooDaily.CSVRecord.toPriceTable(symbol, line);
+				ret.put(priceTable.date, priceTable);
 			}
 		}
 		return ret;
 	}
 	
-	static List<PriceTable> getFromGoogle(final String exch, final String symbol, final String googleSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
+	static Map<String, PriceTable> getFromGoogle(final String exch, final String symbol, final String googleSymbol, final LocalDate dateFrom, final LocalDate dateTo) {
 		// http://www.google.com/finance/historical?q=NYSE:IBM&startdate=Jan%201,%202000&enddate=Dec%2031,%202050&output=csv
 		final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 
@@ -69,7 +68,7 @@ public class DownloadPrice {
 		final String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, googleSymbol, startdate, enddate);
 		List<String> lines = HttpUtil.download(url);
 
-		final List<PriceTable> ret = new ArrayList<>();
+		final Map<String, PriceTable> ret = new HashMap<>();
 		if (lines == null) return ret;
 		
 		int count = 0;
@@ -77,7 +76,8 @@ public class DownloadPrice {
 			if (count++ == 0) {
 				GoogleHistorical.CSVRecord.checkHeader(line);
 			} else {
-				ret.add(GoogleHistorical.CSVRecord.toPriceTable(symbol, line));
+				final PriceTable priceTable = GoogleHistorical.CSVRecord.toPriceTable(symbol, line);
+				ret.put(priceTable.date, priceTable);
 			}
 		}
 		return ret;
@@ -85,38 +85,35 @@ public class DownloadPrice {
 	
 	
 	static List<String> getDateList(Connection connection, final LocalDate dateFrom, final LocalDate dateTo) {
-		List<PriceTable> ibmList = getFromYahoo("NYSE", "IBM", "IBM", dateFrom, dateTo);
-		List<PriceTable> nytList = getFromYahoo("NYSE", "NYT", "NYT", dateFrom, dateTo);
-		List<PriceTable> pepList = getFromYahoo("NYSE", "PEP", "PEP", dateFrom, dateTo);
+		Map<String, PriceTable> ibmMap = getFromYahoo("NYSE", "IBM", "IBM", dateFrom, dateTo);
+		Map<String, PriceTable> nytMap = getFromYahoo("NYSE", "NYT", "NYT", dateFrom, dateTo);
+		Map<String, PriceTable> pepMap = getFromYahoo("NYSE", "PEP", "PEP", dateFrom, dateTo);
 		
-		if (ibmList.size() != nytList.size()) {
-			logger.error("{} ibm = {}  nyt = {}", dateFrom.getYear(), ibmList.size(), nytList.size());
+		if (ibmMap.size() != nytMap.size()) {
+			logger.error("{} ibm = {}  nyt = {}", dateFrom.getYear(), ibmMap.size(), nytMap.size());
 			throw new SecuritiesException("getDateList");
 		}
-		if (nytList.size() != pepList.size()) {
-			logger.error("{} nyt = {}  pep = {}", dateFrom.getYear(), nytList.size(), pepList.size());
+		if (nytMap.size() != pepMap.size()) {
+			logger.error("{} nyt = {}  pep = {}", dateFrom.getYear(), nytMap.size(), pepMap.size());
 			throw new SecuritiesException("getDateList");
 		}
-		if (ibmList.size() != pepList.size()) {
-			logger.error("{} ibm = {}  pep = {}", dateFrom.getYear(), ibmList.size(), pepList.size());
+		if (ibmMap.size() != pepMap.size()) {
+			logger.error("{} ibm = {}  pep = {}", dateFrom.getYear(), ibmMap.size(), pepMap.size());
 			throw new SecuritiesException("getDateList");
 		}
 		
-		Set<String> set = new HashSet<>();
-		ibmList.stream().forEach(o -> set.add(o.date));
-		
-		for(String symbol: nytList.stream().map(o -> o.date).collect(Collectors.toList())) {
-			if (set.contains(symbol)) continue;
+		for(String symbol: nytMap.keySet()) {
+			if (ibmMap.containsKey(symbol)) continue;
 			logger.error("{} nyt missing date = {}", dateFrom.getYear(), symbol);
 			throw new SecuritiesException("getDateList");
 		}
-		for(String symbol: pepList.stream().map(o -> o.date).collect(Collectors.toList())) {
-			if (set.contains(symbol)) continue;
+		for(String symbol: pepMap.keySet()) {
+			if (ibmMap.containsKey(symbol)) continue;
 			logger.error("{} pep missing date = {}", dateFrom.getYear(), symbol);
 			throw new SecuritiesException("getDateList");
 		}
 		
-		List<String> ret = new ArrayList<>(set);
+		List<String> ret = new ArrayList<>(ibmMap.keySet());
 		Collections.sort(ret);
 		return ret;
 	}
@@ -144,6 +141,8 @@ public class DownloadPrice {
 			// Skip symbol that has no data
 			if (data2.size() == 0) continue;
 			
+			logger.info("XXX {}", symbol);
+			
 			// create map
 			Map<String, PriceTable> map = new HashMap<>();
 			{
@@ -162,14 +161,17 @@ public class DownloadPrice {
 				if (foundError) continue;
 			}
 			
-			final List<String> dateList2 = data2.stream().map(o -> o.date).collect(Collectors.toList());
-			final String dateFirst2 = dateList2.get(0);
+			final String dateFirst2 = data2.get(0).date;
+			final List<String> modifiedDateList = new ArrayList<>();
+			for(String date: dateList) {
+				// Skip data before dateFirst2 -- before inception date
+				if (date.compareTo(dateFirst2) < 0) continue;
+				modifiedDateList.add(date);
+			}
 			
 			{
 				boolean foundError = false;
-				for(String date: dateList) {
-					// Skip data before dateFirst2 -- before inception date
-					if (date.compareTo(dateFirst2) < 0) continue;
+				for(String date: modifiedDateList) {
 					if (!map.containsKey(date)) {
 						// missing date
 //						logger.info("missing  {} {}", date, symbol);
@@ -183,9 +185,7 @@ public class DownloadPrice {
 			}
 
 			// build goodData to remove surplus date
-			for(String date: dateList) {
-				// Skip data before dateFirst2 -- before inception date
-				if (date.compareTo(dateFirst2) < 0) continue;
+			for(String date: modifiedDateList) {
 				goodData.add(map.get(date));
 			}
 		}
@@ -193,22 +193,15 @@ public class DownloadPrice {
 
 		List<String> missingSymbols = new ArrayList<>();
 		for(String symbol: badSymbols) {
-			final Map<String, PriceTable> yahooMap = new HashMap<>();
-			final Map<String, PriceTable> googleMap = new HashMap<>();
-
-			{
-				NasdaqTable nasdaq = nasdaqMap.get(symbol);
-				String exch = nasdaq.exchange;
-				
-				List<PriceTable> yahooData = getFromYahoo(exch, symbol, nasdaq.yahoo, dateFrom, dateTo);
-				yahooData.stream().forEach(o -> yahooMap.put(o.date, o));
-				
-				List<PriceTable> googleData = getFromGoogle(exch, symbol, nasdaq.google, dateFrom, dateTo);
-				googleData.stream().forEach(o -> googleMap.put(o.date, o));
-			}
+			final NasdaqTable nasdaq = nasdaqMap.get(symbol);
 			
-			List<String> missingDate = new ArrayList<>();
-			List<PriceTable> myGoodData = new ArrayList<>();
+			logger.info("YYY {}", symbol);
+
+			final Map<String, PriceTable> yahooMap  = getFromYahoo(nasdaq.exchange, symbol, nasdaq.yahoo, dateFrom, dateTo);
+			final Map<String, PriceTable> googleMap = getFromGoogle(nasdaq.exchange, symbol, nasdaq.google, dateFrom, dateTo);
+
+			final List<String>     missingDate = new ArrayList<>();
+			final List<PriceTable> myGoodData  = new ArrayList<>();
 			for(String date: dateList) {
 				if (yahooMap.containsKey(date)) {
 					myGoodData.add(yahooMap.get(date));

@@ -1,12 +1,11 @@
 package yokwe.finance.securities.app;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,32 +84,32 @@ public class UpdatePrice {
 	}
 	
 	
-	static List<String> getDateList(Connection connection, final LocalDate dateFrom, final LocalDate dateTo) {
-		Map<String, PriceTable> ibmMap = getFromYahoo("NYSE", "IBM", "IBM", dateFrom, dateTo);
-		Map<String, PriceTable> nytMap = getFromYahoo("NYSE", "NYT", "NYT", dateFrom, dateTo);
-		Map<String, PriceTable> pepMap = getFromYahoo("NYSE", "PEP", "PEP", dateFrom, dateTo);
+	static List<String> getDateList(Map<String, Map<String, PriceTable>> map) {
+		Map<String, PriceTable> ibmMap = map.get("IBM");
+		Map<String, PriceTable> nytMap = map.get("NYT");
+		Map<String, PriceTable> pepMap = map.get("PEP");
 		
 		if (ibmMap.size() != nytMap.size()) {
-			logger.error("{} ibm = {}  nyt = {}", dateFrom.getYear(), ibmMap.size(), nytMap.size());
+			logger.error("ibm = {}  nyt = {}", ibmMap.size(), nytMap.size());
 			throw new SecuritiesException("getDateList");
 		}
 		if (nytMap.size() != pepMap.size()) {
-			logger.error("{} nyt = {}  pep = {}", dateFrom.getYear(), nytMap.size(), pepMap.size());
+			logger.error("nyt = {}  pep = {}", nytMap.size(), pepMap.size());
 			throw new SecuritiesException("getDateList");
 		}
 		if (ibmMap.size() != pepMap.size()) {
-			logger.error("{} ibm = {}  pep = {}", dateFrom.getYear(), ibmMap.size(), pepMap.size());
+			logger.error("ibm = {}  pep = {}", ibmMap.size(), pepMap.size());
 			throw new SecuritiesException("getDateList");
 		}
 		
-		for(String symbol: nytMap.keySet()) {
-			if (ibmMap.containsKey(symbol)) continue;
-			logger.error("{} nyt missing date = {}", dateFrom.getYear(), symbol);
+		for(String date: ibmMap.keySet()) {
+			if (nytMap.containsKey(date)) continue;
+			logger.error("nyt missing date = {}", date);
 			throw new SecuritiesException("getDateList");
 		}
-		for(String symbol: pepMap.keySet()) {
-			if (ibmMap.containsKey(symbol)) continue;
-			logger.error("{} pep missing date = {}", dateFrom.getYear(), symbol);
+		for(String date: ibmMap.keySet()) {
+			if (pepMap.containsKey(date)) continue;
+			logger.error("nyt missing date = {}", date);
 			throw new SecuritiesException("getDateList");
 		}
 		
@@ -138,8 +136,9 @@ public class UpdatePrice {
 		//   tmp/update/google-yyyy-symbol.html
 		//   tmp/update/yahoo-yyyy-symbol.html
 		
+		logger.info("Build pathURLMap");
 		Map<String, PathURL> yahooPathURLMap  = new TreeMap<>();
-		Map<String, PathURL> googlePathRULMap = new TreeMap<>();
+		Map<String, PathURL> googlePathURLMap = new TreeMap<>();
 		for(String symbol: nasdaqMap.keySet()) {
 			NasdaqTable nasdaq = nasdaqMap.get(symbol);
 			// yahoo
@@ -170,11 +169,12 @@ public class UpdatePrice {
 				final String enddate   = dateTo.format(dateFormatter).replace(" ", "%20");
 				final String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, startdate, enddate);
 				
-				googlePathRULMap.put(symbol, new PathURL(path, url));
+				googlePathURLMap.put(symbol, new PathURL(path, url));
 			}
 		}
 		
 		// Fetch
+		logger.info("Fetch");
 		for(String symbol: nasdaqMap.keySet()) {
 			{
 				PathURL pathURL = yahooPathURLMap.get(symbol);
@@ -184,7 +184,7 @@ public class UpdatePrice {
 				}
 			}
 			{
-				PathURL pathURL = googlePathRULMap.get(symbol);
+				PathURL pathURL = googlePathURLMap.get(symbol);
 				File file = new File(pathURL.path);
 				if (!file.exists()) {
 					Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
@@ -192,133 +192,112 @@ public class UpdatePrice {
 			}
 		}
 		
-		// Read
-		for(String symbol: nasdaqMap.keySet()) {
-			{
-				File file = new File(yahooPathURLMap.get(symbol).path);
-				
-			}
-			{
-				File file = new File(googlePathRULMap.get(symbol).path);
-			}
-		}
-
-		
 		// Build map   Map<Symbol, Map<Date, PriceTable>>
+		logger.info("Build map");
 		Map<String, Map<String, PriceTable>> yahooMap  = new HashMap<>();
 		Map<String, Map<String, PriceTable>> googleMap = new HashMap<>();
-		
-		
-		
-		
-		List<PriceTable> goodData   = new ArrayList<>();
-		List<String>     badSymbols = new ArrayList<>();
 		for(String symbol: nasdaqMap.keySet()) {
-			final List<PriceTable> data2 = data.stream().filter(o -> o.symbol.equals(symbol)).collect(Collectors.toList());
-			
-			// Skip symbol that has no data
-			if (data2.size() == 0) continue;
-			
-			logger.info("XXX {}", symbol);
-			
-			// create map
-			Map<String, PriceTable> map = new HashMap<>();
 			{
-				boolean foundError = false;
-				for(PriceTable table: data2) {
-					if (map.containsKey(table.date)) {
-						// duplicate date
-						logger.info("dup      {} {}", table.date, symbol);
-						badSymbols.add(symbol);
-						foundError = true;
-						break;
-					}
-					map.put(table.date, table);
+				final String path = yahooPathURLMap.get(symbol).path;
+				final File file = new File(path);
+				if (!file.isFile()) {
+					logger.error("not file  {}", path);
+					throw new SecuritiesException("no file");
 				}
-				// skip to next symbol if found error
-				if (foundError) continue;
-			}
-			
-			final String dateFirst2 = data2.get(0).date;
-			final List<String> modifiedDateList = new ArrayList<>();
-			for(String date: dateList) {
-				// Skip data before dateFirst2 -- before inception date
-				if (date.compareTo(dateFirst2) < 0) continue;
-				modifiedDateList.add(date);
-			}
-			
-			{
-				boolean foundError = false;
-				for(String date: modifiedDateList) {
-					if (!map.containsKey(date)) {
-						// missing date
-//						logger.info("missing  {} {}", date, symbol);
-						badSymbols.add(symbol);
-						foundError = true;
-						break;
+				final Map<String, PriceTable> dateMap = new HashMap<>();
+				yahooMap.put(symbol, dateMap);
+				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+					final String header = br.readLine();
+					if (header == null) {
+						logger.error("header is null", path);
+						throw new SecuritiesException("header is null");
+					}
+					YahooDaily.CSVRecord.checkHeader(header);
+					for(;;) {
+						final String line = br.readLine();
+						if (line == null) break;
+						final PriceTable priceTable = YahooDaily.CSVRecord.toPriceTable(symbol, line);
+						dateMap.put(priceTable.date, priceTable);
 					}
 				}
-				// skip to next symbol if found error
-				if (foundError) continue;
 			}
-
-			// build goodData to remove surplus date
-			for(String date: modifiedDateList) {
-				goodData.add(map.get(date));
+			{
+				final String path = googlePathURLMap.get(symbol).path;
+				final File file = new File(path);
+				if (!file.isFile()) {
+					logger.error("not file  {}", path);
+					throw new SecuritiesException("no file");
+				}
+				final Map<String, PriceTable> dateMap = new HashMap<>();
+				googleMap.put(symbol, dateMap);
+				try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+					final String header = br.readLine();
+					if (header == null) {
+						logger.error("header is null", path);
+						throw new SecuritiesException("header is null");
+					}
+					GoogleHistorical.CSVRecord.checkHeader(header);
+					for(;;) {
+						final String line = br.readLine();
+						if (line == null) break;
+						final PriceTable priceTable = GoogleHistorical.CSVRecord.toPriceTable(symbol, line);
+						dateMap.put(priceTable.date, priceTable);
+					}
+				}
 			}
 		}
-		if (0 < badSymbols.size()) logger.info("badSymbols     {} {}", badSymbols.size(), badSymbols);
 
-		List<String> missingSymbols = new ArrayList<>();
-		for(String symbol: badSymbols) {
-			final NasdaqTable nasdaq = nasdaqMap.get(symbol);
-			
-			logger.info("YYY {}", symbol);
+		final List<String> dateList = getDateList(yahooMap);
+		logger.info("Build dateList  {}", dateList.size());
+		
 
-			final Map<String, PriceTable> yahooMap  = getFromYahoo(nasdaq.exchange, symbol, nasdaq.yahoo, dateFrom, dateTo);
-			final Map<String, PriceTable> googleMap = getFromGoogle(nasdaq.exchange, symbol, nasdaq.google, dateFrom, dateTo);
+		logger.info("Build data");
+		List<String>     badSymbols = new ArrayList<>();
+		List<PriceTable> data = new ArrayList<>();
+		for(String symbol: badSymbols) {			
+			final Map<String, PriceTable> yahoo  = yahooMap.get(symbol);
+			final Map<String, PriceTable> google = googleMap.get(symbol);
 
-			final List<String>     missingDate = new ArrayList<>();
-			final List<PriceTable> myGoodData  = new ArrayList<>();
+			int countMissing = 0;
 			for(String date: dateList) {
-				if (yahooMap.containsKey(date)) {
-					myGoodData.add(yahooMap.get(date));
+				if (yahoo.containsKey(date)) {
+					data.add(yahoo.get(date));
 				} else {
-					if (googleMap.containsKey(date)) {
-						myGoodData.add(googleMap.get(date));
+					if (google.containsKey(date)) {
+						data.add(google.get(date));
 					} else {
-						missingDate.add(date);
+						countMissing++;
 					}
 				}
 			}
-			goodData.addAll(myGoodData);
-			if (0 < missingDate.size()) {
+			if (0 < countMissing) {
 				// repair failed with yahoo and google (some data is still missing)
-				missingSymbols.add(symbol);
+				badSymbols.add(symbol);
 			}
 		}
 		
-		if (missingSymbols.size() == 0) {
+		logger.info("Build data");
+		if (badSymbols.size() == 0) {
 			// Save content of goodData as saveFile
 			final String saveFilePath = String.format("tmp/database/price-%d.csv", dateFrom.getYear());
 			final File saveFile = new File(saveFilePath);
 			if (!saveFile.exists()) saveFile.createNewFile();
 			
-			logger.info("# save {}", saveFilePath);
+			logger.info("Save {}", saveFilePath);
 			saveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
-				for(PriceTable table: goodData) {
+				for(PriceTable table: data) {
 					save.append(table.toCSV()).append("\n");
 				}
 			}
 		} else {
-			logger.info("# missing data {} {}", missingSymbols.size(), missingSymbols);
 			// Save content of goodData as bad saveFile
 			final String badSaveFilePath = String.format("tmp/database/price-%d.BAD", dateFrom.getYear());
+			logger.info("Save {}  {}", badSaveFilePath,  badSymbols.size());
 			File badSaveFile = new File(badSaveFilePath);
 			if (!badSaveFile.exists()) badSaveFile.createNewFile();
 			try (BufferedWriter save = new BufferedWriter(new FileWriter(badSaveFile))) {
-				for(PriceTable table: goodData) {
+				for(PriceTable table: data) {
 					save.append(table.toCSV()).append("\n");
 				}
 			}

@@ -42,12 +42,12 @@ load-data:
 update-price:
 	mkdir -p tmp/update/price
 	ant run-update-price
-	cat data/price/price-????.??? ${DIR_DATABASE}/price-????.??? >${DIR_DATABASE}/price-all.csv
+	cat data/price/price-????.{csv,BAD} ${DIR_DATABASE}/price-????.{csv,BAD} >${DIR_DATABASE}/price-all.csv
 
 update-dividend:
 	mkdir -p tmp/update/dividend
 	ant run-update-dividend
-	cat data/price/dividend-????.??? ${DIR_DATABASE}/dividend-????.??? >${DIR_DATABASE}/dividend-all.csv
+	cat data/price/dividend-????.csv ${DIR_DATABASE}/dividend-????.csv >${DIR_DATABASE}/dividend-all.csv
 
 #
 # nasdaq

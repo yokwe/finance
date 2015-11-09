@@ -25,13 +25,15 @@ public final class UpdateDividend {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
 	
 	static final int BUFFER_SIZE = 64 * 1024;
+	
+	static final long WAIT_TIME = 300;
 
 	static enum Provider {
 		YAHOO,
 	}
 	// YEAR-SYMBOL-PROVIDER.csv
 	//   2015-VCLT-yahoo.csv
-	private static String HTML_FILE_PATH_FORMAT = "tmp/update/dividend/%d-%s-%s.csv";
+	private static String HTML_FILE_PATH_FORMAT = "tmp/update/dividend/%d/%s-%s.csv";
 	static String getFilePath(final int year, final String symbol, final Provider provider) {
 		return String.format(HTML_FILE_PATH_FORMAT, year, symbol, provider.name());
 	}
@@ -44,11 +46,17 @@ public final class UpdateDividend {
 			this.url  = url;
 		}
 	}
-	static void update(final int year) throws IOException {
+	static void update(final int year) throws IOException, InterruptedException {
 		final Map<String, NasdaqTable> nasdaqMap = NasdaqUtil.getMap();
 		
 		final LocalDate dateFrom = LocalDate.of(year, 1, 1);
 		final LocalDate dateTo   = dateFrom.plusYears(1).minusDays(1);
+		
+		{
+			String dirPath = String.format("tmp/update/dividend/%d", year);
+			File dir = new File(dirPath);
+			if (!dir.exists()) dir.mkdirs();
+		}
 		
 		// Download dividend file from yahoo and google		
 		logger.info("Build pathURLMap");
@@ -79,10 +87,15 @@ public final class UpdateDividend {
 		{
 			final int total = nasdaqMap.keySet().size();
 			int count = 0;
+			long lastTime = System.currentTimeMillis();
 			for(String symbol: nasdaqMap.keySet()) {
 				if ((count++ % 100) == 0) {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
+				long thisTime = System.currentTimeMillis();
+				long sleepTime = lastTime + WAIT_TIME - thisTime;
+				lastTime = thisTime;
+				if (0 < sleepTime) Thread.sleep(sleepTime);
 				{
 					PathURL pathURL = yahooPathURLMap.get(symbol);
 					File file = new File(pathURL.path);
@@ -150,7 +163,7 @@ public final class UpdateDividend {
 		
 		try {
 			update(year);
-		} catch (RuntimeException | IOException e) {
+		} catch (RuntimeException | IOException | InterruptedException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
 			e.printStackTrace();

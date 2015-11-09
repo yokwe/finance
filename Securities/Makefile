@@ -47,7 +47,7 @@ update-price:
 update-dividend:
 	mkdir -p tmp/update/dividend
 	ant run-update-dividend
-	cat data/price/dividend-????.csv ${DIR_DATABASE}/dividend-????.csv >${DIR_DATABASE}/dividend-all.csv
+	cat data/dividend/dividend-????.csv ${DIR_DATABASE}/dividend-????.csv >${DIR_DATABASE}/dividend-all.csv
 
 #
 # nasdaq

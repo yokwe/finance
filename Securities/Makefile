@@ -39,10 +39,15 @@ load-data:
 	rm -f tmp/sqlite/securities.sqlite3
 	sqlite3 < data/sqlite/table-create.sql
 
-download-price:
-	touch tmp/download-price.log
-	ant run-download-price
-	cat ${DIR_DATABASE}/price-????.??? >${DIR_DATABASE}/price-all.csv
+update-price:
+	mkdir -p tmp/update/price
+	ant run-update-price
+	cat data/price/price-????.??? ${DIR_DATABASE}/price-????.??? >${DIR_DATABASE}/price-all.csv
+
+update-dividend:
+	mkdir -p tmp/update/dividend
+	ant run-update-dividend
+	cat data/price/dividend-????.??? ${DIR_DATABASE}/dividend-????.??? >${DIR_DATABASE}/dividend-all.csv
 
 #
 # nasdaq
@@ -65,24 +70,12 @@ update-nasdaq:
 # fetch-google-*
 #
 
-fetch-google-getprices-1m:
-	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f ${DIR_SCRIPT}/fetch-google-getprices.awk  -v P="1M" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
 fetch-google-getprices-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f ${DIR_SCRIPT}/fetch-google-getprices.awk  -v P="40Y" \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 
-fetch-google-historical-1m:
-	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
-	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f ${DIR_SCRIPT}/fetch-google-historical.awk  -v P="-1 month" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-	
 fetch-google-historical-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f ${DIR_SCRIPT}/fetch-google-historical.awk  -v P="-40 years" \
@@ -94,33 +87,9 @@ fetch-google-historical-40y:
 # fetch-yahoo-*
 #
 
-fetch-yahoo-daily-1w:
-	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-1 week" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-fetch-yahoo-daily-1m:
-	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-1 month" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
 fetch-yahoo-daily-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 years" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-fetch-yahoo-dividend-1w:
-	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-1 week" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
-	ant run-fetch
-
-fetch-yahoo-dividend-1m:
-	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
-	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-1 month" \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
 

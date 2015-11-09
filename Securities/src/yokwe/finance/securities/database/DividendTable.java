@@ -56,10 +56,10 @@ public final class DividendTable {
 	}
 	@Override
 	public String toString() {
-		return String.format("{%s %s %6.2f}", date, symbol, dividend);
+		return String.format("{%s %s %6.3f}", date, symbol, dividend);
 	}
 	
 	public String toCSV() {
-		return String.format("%s,%s,%.2f", date, symbol, dividend);
+		return String.format("%s,%s,%.3f", date, symbol, dividend);
 	}
 }

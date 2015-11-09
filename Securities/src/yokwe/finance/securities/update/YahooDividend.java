@@ -11,6 +11,7 @@ import java.util.Arrays;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.DividendTable;
 
 public final class YahooDividend {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooDividend.class);
@@ -25,7 +26,7 @@ public final class YahooDividend {
 				throw new SecuritiesException("header");
 			}
 		}
-		public static String toCSV(String symbol, String line) {
+		public static DividendTable toDividendTable(String symbol, String line) {
 			String[] fields = line.split(",");
 			if (fields.length != NUMBER_OF_FIELDS) {
 				logger.error("fields  {}  line = {}", symbol, line);
@@ -33,7 +34,11 @@ public final class YahooDividend {
 			}
 			String date     = fields[0];
 			double dividend = Double.valueOf(fields[1]);
-			return String.format("%s,%s,%.3f", date, symbol, dividend);
+			
+			return new DividendTable(date, symbol, dividend);
+		}
+		public static String toCSV(String symbol, String line) {
+			return toDividendTable(symbol, line).toCSV();
 		}
 	}
 

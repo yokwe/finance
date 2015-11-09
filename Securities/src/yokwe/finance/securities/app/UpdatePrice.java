@@ -29,11 +29,14 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public final class UpdatePrice {
 	private static final Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
+	static final int BUFFER_SIZE = 64 * 1024;
+	
 	static enum Provider {
 		YAHOO, GOOGLE,
 	}
-	// price-2015-VCLT-yahoo.html
-	private static String HTML_FILE_PATH_FORMAT = "tmp/update/price-%d-%s-%s.csv";
+	// 2015-VCLT-yahoo.csv
+	//   YEAR-SYMBOL-PROVIDER.csv
+	private static String HTML_FILE_PATH_FORMAT = "tmp/update/price/%d-%s-%s.csv";
 	static String getFilePath(final int year, final String symbol, final Provider provider) {
 		return String.format(HTML_FILE_PATH_FORMAT, year, symbol, provider.name());
 	}
@@ -166,12 +169,12 @@ public final class UpdatePrice {
 					final String path = yahooPathURLMap.get(symbol).path;
 					final File file = new File(path);
 					if (!file.isFile()) {
-						logger.error("not file  {}", path);
+						logger.error("no file  {}", path);
 						throw new SecuritiesException("no file");
 					}
 					final Map<String, PriceTable> dateMap = new HashMap<>();
 					yahooMap.put(symbol, dateMap);
-					try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+					try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
 						final String header = br.readLine();
 						if (header != null) {
 							YahooDaily.CSVRecord.checkHeader(header);
@@ -193,7 +196,7 @@ public final class UpdatePrice {
 					}
 					final Map<String, PriceTable> dateMap = new HashMap<>();
 					googleMap.put(symbol, dateMap);
-					try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+					try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
 						final String header = br.readLine();
 						if (header != null) {
 							GoogleHistorical.CSVRecord.checkHeader(header);
@@ -257,7 +260,7 @@ public final class UpdatePrice {
 			
 			logger.info("Save {}", saveFilePath);
 			saveFile.createNewFile();
-			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile))) {
+			try (BufferedWriter save = new BufferedWriter(new FileWriter(saveFile), BUFFER_SIZE)) {
 				for(PriceTable table: data) {
 					save.append(table.toCSV()).append("\n");
 				}

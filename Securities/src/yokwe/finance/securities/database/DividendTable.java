@@ -43,4 +43,23 @@ public final class DividendTable {
 	public String date;
 	public String symbol;
 	public double dividend;
+	
+	public DividendTable(String date, String symbol, double dividend) {
+		this.date      = date;
+		this.symbol    = symbol;
+		this.dividend  = dividend;
+	}
+	public DividendTable() {
+		this.date     = "";
+		this.symbol   = "";
+		this.dividend = 0;
+	}
+	@Override
+	public String toString() {
+		return String.format("{%s %s %6.2f}", date, symbol, dividend);
+	}
+	
+	public String toCSV() {
+		return String.format("%s,%s,%.2f", date, symbol, dividend);
+	}
 }

@@ -230,6 +230,11 @@ public final class Nasdaq {
 //				String cqsSymbol = fields[9];
 				String symbol    = fields[10]; // nasdaq symbol
 				
+				if (symbol.endsWith("$")) {
+					// TODO How to handle symbol end with "$"?
+					logger.warn("SKIP {}", symbol);
+					continue;
+				}
 				if (status.length() == 0) status = "N";
 
 				if (traded.equals("Y") && status.equals("N") && test.equals("N")) {

@@ -29,9 +29,8 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public final class UpdatePrice {
 	private static final Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
-	static final int BUFFER_SIZE = 64 * 1024;
-	
-	static final long WAIT_TIME = 300;
+	static final int  BUFFER_SIZE = 64 * 1024;
+	static final long WAIT_TIME   = 300;
 
 	static enum Provider {
 		YAHOO, GOOGLE,

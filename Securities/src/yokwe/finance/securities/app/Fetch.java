@@ -36,14 +36,14 @@ public class Fetch {
 			final String reasonPhrase = response.getStatusLine().getReasonPhrase();
 			
 			if (code == HttpStatus.SC_NOT_FOUND) { // 404
-				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
+				String message = String.format("%d %s - %s", code, reasonPhrase, url);
 				logger.error("               " + message);
 				messageList.add(message);
 				new File(fileName).createNewFile(); // create empty file to prevent process again
 				return;
 			}
 			if (code == HttpStatus.SC_BAD_REQUEST) { // 400
-				String message = String.format("%d %s - %s", code, reasonPhrase, fileName);
+				String message = String.format("%d %s - %s", code, reasonPhrase, url);
 				logger.error("               " + message);
 				messageList.add(message);
 				new File(fileName).createNewFile(); // create empty file to prevent process again

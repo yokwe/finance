@@ -36,10 +36,11 @@ public class FindCorrelation {
 	
 	static final class CorrelationMap {
 		private final Map<String, double[]> dataMap;
-		final int                           size;
-		final int                           length;
-		private final Map<String, Integer>  nameMap;
-		private final Map<String, double[]> devMap;
+		final int                           size;     // number of symbol
+		final int                           length;   // number of data per symbol
+		private final Map<String, Integer>  nameMap;  // map from name to index
+		private final double[][]            devArray; // double[size][length]
+		private final double[]              sdArray;  // double[size]
 		
 		static double[] deviation(double[] array) {
 			final int length = array.length;
@@ -53,12 +54,12 @@ public class FindCorrelation {
 			}
 			return ret;
 		}
-		
 
 		CorrelationMap(Map<String, double[]> doubleMap) {
+			int     len       = -1;
 			{
 				boolean firstTime = true;
-				int     len       = -1;
+				// Sanity check
 				for(String name: doubleMap.keySet()) {
 					double[] data = doubleMap.get(name);
 					if (firstTime) {
@@ -71,29 +72,57 @@ public class FindCorrelation {
 						throw new SecuritiesException("len");
 					}
 				}
-				dataMap = new HashMap<>(doubleMap);
-				size    = dataMap.size();
-				length  = len;
-				devMap  = new HashMap<>();
-				for(String name: doubleMap.keySet()) {
-					double[] data = doubleMap.get(name);
-					devMap.put(name, deviation(data));
-				}
 			}
+			dataMap  = new HashMap<>(doubleMap);
+			size     = dataMap.size();
+			length   = len;
+			nameMap  = new HashMap<>();
+			devArray = new double[size][length];
+			sdArray  = new double[size];
 			
-			nameMap = new TreeMap<>();
-			{
-				int i = 0;
-				for(String name: doubleMap.keySet()) {
-					nameMap.put(name, i++);
+			int index = 0;
+			for(String name: doubleMap.keySet()) {
+				nameMap.put(name, index);
+				
+				final double[] data = doubleMap.get(name);
+				final double[] dev  = devArray[index];
+				
+				double mean = 0;
+				for(double e: data) mean += e;
+				mean /= length;
+				
+				double var = 0;
+				for(int i = 0; i < length; i++) {
+					double t = data[i] - mean;
+					dev[i] = t;
+					var += t * t;
 				}
+				sdArray[index] = Math.sqrt(var);
+				//
+				index++;
 			}
 		}
 		double getCorrelation(String nameX, String nameY) {
+			final int indexX = nameMap.get(nameX);
+			final int indexY = nameMap.get(nameY);
+			
+			double[] dataX = devArray[indexX];
+			double[] dataY = devArray[indexY];
+			double   sdX   = sdArray[indexX];
+			double   sdY   = sdArray[indexY];
+			
+			double ret = 0;
+			for(int i = 0; i < dataX.length; i++) ret += dataX[i] * dataY[i];
+
+			return ret / (sdX * sdY);
+		}
+		
+		double getCorrelationX(String nameX, String nameY) {
 			double[] x = dataMap.get(nameX);
 			double[] y = dataMap.get(nameY);
 			return new PearsonsCorrelation().correlation(x, y);
 		}
+
 	}
 	
 	static void calculate(final Connection connection, final Writer w, final int months) throws IOException {
@@ -192,7 +221,8 @@ public class FindCorrelation {
 			CorrelationMap cm = new CorrelationMap(priceMap);
 			logger.info("cm   {} x {}", cm.size, cm.length);
 			
-			logger.info("SPY  QQQ = {}", String.format("%.2f", cm.getCorrelation("SPY", "QQQ")));
+			logger.info("X SPY  QQQ = {}", String.format("%.9f", cm.getCorrelationX("SPY", "QQQ")));
+			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY", "QQQ")));
 		}
 	}
 	

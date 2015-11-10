@@ -55,29 +55,19 @@ public final class PriceTable {
 		return result;
 	}
 	
-	public static List<PriceTable>  getAllBySymbolDateLike(Connection connection, String symbol, String dateLikeString) {
-		String sql = String.format("select * from price where symbol = '%s' and date like '%s'", symbol, dateLikeString);
+	public static List<PriceTable>  getAllBySymbolDateRange(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
+		final String stringFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		final String stringTo   = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+		String sql = String.format("select * from price where symbol = '%s' and '%s' <= date and date <= '%s'", symbol, stringFrom, stringTo);
 		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
 		return result;
 	}
 	
-	public static class SymbolCountTable {
+	private static class SymbolCountTable {
 		public String symbol;
 		public int    count;
 	}
-	public static Map<String, Integer> getSymbolCount(Connection connection, String dateLikeString) {
-		String sql = String.format("select symbol, count(*) as count from price where date like '%s' group by symbol", dateLikeString);
-		List<SymbolCountTable> result = JDBCUtil.getResultAll(connection, sql, SymbolCountTable.class);
-		if (result.size() == 0) {
-			logger.error("result = {}", result);
-			throw new SecuritiesException("result");
-		}
-		Map<String, Integer> ret = new TreeMap<>();
-		result.stream().forEach(o -> ret.put(o.symbol, o.count));
-		
-		return ret;
-	}
-	
 	public static Map<String, Integer> getAverageVolume(Connection connection, String dateFrom, String dateTo) {
 		String sql = String.format("select symbol, cast(avg(volume) as INTEGER) as count from price where date between '%s' and '%s' group by symbol", dateFrom, dateTo);
 		List<SymbolCountTable> result = JDBCUtil.getResultAll(connection, sql, SymbolCountTable.class);
@@ -108,6 +98,12 @@ public final class PriceTable {
 		String sql = String.format("select * from price where date = '%s'", date);
 		return getAll(connection, sql);
 	}
+	
+	public static boolean isTradingDay(Connection connection, LocalDate date) {
+		PriceTable priceTable = PriceTable.getBySymbolDate(connection, "NYT", date);
+		return priceTable != null;
+	}
+
 
 	public String date;
 	public String symbol;

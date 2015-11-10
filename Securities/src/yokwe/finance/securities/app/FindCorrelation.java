@@ -9,7 +9,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.util.DoubleStreamUtil.MovingAverage;
 import yokwe.finance.securities.util.DoubleStreamUtil.Sample;
-import yokwe.finance.securities.util.DoubleStreamUtil.Stats;
 
 public class FindCorrelation {
 	private static final Logger logger = LoggerFactory.getLogger(FindCorrelation.class);
@@ -36,12 +34,25 @@ public class FindCorrelation {
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
 	private static final String OUTPUT_PATH = "tmp/correlaton.csv";
 	
-	static class CorrelationMap {
+	static final class CorrelationMap {
 		private final Map<String, double[]> dataMap;
 		final int                           size;
 		final int                           length;
 		private final Map<String, Integer>  nameMap;
-		private final Map<String, Double>   sdMap;
+		private final Map<String, double[]> devMap;
+		
+		static double[] deviation(double[] array) {
+			final int length = array.length;
+			double mean = 0;
+			for(double e: array) mean += e;
+			mean /= length;
+			
+			double[] ret = new double[length];
+			for(int i = 0; i < length; i++) {
+				ret[i] = array[i] - mean;
+			}
+			return ret;
+		}
 		
 
 		CorrelationMap(Map<String, double[]> doubleMap) {
@@ -63,12 +74,10 @@ public class FindCorrelation {
 				dataMap = new HashMap<>(doubleMap);
 				size    = dataMap.size();
 				length  = len;
-				sdMap   = new HashMap<>();
+				devMap  = new HashMap<>();
 				for(String name: doubleMap.keySet()) {
 					double[] data = doubleMap.get(name);
-					Stats stats = new Stats();
-					Arrays.stream(data).forEach(stats);
-					sdMap.put(name, stats.getStandardDeviation());
+					devMap.put(name, deviation(data));
 				}
 			}
 			
@@ -179,6 +188,7 @@ public class FindCorrelation {
 		}
 		
 		{
+			logger.info("CorrelationMap");
 			CorrelationMap cm = new CorrelationMap(priceMap);
 			logger.info("cm   {} x {}", cm.size, cm.length);
 			

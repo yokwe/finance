@@ -25,21 +25,16 @@ public class ScreenByPrice {
 		
 	public static LocalDate getTradingDate(Connection connection, final LocalDate date) {
 		LocalDate tradingDate = date.minusDays(0);
-		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		if (PriceTable.isTradingDay(connection, tradingDate)) return tradingDate;
 		tradingDate = tradingDate.minusDays(1);
-		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		if (PriceTable.isTradingDay(connection, tradingDate)) return tradingDate;
 		tradingDate = tradingDate.minusDays(1);
-		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		if (PriceTable.isTradingDay(connection, tradingDate)) return tradingDate;
 		tradingDate = tradingDate.minusDays(1);
-		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		if (PriceTable.isTradingDay(connection, tradingDate)) return tradingDate;
 		
 		logger.error("date = {}  tradingDate = {}", date, tradingDate);
 		throw new SecuritiesException("tradingDate");
-	}
-
-	static boolean isTradingDay(Connection connection, LocalDate date) {
-		PriceTable priceTable = PriceTable.getBySymbolDate(connection, "NYT", date);
-		return priceTable != null;
 	}
 	
 	static Map<String, PriceTable> getPriceMap(Connection connection, LocalDate date) {

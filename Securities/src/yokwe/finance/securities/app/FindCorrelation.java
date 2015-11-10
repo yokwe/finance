@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,20 +40,8 @@ public class FindCorrelation {
 		private final Map<String, Integer>  nameMap;  // map from name to index
 		private final double[][]            devArray; // double[size][length]
 		private final double[]              sdArray;  // double[size]
+		private final double[][]            ccArray;  // double[size][size]
 		
-		static double[] deviation(double[] array) {
-			final int length = array.length;
-			double mean = 0;
-			for(double e: array) mean += e;
-			mean /= length;
-			
-			double[] ret = new double[length];
-			for(int i = 0; i < length; i++) {
-				ret[i] = array[i] - mean;
-			}
-			return ret;
-		}
-
 		CorrelationMap(Map<String, double[]> doubleMap) {
 			int     len       = -1;
 			{
@@ -68,7 +55,7 @@ public class FindCorrelation {
 						continue;
 					}
 					if (len != data.length) {
-						logger.error("len = {}  data.length = {}", len, data.length);
+						logger.error("name = {}  len = {}  data.length = {}", name, len, data.length);
 						throw new SecuritiesException("len");
 					}
 				}
@@ -79,6 +66,7 @@ public class FindCorrelation {
 			nameMap  = new HashMap<>();
 			devArray = new double[size][length];
 			sdArray  = new double[size];
+			ccArray  = new double[size][size];
 			
 			int index = 0;
 			for(String name: doubleMap.keySet()) {
@@ -101,27 +89,51 @@ public class FindCorrelation {
 				//
 				index++;
 			}
+			for(int x = 0; x < size; x++) {
+				for(int y = 0; y <= x; y++) {
+					if (x == y) {
+						ccArray[y][y] = 1.0;
+						continue;
+					}
+					double[] dataX = devArray[x];
+					double[] dataY = devArray[y];
+					double   sdX   = sdArray[x];
+					double   sdY   = sdArray[y];
+					
+					double cc = 0;
+					for(int i = 0; i < dataX.length; i++) cc += dataX[i] * dataY[i];
+					cc /= (sdX * sdY);
+					ccArray[x][y] = cc;
+					ccArray[y][x] = cc;
+				}
+			}
 		}
+//		double getCorrelation(String nameX, String nameY) {
+//			final int indexX = nameMap.get(nameX);
+//			final int indexY = nameMap.get(nameY);
+//			
+//			double[] dataX = devArray[indexX];
+//			double[] dataY = devArray[indexY];
+//			double   sdX   = sdArray[indexX];
+//			double   sdY   = sdArray[indexY];
+//			
+//			double ret = 0;
+//			for(int i = 0; i < dataX.length; i++) ret += dataX[i] * dataY[i];
+//
+//			return ret / (sdX * sdY);
+//		}
 		double getCorrelation(String nameX, String nameY) {
 			final int indexX = nameMap.get(nameX);
 			final int indexY = nameMap.get(nameY);
 			
-			double[] dataX = devArray[indexX];
-			double[] dataY = devArray[indexY];
-			double   sdX   = sdArray[indexX];
-			double   sdY   = sdArray[indexY];
-			
-			double ret = 0;
-			for(int i = 0; i < dataX.length; i++) ret += dataX[i] * dataY[i];
-
-			return ret / (sdX * sdY);
+			return ccArray[indexX][indexY];
 		}
 		
-		double getCorrelationX(String nameX, String nameY) {
-			double[] x = dataMap.get(nameX);
-			double[] y = dataMap.get(nameY);
-			return new PearsonsCorrelation().correlation(x, y);
-		}
+//		double getCorrelation(String nameX, String nameY) {
+//			double[] x = dataMap.get(nameX);
+//			double[] y = dataMap.get(nameY);
+//			return new PearsonsCorrelation().correlation(x, y);
+//		}
 
 	}
 	
@@ -166,24 +178,24 @@ public class FindCorrelation {
 		}
 		logger.info("symbolList    = {}", symbolList.size());
 		
-		// Filter out securities that has average volume for last 90 days is less than 50,000
-		{
-			List<String> newSymbolList = new ArrayList<>();
-
-			final int DURATION_DAYS = 90;
-			final int MIN_AVG_VOL   = 50_000;
-			logger.info("DURATION_DAYS = {}", DURATION_DAYS);
-			logger.info("MIN_AVG_VOL   = {}", MIN_AVG_VOL);
-			
-			for(String symbol: symbolList) {
-				double averageVolume = PriceTable.getAverageVolume(connection, symbol, dateFrom, dateTo);
-				if (averageVolume < MIN_AVG_VOL) continue;
-				
-				newSymbolList.add(symbol);
-			}
-			symbolList = newSymbolList;
-		}
-		logger.info("symbolList    = {}", symbolList.size());
+//		// Filter out securities that has average volume for last 90 days is less than 50,000
+//		{
+//			List<String> newSymbolList = new ArrayList<>();
+//
+//			final int DURATION_DAYS = 90;
+//			final int MIN_AVG_VOL   = 50_000;
+//			logger.info("DURATION_DAYS = {}", DURATION_DAYS);
+//			logger.info("MIN_AVG_VOL   = {}", MIN_AVG_VOL);
+//			
+//			for(String symbol: symbolList) {
+//				double averageVolume = PriceTable.getAverageVolume(connection, symbol, dateFrom, dateTo);
+//				if (averageVolume < MIN_AVG_VOL) continue;
+//				
+//				newSymbolList.add(symbol);
+//			}
+//			symbolList = newSymbolList;
+//		}
+//		logger.info("symbolList    = {}", symbolList.size());
 		
 		List<String> dateList = PriceTable.getAllBySymbolDateRange(connection, "IBM", dateFrom, dateTo).stream().map(o -> o.date).collect(Collectors.toList());
 		logger.info("dateList      = {}", dateList.size());
@@ -212,6 +224,10 @@ public class FindCorrelation {
 		Map<String, double[]> priceMap = new TreeMap<>();
 		for(String symbol: symbolList) {
 			List<PriceTable> list = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
+			if (list.size() != dateList.size()) {
+				logger.warn("SKIP  symbol = {}  list = {}  dateList = {}", symbol, list.size(), dateList.size());
+				continue;
+			}
 			double[] value = list.stream().mapToDouble(o -> o.close).skip(skip).map(MovingAverage.getInstance(sampleCount)).flatMap(Sample.getInstance(sampleCount)).toArray();
 			priceMap.put(symbol, value);
 		}
@@ -221,7 +237,7 @@ public class FindCorrelation {
 			CorrelationMap cm = new CorrelationMap(priceMap);
 			logger.info("cm   {} x {}", cm.size, cm.length);
 			
-			logger.info("X SPY  QQQ = {}", String.format("%.9f", cm.getCorrelationX("SPY", "QQQ")));
+			//  SPY  QQQ = 0.980560447
 			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY", "QQQ")));
 		}
 	}

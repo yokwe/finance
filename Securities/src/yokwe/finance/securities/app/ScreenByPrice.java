@@ -30,6 +30,8 @@ public class ScreenByPrice {
 		if (isTradingDay(connection, tradingDate)) return tradingDate;
 		tradingDate = tradingDate.minusDays(1);
 		if (isTradingDay(connection, tradingDate)) return tradingDate;
+		tradingDate = tradingDate.minusDays(1);
+		if (isTradingDay(connection, tradingDate)) return tradingDate;
 		
 		logger.error("date = {}  tradingDate = {}", date, tradingDate);
 		throw new SecuritiesException("tradingDate");

@@ -238,6 +238,7 @@ public class FindCorrelation {
 			logger.info("cm   {} x {}", cm.size, cm.length);
 			
 			//  SPY  QQQ = 0.980560447
+			logger.info("  SPY  QQQ = 0.980560447");
 			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY", "QQQ")));
 		}
 	}

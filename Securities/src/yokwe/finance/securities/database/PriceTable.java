@@ -64,12 +64,13 @@ public final class PriceTable {
 		return result;
 	}
 	
-	private static class SymbolCountTable {
+	// Make SymbolCountTable public for reflection
+	public static class SymbolCountTable {
 		public String symbol;
 		public int    count;
 	}
 	public static Map<String, Integer> getAverageVolume(Connection connection, String dateFrom, String dateTo) {
-		String sql = String.format("select symbol, cast(avg(volume) as INTEGER) as count from price where date between '%s' and '%s' group by symbol", dateFrom, dateTo);
+		String sql = String.format("select symbol, cast(avg(volume) as INTEGER) as count from price where '%s' <= date and date <= '%s' group by symbol", dateFrom, dateTo);
 		List<SymbolCountTable> result = JDBCUtil.getResultAll(connection, sql, SymbolCountTable.class);
 		if (result.size() == 0) {
 			logger.error("result = {}", result);
@@ -79,6 +80,25 @@ public final class PriceTable {
 		result.stream().forEach(o -> ret.put(o.symbol, o.count));
 		
 		return ret;
+	}
+	public static Map<String, Integer> getAverageVolume(Connection connection, LocalDate dateFrom, LocalDate dateTo) {
+		return getAverageVolume(connection, dateFrom.format(DateTimeFormatter.ISO_DATE), dateTo.format(DateTimeFormatter.ISO_DATE));
+	}
+	public static int getAverageVolume(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
+		String stringFrom = dateFrom.format(DateTimeFormatter.ISO_DATE);
+		String stringTo   = dateTo.format(DateTimeFormatter.ISO_DATE);
+		String sql = String.format("select symbol, cast(avg(volume) as INTEGER) as count from price where symbol = '%s' and '%s' <= date and date <= '%s' group by symbol",
+				symbol, stringFrom, stringTo);
+		List<SymbolCountTable> result = JDBCUtil.getResultAll(connection, sql, SymbolCountTable.class);
+		if (result.size() == 0) {
+			logger.error("result = {}", result);
+			throw new SecuritiesException("result");
+		}
+		if (result.size() != 1) {
+			logger.error("result = {}", result);
+			throw new SecuritiesException("result");
+		}
+		return result.get(0).count;
 	}
 	
 	public static class DateTable {

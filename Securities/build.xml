@@ -107,6 +107,17 @@
 		</java>
 	</target>
 
+	<target name="run-update-correlation">
+		<java classname="yokwe.finance.securities.app.UpdateCorrelation" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+                        <arg value="3"/>
+                        <arg value="12"/>
+                        <arg value="36"/>
+                        <arg value="60"/>
+		</java>
+	</target>
+
 	
         <target name="run-update-yahoo-dividend">
                 <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">

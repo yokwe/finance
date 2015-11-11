@@ -39,15 +39,21 @@ load-data:
 	rm -f tmp/sqlite/securities.sqlite3
 	sqlite3 < data/sqlite/table-create.sql
 
+load-correlation:
+	sqlite3 < data/sqlite/table-correlation.sql
+
 update-price:
 	mkdir -p tmp/update/price
 	ant run-update-price
-	cat data/price/price-????.{csv,BAD} ${DIR_DATABASE}/price-????.{csv,BAD} >${DIR_DATABASE}/price-all.csv
+	cat data/price/price-????.{csv,BAD} $${DIR_DATABASE}/price-????.{csv,BAD} >$${DIR_DATABASE}/price-all.csv
 
 update-dividend:
 	mkdir -p tmp/update/dividend
 	ant run-update-dividend
-	cat data/dividend/dividend-????.csv ${DIR_DATABASE}/dividend-????.csv >${DIR_DATABASE}/dividend-all.csv
+	cat data/dividend/dividend-????.csv $${DIR_DATABASE}/dividend-????.csv >$${DIR_DATABASE}/dividend-all.csv
+
+update-correlation:
+	ant run-update-correlation
 
 #
 # nasdaq

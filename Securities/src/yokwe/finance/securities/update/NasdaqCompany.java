@@ -22,6 +22,8 @@ public final class NasdaqCompany {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(NasdaqCompany.class);
 	
 	private static final int BUFFER_SIZE = 256 * 1024;
+	private static final String NA  = "n/a";
+	private static final String ETF = "*ETF*";
 	
 	private static final Map<String, NasdaqTable> nasdaqMap = new TreeMap<>();
 	static {
@@ -63,15 +65,25 @@ public final class NasdaqCompany {
 				return null;
 			}
 			
-			// TODO check duplicate
+			// Handle duplicate symbol
 			String nasdaqSymbol = nasdaqTable.symbol;
 			if (lineMap.containsKey(nasdaqSymbol)) {
 				String lineOld = lineMap.get(nasdaqSymbol);
-				if (line.equals(line)) return null;
-				logger.warn("DUPLICATE  old {}  {}", nasdaqSymbol, line);
-				logger.warn("DUPLICATE  new {}  {}", nasdaqSymbol, lineMap.get(nasdaqSymbol));
+				if (line.equals(lineOld)) {
+					return null;
+				} else {
+					logger.warn("DUPLICATE  old {}  {}", nasdaqSymbol, line);
+					logger.warn("DUPLICATE  new {}  {}", nasdaqSymbol, lineMap.get(nasdaqSymbol));
+					throw new SecuritiesException("duplicate");
+				}
+			} else {
+				lineMap.put(nasdaqSymbol, line);
 			}
-			lineMap.put(nasdaqSymbol, line);
+			
+			// Handle n/a
+			if (sector.equals(NA) && industry.equals(NA) && nasdaqTable.etf.equals("Y")) {
+				sector = industry = ETF;
+			}
 			
 			return new CompanyTable(nasdaqSymbol, sector, industry, name);
 		}

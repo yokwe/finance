@@ -48,7 +48,7 @@ CREATE TABLE cc60 (
 
 CREATE        INDEX cc03_a               ON cc03(a);
 CREATE        INDEX cc03_b               ON cc03(b);
-CREATE        INDEX cc03_cc              ON cc3(cc);
+CREATE        INDEX cc03_cc              ON cc03(cc);
 
 CREATE        INDEX cc12_a               ON cc12(a);
 CREATE        INDEX cc12_b               ON cc12(b);

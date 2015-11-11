@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -26,6 +27,8 @@ public final class NasdaqCompany {
 	static {
 		NasdaqUtil.getAll().stream().forEach(o -> nasdaqMap.put(o.nasdaq, o));
 	}
+	
+	private static Map<String, String> lineMap = new HashMap<>();
 	
 	public static final class CSVRecord {
 		public static final String HEADER = "\"Symbol\",\"Name\",\"LastSale\",\"MarketCap\",\"ADR TSO\",\"IPOyear\",\"Sector\",\"Industry\",\"Summary Quote\",";
@@ -59,7 +62,18 @@ public final class NasdaqCompany {
 				logger.warn("Unknown = {}|{}|{}|{}", nasdaq, sector, industry, name);
 				return null;
 			}
-			return new CompanyTable(nasdaqTable.symbol, sector, industry, name);
+			
+			// TODO check duplicate
+			String nasdaqSymbol = nasdaqTable.symbol;
+			if (lineMap.containsKey(nasdaqSymbol)) {
+				String lineOld = lineMap.get(nasdaqSymbol);
+				if (line.equals(line)) return null;
+				logger.warn("DUPLICATE  old {}  {}", nasdaqSymbol, line);
+				logger.warn("DUPLICATE  new {}  {}", nasdaqSymbol, lineMap.get(nasdaqSymbol));
+			}
+			lineMap.put(nasdaqSymbol, line);
+			
+			return new CompanyTable(nasdaqSymbol, sector, industry, name);
 		}
 		public static String toCSV(String line) {
 			final CompanyTable table = toCompanyTable(line);

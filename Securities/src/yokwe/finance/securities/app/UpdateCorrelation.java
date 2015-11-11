@@ -25,8 +25,8 @@ import yokwe.finance.securities.util.Correlation;
 import yokwe.finance.securities.util.DoubleStreamUtil.MovingAverage;
 import yokwe.finance.securities.util.DoubleStreamUtil.Sample;
 
-public final class FindCorrelation {
-	private static final Logger logger = LoggerFactory.getLogger(FindCorrelation.class);
+public final class UpdateCorrelation {
+	private static final Logger logger = LoggerFactory.getLogger(UpdateCorrelation.class);
 
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
 	private static final String OUTPUT_PATH = "tmp/database/correlaton-%d.csv";
@@ -194,10 +194,10 @@ public final class FindCorrelation {
 		try {
 			Class.forName("org.sqlite.JDBC");
 			try (Connection connection = DriverManager.getConnection(JDBC_URL)) {
-				calculate(connection, 3);
-				calculate(connection, 12);
-				calculate(connection, 36);
-				calculate(connection, 60);
+				for(String arg: args) {
+					int month = Integer.valueOf(arg);
+					calculate(connection, month);
+				}
 			}
 		} catch (ClassNotFoundException | SQLException | IOException e) {
 			logger.error(e.getClass().getName());

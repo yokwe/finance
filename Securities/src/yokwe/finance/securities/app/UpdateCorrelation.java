@@ -29,7 +29,7 @@ public final class UpdateCorrelation {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateCorrelation.class);
 
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
-	private static final String OUTPUT_PATH = "tmp/database/correlaton-%d.csv";
+	private static final String OUTPUT_PATH = "tmp/database/correlation-%02d.csv";
 	
 //	private static final int MIN_SAMPLE_COUNT =  80;
 //	private static final int MAX_SAMPLE_COUNT = 120;

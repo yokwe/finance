@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,52 +29,55 @@ import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.util.DoubleStreamUtil.MovingAverage;
 import yokwe.finance.securities.util.DoubleStreamUtil.Sample;
 
-public class FindCorrelation {
+public final class FindCorrelation {
 	private static final Logger logger = LoggerFactory.getLogger(FindCorrelation.class);
 
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
 	private static final String OUTPUT_PATH = "tmp/correlaton.csv";
 	
 	static final class CorrelationMap {
+		public  final int                   length;
+		public  final int                   size;
 		private final Map<String, double[]> dataMap;
-		final int                           size;     // number of symbol
-		final int                           length;   // number of data per symbol
-		private final Map<String, Integer>  nameMap;  // map from name to index
-		private final double[][]            devArray; // double[size][length]
-		private final double[]              sdArray;  // double[size]
+		private final Map<String, Integer>  indexMap; // map from name to index
+		private final String[]              names;    // all name in dataMap
 		private final double[][]            ccArray;  // double[size][size]
 		
 		CorrelationMap(Map<String, double[]> doubleMap) {
-			int     len       = -1;
-			{
-				boolean firstTime = true;
-				// Sanity check
-				for(String name: doubleMap.keySet()) {
-					double[] data = doubleMap.get(name);
-					if (firstTime) {
-						firstTime = false;
-						len       = data.length;
-						continue;
-					}
-					if (len != data.length) {
-						logger.error("name = {}  len = {}  data.length = {}", name, len, data.length);
-						throw new SecuritiesException("len");
-					}
+			length   = doubleMap.get("IBM").length;
+			size     = doubleMap.size();
+
+			// Sanity check
+			for(String name: doubleMap.keySet()) {
+				double[] data = doubleMap.get(name);
+				if (data.length != length) {
+					logger.error("name = {}  length = {}  data.length = {}", name, length, data.length);
+					throw new SecuritiesException("length");
 				}
 			}
+
 			dataMap  = new HashMap<>(doubleMap);
-			size     = dataMap.size();
-			length   = len;
-			nameMap  = new HashMap<>();
-			devArray = new double[size][length];
-			sdArray  = new double[size];
+			indexMap = new HashMap<>();
+			names    = new String[size];
 			ccArray  = new double[size][size];
+
+			double[][] devArray = new double[size][length];
+			double[]   sdArray  = new double[size];
 			
-			int index = 0;
-			for(String name: doubleMap.keySet()) {
-				nameMap.put(name, index);
+			{
+				int index = 0;
+				for(String name: dataMap.keySet()) {
+					names[index++] = name;
+				}
+				// Sort names before use.  dataMap can be HashMap
+				Arrays.sort(names);
+			}
+			
+			for(int index = 0; index < names.length; index++) {
+				final String name = names[index];
+				indexMap.put(name, index);
 				
-				final double[] data = doubleMap.get(name);
+				final double[] data = dataMap.get(name);
 				final double[] dev  = devArray[index];
 				
 				double mean = 0;
@@ -85,16 +90,11 @@ public class FindCorrelation {
 					dev[i] = t;
 					var += t * t;
 				}
-				sdArray[index] = Math.sqrt(var);
-				//
-				index++;
+				sdArray[index] = 1.0 / Math.sqrt(var);
 			}
+			// Compute ccArray from devArray and sdArray
 			for(int x = 0; x < size; x++) {
-				for(int y = 0; y <= x; y++) {
-					if (x == y) {
-						ccArray[y][y] = 1.0;
-						continue;
-					}
+				for(int y = 0; y < x; y++) {
 					double[] dataX = devArray[x];
 					double[] dataY = devArray[y];
 					double   sdX   = sdArray[x];
@@ -102,39 +102,41 @@ public class FindCorrelation {
 					
 					double cc = 0;
 					for(int i = 0; i < dataX.length; i++) cc += dataX[i] * dataY[i];
-					cc /= (sdX * sdY);
+					cc *= (sdX * sdY);
 					ccArray[x][y] = cc;
 					ccArray[y][x] = cc;
 				}
+				ccArray[x][x] = 1.0;
 			}
 		}
-//		double getCorrelation(String nameX, String nameY) {
-//			final int indexX = nameMap.get(nameX);
-//			final int indexY = nameMap.get(nameY);
-//			
-//			double[] dataX = devArray[indexX];
-//			double[] dataY = devArray[indexY];
-//			double   sdX   = sdArray[indexX];
-//			double   sdY   = sdArray[indexY];
-//			
-//			double ret = 0;
-//			for(int i = 0; i < dataX.length; i++) ret += dataX[i] * dataY[i];
-//
-//			return ret / (sdX * sdY);
-//		}
+		private int getIndex(String name) {
+			if (indexMap.containsKey(name)) {
+				return indexMap.get(name);
+			} else {
+				logger.error("Unknown name = {}", name);
+				throw new SecuritiesException("unknown name");
+			}
+		}
 		double getCorrelation(String nameX, String nameY) {
-			final int indexX = nameMap.get(nameX);
-			final int indexY = nameMap.get(nameY);
+			final int indexX = getIndex(nameX);
+			final int indexY = getIndex(nameY);
 			
 			return ccArray[indexX][indexY];
 		}
 		
-//		double getCorrelation(String nameX, String nameY) {
-//			double[] x = dataMap.get(nameX);
-//			double[] y = dataMap.get(nameY);
-//			return new PearsonsCorrelation().correlation(x, y);
-//		}
-
+		double getCorrelationX(String nameX, String nameY) {
+			double[] x = dataMap.get(nameX);
+			double[] y = dataMap.get(nameY);
+			return new PearsonsCorrelation().correlation(x, y);
+		}
+		Map<String, Double> getCorrelation(String name) {
+			final int index = getIndex(name);
+			Map<String, Double> ret = new TreeMap<>();
+			for(int i = 0; i < names.length; i++) {
+				ret.put(names[i], ccArray[index][i]);
+			}
+			return ret;
+		}
 	}
 	
 	static void calculate(final Connection connection, final Writer w, final int months) throws IOException {
@@ -238,8 +240,9 @@ public class FindCorrelation {
 			logger.info("cm   {} x {}", cm.size, cm.length);
 			
 			//  SPY  QQQ = 0.980560447
-			logger.info("  SPY  QQQ = 0.980560447");
+			logger.info("X SPY  QQQ = {}", String.format("%.9f", cm.getCorrelationX("SPY", "QQQ")));
 			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY", "QQQ")));
+			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY").get("QQQ")));
 		}
 	}
 	

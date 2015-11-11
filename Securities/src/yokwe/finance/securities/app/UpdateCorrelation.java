@@ -31,6 +31,8 @@ public final class UpdateCorrelation {
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
 	private static final String OUTPUT_PATH = "tmp/database/correlation-%02d.csv";
 	
+	private static final int  BUFFER_SIZE = 128 * 1024 * 1024;
+	
 //	private static final int MIN_SAMPLE_COUNT =  80;
 //	private static final int MAX_SAMPLE_COUNT = 120;
 	
@@ -159,9 +161,9 @@ public final class UpdateCorrelation {
 		}
 		
 		{
-//			logger.info("Correlation");
+			logger.info("correlation");
 			Correlation correlation = new Correlation(priceMap);
-			logger.info("correation    {} x {}", correlation.size, correlation.length);
+			logger.info("correlation    {} x {}", correlation.size, correlation.length);
 			
 			//  SPY  QQQ = 0.980560447
 			logger.info("X SPY  QQQ = {}", String.format("%.9f", correlation.getCorrelationX("SPY", "QQQ")));
@@ -169,7 +171,7 @@ public final class UpdateCorrelation {
 			
 			String csvPath = String.format(OUTPUT_PATH, months);
 			logger.info("csv file      {}", csvPath);
-			try (BufferedWriter csv = new BufferedWriter(new FileWriter(csvPath))) {
+			try (BufferedWriter csv = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 				for(String symbolA: correlation.getNames()) {
 					Map<String, Double> map = correlation.getCorrelation(symbolA);
 					

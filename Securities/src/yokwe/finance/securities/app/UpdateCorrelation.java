@@ -161,14 +161,14 @@ public final class UpdateCorrelation {
 		{
 //			logger.info("Correlation");
 			Correlation correlation = new Correlation(priceMap);
-			logger.info("correation   {} x {}", correlation.size, correlation.length);
+			logger.info("correation    {} x {}", correlation.size, correlation.length);
 			
 			//  SPY  QQQ = 0.980560447
 			logger.info("X SPY  QQQ = {}", String.format("%.9f", correlation.getCorrelationX("SPY", "QQQ")));
 			logger.info("  SPY  QQQ = {}", String.format("%.9f", correlation.getCorrelation("SPY", "QQQ")));
 			
 			String csvPath = String.format(OUTPUT_PATH, months);
-			logger.info("OUTPUT CSV START  {}", csvPath);
+			logger.info("csv file      {}", csvPath);
 			try (BufferedWriter csv = new BufferedWriter(new FileWriter(csvPath))) {
 				for(String symbolA: correlation.getNames()) {
 					Map<String, Double> map = correlation.getCorrelation(symbolA);
@@ -180,7 +180,6 @@ public final class UpdateCorrelation {
 					}
 				}
 			}
-			logger.info("OUTPUT CSV STOP");
 		}
 	}
 	

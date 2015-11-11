@@ -7,7 +7,7 @@
 .echo ON
 .open tmp/sqlite/securities.sqlite3
 
-DROP TABLE IF EXISTS correlation
+DROP TABLE IF EXISTS correlation;
 
 CREATE TABLE correlation (
   month INTEGER NOT NULL, -- month
@@ -25,7 +25,7 @@ CREATE TABLE correlation (
 .import tmp/database/correlation-36.csv   correlation
 .import tmp/database/correlation-60.csv   correlation
 
-CREATE        INDEX correlation_momth           ON correlation(momth);
+CREATE        INDEX correlation_month           ON correlation(month);
 CREATE        INDEX correlation_a               ON correlation(a);
 CREATE        INDEX correlation_b               ON correlation(b);
 CREATE        INDEX correlation_cc              ON correlation(cc);

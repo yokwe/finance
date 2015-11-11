@@ -35,6 +35,15 @@ public final class FindCorrelation {
 	private static final String JDBC_URL    = "jdbc:sqlite:tmp/sqlite/securities.sqlite3";
 	private static final String OUTPUT_PATH = "tmp/correlaton.csv";
 	
+//	private static final int MIN_SAMPLE_COUNT =  80;
+//	private static final int MAX_SAMPLE_COUNT = 120;
+	
+	private static final int MIN_SAMPLE_COUNT = 480;
+	private static final int MAX_SAMPLE_COUNT = 520;
+	
+//	private static final int MIN_SAMPLE_COUNT =  980;
+//	private static final int MAX_SAMPLE_COUNT = 1020;
+	
 	static final class CorrelationMap {
 		public  final int                   length;
 		public  final int                   size;
@@ -201,36 +210,45 @@ public final class FindCorrelation {
 		
 		List<String> dateList = PriceTable.getAllBySymbolDateRange(connection, "IBM", dateFrom, dateTo).stream().map(o -> o.date).collect(Collectors.toList());
 		logger.info("dateList      = {}", dateList.size());
-		int sampleCount = 0;
-		int skip        = 0;
+		final int totalCount = dateList.size();
+		int sample = -1;
+		int skip   = totalCount;
 		{
-			final int dateCount = dateList.size();
-			
-			int reminder = dateCount;
-			for(int i = 40; 20 <= i; i--) {
-				skip = dateCount % i;
-				if (skip == 0) {
-					sampleCount = dateCount / i;
-					reminder    = skip;
+			for(int i = MAX_SAMPLE_COUNT; MIN_SAMPLE_COUNT <= i; i--) {
+				final int tempSample = totalCount / i;
+				if (tempSample == 0) continue;
+				
+				final int tempCount  = totalCount / tempSample;
+				if (tempCount < MIN_SAMPLE_COUNT || MAX_SAMPLE_COUNT < tempCount) continue;
+				
+				final int tempSkip   = totalCount % tempSample;
+
+				if (tempSkip == 0) {
+					sample = tempSample;
+					skip   = tempSkip;
 					break;
 				}
-				if (skip < reminder) {
-					sampleCount = dateCount / i;
-					reminder    = skip;
+				if (tempSkip < skip) {
+					sample  = tempSample;
+					skip    = tempSkip;
 				}
 			}
+			if (sample == -1) {
+				sample = 1;
+				skip   = 0;
+			}
 		}
-		logger.info("skip          = {}", skip);
-		logger.info("sampleCount   = {}", sampleCount);
-		logger.info("sample        = {}", dateList.size() / sampleCount);
+		logger.info("sample count  {}  -  {}", MIN_SAMPLE_COUNT, MAX_SAMPLE_COUNT);
+		logger.info("totalCount    {}  =  {} (sample) *  {} (count)  +  {} (skip)", totalCount, sample, totalCount / sample, skip);
+		
 		Map<String, double[]> priceMap = new TreeMap<>();
 		for(String symbol: symbolList) {
 			List<PriceTable> list = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
 			if (list.size() != dateList.size()) {
-				logger.warn("SKIP  symbol = {}  list = {}  dateList = {}", symbol, list.size(), dateList.size());
+//				logger.warn("SKIP  symbol = {}  list = {}  dateList = {}", symbol, list.size(), dateList.size());
 				continue;
 			}
-			double[] value = list.stream().mapToDouble(o -> o.close).skip(skip).map(MovingAverage.getInstance(sampleCount)).flatMap(Sample.getInstance(sampleCount)).toArray();
+			double[] value = list.stream().mapToDouble(o -> o.close).skip(skip).map(MovingAverage.getInstance(sample)).flatMap(Sample.getInstance(sample)).toArray();
 			priceMap.put(symbol, value);
 		}
 		
@@ -242,7 +260,16 @@ public final class FindCorrelation {
 			//  SPY  QQQ = 0.980560447
 			logger.info("X SPY  QQQ = {}", String.format("%.9f", cm.getCorrelationX("SPY", "QQQ")));
 			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY", "QQQ")));
-			logger.info("  SPY  QQQ = {}", String.format("%.9f", cm.getCorrelation("SPY").get("QQQ")));
+			{
+				Map<String, Double> map = cm.getCorrelation("SPY");
+				logger.info("  SPY  QQQ = {}", String.format("%.9f", map.get("QQQ")));
+				for(String key: map.keySet()) {
+					double value = map.get(key);
+					if (value < -0.5) {
+						logger.info("{}", String.format("%-6s  %-6s  %6.2f", "SPY", key, value));
+					}
+				}
+			}
 		}
 	}
 	

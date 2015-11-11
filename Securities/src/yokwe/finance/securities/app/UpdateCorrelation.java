@@ -175,8 +175,8 @@ public final class UpdateCorrelation {
 					
 					for(String symbolB: map.keySet()) {
 						double v = map.get(symbolB);
-						// symbolA, symbolB, correlation
-						csv.append(String.format("%s,%s,%.2f\n", symbolA, symbolB, v));
+						// month, symbolA, symbolB, correlation
+						csv.append(String.format("%d,%s,%s,%.2f\n", months, symbolA, symbolB, v));
 					}
 				}
 			}

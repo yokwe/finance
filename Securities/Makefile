@@ -44,13 +44,15 @@ load-correlation:
 
 update-price:
 	mkdir -p tmp/update/price
+	mkdir -p ${DIR_DATABASE}
 	ant run-update-price
-	cat data/price/price-????.{csv,BAD} $${DIR_DATABASE}/price-????.{csv,BAD} >$${DIR_DATABASE}/price-all.csv
+	cat data/price/price-????.??? ${DIR_DATABASE}/price-????.??? >${DIR_DATABASE}/price-all.csv
 
 update-dividend:
 	mkdir -p tmp/update/dividend
+	mkdir -p ${DIR_DATABASE}
 	ant run-update-dividend
-	cat data/dividend/dividend-????.csv $${DIR_DATABASE}/dividend-????.csv >$${DIR_DATABASE}/dividend-all.csv
+	cat data/dividend/dividend-????.csv ${DIR_DATABASE}/dividend-????.csv >${DIR_DATABASE}/dividend-all.csv
 
 update-correlation:
 	ant run-update-correlation

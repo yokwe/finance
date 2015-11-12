@@ -242,15 +242,12 @@ public final class Nasdaq {
 				// D = Deficient: Issuer Failed to Meet NASDAQ Continued Listing Requirements
 				// E = Delinquent: Issuer Missed Regulatory Filing Deadline
 				// Q = Bankrupt: Issuer Has Filed for Bankruptcy
-				if (status.equals("Q")) continue;  // Skip Bankruptcy record
 				// N = Normal (Default): Issuer Is NOT Deficient, Delinquent, or Bankrupt.
 				// G = Deficient and Bankrupt
-				if (status.equals("G")) continue;  // Skip Bankruptcy record
 				// H = Deficient and Delinquent
 				// J = Delinquent and Bankrupt
-				if (status.equals("J")) continue;  // Skip Bankruptcy record
-				// K = Deficient, Delinquent, and Bankrupt
-				if (status.equals("K")) continue;  // Skip Bankruptcy record
+				// K = Deficient, Delinquent, and Bankrupt				
+				if (!status.equals("N")) continue;
 				
 				if (traded.equals("Y") && test.equals("N")) {
 					// name

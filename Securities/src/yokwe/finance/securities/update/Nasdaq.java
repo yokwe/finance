@@ -42,19 +42,21 @@ public final class Nasdaq {
 	//  # X-    X preferred                     AA-      AA-P      AA-       AA^
 	//  # X*    X called                        ARY*     ARY-CL    ARY.CL    ARY.CL
 	//  # X#    X when issued                   HPE#     HPE-WI    HPE*      HPE.WI
+	//  # X$    X when issued2                  AC$      AC-WD     AC.WD     AC.WD
 	//  # X+    X warrants                      AIG+     AIG-WT    ???       AIG.WS
 	//  # X-A   X preferred class A             ABR-A    ABR-PA    ABR-A     ABR^A
 	//  # X-A*  X preferred class A called      BIR-A*   BIR-PA.A  BIR-A.CL  BIR^A.CL
 	//  # X.A   X class A                       AKO.A    AKO-A     AKO.A     AKO.A
 	//  # X+A   X warrants class A              GM+A     GM-WTA    ???       GM.WS.A
 	
-	//  TODO                                                                 DRI$      What is this?
+	//  DRI$ became DRI
 	
 	private static String PAT_NORMAL            = "^([A-Z]+)$";
 	private static String PAT_UNIT              = "^([A-Z]+)=$";
 	private static String PAT_PREF              = "^([A-Z]+)-$";
 	private static String PAT_CALL              = "^([A-Z]+)\\*$";
 	private static String PAT_WHEN_ISSUED       = "^([A-Z]+)#$";
+	private static String PAT_WHEN_ISSUED2      = "^([A-Z]+)\\$$";
 	private static String PAT_WAR               = "^([A-Z]+)\\+$";
 	//
 	private static String PAT_PREF_CLASS        = "^([A-Z]+)-([A-Z])$";
@@ -76,6 +78,7 @@ public final class Nasdaq {
 		yahooConverter.addConverter1(PAT_PREF,              "%s-P");     // Preferred
 		yahooConverter.addConverter1(PAT_CALL,              "%s-CL");    // Called
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED,       "%s-WI");    // When Issued
+		yahooConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s-WD");    // When Issued2
 		yahooConverter.addConverter1(PAT_WAR,               "%s-WT");    // Warrants
 		
 		yahooConverter.addConverter2(PAT_PREF_CLASS,        "%s-P%s");   // Preferred class A
@@ -89,6 +92,7 @@ public final class Nasdaq {
 		googleConverter.addConverter1(PAT_PREF,              "%s-");      // Preferred
 		googleConverter.addConverter1(PAT_CALL,              "%s.CL");    // Called
 		googleConverter.addConverter1(PAT_WHEN_ISSUED,       "%s*");      // When Issued
+		googleConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		googleConverter.addConverter1(PAT_WAR,               "???");      // Warrants -- UNKNOWN
 		
 		googleConverter.addConverter2(PAT_PREF_CLASS,        "%s-%s");    // Preferred class A
@@ -102,6 +106,7 @@ public final class Nasdaq {
 		nasdaqConverter.addConverter1(PAT_PREF,              "%s^");      // Preferred
 		nasdaqConverter.addConverter1(PAT_CALL,              "%s.CL");    // Called
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED,       "%s.WI");    // When Issued
+		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		nasdaqConverter.addConverter1(PAT_WAR,               "%s.WS");    // Warrants
 		
 		nasdaqConverter.addConverter2(PAT_PREF_CLASS,        "%s^%s");    // Preferred class A
@@ -230,14 +235,24 @@ public final class Nasdaq {
 //				String cqsSymbol = fields[9];
 				String symbol    = fields[10]; // nasdaq symbol
 				
-				if (symbol.endsWith("$")) {
-					// TODO How to handle symbol end with "$"?
-					logger.warn("SKIP {}", symbol);
-					continue;
+				if (status.length() == 0) {
+					status = "N";
 				}
-				if (status.length() == 0) status = "N";
-
-				if (traded.equals("Y") && status.equals("N") && test.equals("N")) {
+				
+				// D = Deficient: Issuer Failed to Meet NASDAQ Continued Listing Requirements
+				// E = Delinquent: Issuer Missed Regulatory Filing Deadline
+				// Q = Bankrupt: Issuer Has Filed for Bankruptcy
+				if (status.equals("Q")) continue;  // Skip Bankruptcy record
+				// N = Normal (Default): Issuer Is NOT Deficient, Delinquent, or Bankrupt.
+				// G = Deficient and Bankrupt
+				if (status.equals("G")) continue;  // Skip Bankruptcy record
+				// H = Deficient and Delinquent
+				// J = Delinquent and Bankrupt
+				if (status.equals("J")) continue;  // Skip Bankruptcy record
+				// K = Deficient, Delinquent, and Bankrupt
+				if (status.equals("K")) continue;  // Skip Bankruptcy record
+				
+				if (traded.equals("Y") && test.equals("N")) {
 					// name
 					name = name.replace("\"", "\"\"");
 					if (name.contains(",")) {

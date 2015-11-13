@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 
@@ -68,6 +69,9 @@ public class ScreenByPrice {
 	static void calculate(Connection connection, Writer w) throws IOException {
 		Map<String, NasdaqTable> nasdaqMap = NasdaqTable.getMap(connection);
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());
+		
+		Map<String, CompanyTable> companyMap = CompanyTable.getMap(connection);
+		logger.info("nasdaqMap     = {}", nasdaqMap.size());
 
 		// symbolList has all symbols
 		List<String> symbolList = nasdaqMap.keySet().stream().collect(Collectors.toList());
@@ -111,6 +115,9 @@ public class ScreenByPrice {
 		
 		// Output header
 		w.append("symbol");
+		w.append(",sector");
+		w.append(",industry");
+		w.append(",name");
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
 		}
@@ -118,11 +125,39 @@ public class ScreenByPrice {
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
 		}
-		w.append(",name\n");
+		w.append("\n");
 		
 		// Output data of each symbol
 		for(String symbol: ratioMap.keySet()) {
 			w.append(symbol);
+			
+			{
+				CompanyTable company = companyMap.get(symbol);
+				if (company != null) {
+					String sector   = company.sector;
+					if (sector.contains("\"")) sector = sector.replace("\"", "\"\"");
+					if (sector.contains(","))  sector = "\"" + sector + "\"";
+
+					String industry = company.industry;
+					if (industry.contains("\"")) industry = industry.replace("\"", "\"\"");
+					if (industry.contains(","))  industry = "\"" + industry + "\"";
+					
+					w.append(",").append(sector);
+					w.append(",").append(industry);
+				} else {
+					w.append(",N/A");
+					w.append(",N/A");
+				}
+			}
+			
+			{
+				String name = nasdaqMap.get(symbol).name;
+				if (name.contains("\"")) name = name.replace("\"", "\"\"");
+				if (name.contains(","))  name = "\"" + name + "\"";
+				
+				w.append(",").append(name);
+			}
+			
 			Map<String, String> map = ratioMap.get(symbol);
 			if (map == null) {
 				logger.error("null  {}  {}", symbol, map);
@@ -141,12 +176,8 @@ public class ScreenByPrice {
 			for(String name: priceMapMap.keySet()) {
 				w.append(",").append(map.get(name));
 			}
-			
-			String name = nasdaqMap.get(symbol).name;
-			if (name.contains("\"")) name = name.replace("\"", "\"\"");
-			if (name.contains(","))  name = "\"" + name + "\"";
-			
-			w.append(",").append(name).append("\n");
+						
+			w.append("\n");
 		}
 	}
 	

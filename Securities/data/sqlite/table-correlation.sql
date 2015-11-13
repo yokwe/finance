@@ -36,6 +36,8 @@ CREATE        INDEX correlation_a               ON correlation(a);
 select time('now', 'localtime');
 CREATE        INDEX correlation_b               ON correlation(b);
 select time('now', 'localtime');
+CREATE        INDEX correlation_a_b             ON correlation(a,b);
+select time('now', 'localtime');
 CREATE        INDEX correlation_cc              ON correlation(cc);
 select time('now', 'localtime');
 

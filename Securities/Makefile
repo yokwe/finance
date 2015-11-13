@@ -57,6 +57,12 @@ update-dividend:
 update-correlation:
 	ant run-update-correlation
 
+tar:
+	tar cfzv ~/Dropbox/Securities_data.taz tmp/fetch tmp/database
+
+extract-tar:
+	tar xfzv ~/Dropbox/Securities_data.taz
+
 #
 # nasdaq
 #

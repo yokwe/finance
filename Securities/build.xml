@@ -111,6 +111,7 @@
 		<java classname="yokwe.finance.securities.app.UpdateCorrelation" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
+                        <arg value="1"/>
                         <arg value="3"/>
                         <arg value="12"/>
                         <arg value="36"/>

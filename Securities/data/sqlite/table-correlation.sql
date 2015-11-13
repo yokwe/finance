@@ -21,6 +21,8 @@ CREATE TABLE correlation (
 .separator ,
 
 select time('now', 'localtime');
+.import tmp/database/correlation-01.csv   correlation
+select time('now', 'localtime');
 .import tmp/database/correlation-03.csv   correlation
 select time('now', 'localtime');
 .import tmp/database/correlation-12.csv   correlation

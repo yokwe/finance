@@ -7,6 +7,9 @@
 .echo ON
 .open tmp/sqlite/securities.sqlite3
 
+pragma page_size = 4096;
+pragma journal_mode = wal;
+
 CREATE TABLE nasdaq (
   etf              TEXT     NOT NULL, -- Y for ETF
   exchange         TEXT     NOT NULL, -- name of exchange

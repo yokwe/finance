@@ -40,6 +40,8 @@ load-data:
 	sqlite3 < data/sqlite/table-create.sql
 
 load-correlation:
+	mkdir -p tmp/sqlite
+	rm -f tmp/sqlite/correlation.sqlite3
 	sqlite3 < data/sqlite/table-correlation.sql
 
 update-price:

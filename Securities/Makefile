@@ -63,6 +63,7 @@ tar:
 	tar cfzv ~/Dropbox/Securities_data.taz tmp/fetch tmp/database
 
 extract-tar:
+	rm -rf tmp/fetch/* tmp/database/*
 	tar xfzv ~/Dropbox/Securities_data.taz
 
 #

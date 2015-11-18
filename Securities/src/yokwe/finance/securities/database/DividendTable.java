@@ -1,6 +1,8 @@
 package yokwe.finance.securities.database;
 
 import java.sql.Connection;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import yokwe.finance.securities.util.JDBCUtil;
@@ -11,6 +13,13 @@ public final class DividendTable {
 	}
 	public static List<DividendTable> getAllBySymbol(Connection connection, String symbol) {
 		final String sql = String.format("select * from dividend where symbol = '%s'", symbol);
+		return getAll(connection, sql);
+	}
+	public static List<DividendTable> getAllBySymbolDateRange(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
+		final String stringFrom = dateFrom.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		final String stringTo   = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE);
+		
+		final String sql = String.format("select * from dividend where symbol = '%s' and '%s' <= date and date <= '%s'", symbol, stringFrom, stringTo);
 		return getAll(connection, sql);
 	}
 	

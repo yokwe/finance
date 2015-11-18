@@ -99,8 +99,9 @@ public class JDBCUtil {
 						throw new SecuritiesException(message);
 					}
 					{
-						String value = Scrape.isValid(stringValue) ? stringValue : null;
-						columnInfo.field.set(ret, value);
+//						String value = Scrape.isValid(stringValue) ? stringValue : null;
+//						columnInfo.field.set(ret, value);
+						columnInfo.field.set(ret, stringValue);
 					}
 					break;
 				case Types.INTEGER:

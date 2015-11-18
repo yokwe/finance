@@ -71,7 +71,7 @@ public class ScreenByPrice {
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());
 		
 		Map<String, CompanyTable> companyMap = CompanyTable.getMap(connection);
-		logger.info("nasdaqMap     = {}", nasdaqMap.size());
+		logger.info("companyMap    = {}", companyMap.size());
 
 		// symbolList has all symbols
 		List<String> symbolList = nasdaqMap.keySet().stream().collect(Collectors.toList());
@@ -133,21 +133,20 @@ public class ScreenByPrice {
 			
 			{
 				CompanyTable company = companyMap.get(symbol);
-				if (company != null) {
-					String sector   = company.sector;
-					if (sector.contains("\"")) sector = sector.replace("\"", "\"\"");
-					if (sector.contains(","))  sector = "\"" + sector + "\"";
-
-					String industry = company.industry;
-					if (industry.contains("\"")) industry = industry.replace("\"", "\"\"");
-					if (industry.contains(","))  industry = "\"" + industry + "\"";
-					
-					w.append(",").append(sector);
-					w.append(",").append(industry);
-				} else {
-					w.append(",N/A");
-					w.append(",N/A");
+				if (company == null) {
+					logger.error("Unknown symbol = {}", symbol);
+					throw new SecuritiesException("Unknown symbol");
 				}
+				String sector   = company.sector;
+				if (sector.contains("\"")) sector = sector.replace("\"", "\"\"");
+				if (sector.contains(","))  sector = "\"" + sector + "\"";
+
+				String industry = company.industry;
+				if (industry.contains("\"")) industry = industry.replace("\"", "\"\"");
+				if (industry.contains(","))  industry = "\"" + industry + "\"";
+				
+				w.append(",").append(sector);
+				w.append(",").append(industry);
 			}
 			
 			{

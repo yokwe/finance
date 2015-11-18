@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
@@ -116,8 +117,10 @@ public class ScreenByDividend {
 		final String thisYear = String.format("%d", lastTradeDate.getYear());
 		
 		Map<String, NasdaqTable>  nasdaqMap  = NasdaqTable.getMap(connection);
-		
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());
+		
+		Map<String, CompanyTable> companyMap = CompanyTable.getMap(connection);
+		logger.info("companyMap     = {}", companyMap.size());
 		
 		// candidateList has all
 		List<String> candidateList = nasdaqMap.keySet().stream().collect(Collectors.toList());
@@ -138,7 +141,6 @@ public class ScreenByDividend {
 			candidateList = newCandidateList;
 		}
 		logger.info("candidateList = {}", candidateList.size());
-		logger.info("AKP = {}", candidateList.contains("AKP"));
 		
 		// Filter out securities that has average volume for last 90 days is less than 50,000
 		{
@@ -157,7 +159,6 @@ public class ScreenByDividend {
 				if (!avgVolumeMap.containsKey(symbol)) continue;
 				
 				final int averageVolume = avgVolumeMap.get(symbol);
-				if (symbol.equals("AKP")) logger.info("AKP = {}", averageVolume);
 				if (averageVolume < MIN_AVG_VOL) continue;
 				
 				newCandidateList.add(symbol);
@@ -206,9 +207,10 @@ public class ScreenByDividend {
 			final String y1 = String.format("%d", y0Number - 1);
 			
 			// Output title line
-			w.append("etf,freq,price,symbol");
+			w.append("symbol,sector,industry,name,freq,price");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
-			w.append(",name\n");
+			w.append(",last");
+			w.append("\n");
 
 			int count = 0;
 			for(String symbol: candidateList) {
@@ -222,11 +224,9 @@ public class ScreenByDividend {
 				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
 				
 				final String name;
-				final String etf;
 				final int    freq;
 				{
 					NasdaqTable nasdaqTable = NasdaqUtil.get(symbol);
-					etf  = nasdaqTable.etf;
 					freq = yearMap.get(y1).size();
 					
 					String nasdaqName = nasdaqTable.name;
@@ -263,12 +263,46 @@ public class ScreenByDividend {
 					}
 				}
 				
-				w.append(String.format("%s,%d,%.2f,%s", etf, freq, price, symbol));
+				w.append(String.format("%s", symbol));
+				{
+					CompanyTable company = companyMap.get(symbol);
+					if (company == null) {
+						logger.error("Unknown symbol = {}", symbol);
+						throw new SecuritiesException("Unknown symbol");
+					}
+					String sector   = company.sector;
+					if (sector.contains("\"")) sector = sector.replace("\"", "\"\"");
+					if (sector.contains(","))  sector = "\"" + sector + "\"";
+
+					String industry = company.industry;
+					if (industry.contains("\"")) industry = industry.replace("\"", "\"\"");
+					if (industry.contains(","))  industry = "\"" + industry + "\"";
+					
+					w.append(",").append(sector);
+					w.append(",").append(industry);
+				}
+				w.append(String.format(",%s", name));
+				w.append(String.format(",%d,%.2f", freq, price));
+
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
 					final double p = profit[i];
 					w.append((0 <= p) ? String.format(",%.3f", p) : ",");
 				}
-				w.append(String.format(",%s\n", name));
+				
+				// Calculate profit from last dividend within 1 month
+				{
+					LocalDate oneMonthBefore = lastTradeDate.minusMonths(1);
+					List<DividendTable> dividendList = DividendTable.getAllBySymbolDateRange(connection, symbol, oneMonthBefore, lastTradeDate);
+					w.append(",");
+					if (dividendList.size() == 1) {
+						// estimate dividend profit from last dividend
+						final double lastDividend = dividendList.get(0).dividend;
+						double profitFromLastDividend = (lastDividend * freq) * priceRatio;
+						w.append(String.format("%.3f", profitFromLastDividend));
+					}
+				}
+				
+				w.append("\n");
 				count++;
 			}
 			

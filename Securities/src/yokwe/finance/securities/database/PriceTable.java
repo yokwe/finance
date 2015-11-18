@@ -51,8 +51,7 @@ public final class PriceTable {
 		final String stringTo   = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
 		String sql = String.format("select * from price where '%s' <= date and date <= '%s'", stringFrom, stringTo);
-		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
-		return result;
+		return getAll(connection, sql);
 	}
 	
 	public static List<PriceTable>  getAllBySymbolDateRange(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
@@ -60,8 +59,7 @@ public final class PriceTable {
 		final String stringTo   = dateTo.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
 		String sql = String.format("select * from price where symbol = '%s' and '%s' <= date and date <= '%s'", symbol, stringFrom, stringTo);
-		List<PriceTable> result = JDBCUtil.getResultAll(connection, sql, PriceTable.class);
-		return result;
+		return getAll(connection, sql);
 	}
 	
 	// Make SymbolCountTable public for reflection

@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -25,12 +24,8 @@ public final class NasdaqCompany {
 	private static final String NA  = "n/a";
 	private static final String ETF = "*ETF*";
 	
-	private static final Map<String, NasdaqTable> nasdaqMap = new TreeMap<>();
-	static {
-		NasdaqUtil.getAll().stream().forEach(o -> nasdaqMap.put(o.nasdaq, o));
-	}
-	
-	private static Map<String, String> lineMap = new HashMap<>();
+	private static final Map<String, NasdaqTable>  nasdaqMap  = NasdaqUtil.getMap();	
+	private static final Map<String, String>       lineMap    = new TreeMap<>();
 	
 	public static final class CSVRecord {
 		public static final String HEADER = "\"Symbol\",\"Name\",\"LastSale\",\"MarketCap\",\"ADR TSO\",\"IPOyear\",\"Sector\",\"Industry\",\"Summary Quote\",";
@@ -81,8 +76,8 @@ public final class NasdaqCompany {
 			}
 			
 			// Handle n/a
-			if (sector.equals(NA) && industry.equals(NA) && nasdaqTable.etf.equals("Y")) {
-				sector = industry = ETF;
+			if (sector.equals(NA) && industry.equals(NA)) {
+				sector = industry = nasdaqTable.etf.equals("Y") ? ETF : "*NA*";
 			}
 			
 			return new CompanyTable(nasdaqSymbol, sector, industry, name);
@@ -105,6 +100,8 @@ public final class NasdaqCompany {
 		File[] fileList = root.listFiles();
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
+		Map<String, CompanyTable> companyMap = new TreeMap<>();
+		
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
 			int totalRecord = 0;
 			int totalSymbol = 0;
@@ -126,17 +123,36 @@ public final class NasdaqCompany {
 					for(;;) {
 						String line = br.readLine();
 						if (line == null) break;
-						String csv = CSVRecord.toCSV(line);
-						if (csv == null) {
+						CompanyTable company = CSVRecord.toCompanyTable(line);
+						if (company == null) {
 							totalNull++;
 							continue;
 						}
-						bw.append(csv).append(NEWLINE);
+						companyMap.put(company.symbol, company);
 						size++;
 					}
 				}
 				totalRecord += size;
 				if (0 < size) totalSymbol++;
+			}
+			for(String symbol: nasdaqMap.keySet()) {
+				final CompanyTable company;
+				if (companyMap.containsKey(symbol)) {
+					company = companyMap.get(symbol);
+				} else {
+					NasdaqTable nasdaq = nasdaqMap.get(symbol);
+					final String sector;
+					final String industry;
+					if (nasdaq.etf.equals("Y")) {
+						sector   = ETF;
+						industry = ETF;
+					} else {
+						sector   = "*NA*";
+						industry = "*NA*";
+					}
+					company = new CompanyTable(symbol, sector, industry, nasdaq.name);
+				}
+				bw.append(company.toCSV()).append(NEWLINE);
 			}
 			
 			logger.info("RECORD {}", totalRecord);

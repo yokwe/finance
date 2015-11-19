@@ -173,6 +173,8 @@ public class ScreenByDividend {
 			List<DividendTable> dividendList = DividendTable.getAllBySymbol(connection, symbol);
 			Map<String, List<Double>> yearMap = new TreeMap<>();
 			for(DividendTable dividendTable: dividendList) {
+				// Skip very small dividend
+				if (dividendTable.dividend < 0.001) continue;
 				String year = dividendTable.date.substring(0, 4);
 				if (!yearMap.containsKey(year)) yearMap.put(year, new ArrayList<>());
 				yearMap.get(year).add(dividendTable.dividend);

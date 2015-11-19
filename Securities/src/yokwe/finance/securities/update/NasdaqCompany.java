@@ -24,12 +24,18 @@ public final class NasdaqCompany {
 	private static final String NA  = "n/a";
 	private static final String ETF = "*ETF*";
 	
-	private static final Map<String, NasdaqTable>  nasdaqMap  = NasdaqUtil.getMap();	
+	// key of nasdaqMap is nasdaq-web-symbol
+	private static final Map<String, NasdaqTable>  nasdaqWebSymbolMap  = new TreeMap<>();
+	static {
+		for(NasdaqTable table: NasdaqUtil.getAll()) {
+			nasdaqWebSymbolMap.put(table.nasdaq, table);
+		}
+	}
 	private static final Map<String, String>       lineMap    = new TreeMap<>();
 	
 	public static final class CSVRecord {
-		public static final String HEADER = "\"Symbol\",\"Name\",\"LastSale\",\"MarketCap\",\"ADR TSO\",\"IPOyear\",\"Sector\",\"Industry\",\"Summary Quote\",";
-		public static final int NUMBER_OF_FIELDS = 9;
+		public static final String HEADER = "\"Symbol\",\"Name\",\"LastSale\",\"MarketCap\",\"ADR TSO\",\"Country\",\"IPOyear\",\"Sector\",\"Industry\",\"Summary Quote\",";
+		public static final int NUMBER_OF_FIELDS = 10;
 		
 		public static void checkHeader(String line) {
 			if (!line.equals(HEADER)) {
@@ -48,20 +54,21 @@ public final class NasdaqCompany {
 //			double lastSale   = Double.valueOf(fields[2].substring(1).trim());
 //			String marketCap  = fields[3].substring(1).trim();
 //			String adrTSO     = fields[4].substring(1).trim();
-//			String ip0Year    = fields[5].substring(1).trim();
-			String sector     = fields[6].substring(1).trim();
-			String industry   = fields[7].substring(1).trim();
-//			String url        = fields[8].substring(1).trim();
+			String country    = fields[5].substring(1).trim();
+//			String ip0Year    = fields[6].substring(1).trim();
+			String sector     = fields[7].substring(1).trim();
+			String industry   = fields[8].substring(1).trim();
+//			String url        = fields[9].substring(1).trim();
 			
 			// Translate nasdaq web symbol to symbol
-			NasdaqTable nasdaqTable = nasdaqMap.get(nasdaq);
+			NasdaqTable nasdaqTable = nasdaqWebSymbolMap.get(nasdaq);
 			if (nasdaqTable == null) {
 				logger.warn("Unknown = {}|{}|{}|{}", nasdaq, sector, industry, name);
 				return null;
 			}
+			String nasdaqSymbol = nasdaqTable.symbol;
 			
 			// Handle duplicate symbol
-			String nasdaqSymbol = nasdaqTable.symbol;
 			if (lineMap.containsKey(nasdaqSymbol)) {
 				String lineOld = lineMap.get(nasdaqSymbol);
 				if (line.equals(lineOld)) {
@@ -79,8 +86,11 @@ public final class NasdaqCompany {
 			if (sector.equals(NA) && industry.equals(NA)) {
 				sector = industry = nasdaqTable.etf.equals("Y") ? ETF : "*NA*";
 			}
+			if (country.equals(NA)) {
+				country = "*NA*";
+			}
 			
-			return new CompanyTable(nasdaqSymbol, sector, industry, name);
+			return new CompanyTable(nasdaqSymbol, country, sector, industry);
 		}
 		public static String toCSV(String line) {
 			final CompanyTable table = toCompanyTable(line);
@@ -135,12 +145,15 @@ public final class NasdaqCompany {
 				totalRecord += size;
 				if (0 < size) totalSymbol++;
 			}
+			// Output csv
+			Map<String, NasdaqTable> nasdaqMap = NasdaqUtil.getMap();
 			for(String symbol: nasdaqMap.keySet()) {
 				final CompanyTable company;
 				if (companyMap.containsKey(symbol)) {
 					company = companyMap.get(symbol);
 				} else {
 					NasdaqTable nasdaq = nasdaqMap.get(symbol);
+					final String country = "*NA*";
 					final String sector;
 					final String industry;
 					if (nasdaq.etf.equals("Y")) {
@@ -150,7 +163,7 @@ public final class NasdaqCompany {
 						sector   = "*NA*";
 						industry = "*NA*";
 					}
-					company = new CompanyTable(symbol, sector, industry, nasdaq.name);
+					company = new CompanyTable(symbol, country, sector, industry);
 				}
 				bw.append(company.toCSV()).append(NEWLINE);
 			}

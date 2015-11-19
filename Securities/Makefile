@@ -73,10 +73,8 @@ extract-tar:
 fetch-nasdaq:
 	mkdir -p ${DIR_FETCH_NASDAQ}
 	rm    -f ${DIR_FETCH_NASDAQ}/*
-	wget -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt     ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
-	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-nasdaq.csv 'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=NASDAQ'
-	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-nyse.csv   'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=NYSE'
-	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-amex.csv   'http://www.nasdaq.com/screening/companies-by-industry.aspx?render=download&exchange=AMEX'
+	wget            -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt        ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'http://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
 
 update-nasdaq:
 	ant run-update-nasdaq

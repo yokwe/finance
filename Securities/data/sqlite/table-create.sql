@@ -23,9 +23,9 @@ CREATE TABLE nasdaq (
 
 CREATE TABLE company (
   symbol           TEXT     NOT NULL, -- ticker symbol
+  country          TEXT     NOT NULL, -- country of securities
   sector           TEXT     NOT NULL, -- sector of securities
-  industry         TEXT     NOT NULL, -- industry of securities
-  name             TEXT     NOT NULL  -- name of securities
+  industry         TEXT     NOT NULL -- industry of securities
 );
 
 CREATE TABLE price (

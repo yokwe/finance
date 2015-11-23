@@ -25,6 +25,9 @@ clean:
 prepare-log:
 	sudo chmod 777 /tmp/securities.log
 
+prepare-sqlite:
+	chmod 777 tmp/sqlite tmp/sqlite/*
+
 build-jar:
 	ant build
 

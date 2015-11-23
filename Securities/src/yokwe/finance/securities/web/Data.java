@@ -75,7 +75,8 @@ public abstract class Data {
 		public List<Daily> generate(Connection connection, String symbol, Period period) {
 			List<DividendTable> result = DividendTable.getAllBySymbolDateRange(connection, symbol, period.dateStart, period.dateEnd);
 			List<Daily>      ret    = new ArrayList<>();
-			result.stream().forEach(o -> ret.add(new Daily(o.date, o.symbol, o.dividend)));
+			// Manipulate date have same value for other symbol.
+			result.stream().forEach(o -> ret.add(new Daily(o.date.substring(0, 8) + "01", o.symbol, o.dividend)));
 			return ret;
 		}
 	}

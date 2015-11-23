@@ -144,23 +144,25 @@ public final class UpdatePrice {
 				if ((count++ % 100) == 0) {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
-				long thisTime = System.currentTimeMillis();
-				long sleepTime = lastTime + WAIT_TIME - thisTime;
-				lastTime = thisTime;
-				if (0 < sleepTime) Thread.sleep(sleepTime);
-				
 				{
-					PathURL pathURL = yahooPathURLMap.get(symbol);
-					File file = new File(pathURL.path);
-					if (!file.exists()) {
-						Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
+					PathURL yahooPathURL = yahooPathURLMap.get(symbol);
+					File yahooFile = new File(yahooPathURL.path);
+					
+					PathURL googlePathURL = googlePathURLMap.get(symbol);
+					File googleFile = new File(googlePathURL.path);
+					
+					if (yahooFile.exists() && googleFile.exists()) continue;
+					
+					long thisTime = System.currentTimeMillis();
+					long sleepTime = lastTime + WAIT_TIME - thisTime;
+					lastTime = thisTime;
+					if (0 < sleepTime) Thread.sleep(sleepTime);
+
+					if (!yahooFile.exists()) {
+						Fetch.download(yahooPathURL.url, yahooPathURL.path, new ArrayList<>());
 					}
-				}
-				{
-					PathURL pathURL = googlePathURLMap.get(symbol);
-					File file = new File(pathURL.path);
-					if (!file.exists()) {
-						Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
+					if (!googleFile.exists()) {
+						Fetch.download(googlePathURL.url, googlePathURL.path, new ArrayList<>());
 					}
 				}
 			}

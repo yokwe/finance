@@ -92,16 +92,18 @@ public final class UpdateDividend {
 				if ((count++ % 100) == 0) {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
-				long thisTime = System.currentTimeMillis();
-				long sleepTime = lastTime + WAIT_TIME - thisTime;
-				lastTime = thisTime;
-				if (0 < sleepTime) Thread.sleep(sleepTime);
 				{
 					PathURL pathURL = yahooPathURLMap.get(symbol);
 					File file = new File(pathURL.path);
-					if (!file.exists()) {
-						Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
-					}
+					
+					if (file.exists()) continue;
+					
+					long thisTime = System.currentTimeMillis();
+					long sleepTime = lastTime + WAIT_TIME - thisTime;
+					lastTime = thisTime;
+					if (0 < sleepTime) Thread.sleep(sleepTime);
+
+					Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
 				}
 			}
 		}

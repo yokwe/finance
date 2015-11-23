@@ -44,8 +44,12 @@ public class JDBCUtil {
 			ResultSet resultSet = statement.executeQuery(sql);
 			return getResultAll(resultSet, clazz);
 		} catch (SQLException e) {
+			logger.error("sql = {}", sql);
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());
+			for(StackTraceElement ste: e.getStackTrace()) {
+				logger.error("stackTrace  {}", ste);
+			}
 			throw new SecuritiesException();
 		}
 	}

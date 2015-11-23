@@ -92,3 +92,5 @@ select count(*) from dividend;
 select time('now', 'localtime');
 select date, count(*) from price group by date order by date desc limit 5;
 select time('now', 'localtime');
+select * from dividend order by date desc limit 5;
+select time('now', 'localtime');

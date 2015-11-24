@@ -41,11 +41,13 @@ load-data:
 	mkdir -p tmp/sqlite
 	rm -f tmp/sqlite/securities.sqlite3
 	sqlite3 < data/sqlite/table-create.sql
+	chmod 777 tmp/sqlite tmp/sqlite/*
 
 load-correlation:
 	mkdir -p tmp/sqlite
 	rm -f tmp/sqlite/correlation.sqlite3
 	sqlite3 < data/sqlite/table-correlation.sql
+	chmod 777 tmp/sqlite tmp/sqlite/*
 
 update-price:
 	mkdir -p tmp/update/price
@@ -78,7 +80,7 @@ fetch-nasdaq:
 	rm    -f ${DIR_FETCH_NASDAQ}/*
 	wget            -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt        ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
 	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'http://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
-
+	
 update-nasdaq:
 	ant run-update-nasdaq
 	ant run-update-nasdaq-company

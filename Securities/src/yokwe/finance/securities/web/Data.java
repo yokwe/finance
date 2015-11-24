@@ -74,9 +74,20 @@ public abstract class Data {
 		@Override
 		public List<Daily> generate(Connection connection, String symbol, Period period) {
 			List<DividendTable> result = DividendTable.getAllBySymbolDateRange(connection, symbol, period.dateStart, period.dateEnd);
-			List<Daily>      ret    = new ArrayList<>();
-			// Manipulate date have same value for other symbol.
-			result.stream().forEach(o -> ret.add(new Daily(o.date.substring(0, 8) + "01", o.symbol, o.dividend)));
+
+			Map<String, DividendTable> map = new TreeMap<>();
+			for(DividendTable table: result) {
+				// Manipulate date to make summation of values within same month
+				table.date = table.date.substring(0, 8) + "01";
+				if (map.containsKey(table.date)) {
+					map.get(table.date).dividend += table.dividend;
+				} else {
+					map.put(table.date, table);
+				}
+			}
+			
+			List<Daily> ret = new ArrayList<>();
+			map.values().stream().forEach(o -> ret.add(new Daily(o.date, o.symbol, o.dividend)));
 			return ret;
 		}
 	}

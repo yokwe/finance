@@ -55,7 +55,7 @@ public class CSVServlet extends HttpServlet {
 		final List<String> symbolList = new ArrayList<>();
 		final Data    data;
 		final Period  period;
-//		final Filter  filter;
+		final Filter  filter;
 		final boolean zero;
 		final boolean relative;
 		
@@ -99,7 +99,7 @@ public class CSVServlet extends HttpServlet {
 			
 			// f - filter
 			//     (avg|sd|skew|kurt)([0-9]+)
-//			filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
+			filter = new Filter(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
 			
 			// z - add zero data
 			zero = paramMap.containsKey("z");
@@ -174,10 +174,10 @@ public class CSVServlet extends HttpServlet {
 			}
 			
 			// Apply filter with doubleDataMap
-//			for(String symbol: symbolList) {
-//				double[] filtered = filter.apply(doubleDataMap.get(symbol));
-//				doubleDataMap.put(symbol, filtered);
-//			}
+			for(String symbol: symbolList) {
+				double[] filtered = filter.apply(doubleDataMap.get(symbol));
+				doubleDataMap.put(symbol, filtered);
+			}
 			
 			// Add zero data if requested
 			if (zero){

@@ -110,15 +110,20 @@ public class CSVServlet extends HttpServlet {
 
 		resp.setContentType("text/csv; charset=UTF-8");
 		
-		try (
-				Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL);
-				BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536);) {
+		try {
 			// Build dailyDataMap
 			Map<String, List<Data.Daily>> dailyDataMap = new TreeMap<>();
-			for(String symbol: symbolList) {
-				List<Data.Daily> dailyDataList = data.generate(connection, symbol, period);
-				dailyDataMap.put(symbol, dailyDataList);
-				logger.info("dailyDataMap {} {}", symbol, dailyDataList.size());
+			
+			try (Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL)) {
+				for(String symbol: symbolList) {
+					List<Data.Daily> dailyDataList = data.generate(connection, symbol, period);
+					dailyDataMap.put(symbol, dailyDataList);
+					logger.info("dailyDataMap {} {}", symbol, dailyDataList.size());
+				}
+			} catch (SQLException e) {
+				logger.error(e.getClass().getName());
+				logger.error(e.getMessage());
+				throw new SecuritiesException();
 			}
 			
 			// Build dateList from dailyDataMap
@@ -220,39 +225,40 @@ public class CSVServlet extends HttpServlet {
 			}
 			logger.info("dateMap  = {}", dateMap.size());
 
-			//
-		    // Start output data
-			//
-			StringBuilder line = new StringBuilder();
-			
-			// Output header
-			line.setLength(0);
-			line.append("date");
-			for(String fieldName: symbolList) {
-				if (0 < line.length()) line.append(",");
-				line.append(fieldName);
-			}
-			output.append(line.toString()).append(CRLF);
-			logger.info("fieldNameList = {}", line.toString());
-
-			
-			for(String date: dateMap.keySet()) {
-				Map<String, Double> record = dateMap.get(date);
+			try (BufferedWriter output = new BufferedWriter(resp.getWriter(), 65536)) {
+				//
+			    // Start output data
+				//
+				StringBuilder line = new StringBuilder();
+				
+				// Output header
 				line.setLength(0);
-				line.append(date);
-				for(String symbol: symbolList) {
-					line.append(",");
-					if (record.containsKey(symbol)) {
-						line.append(record.get(symbol));
-					}
+				line.append("date");
+				for(String fieldName: symbolList) {
+					if (0 < line.length()) line.append(",");
+					line.append(fieldName);
 				}
 				output.append(line.toString()).append(CRLF);
+				logger.info("fieldNameList = {}", line.toString());
+
+				
+				for(String date: dateMap.keySet()) {
+					Map<String, Double> record = dateMap.get(date);
+					line.setLength(0);
+					line.append(date);
+					for(String symbol: symbolList) {
+						line.append(",");
+						if (record.containsKey(symbol)) {
+							line.append(record.get(symbol));
+						}
+					}
+					output.append(line.toString()).append(CRLF);
+				}
+			} catch (IOException e) {
+				logger.error(e.getClass().getName());
+				logger.error(e.getMessage());
+				throw new SecuritiesException();
 			}
-		
-		} catch (SQLException | IOException e) {
-			logger.error(e.getClass().getName());
-			logger.error(e.getMessage());
-			throw new SecuritiesException();
 		} catch (RuntimeException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

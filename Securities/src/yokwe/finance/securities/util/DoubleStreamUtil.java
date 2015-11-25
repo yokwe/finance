@@ -170,7 +170,7 @@ public class DoubleStreamUtil {
 		}
 	}
 
-	public static final class MovingStandardDeviation {
+	public static final class MovingSD {
 		public static SimpleMovingStats getInstance(int interval) {
 			return new SimpleMovingStats(SimpleMovingStats.Type.STANDARD_DEVIATION, interval);
 		}
@@ -272,7 +272,7 @@ public class DoubleStreamUtil {
 
 	}
 	
-	private static void testRelative() {
+	private static void testRelativeRatio() {
 		double[] values = {
 				1, 1, 1,   2, 2, 2,
 				3, 3, 3,   4, 4, 4,
@@ -285,11 +285,14 @@ public class DoubleStreamUtil {
 		logger.info("rr     {}", Arrays.stream(rr).boxed().collect(Collectors.toList()));
 	}
 	
+	// MovingHistoricalVoratility
+	//   double[] hb = Arrays.stream(values).map(RelativeRatio.getInstance()).map(o -> Math.log(o)).map(MovingSD.getInstance(20)).toArray();
+	
 	public static void main(String[] args) {
 		testMovingStats();
 		testStats();
 		testSampling();
 		testMovingAverage();
-		testRelative();
+		testRelativeRatio();
 	}
 }

@@ -227,7 +227,18 @@ public final class UpdatePrice {
 			}
 		}
 
-		final List<String> dateList = getDateList(yahooMap);
+		// Merge yahoo and google dateList
+		final List<String> dateList = new ArrayList<>();
+		{
+			dateList.addAll(getDateList(yahooMap));
+			
+			List<String> googleDateList = getDateList(googleMap);
+			for(String date: googleDateList) {
+				if (dateList.contains(date)) continue;
+				dateList.add(date);
+			}
+			Collections.sort(dateList);
+		}
 		logger.info("Build dateList  {}", dateList.size());
 		
 

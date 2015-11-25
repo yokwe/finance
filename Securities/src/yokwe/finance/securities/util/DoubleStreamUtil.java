@@ -13,6 +13,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
+
 public class DoubleStreamUtil {
 	static final Logger logger = LoggerFactory.getLogger(DoubleStreamUtil.class);
 	
@@ -120,10 +122,15 @@ public class DoubleStreamUtil {
 		logger.info("sample 6 {}", Arrays.stream(smaple6).boxed().collect(Collectors.toList()));
 	}
 
-	public static final class MovingAverage implements DoubleUnaryOperator {
+	public static final class SimpleMovingStats implements DoubleUnaryOperator {
+		public enum Type {
+			MIN, MAX, SUM, VARIANCE, MEAN, STANDARD_DEVIATION, KURTOSIS, SKEWNESS,
+		}
+		final Type                  type;
 		final DescriptiveStatistics stats;
 		
-		private MovingAverage(int interval) {
+		private SimpleMovingStats(Type type, int interval) {
+			this.type  = type;
 			this.stats = new DescriptiveStatistics(interval);
 		}
 
@@ -135,11 +142,69 @@ public class DoubleStreamUtil {
 				}
 			}
 			stats.addValue(value);
-			return stats.getMean();
+			switch(type) {
+			case MIN:
+				return stats.getMin();
+			case MAX:
+				return stats.getMax();
+			case SUM:
+				return stats.getSum();
+			case VARIANCE:
+				return stats.getVariance();
+			case MEAN:
+				return stats.getMean();
+			case STANDARD_DEVIATION:
+				return stats.getStandardDeviation();
+			case KURTOSIS:
+				return stats.getKurtosis();
+			case SKEWNESS:
+				return stats.getSkewness();
+			default:
+				logger.error("Unknown type = {}", type);
+				throw new SecuritiesException("Unknown type");
+			}
 		}
 
-		public static MovingAverage getInstance(int interval) {
-			return new MovingAverage(interval);
+		public static SimpleMovingStats getInstance(Type type, int interval) {
+			return new SimpleMovingStats(type, interval);
+		}
+	}
+
+	public static final class MovingStandardDeviation {
+		public static SimpleMovingStats getInstance(int interval) {
+			return new SimpleMovingStats(SimpleMovingStats.Type.STANDARD_DEVIATION, interval);
+		}
+	}
+
+	public static final class MovingAverage {
+		public static SimpleMovingStats getInstance(int interval) {
+			return new SimpleMovingStats(SimpleMovingStats.Type.MEAN, interval);
+		}
+	}
+
+	public static final class RelativeRatio implements DoubleUnaryOperator {
+		boolean firstTime;
+		double  lastValue;
+		
+		private RelativeRatio() {
+			firstTime = true;
+		}
+
+		@Override
+		public double applyAsDouble(double value) {
+			if (!firstTime) {
+				double ratio = value / lastValue;
+				lastValue = value;
+				return ratio;
+			} else {
+				lastValue = value;
+				firstTime = false;
+				return 1;
+			}
+		}
+
+		public static RelativeRatio getInstance() {
+			return new RelativeRatio();
 		}
 	}
 
@@ -207,10 +272,24 @@ public class DoubleStreamUtil {
 
 	}
 	
+	private static void testRelative() {
+		double[] values = {
+				1, 1, 1,   2, 2, 2,
+				3, 3, 3,   4, 4, 4,
+				5, 5, 5,   6, 6, 6,
+		};
+		
+		double[] rr = Arrays.stream(values).map(RelativeRatio.getInstance()).toArray();
+		
+		logger.info("values {}", Arrays.stream(values).boxed().collect(Collectors.toList()));
+		logger.info("rr     {}", Arrays.stream(rr).boxed().collect(Collectors.toList()));
+	}
+	
 	public static void main(String[] args) {
 		testMovingStats();
 		testStats();
 		testSampling();
 		testMovingAverage();
+		testRelative();
 	}
 }

@@ -43,6 +43,9 @@ load-data:
 	sqlite3 < data/sqlite/table-create.sql
 	chmod 777 tmp/sqlite tmp/sqlite/*
 
+load-dividend:
+	sqlite3 < data/sqlite/load-dividend.sql
+
 load-correlation:
 	mkdir -p tmp/sqlite
 	rm -f tmp/sqlite/correlation.sqlite3

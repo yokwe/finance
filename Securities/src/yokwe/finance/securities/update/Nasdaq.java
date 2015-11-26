@@ -41,6 +41,7 @@ public final class Nasdaq {
 	//  # X=    X units                         GRP=     GRP-U     GRP.UN    GRP.U
 	//  # X-    X preferred                     AA-      AA-P      AA-       AA^
 	//  # X*    X called                        ARY*     ARY-CL    ARY.CL    ARY.CL
+	//  # X^    X right                         UTG^     URG-RI    ???       URG~
 	//  # X#    X when issued                   HPE#     HPE-WI    HPE*      HPE.WI
 	//  # X$    X when issued2                  AC$      AC-WD     AC.WD     AC.WD
 	//  # X^#   X when issued3                  UTG^#    UTG-RWI   ???       UTG~$
@@ -56,6 +57,7 @@ public final class Nasdaq {
 	private static String PAT_UNIT              = "^([A-Z]+)=$";
 	private static String PAT_PREF              = "^([A-Z]+)-$";
 	private static String PAT_CALL              = "^([A-Z]+)\\*$";
+	private static String PAT_RIGHT             = "^([A-Z]+)\\^$";
 	private static String PAT_WHEN_ISSUED       = "^([A-Z]+)#$";
 	private static String PAT_WHEN_ISSUED2      = "^([A-Z]+)\\$$";
 	private static String PAT_WHEN_ISSUED3      = "^([A-Z]+)\\^#$";
@@ -79,6 +81,7 @@ public final class Nasdaq {
 		yahooConverter.addConverter1(PAT_UNIT,              "%s-U");     // Units
 		yahooConverter.addConverter1(PAT_PREF,              "%s-P");     // Preferred
 		yahooConverter.addConverter1(PAT_CALL,              "%s-CL");    // Called
+		yahooConverter.addConverter1(PAT_RIGHT,             "%s-RI");    // Right
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED,       "%s-WI");    // When Issued
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s-WD");    // When Issued2
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED3,      "%s-RWI");   // When Issued3
@@ -94,6 +97,7 @@ public final class Nasdaq {
 		googleConverter.addConverter1(PAT_UNIT,              "%s.UN");    // Units
 		googleConverter.addConverter1(PAT_PREF,              "%s-");      // Preferred
 		googleConverter.addConverter1(PAT_CALL,              "%s.CL");    // Called
+		googleConverter.addConverter1(PAT_RIGHT,             "???");      // Right
 		googleConverter.addConverter1(PAT_WHEN_ISSUED,       "%s*");      // When Issued
 		googleConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		googleConverter.addConverter1(PAT_WHEN_ISSUED3,      "???");      // When Issued3
@@ -109,6 +113,7 @@ public final class Nasdaq {
 		nasdaqConverter.addConverter1(PAT_UNIT,              "%s.U");     // Units
 		nasdaqConverter.addConverter1(PAT_PREF,              "%s^");      // Preferred
 		nasdaqConverter.addConverter1(PAT_CALL,              "%s.CL");    // Called
+		nasdaqConverter.addConverter1(PAT_RIGHT,             "%s^");      // Right
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED,       "%s.WI");    // When Issued
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED3,      "%s~$");     // When Issued3

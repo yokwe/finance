@@ -227,6 +227,7 @@ public class DoubleStreamUtil {
 			return ret;
 		}
 		
+		// Usually interval is 21 (monthly)
 		public static DoubleUnaryOperator getInstance(int interval) {
 			return new HistoricalVolatility(interval);
 		}
@@ -234,6 +235,7 @@ public class DoubleStreamUtil {
 
 	public static class ValueAtRisk implements DoubleUnaryOperator {
 		private final double C_RELIABILITY = 2.33;              // For 99% reliability
+//		private final double C_RELIABILITY = 2.00;              // For 95% reliability
 		
 		private final DoubleUnaryOperator hv;
 		

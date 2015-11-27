@@ -7,12 +7,34 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.DoubleStreamUtil.RelativeRatio;
 import yokwe.finance.securities.util.DoubleStreamUtil.SimpleMovingStats;
 
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt)([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv)([0-9]+)").matcher("");
+	
+	private static class HistoricalVolatility implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator rr;
+		private final DoubleUnaryOperator sd;
+		
+		private HistoricalVolatility(int interval) {
+			rr = RelativeRatio.getInstance();
+			sd = SimpleMovingStats.getInstance(SimpleMovingStats.Type.STANDARD_DEVIATION, interval);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			value = rr.applyAsDouble(value);
+			value = Math.log(value);
+			value = sd.applyAsDouble(value);
+			return value;
+		}
+		
+		public static DoubleUnaryOperator getInstance(int interval) {
+			return new HistoricalVolatility(interval);
+		}
+	}
 
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;
@@ -47,6 +69,8 @@ class Filter {
 			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.SKEWNESS, interval);
 		case "kurt":
 			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.KURTOSIS, interval);
+		case "hv":
+			return HistoricalVolatility.getInstance(interval);
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

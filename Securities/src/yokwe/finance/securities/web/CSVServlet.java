@@ -53,12 +53,12 @@ public class CSVServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 		logger.info("doGet START");
 		
-		final List<String> symbolList = new ArrayList<>();
-		final Data                data;
-		final Period              period;
-		final DoubleUnaryOperator filter;
-		final boolean             zero;
-		final boolean             relative;
+		final List<String>                     symbolList = new ArrayList<>();
+		final Data                             data;
+		final Period                           period;
+		final Map<String, DoubleUnaryOperator> filterMap = new TreeMap<>();
+		final boolean                          zero;
+		final boolean                          relative;
 		
 		final String  baseSymbol;
 		
@@ -100,7 +100,10 @@ public class CSVServlet extends HttpServlet {
 			
 			// f - filter
 			//     (avg|sd|skew|kurt)([0-9]+)
-			filter = Filter.getInstance(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
+			for(String symbol: symbolList) {
+				DoubleUnaryOperator op = Filter.getInstance(paramMap.containsKey("f") ? paramMap.get("f")[0] : "avg1");
+				filterMap.put(symbol, op);
+			}
 			
 			// z - add zero data
 			zero = paramMap.containsKey("z");
@@ -181,10 +184,11 @@ public class CSVServlet extends HttpServlet {
 			
 			// Apply filter with doubleDataMap
 			for(String symbol: symbolList) {
+				DoubleUnaryOperator op = filterMap.get(symbol);
 				// variable data is reference, so no need to copy back to doubleDataMap.
 				double[] doubleArray = doubleDataMap.get(symbol);
 				for(int i = 0; i < doubleArray.length; i++) {
-					doubleArray[i] = filter.applyAsDouble(doubleArray[i]);
+					doubleArray[i] = op.applyAsDouble(doubleArray[i]);
 				}
 			}
 			

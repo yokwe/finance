@@ -183,28 +183,71 @@ public class DoubleStreamUtil {
 	}
 
 	public static final class RelativeRatio implements DoubleUnaryOperator {
-		boolean firstTime;
-		double  lastValue;
+		private double lastValue = Double.NaN;
 		
 		private RelativeRatio() {
-			firstTime = true;
 		}
 
 		@Override
 		public double applyAsDouble(double value) {
-			if (!firstTime) {
-				double ratio = value / lastValue;
+			if (Double.isNaN(lastValue)) {
 				lastValue = value;
-				return ratio;
-			} else {
-				lastValue = value;
-				firstTime = false;
 				return 1;
+			} else {
+				double ret = value / lastValue;
+				lastValue = value;
+				return ret;
 			}
 		}
 
 		public static RelativeRatio getInstance() {
 			return new RelativeRatio();
+		}
+	}
+	
+	// One day Historical Volatility
+	public static class HistoricalVolatility implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator rr;
+		private final DoubleUnaryOperator sd;
+		private double lastValue = Double.NaN;
+		
+		private HistoricalVolatility(int interval) {
+			rr = RelativeRatio.getInstance();
+			sd = SimpleMovingStats.getInstance(SimpleMovingStats.Type.STANDARD_DEVIATION, interval);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(lastValue)) {
+				lastValue = value;
+				return 0;
+			}
+			double ret = rr.applyAsDouble(value);
+			ret = Math.log(ret);
+			ret = sd.applyAsDouble(ret);
+			return ret;
+		}
+		
+		public static DoubleUnaryOperator getInstance(int interval) {
+			return new HistoricalVolatility(interval);
+		}
+	}
+
+	public static class ValueAtRisk implements DoubleUnaryOperator {
+		private final double C_RELIABILITY = 2.33;              // For 99% reliability
+		
+		private final DoubleUnaryOperator hv;
+		
+		private ValueAtRisk(int interval) {
+			hv = HistoricalVolatility.getInstance(interval);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			value = hv.applyAsDouble(value);
+			return value * C_RELIABILITY;
+		}
+		
+		public static DoubleUnaryOperator getInstance(int interval) {
+			return new ValueAtRisk(interval);
 		}
 	}
 
@@ -285,6 +328,16 @@ public class DoubleStreamUtil {
 		logger.info("rr     {}", Arrays.stream(rr).boxed().collect(Collectors.toList()));
 	}
 	
+	private static void testSD() {
+		// Standard Deviation of below is  2.9277
+		double[] values = {11, 13, 12, 16, 18, 19, 14, 17,};
+		
+		double[] sd = Arrays.stream(values).map(SimpleMovingStats.getInstance(SimpleMovingStats.Type.STANDARD_DEVIATION, values.length)).toArray();
+		
+		logger.info("values {}", Arrays.stream(values).boxed().collect(Collectors.toList()));
+		logger.info("sd     {}", sd[sd.length - 1]);
+	}
+	
 	// MovingHistoricalVoratility
 	//   double[] hb = Arrays.stream(values).map(RelativeRatio.getInstance()).map(o -> Math.log(o)).map(MovingSD.getInstance(20)).toArray();
 	
@@ -294,5 +347,6 @@ public class DoubleStreamUtil {
 		testSampling();
 		testMovingAverage();
 		testRelativeRatio();
+		testSD();
 	}
 }

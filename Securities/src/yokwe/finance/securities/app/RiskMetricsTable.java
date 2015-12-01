@@ -3,8 +3,8 @@ package yokwe.finance.securities.app;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PrintStats {
-	private static final Logger logger = LoggerFactory.getLogger(PrintStats.class);
+public class RiskMetricsTable {
+	private static final Logger logger = LoggerFactory.getLogger(RiskMetricsTable.class);
 	
 	static double CONFIDENCE_95 = 1.65;
 	static double CONFIDENCE_99 = 2.33;

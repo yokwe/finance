@@ -38,6 +38,12 @@ public class DoubleStreamUtil {
 		public double getStandardDeviation() {
 			return stats.getStandardDeviation();
 		}
+		public double getVariance() {
+			return stats.getVariance();
+		}
+		public double getPopulatedVariance() {
+			return stats.getPopulationVariance();
+		}
 		public double getKurtosis() {
 			return stats.getKurtosis();
 		}

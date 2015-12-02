@@ -1,5 +1,7 @@
 package yokwe.finance.securities.app;
 
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ public class RiskMetricsTable {
 		table_5_2();
 		table_5_3();
 		table_5_5();
+		table_5_6();
 		logger.info("STOP");
 	}
 	
@@ -204,4 +207,69 @@ public class RiskMetricsTable {
 			logger.info("table 5.5  {}", String.format("%8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", usddem, sp500, rv_usddem, rv_sp500, rcov, rcor));
 		}
 	}
+	
+	static void table_5_6() {
+		final double[] usddem_data = {
+				 0.634,
+				 0.115,
+				-0.460,
+				 0.094,
+				 0.176,
+				-0.088,
+				-0.142,
+				 0.324,
+				-0.943,
+				-0.528,
+				-0.107,
+				-0.160,
+				-0.445,
+			 	 0.053,
+				 0.152,
+				-0.318,
+				 0.424,
+				-0.708,
+				-0.105,
+				-0.257,
+				};
+		
+		double sp500_data[] = {
+				  0.005,
+				 -0.532,
+				  1.267,
+				  0.234,
+				  0.095,
+				 -0.003,
+				 -0.144,
+				 -1.643,
+				 -0.319,
+				 -1.362,
+				 -0.367,
+				  0.872,
+				  0.904,
+				  0.390,
+				 -0.527,
+				  0.311,
+				  0.227,
+				  0.436,
+				  0.568,
+				 -0.217,
+		};
+		
+		logger.info("table 5.6");
+		DescriptiveStatistics usddem_stats = new DescriptiveStatistics(usddem_data);
+		DescriptiveStatistics sp500_stats  = new DescriptiveStatistics(sp500_data);
+		
+		double usddem_mean = usddem_stats.getMean();
+		double sp500_mean  = sp500_stats.getMean();
+		
+		double usddem_sd   = Math.sqrt(usddem_stats.getPopulationVariance());
+		double sp500_sd    = Math.sqrt(sp500_stats.getPopulationVariance());
+				
+		double cor = new PearsonsCorrelation().correlation(usddem_data, sp500_data);
+
+		logger.info("table 5.6  {}", String.format("mean  %8.3f  %8.3f", usddem_mean, sp500_mean));
+		logger.info("table 5.6  {}", String.format("sd    %8.3f  %8.3f", usddem_sd,   sp500_sd));
+		logger.info("table 5.6  {}", String.format("cor   %8.3f", cor));
+	}
 }
+

@@ -40,20 +40,27 @@ public final class RiskMetrics {
 		return ret;
 	}
 	
-	public static double[] getRecursiveVariance(double data[], double decayFactor) {
+	public static double getEMA(double ema, double value, double decayFactor) {
+		return ema + decayFactor * (value - ema);
+	}
+	
+	public static double getEMA_VAR(double var, double value, double decayFactor) {
+		return value + decayFactor * (var - value);
+	}
+	public static double[] getVariance(double data[], double decayFactor) {
 		double ret[] = new double[data.length];
 		
-		double b = data[0] * data[0];
+		double var = data[0] * data[0];
 		for(int i = 0; i < ret.length; i++) {
-			double a = data[i];
-			b = (decayFactor * b) + (1 - decayFactor) * (a * a);
-			ret[i] = b;
+			final double value = data[i] * data[i];
+			var = getEMA_VAR(var, value, decayFactor);
+			ret[i] = var;
 		}
 		return ret;
 	}
 	
-	public double[] getRecursiveVariance(double data[]) {
-		return getRecursiveVariance(data, decayFactor);
+	public double[] getVariance(double data[]) {
+		return getVariance(data, decayFactor);
 	}
 
 	public static void main(String args[]) {
@@ -82,12 +89,10 @@ public final class RiskMetrics {
 
 		RiskMetrics rm = new RiskMetrics(data.length);
 		
-		double var[] = rm.getRecursiveVariance(data);
+		double var[] = rm.getVariance(data);
 		
-		for(int i = 0; i < var.length; i++) {
+		for(int i = 0; i < data.length; i++) {
 			logger.info("{}", String.format("%6.3f   %6.3f", data[i], var[i]));
 		}
 	}
-	
-	
 }

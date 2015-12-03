@@ -2,6 +2,7 @@ package yokwe.finance.securities.util;
 
 import java.util.Arrays;
 import java.util.function.DoubleUnaryOperator;
+import java.util.stream.DoubleStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,14 +102,18 @@ public final class RiskMetrics {
 		return divide(cov, multiply(sd1, sd2));
 	}
 	
+	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
+		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance());
+	}
+	
 	public double[] getCovariance(double data1[], double data2[]) {
-		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance()).toArray();
+		return getCovarianceDoubleStream(data1, data2).toArray();
 	}
 	public double[] getVariance(double data[]) {
 		return getCovariance(data, data);
 	}
 	public double[] getStandardDeviation(double data[]) {
-		return Arrays.stream(multiply(data, data)).map(recursiveVariance()).map(applySqrt()).toArray();
+		return getCovarianceDoubleStream(data, data).map(applySqrt()).toArray();
 	}
 
 	public static void main(String args[]) {

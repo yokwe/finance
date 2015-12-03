@@ -1,11 +1,19 @@
 package yokwe.finance.securities.util;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.function.DoubleUnaryOperator;
 import java.util.stream.DoubleStream;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.PriceTable;
 
 public final class RiskMetrics {
 	private static final Logger logger = LoggerFactory.getLogger(RiskMetrics.class);
@@ -44,6 +52,27 @@ public final class RiskMetrics {
 	};
 	private DoubleUnaryOperator recursiveVariance() {
 		return new RecursiveVariance(decayFactor);
+	}
+	
+	private static final class ExponentialMovingAverage implements DoubleUnaryOperator {
+		private final double decayFactor;
+		private double ema = Double.NaN;
+		
+		ExponentialMovingAverage(double decayFactor) {
+			this.decayFactor = decayFactor;
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(ema)) {
+				ema = value;
+			}
+			
+			ema = ema + decayFactor * (value - ema);
+			return ema;
+		}
+	};
+	private DoubleUnaryOperator expornentialMovingAverage() {
+		return new ExponentialMovingAverage(decayFactor);
 	}
 	
 	public static double[] multiply(double a[], double b[]) {
@@ -93,15 +122,9 @@ public final class RiskMetrics {
 		}
 		return ret;
 	}
-		
-	public double[] getCorrelation(double data1[], double data2[]) {
-		double sd1[] = getStandardDeviation(data1);
-		double sd2[] = getStandardDeviation(data2);
-		double cov[] = getCovariance(data1, data2);
-		
-		return divide(cov, multiply(sd1, sd2));
-	}
 	
+	
+	// EWMA variance, covariance and correlation
 	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
 		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance());
 	}
@@ -114,6 +137,19 @@ public final class RiskMetrics {
 	}
 	public double[] getStandardDeviation(double data[]) {
 		return getCovarianceDoubleStream(data, data).map(applySqrt()).toArray();
+	}
+	public double[] getCorrelation(double data1[], double data2[]) {
+		double sd1[] = getStandardDeviation(data1);
+		double sd2[] = getStandardDeviation(data2);
+		double cov[] = getCovariance(data1, data2);
+		
+		return divide(cov, multiply(sd1, sd2));
+	}
+
+	
+	// EMA -- Exponential Moving Average
+	public double[] getEMA(double data[]) {
+		return Arrays.stream(data).map(expornentialMovingAverage()).toArray();
 	}
 
 	public static void main(String args[]) {
@@ -143,6 +179,7 @@ public final class RiskMetrics {
 			}
 		}
 		
+		// Calculation of variance, covariance and correlation
 		{
 			double[] data_a = {
 				 0.634,
@@ -202,5 +239,54 @@ public final class RiskMetrics {
 			}
 		}
 
+		// Calculation of Value at Risk
+		{
+			try {
+				Class.forName("org.sqlite.JDBC");
+			} catch (ClassNotFoundException e) {
+				logger.error(e.getClass().getName());
+				logger.error(e.getMessage());
+				throw new SecuritiesException();
+			}
+			final String JDBC_CONNECTION_URL = "jdbc:sqlite:/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3";
+
+			try (Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL)) {
+				LocalDate dateFrom = LocalDate.now().minusYears(10);
+				LocalDate dateTo   = LocalDate.now();
+				double data[] = PriceTable.getAllBySymbolDateRange(connection, "QQQ", dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
+				
+				{
+					RiskMetrics rm = new RiskMetrics();
+					double lr[] = RiskMetrics.getLogReturn(data);
+					double sd[] = rm.getStandardDeviation(lr);
+					
+					double lastData = data[data.length - 1];
+					double lastSD   = sd[sd.length - 1];
+					
+					logger.info("");
+					logger.info("{}", String.format("last  data %8.3f  sd %8.3f  %8.3f", lastData, lastSD, lastData * lastSD));
+					
+//					for(int i = 0; i < sd.length; i++) {
+//						logger.info("{}", String.format("%8.3f  %8.3f", data[i], sd[i]));
+//					}
+				}
+				
+				{
+					DescriptiveStatistics stats = new DescriptiveStatistics();
+					Arrays.stream(data).forEach(o -> stats.addValue(o));
+					
+					double mean = stats.getMean();
+					double sd   = stats.getStandardDeviation();
+					
+					logger.info("{}", String.format("n %4d  mean %8.3f  sd %8.3f", stats.getN(), mean, sd));
+					logger.info("{}", String.format("%8.3f", mean - (CONFIDENCE_95_PERCENT * sd)));
+				}
+
+			} catch (SQLException e) {
+				logger.error(e.getClass().getName());
+				logger.error(e.getMessage());
+				throw new SecuritiesException();
+			}
+		}
 	}
 }

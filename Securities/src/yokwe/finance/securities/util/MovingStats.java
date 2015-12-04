@@ -8,15 +8,15 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public abstract class MovingAverage implements DoubleConsumer {
-	private static final Logger logger = LoggerFactory.getLogger(MovingAverage.class);
+public abstract class MovingStats implements DoubleConsumer {
+	private static final Logger logger = LoggerFactory.getLogger(MovingStats.class);
 
 	protected final int    size;
 	protected final double data[];
 	// pos point to next position
 	protected int          pos;
 
-	protected MovingAverage(int dataSize) {
+	protected MovingStats(int dataSize) {
 		size = dataSize;
 		if (size <= 1) {
 			logger.error("size = {}", size);
@@ -55,7 +55,7 @@ public abstract class MovingAverage implements DoubleConsumer {
 	public abstract double getMean();
 	public abstract double getVariance();
 
-	public static final class Simple extends MovingAverage {
+	public static final class Simple extends MovingStats {
 		public Simple(int dataSize) {
 			super(dataSize);
 		}
@@ -71,7 +71,7 @@ public abstract class MovingAverage implements DoubleConsumer {
 		}
 	}
 	
-	public static final class Exponential extends MovingAverage {
+	public static final class Exponential extends MovingStats {
 		final double weight[];
 		
 		public Exponential(int dataSize, double decayFactor) {

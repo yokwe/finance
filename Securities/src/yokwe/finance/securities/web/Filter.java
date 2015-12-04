@@ -10,11 +10,12 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleStreamUtil.HistoricalVolatility;
 import yokwe.finance.securities.util.DoubleStreamUtil.SimpleMovingStats;
 import yokwe.finance.securities.util.DoubleStreamUtil.ValueAtRisk;
+import yokwe.finance.securities.util.MovingStats;
 
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var)([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|smam|smas|emam|emas)([0-9]+)").matcher("");
 	
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;
@@ -53,6 +54,14 @@ class Filter {
 			return HistoricalVolatility.getInstance(interval);
 		case "var":
 			return ValueAtRisk.getInstance(interval);
+		case "smam":
+			return new MovingStats.SMA.Mean(interval);
+		case "smas":
+			return new MovingStats.SMA.StandardDeviation(interval);
+		case "emam":
+			return new MovingStats.EMA.Mean(interval);
+		case "emas":
+			return new MovingStats.EMA.StandardDeviation(interval);
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

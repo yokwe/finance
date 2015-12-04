@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.function.DoublePredicate;
 import java.util.function.DoubleUnaryOperator;
 import java.util.stream.DoubleStream;
 
@@ -24,10 +25,16 @@ public final class RiskMetrics {
 	public static double DEFAULT_DECAY_FACTOR = 0.94;
 	public static double DEFAULT_CONFIDENCE   = CONFIDENCE_95_PERCENT;
 	
-	public static DoubleUnaryOperator relativeReturn() {
-		return new RelativeReturn();
+	private static DoublePredicate skipNaN = new DoublePredicate() {
+		public boolean test(double value) {
+			return !Double.isNaN(value);
+		}
+	};
+	public static DoublePredicate skipNan() {
+		return skipNaN;
 	}
-	public static final class RelativeReturn implements DoubleUnaryOperator {
+	
+	private static final class RelativeReturn implements DoubleUnaryOperator {
 		private double lastValue;
 		public RelativeReturn() {
 			lastValue = Double.NaN;
@@ -44,10 +51,13 @@ public final class RiskMetrics {
 			return ret;
 		}
 	}
-	
-	public static DoubleUnaryOperator logReturn() {
-		return new LogReturn();
+	public static DoubleUnaryOperator relativeReturn() {
+		return new RelativeReturn();
 	}
+	public static DoubleStream relativeReturn(double[] data) {
+		return Arrays.stream(data).map(relativeReturn()).filter(skipNan());
+	}
+	
 	private static final class LogReturn implements DoubleUnaryOperator {
 		private double lastValue;
 		public LogReturn() {
@@ -65,6 +75,13 @@ public final class RiskMetrics {
 			return ret;
 		}
 	}
+	public static DoubleUnaryOperator logReturn() {
+		return new LogReturn();
+	}
+	public static DoubleStream logReturn(double[] data) {
+		return Arrays.stream(data).map(logReturn()).filter(skipNan());
+	}
+
 	private static final DoubleUnaryOperator squareInstance = new DoubleUnaryOperator() {
 		@Override
 		public double applyAsDouble(double value) {
@@ -123,31 +140,6 @@ public final class RiskMetrics {
 		return new RecursiveVariance(dataSize);
 	}
 	
-	
-	
-	
-	
-	private static final class ExponentialMovingAverage implements DoubleUnaryOperator {
-		private final double decayFactor;
-		private double ema = Double.NaN;
-		
-		ExponentialMovingAverage(double decayFactor) {
-			this.decayFactor = decayFactor;
-		}
-		@Override
-		public double applyAsDouble(double value) {
-			if (Double.isNaN(ema)) {
-				ema = value;
-			}
-			
-			ema = ema + decayFactor * (value - ema);
-			return ema;
-		}
-	};
-	private DoubleUnaryOperator expornentialMovingAverage() {
-		return new ExponentialMovingAverage(decayFactor);
-	}
-	
 	public static double[] multiply(double a[], double b[]) {
 		double ret[] = new double[a.length];
 		for(int i = 0; i < a.length; i++) {
@@ -163,6 +155,8 @@ public final class RiskMetrics {
 		return ret;
 	}
 	
+	// TODO Until here
+	
 	
 	final double              decayFactor;
 	final DoubleUnaryOperator recursiveVariance;
@@ -175,27 +169,7 @@ public final class RiskMetrics {
 		this(DEFAULT_DECAY_FACTOR);
 	}
 	
-	
-	public static double[] getRelativeReturn(double data[]) {
-		double ret[] = new double[data.length - 1];
-		for(int i = 1; i < data.length; i++) {
-			final double d0 = data[i - 1];
-			final double d1 = data[i];
-			ret[i - 1] = ((d1 / d0) - 1) * 100;
-		}
-		return ret;
-	}
 		
-	public static double[] getLogReturn(double data[]) {
-		double ret[] = new double[data.length - 1];
-		for(int i = 1; i < data.length; i++) {
-			final double d0 = data[i - 1];
-			final double d1 = data[i];
-			ret[i - 1] = Math.log(d1 / d0) * 100;
-		}
-		return ret;
-	}
-	
 	
 	// EWMA variance, covariance and correlation
 	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
@@ -220,11 +194,6 @@ public final class RiskMetrics {
 	}
 
 	
-	// EMA -- Exponential Moving Average
-	public double[] getEMA(double data[]) {
-		return Arrays.stream(data).map(expornentialMovingAverage()).toArray();
-	}
-
 	public static void main(String args[]) {
 		// Difference between relative return and log return
 		{
@@ -243,12 +212,13 @@ public final class RiskMetrics {
 				0.66503,
 			};
 			
-			double rr[] = getRelativeReturn(data);
-			double lr[] = getLogReturn(data);
+			double rr[] = relativeReturn(data).toArray();
+			double lr[] = logReturn(data).toArray();
+
 			
 			logger.info("");
 			for(int i = 0; i < rr.length; i++) {
-				logger.info("{}", String.format("%8.3f  %8.3f  %8.3f", data[i + 1], rr[i], lr[i]));
+				logger.info("{}", String.format("111 %8.3f  %8.3f  %8.3f", data[i + 1], rr[i], lr[i]));
 			}
 		}
 		
@@ -330,7 +300,7 @@ public final class RiskMetrics {
 				
 				{
 					RiskMetrics rm = new RiskMetrics();
-					double lr[] = RiskMetrics.getLogReturn(data);
+					double lr[] = logReturn(data).toArray();
 					double sd[] = rm.getStandardDeviation(lr);
 					
 					double lastData = data[data.length - 1];

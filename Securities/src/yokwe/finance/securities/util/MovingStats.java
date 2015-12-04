@@ -42,6 +42,9 @@ public abstract class MovingStats implements DoubleConsumer {
 	
 	@Override
 	public void accept(double value) {
+		// Ignore NaN value
+		if (Double.isNaN(value)) return;
+		
 		if (firstTime) {
 			for(int i = 0; i < size; i++) {
 				data[pos++] = value;
@@ -160,7 +163,13 @@ public abstract class MovingStats implements DoubleConsumer {
 				movingStats = new Exponential(dataSize);
 			}
 		}
-		public static final class Mean extends Base {
+		public static DoubleUnaryOperator mean(int dataSize) {
+			return new Mean(dataSize);
+		}
+		public static DoubleUnaryOperator sd(int dataSize) {
+			return new StandardDeviation(dataSize);
+		}
+		private static final class Mean extends Base {
 			public Mean(int dataSize) {
 				super(dataSize);
 			}
@@ -170,7 +179,7 @@ public abstract class MovingStats implements DoubleConsumer {
 				return movingStats.getMean();
 			}
 		}
-		public static final class StandardDeviation extends Base {
+		private static final class StandardDeviation extends Base {
 			public StandardDeviation(int dataSize) {
 				super(dataSize);
 			}
@@ -189,7 +198,13 @@ public abstract class MovingStats implements DoubleConsumer {
 				movingStats = new Simple(dataSize);
 			}
 		}
-		public static final class Mean extends Base {
+		public static DoubleUnaryOperator mean(int dataSize) {
+			return new Mean(dataSize);
+		}
+		public static DoubleUnaryOperator sd(int dataSize) {
+			return new StandardDeviation(dataSize);
+		}
+		private static final class Mean extends Base {
 			public Mean(int dataSize) {
 				super(dataSize);
 			}
@@ -199,7 +214,7 @@ public abstract class MovingStats implements DoubleConsumer {
 				return movingStats.getMean();
 			}
 		}
-		public static final class StandardDeviation extends Base {
+		private static final class StandardDeviation extends Base {
 			public StandardDeviation(int dataSize) {
 				super(dataSize);
 			}

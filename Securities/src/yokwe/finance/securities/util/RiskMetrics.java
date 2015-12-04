@@ -24,35 +24,108 @@ public final class RiskMetrics {
 	public static double DEFAULT_DECAY_FACTOR = 0.94;
 	public static double DEFAULT_CONFIDENCE   = CONFIDENCE_95_PERCENT;
 	
-	private static final DoubleUnaryOperator APPLY_SQRT = new DoubleUnaryOperator() {
+	public static DoubleUnaryOperator relativeReturn() {
+		return new RelativeReturn();
+	}
+	public static final class RelativeReturn implements DoubleUnaryOperator {
+		private double lastValue;
+		public RelativeReturn() {
+			lastValue = Double.NaN;
+		}
 		@Override
 		public double applyAsDouble(double value) {
+			if (Double.isNaN(value)) return Double.NaN; 
+			if (Double.isNaN(lastValue)) {
+				lastValue = value;
+				return Double.NaN;
+			}
+			final double ret = ((value / lastValue) - 1.0) * 100.0;
+			lastValue = value;
+			return ret;
+		}
+	}
+	
+	public static DoubleUnaryOperator logReturn() {
+		return new LogReturn();
+	}
+	private static final class LogReturn implements DoubleUnaryOperator {
+		private double lastValue;
+		public LogReturn() {
+			lastValue = Double.NaN;
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(value)) return Double.NaN; 
+			if (Double.isNaN(lastValue)) {
+				lastValue = value;
+				return Double.NaN;
+			}
+			final double ret = Math.log(value / lastValue) * 100.0;
+			lastValue = value;
+			return ret;
+		}
+	}
+	private static final DoubleUnaryOperator squareInstance = new DoubleUnaryOperator() {
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(value)) return Double.NaN; 
+			return value * value;
+		}
+	};
+	public static DoubleUnaryOperator square() {
+		return squareInstance;
+	}
+
+	private static final DoubleUnaryOperator sqrtInstance = new DoubleUnaryOperator() {
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(value)) return Double.NaN; 
 			return Math.sqrt(value);
 		}
 	};
-	private static DoubleUnaryOperator applySqrt() {
-		return APPLY_SQRT;
+	public static DoubleUnaryOperator sqrt() {
+		return sqrtInstance;
 	}
 	
 	private static final class RecursiveVariance implements DoubleUnaryOperator {
-		private final double decayFactor;
-		private double var = Double.NaN;
+		private final double alpha;
+		private double       var;
 		
-		RecursiveVariance(double decayFactor) {
-			this.decayFactor = decayFactor;
+		// dataSize 32 => decayFactor 93.94
+		RecursiveVariance(int dataSize) {
+			alpha = 2.0 / (dataSize + 1.0);
+			var   = Double.NaN;
+		}
+		
+		RecursiveVariance(double alpha) {
+			this.alpha = alpha;
 		}
 		@Override
 		public double applyAsDouble(double value) {
+			// Ignore Nan
+			if (Double.isNaN(value)) return Double.NaN;
+			
 			if (Double.isNaN(var)) {
 				var = value;
 			}
-			var = value + decayFactor * (var - value);
+			// var = value + decayFactor * (var - value);
+			var = var + alpha * (value - var);
 			return var;
 		}
 	};
-	private DoubleUnaryOperator recursiveVariance() {
-		return new RecursiveVariance(decayFactor);
+	public static DoubleUnaryOperator recursiveVariance(double decayFactor) {
+		return new RecursiveVariance(1.0 - decayFactor);
 	}
+	public static DoubleUnaryOperator recursiveVarianceFromAlpha(double alpha) {
+		return new RecursiveVariance(alpha);
+	}
+	public static DoubleUnaryOperator recursiveVariance(int dataSize) {
+		return new RecursiveVariance(dataSize);
+	}
+	
+	
+	
+	
 	
 	private static final class ExponentialMovingAverage implements DoubleUnaryOperator {
 		private final double decayFactor;
@@ -126,7 +199,7 @@ public final class RiskMetrics {
 	
 	// EWMA variance, covariance and correlation
 	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
-		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance());
+		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance(decayFactor));
 	}
 	
 	public double[] getCovariance(double data1[], double data2[]) {
@@ -136,7 +209,7 @@ public final class RiskMetrics {
 		return getCovariance(data, data);
 	}
 	public double[] getStandardDeviation(double data[]) {
-		return getCovarianceDoubleStream(data, data).map(applySqrt()).toArray();
+		return getCovarianceDoubleStream(data, data).map(sqrt()).toArray();
 	}
 	public double[] getCorrelation(double data1[], double data2[]) {
 		double sd1[] = getStandardDeviation(data1);

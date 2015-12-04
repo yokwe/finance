@@ -55,13 +55,13 @@ class Filter {
 		case "var":
 			return ValueAtRisk.getInstance(interval);
 		case "smam":
-			return new MovingStats.SMA.Mean(interval);
+			return MovingStats.SMA.mean(interval);
 		case "smas":
-			return new MovingStats.SMA.StandardDeviation(interval);
+			return MovingStats.SMA.sd(interval);
 		case "emam":
-			return new MovingStats.EMA.Mean(interval);
+			return MovingStats.EMA.mean(interval);
 		case "emas":
-			return new MovingStats.EMA.StandardDeviation(interval);
+			return MovingStats.EMA.sd(interval);
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

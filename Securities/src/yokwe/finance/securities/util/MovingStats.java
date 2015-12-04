@@ -11,28 +11,6 @@ import yokwe.finance.securities.SecuritiesException;
 public abstract class MovingStats implements DoubleConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(MovingStats.class);
 
-	protected final int    size;
-	protected final double data[];
-	// pos point to next position
-	protected int          pos;
-
-	protected MovingStats(int dataSize) {
-		size = dataSize;
-		if (size <= 1) {
-			logger.error("size = {}", size);
-			throw new SecuritiesException("size <= 1");
-		}
-		data = new double[size];
-		pos  = 0;
-		Arrays.fill(data, 0.0);
-	}
-	
-	@Override
-	public void accept(double value) {
-		data[pos++] = value;
-		if (pos == size) pos = 0;
-	}
-	
 	private static double getMean(double data[]) {
 		final int size = data.length;
 		double ret = 0;
@@ -52,8 +30,37 @@ public abstract class MovingStats implements DoubleConsumer {
 		return ret / size;
 	}
 	
+	protected final int    size;
+	protected final double data[];
+	// pos point to next position
+	protected int          pos;
+	// count holds number of count of data
+	protected int          count;
+
+	protected MovingStats(int dataSize) {
+		size = dataSize;
+		if (size <= 1) {
+			logger.error("size = {}", size);
+			throw new SecuritiesException("size <= 1");
+		}
+		data  = new double[size];
+		pos   = 0;
+		count = 0;
+		Arrays.fill(data, 0.0);
+	}
+	
+	@Override
+	public void accept(double value) {
+		data[pos++] = value;
+		if (pos == size) pos = 0;
+		if (count < size) count++;
+	}
+	
 	public abstract double getMean();
 	public abstract double getVariance();
+	public double getStandardDeviation() {
+		return Math.sqrt(getVariance());
+	}
 
 	public static final class Simple extends MovingStats {
 		public Simple(int dataSize) {
@@ -62,12 +69,12 @@ public abstract class MovingStats implements DoubleConsumer {
 		
 		@Override
 		public double getMean() {
-			return getMean(data);
+			return getMean(Arrays.copyOf(data, count));
 		}
 
 		@Override
 		public double getVariance() {
-			return getVariance(data);
+			return getVariance(Arrays.copyOf(data, count));
 		}
 	}
 	
@@ -88,14 +95,20 @@ public abstract class MovingStats implements DoubleConsumer {
 		}
 		
 		private double[] getWeightedData() {
-			double ret[] = new double[size];
-			int    j     = 0;
+			double ret[] = new double[count];
 			
-			for(int i = pos; i < size; i++, j++) {
-				ret[j] = data[i] * weight[j];
+			int wIndex = size;
+			int rIndex = 0;
+			
+			// pos - 1 => 0
+			for(int dIndex = pos - 1; 0 <= dIndex; dIndex--) {
+				if (rIndex == count) break; // No more data to process
+				ret[rIndex++] = data[dIndex] * weight[wIndex--];
 			}
-			for(int i = 0; i < pos; i++, j++) {
-				ret[j] = data[i] * weight[j];
+			// size - 1 => pos
+			for(int dIndex = size - 1; pos <= dIndex; dIndex--) {
+				if (rIndex == count) break; // No more data to process
+				ret[rIndex++] = data[dIndex] * weight[wIndex--];
 			}
 			return ret;
 		}

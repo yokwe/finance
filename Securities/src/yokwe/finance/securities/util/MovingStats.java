@@ -87,26 +87,41 @@ public abstract class MovingStats implements DoubleConsumer {
 	}
 	
 	public static final class Exponential extends MovingStats {
-		private final double weight[];
-		public final double weightRatio;
+		// From k = log(0.01) / log (1 - alpha)
+		public static int getDataSize99(double alpha) {
+			return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
+		}
 		
-		public Exponential(int dataSize) {
+		public  final double alpha;
+		private final double weight[];
+		public  final double weightRatio;
+		
+		public Exponential(int dataSize, double alpha) {
 			super(dataSize);
-			double alfa = 2.0 / (dataSize + 1);
-//			double alfa = 1.0 / dataSize;
+			logger.info("{}", String.format("Exponential %3d  %8.3f", dataSize, alpha));
 			
+			this.alpha = alpha;
 			// From 0:high to size-1:low weight
 			weight = new double[size];
 			{
-				double w  = alfa;
+				double w  = alpha;
 				double wr = 0;
 				for(int i = 0; i < size; i++) {
 					weight[size - i - 1] = w;
 					wr += w;
-					w *= (1 - alfa);
+					w *= (1 - alpha);
 				}
 				weightRatio = (1.0 / wr);
 			}
+		}
+		
+		public Exponential(int dataSize) {
+			// From alpha = 2 / (N + 1)
+			this(dataSize, 2.0 / (dataSize + 1));
+		}
+		public Exponential(double alpha) {
+			// From alpha = 2 / (N + 1)
+			this((int)Math.round((2.0 / alpha) - 1.0), alpha);
 		}
 		
 		private double[] getWeightedData() {
@@ -162,9 +177,15 @@ public abstract class MovingStats implements DoubleConsumer {
 			public Base(int dataSize) {
 				movingStats = new Exponential(dataSize);
 			}
+			public Base(double alpha) {
+				movingStats = new Exponential(alpha);
+			}
 		}
 		public static DoubleUnaryOperator mean(int dataSize) {
 			return new Mean(dataSize);
+		}
+		public static DoubleUnaryOperator mean(double alpha) {
+			return new Mean(alpha);
 		}
 		public static DoubleUnaryOperator sd(int dataSize) {
 			return new StandardDeviation(dataSize);
@@ -172,6 +193,9 @@ public abstract class MovingStats implements DoubleConsumer {
 		private static final class Mean extends Base {
 			public Mean(int dataSize) {
 				super(dataSize);
+			}
+			public Mean(double alpha) {
+				super(alpha);
 			}
 			@Override
 			public double applyAsDouble(double value) {
@@ -256,6 +280,28 @@ public abstract class MovingStats implements DoubleConsumer {
 			logger.info("{}", String.format("mean  s %8.3f  e %8.3f  w %8.3f", simp.getMean(), expo.getMean(), expo.getMean() * expo.weightRatio));
 			logger.info("{}", String.format("var   s %8.3f  e %8.3f", simp.getVariance(),          expo.getVariance()));
 			logger.info("{}", String.format("sd    s %8.3f  e %8.3f", simp.getStandardDeviation(), expo.getStandardDeviation()));
+		}
+		
+		{
+			Simple      simpl = new Simple(33);
+			Exponential expoA = new Exponential(33);
+			Exponential expoB = new Exponential(0.059);
+			Exponential expoC = new Exponential(Exponential.getDataSize99(0.059), 0.059);
+			
+			for(int i = 0; i < 1000; i++) {
+				simpl.accept(100 + i);
+				expoA.accept(100 + i);
+				expoB.accept(100 + i);
+				expoC.accept(100 + i);
+			}
+			
+			logger.info("");
+			logger.info("{}", String.format("size  S %8d  A %8d  B %8d  C %8d",             simpl.size,                   expoA.size,                   expoB.size,                   expoC.size));
+			logger.info("{}", String.format("alpha S           A %8.3f  B %8.3f  C %8.3f",  expoA.alpha,                  expoB.alpha,                  expoC.alpha));
+			logger.info("{}", String.format("wf    S           A %8.3f  B %8.3f  C %8.3f",  expoA.weightRatio,            expoB.weightRatio,            expoC.weightRatio));
+			logger.info("{}", String.format("mean  S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getMean(),              expoA.getMean(),              expoB.getMean(),              expoC.getMean()));
+			logger.info("{}", String.format("var   S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getVariance(),          expoA.getVariance(),          expoB.getVariance(),          expoC.getVariance()));
+			logger.info("{}", String.format("sd    S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getStandardDeviation(), expoA.getStandardDeviation(), expoB.getStandardDeviation(), expoC.getStandardDeviation()));
 		}
 		
 	}

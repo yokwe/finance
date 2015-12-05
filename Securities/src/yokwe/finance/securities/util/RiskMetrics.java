@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.function.DoublePredicate;
 import java.util.function.DoubleUnaryOperator;
 import java.util.stream.DoubleStream;
@@ -297,38 +298,55 @@ public final class RiskMetrics {
 				LocalDate dateFrom = LocalDate.now().minusYears(10);
 				LocalDate dateTo   = LocalDate.now();
 				double data[] = PriceTable.getAllBySymbolDateRange(connection, "QQQ", dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
+				double lr[]   = logReturn(data).toArray();
 				
-				{
-					RiskMetrics rm = new RiskMetrics();
-					double lr[] = logReturn(data).toArray();
-					double sd[] = rm.getStandardDeviation(lr);
-					
-					double lastData = data[data.length - 1];
-					double lastSD   = sd[sd.length - 1];
-					
-					logger.info("");
-					logger.info("{}", String.format("last  data %8.3f  sd %8.3f  %8.3f", lastData, lastSD, lastData * lastSD));
-					
-//					for(int i = 0; i < sd.length; i++) {
-//						logger.info("{}", String.format("%8.3f  %8.3f", data[i], sd[i]));
-//					}
-				}
+				logger.info("");
+				logger.info("QQQ {} - {}", dateFrom, dateTo);
 				
 				{
 					DescriptiveStatistics stats = new DescriptiveStatistics();
 					Arrays.stream(data).forEach(o -> stats.addValue(o));
 					
-					double mean = stats.getMean();
-					double sd   = stats.getStandardDeviation();
-					
-					logger.info("{}", String.format("n %4d  mean %8.3f  sd %8.3f", stats.getN(), mean, sd));
-					logger.info("{}", String.format("%8.3f", mean - (CONFIDENCE_95_PERCENT * sd)));
+					logger.info("{}", String.format("data %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
+							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
 				}
-
+				{
+					DescriptiveStatistics stats = new DescriptiveStatistics();
+					Arrays.stream(lr).forEach(o -> stats.addValue(o));
+					
+					logger.info("{}", String.format("lr   %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
+							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
+				}
+				
 			} catch (SQLException e) {
 				logger.error(e.getClass().getName());
 				logger.error(e.getMessage());
 				throw new SecuritiesException();
+			}
+			
+			{
+				Random random = new Random(System.currentTimeMillis());
+				double data[] = new double[9999];
+				for(int i = 0; i < data.length; i++) data[i] = random.nextGaussian();
+				{
+					DescriptiveStatistics stats = new DescriptiveStatistics();
+					Arrays.stream(data).forEach(o -> stats.addValue(o));
+					
+					logger.info("{}", String.format("gaus %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
+							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
+				}
+			}
+			{
+				Random random = new Random(System.currentTimeMillis());
+				double data[] = new double[9999];
+				for(int i = 0; i < data.length; i++) data[i] = random.nextDouble();
+				{
+					DescriptiveStatistics stats = new DescriptiveStatistics();
+					Arrays.stream(data).forEach(o -> stats.addValue(o));
+					
+					logger.info("{}", String.format("rand %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
+							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
+				}
 			}
 		}
 	}

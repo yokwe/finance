@@ -22,6 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.RiskMetrics;
 
 public class CSVServlet extends HttpServlet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
@@ -59,6 +60,7 @@ public class CSVServlet extends HttpServlet {
 		final Map<String, DoubleUnaryOperator> filterMap = new TreeMap<>();
 		final boolean                          zero;
 		final boolean                          relative;
+		final boolean                          logReturn;
 		
 		final String  baseSymbol;
 		
@@ -110,6 +112,9 @@ public class CSVServlet extends HttpServlet {
 			
 			// r - show relative to first data
 			relative = paramMap.containsKey("r");
+			
+			// lr - log return
+			logReturn = paramMap.containsKey("lr");
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -128,6 +133,22 @@ public class CSVServlet extends HttpServlet {
 				logger.error(e.getClass().getName());
 				logger.error(e.getMessage());
 				throw new SecuritiesException();
+			}
+			
+			// logReturn
+			if (logReturn) {
+				for(String key: dailyDataMap.keySet()) {
+					List<Data.Daily> dailyList = dailyDataMap.get(key);
+					double raw[] = dailyList.stream().mapToDouble(o -> o.value).toArray();
+					double lr[] = RiskMetrics.logReturn(raw).map(RiskMetrics.square()).toArray();
+					List<Data.Daily> newDailyList = new ArrayList<>();
+					for(int i = 1; i < lr.length; i++) {
+						Data.Daily oldDaily = dailyList.get(i);
+						Data.Daily newDaily = new Data.Daily(oldDaily.date, oldDaily.symbol, lr[i]);
+						newDailyList.add(newDaily);
+					}
+					dailyDataMap.put(key, newDailyList);
+				}
 			}
 			
 			// Build dateList from dailyDataMap

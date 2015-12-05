@@ -11,8 +11,22 @@ import yokwe.finance.securities.SecuritiesException;
 
 public abstract class MovingStats implements DoubleConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(MovingStats.class);
+	
+	public static double getAlpha(int dataSize) {
+		// From alpha = 2 / (N + 1)
+		return 2.0 / (dataSize + 1.0);
+	}
+	public static int getDataSize(double alpha) {
+		// From alpha = 2 / (N + 1)
+		return (int)Math.round((2.0 / alpha) - 1.0);
+	}
+	// From k = log(0.01) / log (1 - alpha)
+	public static int getDataSize99(double alpha) {
+		return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
+	}
 
-	private static double getMean(double data[]) {
+
+	protected static double getMean(double data[]) {
 		final int size = data.length;
 		double ret = 0;
 		for(int i = 0; i < size; i++) {
@@ -21,49 +35,51 @@ public abstract class MovingStats implements DoubleConsumer {
 		return ret / size;
 	}
 	
-	protected final int    size;
-	protected final double data[];
-	// pos point to next position
-	protected int          pos;
-	// count holds number of count of data
-	protected boolean      firstTime;
-
-	protected MovingStats(int dataSize) {
-		size = dataSize;
-		if (size <= 1) {
-			logger.error("size = {}", size);
-			throw new SecuritiesException("size <= 1");
-		}
-		data      = new double[size];
-		pos       = 0;
-		firstTime = true;
-		Arrays.fill(data, 0.0);
-	}
-	
-	@Override
-	public void accept(double value) {
-		// Ignore NaN value
-		if (Double.isNaN(value)) return;
-		
-		if (firstTime) {
-			for(int i = 0; i < size; i++) {
-				data[pos++] = value;
-			}
-			pos       = 0;
-			firstTime = false;
-			return;
-		}
-		data[pos++] = value;
-		if (pos == size) pos = 0;
-	}
-	
 	public abstract double getMean();
 	public abstract double getVariance();
 	public double getStandardDeviation() {
 		return Math.sqrt(getVariance());
 	}
 
-	public static final class Simple extends MovingStats {
+	protected static abstract class DataArray extends MovingStats {
+		protected final int    size;
+		protected final double data[];
+		// pos point to next position
+		protected int          pos;
+		// count holds number of count of data
+		protected boolean      firstTime;
+
+		protected DataArray(int dataSize) {
+			size = dataSize;
+			if (size <= 1) {
+				logger.error("size = {}", size);
+				throw new SecuritiesException("size <= 1");
+			}
+			data      = new double[size];
+			pos       = 0;
+			firstTime = true;
+			Arrays.fill(data, 0.0);
+		}
+		
+		@Override
+		public void accept(double value) {
+			// Ignore NaN value
+			if (Double.isNaN(value)) return;
+			
+			if (firstTime) {
+				for(int i = 0; i < size; i++) {
+					data[pos++] = value;
+				}
+				pos       = 0;
+				firstTime = false;
+				return;
+			}
+			data[pos++] = value;
+			if (pos == size) pos = 0;
+		}
+	}
+	
+	public static final class Simple extends DataArray {
 		public Simple(int dataSize) {
 			super(dataSize);
 		}
@@ -86,12 +102,7 @@ public abstract class MovingStats implements DoubleConsumer {
 		}
 	}
 	
-	public static final class Exponential extends MovingStats {
-		// From k = log(0.01) / log (1 - alpha)
-		public static int getDataSize99(double alpha) {
-			return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
-		}
-		
+	public static final class Exponential extends DataArray {		
 		public  final double alpha;
 		private final double weight[];
 		public  final double weightRatio;
@@ -116,12 +127,10 @@ public abstract class MovingStats implements DoubleConsumer {
 		}
 		
 		public Exponential(int dataSize) {
-			// From alpha = 2 / (N + 1)
-			this(dataSize, 2.0 / (dataSize + 1));
+			this(dataSize, getAlpha(dataSize));
 		}
 		public Exponential(double alpha) {
-			// From alpha = 2 / (N + 1)
-			this((int)Math.round((2.0 / alpha) - 1.0), alpha);
+			this(getDataSize99(alpha), alpha);
 		}
 		
 		private double[] getWeightedData() {
@@ -171,85 +180,134 @@ public abstract class MovingStats implements DoubleConsumer {
 		}
 	}
 	
-	public static final class EMA {
-		protected static abstract class Base implements DoubleUnaryOperator {
-			final protected MovingStats movingStats;
-			public Base(int dataSize) {
-				movingStats = new Exponential(dataSize);
-			}
-			public Base(double alpha) {
-				movingStats = new Exponential(alpha);
-			}
+	public static final class RecursiveExponential extends MovingStats {
+		public final double alpha;
+		private      double mean;
+		private      double var;
+		
+		RecursiveExponential(int dataSize) {
+			this(getAlpha(dataSize));
 		}
+		
+		RecursiveExponential(double alpha) {
+			this.alpha = alpha;
+			this.mean  = Double.NaN;
+			this.var   = Double.NaN;
+			logger.info("{}", String.format("RecursiveExponential %8.3f", alpha));
+		}
+		
+		@Override
+		public void accept(double value) {
+			if (Double.isNaN(value)) return;
+			
+			if (Double.isNaN(mean)) {
+				mean = value;
+				var  = 0;
+			}
+			
+			mean = mean + alpha * (value           - mean);
+			var  = var  + alpha * ((value * value) - var);
+		}
+		@Override
+		public double getMean() {
+			return mean;
+		}
+		@Override
+		public double getVariance() {
+			return var;
+		}
+	}
+	
+	
+	protected static abstract class Base implements DoubleUnaryOperator {
+		final protected MovingStats movingStats;
+		public Base(MovingStats movingStats) {
+			this.movingStats = movingStats;
+		}
+	}
+	protected static class BaseMean extends Base {
+		protected BaseMean(MovingStats movingStats) {
+			super(movingStats);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			movingStats.accept(value);
+			return movingStats.getMean();
+		}
+	}
+	protected static class BaseSD extends Base {
+		protected BaseSD(MovingStats movingStats) {
+			super(movingStats);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			movingStats.accept(value);
+			return movingStats.getStandardDeviation();
+		}
+	}
+	protected static class BaseVAR extends Base {
+		protected BaseVAR(MovingStats movingStats) {
+			super(movingStats);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			movingStats.accept(value);
+			return movingStats.getVariance();
+		}
+	}
+
+	public static final class S {
 		public static DoubleUnaryOperator mean(int dataSize) {
-			return new Mean(dataSize);
+			return new BaseMean(new Simple(dataSize));
+		}
+		public static DoubleUnaryOperator sd(int dataSize) {
+			return new BaseSD(new Simple(dataSize));
+		}
+		public static DoubleUnaryOperator var(int dataSize) {
+			return new BaseVAR(new Simple(dataSize));
+		}
+	}
+	public static final class E {
+		public static DoubleUnaryOperator mean(int dataSize) {
+			return new BaseMean(new Exponential(dataSize));
 		}
 		public static DoubleUnaryOperator mean(double alpha) {
-			return new Mean(alpha);
+			return new BaseMean(new Exponential(alpha));
 		}
 		public static DoubleUnaryOperator sd(int dataSize) {
-			return new StandardDeviation(dataSize);
+			return new BaseSD(new Exponential(dataSize));
 		}
-		private static final class Mean extends Base {
-			public Mean(int dataSize) {
-				super(dataSize);
-			}
-			public Mean(double alpha) {
-				super(alpha);
-			}
-			@Override
-			public double applyAsDouble(double value) {
-				movingStats.accept(value);
-				return movingStats.getMean();
-			}
+		public static DoubleUnaryOperator sd(double alpha) {
+			return new BaseSD(new Exponential(alpha));
 		}
-		private static final class StandardDeviation extends Base {
-			public StandardDeviation(int dataSize) {
-				super(dataSize);
-			}
-			@Override
-			public double applyAsDouble(double value) {
-				movingStats.accept(value);
-				return movingStats.getStandardDeviation();
-			}
+		public static DoubleUnaryOperator var(int dataSize) {
+			return new BaseVAR(new Exponential(dataSize));
+		}
+		public static DoubleUnaryOperator var(double alpha) {
+			return new BaseVAR(new Exponential(alpha));
 		}
 	}
-	
-	public static final class SMA {
-		protected static abstract class Base implements DoubleUnaryOperator {
-			final protected MovingStats movingStats;
-			public Base(int dataSize) {
-				movingStats = new Simple(dataSize);
-			}
-		}
+	public static final class RE {
 		public static DoubleUnaryOperator mean(int dataSize) {
-			return new Mean(dataSize);
+			return new BaseMean(new RecursiveExponential(dataSize));
+		}
+		public static DoubleUnaryOperator mean(double alpha) {
+			return new BaseMean(new RecursiveExponential(alpha));
 		}
 		public static DoubleUnaryOperator sd(int dataSize) {
-			return new StandardDeviation(dataSize);
+			return new BaseSD(new RecursiveExponential(dataSize));
 		}
-		private static final class Mean extends Base {
-			public Mean(int dataSize) {
-				super(dataSize);
-			}
-			@Override
-			public double applyAsDouble(double value) {
-				movingStats.accept(value);
-				return movingStats.getMean();
-			}
+		public static DoubleUnaryOperator sd(double alpha) {
+			return new BaseSD(new RecursiveExponential(alpha));
 		}
-		private static final class StandardDeviation extends Base {
-			public StandardDeviation(int dataSize) {
-				super(dataSize);
-			}
-			@Override
-			public double applyAsDouble(double value) {
-				movingStats.accept(value);
-				return movingStats.getStandardDeviation();
-			}
+		public static DoubleUnaryOperator var(int dataSize) {
+			return new BaseVAR(new RecursiveExponential(dataSize));
+		}
+		public static DoubleUnaryOperator var(double alpha) {
+			return new BaseVAR(new RecursiveExponential(alpha));
 		}
 	}
-	
+		
 	public static void main(String[] args) {
 		{
 			Exponential expo = new Exponential(10);
@@ -287,21 +345,23 @@ public abstract class MovingStats implements DoubleConsumer {
 			Exponential expoA = new Exponential(33);
 			Exponential expoB = new Exponential(0.059);
 			Exponential expoC = new Exponential(Exponential.getDataSize99(0.059), 0.059);
+			RecursiveExponential rexpo = new RecursiveExponential(33);
 			
 			for(int i = 0; i < 1000; i++) {
 				simpl.accept(100 + i);
 				expoA.accept(100 + i);
 				expoB.accept(100 + i);
 				expoC.accept(100 + i);
+				rexpo.accept(100 + i);
 			}
 			
 			logger.info("");
 			logger.info("{}", String.format("size  S %8d  A %8d  B %8d  C %8d",             simpl.size,                   expoA.size,                   expoB.size,                   expoC.size));
 			logger.info("{}", String.format("alpha S           A %8.3f  B %8.3f  C %8.3f",  expoA.alpha,                  expoB.alpha,                  expoC.alpha));
 			logger.info("{}", String.format("wf    S           A %8.3f  B %8.3f  C %8.3f",  expoA.weightRatio,            expoB.weightRatio,            expoC.weightRatio));
-			logger.info("{}", String.format("mean  S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getMean(),              expoA.getMean(),              expoB.getMean(),              expoC.getMean()));
-			logger.info("{}", String.format("var   S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getVariance(),          expoA.getVariance(),          expoB.getVariance(),          expoC.getVariance()));
-			logger.info("{}", String.format("sd    S %8.3f  A %8.3f  B %8.3f  C %8.3f",     simpl.getStandardDeviation(), expoA.getStandardDeviation(), expoB.getStandardDeviation(), expoC.getStandardDeviation()));
+			logger.info("{}", String.format("mean  S %8.3f  A %8.3f  B %8.3f  C %8.3f  R %8.3f",     simpl.getMean(),              expoA.getMean(),              expoB.getMean(),              expoC.getMean(),              rexpo.getMean()));
+			logger.info("{}", String.format("var   S %8.3f  A %8.3f  B %8.3f  C %8.3f  R %8.3f",     simpl.getVariance(),          expoA.getVariance(),          expoB.getVariance(),          expoC.getVariance(),          rexpo.getVariance()));
+			logger.info("{}", String.format("sd    S %8.3f  A %8.3f  B %8.3f  C %8.3f  R %8.3f",     simpl.getStandardDeviation(), expoA.getStandardDeviation(), expoB.getStandardDeviation(), expoC.getStandardDeviation(), rexpo.getStandardDeviation()));
 		}
 		
 	}

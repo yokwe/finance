@@ -15,7 +15,7 @@ import yokwe.finance.securities.util.MovingStats;
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|smam|smas|emam|emas)([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|smam|smas|emam|emas|remam|remas)([0-9]+)").matcher("");
 	
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;
@@ -55,13 +55,23 @@ class Filter {
 		case "var":
 			return ValueAtRisk.getInstance(interval);
 		case "smam":
-			return MovingStats.SMA.mean(interval);
+			return MovingStats.S.mean(interval);
 		case "smas":
-			return MovingStats.SMA.sd(interval);
+			return MovingStats.S.sd(interval);
+		case "smav":
+			return MovingStats.S.var(interval);
 		case "emam":
-			return MovingStats.EMA.mean(interval);
+			return MovingStats.E.mean(interval * 0.01);
 		case "emas":
-			return MovingStats.EMA.sd(interval);
+			return MovingStats.E.sd(interval * 0.01);
+		case "emav":
+			return MovingStats.E.var(interval * 0.01);
+		case "remam":
+			return MovingStats.RE.mean(interval * 0.01);
+		case "remas":
+			return MovingStats.RE.sd(interval * 0.01);
+		case "remav":
+			return MovingStats.RE.var(interval * 0.01);
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

@@ -22,7 +22,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.RiskMetrics;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class CSVServlet extends HttpServlet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CSVServlet.class);
@@ -140,7 +140,7 @@ public class CSVServlet extends HttpServlet {
 				for(String key: dailyDataMap.keySet()) {
 					List<Data.Daily> dailyList = dailyDataMap.get(key);
 					double raw[] = dailyList.stream().mapToDouble(o -> o.value).toArray();
-					double lr[] = RiskMetrics.logReturn(raw).map(RiskMetrics.square()).toArray();
+					double lr[] = DoubleUtil.logReturn(raw).map(DoubleUtil.square()).toArray();
 					List<Data.Daily> newDailyList = new ArrayList<>();
 					for(int i = 1; i < lr.length; i++) {
 						Data.Daily oldDaily = dailyList.get(i);

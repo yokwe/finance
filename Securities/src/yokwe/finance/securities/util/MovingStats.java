@@ -12,29 +12,6 @@ import yokwe.finance.securities.SecuritiesException;
 public abstract class MovingStats implements DoubleConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(MovingStats.class);
 	
-	public static double getAlpha(int dataSize) {
-		// From alpha = 2 / (N + 1)
-		return 2.0 / (dataSize + 1.0);
-	}
-	public static int getDataSize(double alpha) {
-		// From alpha = 2 / (N + 1)
-		return (int)Math.round((2.0 / alpha) - 1.0);
-	}
-	// From k = log(0.01) / log (1 - alpha)
-	public static int getDataSize99(double alpha) {
-		return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
-	}
-
-
-	protected static double getMean(double data[]) {
-		final int size = data.length;
-		double ret = 0;
-		for(int i = 0; i < size; i++) {
-			ret += data[i];
-		}
-		return ret / size;
-	}
-	
 	public abstract double getMean();
 	public abstract double getVariance();
 	public double getStandardDeviation() {
@@ -86,12 +63,12 @@ public abstract class MovingStats implements DoubleConsumer {
 		
 		@Override
 		public double getMean() {
-			return MovingStats.getMean(data);
+			return DoubleUtil.mean(data);
 		}
 
 		@Override
 		public double getVariance() {
-			final double mean = MovingStats.getMean(data);
+			final double mean = DoubleUtil.mean(data);
 			final int    size = data.length;
 			double ret = 0;
 			for(int i = 0; i < size; i++) {
@@ -127,10 +104,10 @@ public abstract class MovingStats implements DoubleConsumer {
 		}
 		
 		public Exponential(int dataSize) {
-			this(dataSize, getAlpha(dataSize));
+			this(dataSize, DoubleUtil.getAlpha(dataSize));
 		}
 		public Exponential(double alpha) {
-			this(getDataSize99(alpha), alpha);
+			this(DoubleUtil.getDataSize99(alpha), alpha);
 		}
 		
 		private double[] getWeightedData() {
@@ -164,7 +141,7 @@ public abstract class MovingStats implements DoubleConsumer {
 
 		@Override
 		public double getVariance() {
-			final double mean = MovingStats.getMean(data);
+			final double mean = DoubleUtil.mean(data);
 			
 			double ret = 0;
 			int index = 0;
@@ -186,7 +163,7 @@ public abstract class MovingStats implements DoubleConsumer {
 		private      double var;
 		
 		RecursiveExponential(int dataSize) {
-			this(getAlpha(dataSize));
+			this(DoubleUtil.getAlpha(dataSize));
 		}
 		
 		RecursiveExponential(double alpha) {
@@ -344,7 +321,7 @@ public abstract class MovingStats implements DoubleConsumer {
 			Simple      simpl = new Simple(33);
 			Exponential expoA = new Exponential(33);
 			Exponential expoB = new Exponential(0.059);
-			Exponential expoC = new Exponential(Exponential.getDataSize99(0.059), 0.059);
+			Exponential expoC = new Exponential(DoubleUtil.getDataSize99(0.059), 0.059);
 			RecursiveExponential rexpo = new RecursiveExponential(33);
 			
 			for(int i = 0; i < 1000; i++) {

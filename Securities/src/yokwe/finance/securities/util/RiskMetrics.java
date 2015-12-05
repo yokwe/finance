@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.function.DoublePredicate;
 import java.util.function.DoubleUnaryOperator;
 import java.util.stream.DoubleStream;
 
@@ -26,135 +25,6 @@ public final class RiskMetrics {
 	public static double DEFAULT_DECAY_FACTOR = 0.94;
 	public static double DEFAULT_CONFIDENCE   = CONFIDENCE_95_PERCENT;
 	
-	private static DoublePredicate skipNaN = new DoublePredicate() {
-		public boolean test(double value) {
-			return !Double.isNaN(value);
-		}
-	};
-	public static DoublePredicate skipNan() {
-		return skipNaN;
-	}
-	
-	private static final class RelativeReturn implements DoubleUnaryOperator {
-		private double lastValue;
-		public RelativeReturn() {
-			lastValue = Double.NaN;
-		}
-		@Override
-		public double applyAsDouble(double value) {
-			if (Double.isNaN(value)) return Double.NaN; 
-			if (Double.isNaN(lastValue)) {
-				lastValue = value;
-				return Double.NaN;
-			}
-			final double ret = ((value / lastValue) - 1.0) * 100.0;
-			lastValue = value;
-			return ret;
-		}
-	}
-	public static DoubleUnaryOperator relativeReturn() {
-		return new RelativeReturn();
-	}
-	public static DoubleStream relativeReturn(double[] data) {
-		return Arrays.stream(data).map(relativeReturn()).filter(skipNan());
-	}
-	
-	private static final class LogReturn implements DoubleUnaryOperator {
-		private double lastValue;
-		public LogReturn() {
-			lastValue = Double.NaN;
-		}
-		@Override
-		public double applyAsDouble(double value) {
-			if (Double.isNaN(value)) return Double.NaN; 
-			if (Double.isNaN(lastValue)) {
-				lastValue = value;
-				return Double.NaN;
-			}
-			final double ret = Math.log(value / lastValue) * 100.0;
-			lastValue = value;
-			return ret;
-		}
-	}
-	public static DoubleUnaryOperator logReturn() {
-		return new LogReturn();
-	}
-	public static DoubleStream logReturn(double[] data) {
-		return Arrays.stream(data).map(logReturn()).filter(skipNan());
-	}
-
-	private static final DoubleUnaryOperator squareInstance = new DoubleUnaryOperator() {
-		@Override
-		public double applyAsDouble(double value) {
-			if (Double.isNaN(value)) return Double.NaN; 
-			return value * value;
-		}
-	};
-	public static DoubleUnaryOperator square() {
-		return squareInstance;
-	}
-
-	private static final DoubleUnaryOperator sqrtInstance = new DoubleUnaryOperator() {
-		@Override
-		public double applyAsDouble(double value) {
-			if (Double.isNaN(value)) return Double.NaN; 
-			return Math.sqrt(value);
-		}
-	};
-	public static DoubleUnaryOperator sqrt() {
-		return sqrtInstance;
-	}
-	
-	private static final class RecursiveVariance implements DoubleUnaryOperator {
-		private final double alpha;
-		private double       var;
-		
-		// dataSize 32 => decayFactor 93.94
-		RecursiveVariance(int dataSize) {
-			alpha = 2.0 / (dataSize + 1.0);
-			var   = Double.NaN;
-		}
-		
-		RecursiveVariance(double alpha) {
-			this.alpha = alpha;
-		}
-		@Override
-		public double applyAsDouble(double value) {
-			// Ignore Nan
-			if (Double.isNaN(value)) return Double.NaN;
-			
-			if (Double.isNaN(var)) {
-				var = value;
-			}
-			// var = value + decayFactor * (var - value);
-			var = var + alpha * (value - var);
-			return var;
-		}
-	};
-	public static DoubleUnaryOperator recursiveVariance(double decayFactor) {
-		return new RecursiveVariance(1.0 - decayFactor);
-	}
-	public static DoubleUnaryOperator recursiveVarianceFromAlpha(double alpha) {
-		return new RecursiveVariance(alpha);
-	}
-	public static DoubleUnaryOperator recursiveVariance(int dataSize) {
-		return new RecursiveVariance(dataSize);
-	}
-	
-	public static double[] multiply(double a[], double b[]) {
-		double ret[] = new double[a.length];
-		for(int i = 0; i < a.length; i++) {
-			ret[i] = a[i] * b[i];
-		}
-		return ret;
-	}
-	public static double[] divide(double a[], double b[]) {
-		double ret[] = new double[a.length];
-		for(int i = 0; i < a.length; i++) {
-			ret[i] = a[i] / b[i];
-		}
-		return ret;
-	}
 	
 	// TODO Until here
 	
@@ -164,7 +34,7 @@ public final class RiskMetrics {
 	
 	public RiskMetrics(double decayFactor) {
 		this.decayFactor       = decayFactor;
-		this.recursiveVariance = new RecursiveVariance(decayFactor);
+		this.recursiveVariance = DoubleUtil.ema(DoubleUtil.getAlphaFromDecayFactor(decayFactor));
 	}
 	public RiskMetrics() {
 		this(DEFAULT_DECAY_FACTOR);
@@ -174,7 +44,7 @@ public final class RiskMetrics {
 	
 	// EWMA variance, covariance and correlation
 	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
-		return Arrays.stream(multiply(data1, data2)).map(recursiveVariance(decayFactor));
+		return Arrays.stream(DoubleUtil.multiply(data1, data2)).map(DoubleUtil.emaFromDecayFactor(decayFactor));
 	}
 	
 	public double[] getCovariance(double data1[], double data2[]) {
@@ -184,14 +54,14 @@ public final class RiskMetrics {
 		return getCovariance(data, data);
 	}
 	public double[] getStandardDeviation(double data[]) {
-		return getCovarianceDoubleStream(data, data).map(sqrt()).toArray();
+		return getCovarianceDoubleStream(data, data).map(DoubleUtil.sqrt()).toArray();
 	}
 	public double[] getCorrelation(double data1[], double data2[]) {
 		double sd1[] = getStandardDeviation(data1);
 		double sd2[] = getStandardDeviation(data2);
 		double cov[] = getCovariance(data1, data2);
 		
-		return divide(cov, multiply(sd1, sd2));
+		return DoubleUtil.divide(cov, DoubleUtil.multiply(sd1, sd2));
 	}
 
 	
@@ -213,8 +83,8 @@ public final class RiskMetrics {
 				0.66503,
 			};
 			
-			double rr[] = relativeReturn(data).toArray();
-			double lr[] = logReturn(data).toArray();
+			double rr[] = DoubleUtil.relativeReturn(data).toArray();
+			double lr[] = DoubleUtil.logReturn(data).toArray();
 
 			
 			logger.info("");
@@ -298,7 +168,7 @@ public final class RiskMetrics {
 				LocalDate dateFrom = LocalDate.now().minusYears(10);
 				LocalDate dateTo   = LocalDate.now();
 				double data[] = PriceTable.getAllBySymbolDateRange(connection, "QQQ", dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
-				double lr[]   = logReturn(data).toArray();
+				double lr[]   = DoubleUtil.logReturn(data).toArray();
 				
 				logger.info("");
 				logger.info("QQQ {} - {}", dateFrom, dateTo);

@@ -357,7 +357,7 @@ public abstract class MovingStats implements DoubleConsumer {
 			
 			logger.info("");
 			logger.info("{}", String.format("size  S %8d  A %8d  B %8d  C %8d",             simpl.size,                   expoA.size,                   expoB.size,                   expoC.size));
-			logger.info("{}", String.format("alpha S           A %8.3f  B %8.3f  C %8.3f",  expoA.alpha,                  expoB.alpha,                  expoC.alpha));
+			logger.info("{}", String.format("alpha S           A %8.3f  B %8.3f  C %8.3f  R %8.3f",  expoA.alpha,                  expoB.alpha,                  expoC.alpha,                  rexpo.alpha));
 			logger.info("{}", String.format("wf    S           A %8.3f  B %8.3f  C %8.3f",  expoA.weightRatio,            expoB.weightRatio,            expoC.weightRatio));
 			logger.info("{}", String.format("mean  S %8.3f  A %8.3f  B %8.3f  C %8.3f  R %8.3f",     simpl.getMean(),              expoA.getMean(),              expoB.getMean(),              expoC.getMean(),              rexpo.getMean()));
 			logger.info("{}", String.format("var   S %8.3f  A %8.3f  B %8.3f  C %8.3f  R %8.3f",     simpl.getVariance(),          expoA.getVariance(),          expoB.getVariance(),          expoC.getVariance(),          rexpo.getVariance()));

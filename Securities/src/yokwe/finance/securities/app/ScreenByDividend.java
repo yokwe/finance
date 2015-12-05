@@ -24,7 +24,7 @@ import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
-import yokwe.finance.securities.util.DoubleStreamUtil.Stats;
+import yokwe.finance.securities.util.DoubleUtil.Stats;
 import yokwe.finance.securities.util.NasdaqUtil;
 
 public class ScreenByDividend {

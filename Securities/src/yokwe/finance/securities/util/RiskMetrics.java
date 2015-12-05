@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Random;
-import java.util.function.DoubleUnaryOperator;
-import java.util.stream.DoubleStream;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
@@ -26,45 +24,7 @@ public final class RiskMetrics {
 	public static double DEFAULT_CONFIDENCE   = CONFIDENCE_95_PERCENT;
 	
 	
-	// TODO Until here
-	
-	
-	final double              decayFactor;
-	final DoubleUnaryOperator recursiveVariance;
-	
-	public RiskMetrics(double decayFactor) {
-		this.decayFactor       = decayFactor;
-		this.recursiveVariance = DoubleUtil.ema(DoubleUtil.getAlphaFromDecayFactor(decayFactor));
-	}
-	public RiskMetrics() {
-		this(DEFAULT_DECAY_FACTOR);
-	}
-	
 		
-	
-	// EWMA variance, covariance and correlation
-	private DoubleStream getCovarianceDoubleStream(double data1[], double data2[]) {
-		return Arrays.stream(DoubleUtil.multiply(data1, data2)).map(DoubleUtil.emaFromDecayFactor(decayFactor));
-	}
-	
-	public double[] getCovariance(double data1[], double data2[]) {
-		return getCovarianceDoubleStream(data1, data2).toArray();
-	}
-	public double[] getVariance(double data[]) {
-		return getCovariance(data, data);
-	}
-	public double[] getStandardDeviation(double data[]) {
-		return getCovarianceDoubleStream(data, data).map(DoubleUtil.sqrt()).toArray();
-	}
-	public double[] getCorrelation(double data1[], double data2[]) {
-		double sd1[] = getStandardDeviation(data1);
-		double sd2[] = getStandardDeviation(data2);
-		double cov[] = getCovariance(data1, data2);
-		
-		return DoubleUtil.divide(cov, DoubleUtil.multiply(sd1, sd2));
-	}
-
-	
 	public static void main(String args[]) {
 		// Difference between relative return and log return
 		{
@@ -141,15 +101,15 @@ public final class RiskMetrics {
 				 -0.217,
 			};
 
-			RiskMetrics rm = new RiskMetrics();
-			double rva[] = rm.getVariance(data_a);
-			double rvb[] = rm.getVariance(data_b);
-			double cov[] = rm.getCovariance(data_a, data_b);
-			double cor[] = rm.getCorrelation(data_a, data_b);
+			final double alpha = DoubleUtil.getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
+			double rva[] = DoubleUtil.getVariance(alpha, data_a);
+			double rvb[] = DoubleUtil.getVariance(alpha, data_b);
+			double cov[] = DoubleUtil.getCovariance(alpha, data_a, data_b);
+			double cor[] = DoubleUtil.getCorrelation(alpha, data_a, data_b);
 			
 			logger.info("");
 			for(int i = 0; i < data_a.length; i++) {
-				logger.info("{}", String.format("%8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", data_a[i], data_b[i], rva[i], rvb[i], cov[i], cor[i]));
+				logger.info("{}", String.format("222 %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", data_a[i], data_b[i], rva[i], rvb[i], cov[i], cor[i]));
 			}
 		}
 

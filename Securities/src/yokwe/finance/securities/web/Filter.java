@@ -7,9 +7,7 @@ import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.DoubleStreamUtil.HistoricalVolatility;
-import yokwe.finance.securities.util.DoubleStreamUtil.SimpleMovingStats;
-import yokwe.finance.securities.util.DoubleStreamUtil.ValueAtRisk;
+import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.MovingStats;
 
 class Filter {
@@ -43,17 +41,13 @@ class Filter {
 		
 		switch(type) {
 		case "avg":
-			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.MEAN, interval);
+			return DoubleUtil.simpleStats(DoubleUtil.StatsType.MEAN, interval);
 		case "sd":
-			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.STANDARD_DEVIATION, interval);
+			return DoubleUtil.simpleStats(DoubleUtil.StatsType.SD, interval);
 		case "skew":
-			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.SKEWNESS, interval);
+			return DoubleUtil.simpleStats(DoubleUtil.StatsType.SKEW, interval);
 		case "kurt":
-			return SimpleMovingStats.getInstance(SimpleMovingStats.Type.KURTOSIS, interval);
-		case "hv":
-			return HistoricalVolatility.getInstance(interval);
-		case "var":
-			return ValueAtRisk.getInstance(interval);
+			return DoubleUtil.simpleStats(DoubleUtil.StatsType.KURT, interval);
 		case "smam":
 			return MovingStats.S.mean(interval);
 		case "smas":

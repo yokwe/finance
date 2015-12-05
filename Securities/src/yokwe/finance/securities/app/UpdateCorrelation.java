@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.util.Correlation;
-import yokwe.finance.securities.util.DoubleStreamUtil.MovingAverage;
-import yokwe.finance.securities.util.DoubleStreamUtil.Sample;
+import yokwe.finance.securities.util.DoubleUtil;
+import yokwe.finance.securities.util.DoubleUtil.StatsType;
 
 public final class UpdateCorrelation {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateCorrelation.class);
@@ -156,7 +156,7 @@ public final class UpdateCorrelation {
 //				logger.warn("SKIP  symbol = {}  list = {}  dateList = {}", symbol, list.size(), dateList.size());
 				continue;
 			}
-			double[] value = list.stream().mapToDouble(o -> o.close).skip(skip).map(MovingAverage.getInstance(sample)).flatMap(Sample.getInstance(sample)).toArray();
+			double[] value = list.stream().mapToDouble(o -> o.close).skip(skip).map(DoubleUtil.simpleStats(StatsType.MEAN, sample)).flatMap(DoubleUtil.sample(sample)).toArray();
 			priceMap.put(symbol, value);
 		}
 		

@@ -15,7 +15,7 @@ import yokwe.finance.securities.util.MovingStats;
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|smam|smas|emam|emas|remam|remas)([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|sma[msv]|ema[msv]|rema[msv])([0-9]+)").matcher("");
 	
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;

@@ -192,7 +192,7 @@ public final class DoubleUtil {
 		return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
 	}
 	// Exponential Moving Average
-	public static final class SEMA implements DoubleUnaryOperator {
+	public static final class EMA_NR implements DoubleUnaryOperator, DoubleConsumer {
 		private final int    size;
 		private final double data[];
 		// pos point to next position
@@ -202,21 +202,15 @@ public final class DoubleUtil {
 		private final double weight[];
 		public  final double weightRatio;
 
-		public SEMA(int dataSize) {
-			this(dataSize, getAlpha(dataSize));
-		}
-		public SEMA(double alpha) {
-			this(getDataSize99(alpha), alpha);
-		}
-		public SEMA(int dataSize, double alpha) {
+		public EMA_NR(int dataSize, double alpha) {
 			size = dataSize;
 			if (size <= 1) {
 				logger.error("size = {}", size);
 				throw new SecuritiesException("size <= 1");
 			}
 			data      = new double[size];
-			Arrays.fill(data, 0.0);
 			pos       = -1;
+			Arrays.fill(data, 0.0);
 			
 			this.alpha = alpha;
 			// From 0:high to size-1:low weight
@@ -231,7 +225,6 @@ public final class DoubleUtil {
 				}
 				weightRatio = (1.0 / wr);
 			}
-
 		}
 		
 		private double getWeightedSum() {
@@ -241,11 +234,13 @@ public final class DoubleUtil {
 			// [pos .. size)
 			for(int dIndex = pos; dIndex < size; dIndex++) {
 				ret += data[dIndex] * weight[index];
+//				logger.info("gws {}", String.format("%2d  %8.3f  %8.3f  %8.3f  %8.3f", dIndex, ret, data[dIndex], weight[index], data[dIndex] * weight[index]));
 				index++;
 			}
 			// [0 .. pos)
 			for(int dIndex = 0; dIndex < pos; dIndex++) {
 				ret += data[dIndex] * weight[index];
+//				logger.info("gws {}", String.format("%2d  %8.3f  %8.3f  %8.3f  %8.3f", dIndex, ret, data[dIndex], weight[index], data[dIndex] * weight[index]));
 				index++;
 			}
 			return ret;
@@ -256,42 +251,54 @@ public final class DoubleUtil {
 			// Ignore NaN value
 			if (Double.isNaN(value)) return Double.NaN;
 			
+			accept(value);
+			return getWeightedSum();
+		}
+		@Override
+		public void accept(double value) {
+			// Ignore NaN value
+			if (Double.isNaN(value)) return;
+			
 			if (pos == -1) {
 				for(int i = 0; i < size; i++) {
 					data[i] = value;
 				}
 				pos = 0;
-				return getWeightedSum();
+				return;
 			}
 			data[pos++] = value;
 			if (pos == size) pos = 0;
+		}
+		public double getValue() {
 			return getWeightedSum();
 		}
 	}
-	public static DoubleUnaryOperator sema(double alpha) {
-		return new SEMA(alpha);
+	public static EMA_NR ema_nr(double alpha) {
+		return new EMA_NR(getDataSize99(alpha), alpha);
 	}
-	public static DoubleUnaryOperator semaFromDecayFactor(double decayFactor) {
-		return new SEMA(getAlphaFromDecayFactor(decayFactor));
+	public static EMA_NR semaFromDecayFactor(double decayFactor) {
+		return ema_nr(getAlphaFromDecayFactor(decayFactor));
 	}
-	public static DoubleUnaryOperator sema(int dataSize) {
-		return new SEMA(getAlpha(dataSize));
+	public static EMA_NR ema_nr(int dataSize) {
+		return new EMA_NR(dataSize, getAlpha(dataSize));
+	}
+	public static EMA_NR ema_nr(int dataSize, double alpha) {
+		return new EMA_NR(dataSize, alpha);
 	}
 
 	
 	// Recursive Exponential Moving Average
-	private static final class EMA implements DoubleUnaryOperator {
+	public static final class EMA implements DoubleUnaryOperator, DoubleConsumer {
 		private final double alpha;
-		private double       var;
+		private double       avg;
 		
-		// dataSize 32 => decayFactor 93.94
 		private EMA(int dataSize) {
 			this(getAlpha(dataSize));
 		}
 		
 		private EMA(double alpha) {
 			this.alpha = alpha;
-			this.var   = Double.NaN;
+			this.avg   = Double.NaN;
 		}
 		
 		@Override
@@ -299,20 +306,32 @@ public final class DoubleUtil {
 			// Ignore Nan
 			if (Double.isNaN(value)) return Double.NaN;
 			
-			if (Double.isNaN(var)) {
-				var = value;
+			accept(value);
+			return avg;
+		}
+
+		@Override
+		public void accept(double value) {
+			// Ignore Nan
+			if (Double.isNaN(value)) return;
+			
+			if (Double.isNaN(avg)) {
+				avg = value;
 			}
-			var = var + alpha * (value - var);
-			return var;
+			avg = avg + alpha * (value - avg);
+		}
+		
+		public double getValue() {
+			return avg;
 		}
 	};
-	public static DoubleUnaryOperator ema(double alpha) {
+	public static EMA ema(double alpha) {
 		return new EMA(alpha);
 	}
-	public static DoubleUnaryOperator emaFromDecayFactor(double decayFactor) {
+	public static EMA emaFromDecayFactor(double decayFactor) {
 		return new EMA(getAlphaFromDecayFactor(decayFactor));
 	}
-	public static DoubleUnaryOperator ema(int dataSize) {
+	public static EMA ema(int dataSize) {
 		return new EMA(getAlpha(dataSize));
 	}
 	
@@ -320,7 +339,7 @@ public final class DoubleUtil {
 	public enum StatsType {
 		MIN, MAX, SUM, MEAN, VAR, SD, KURT, SKEW,
 	}
-	private static final class SimpleStats implements DoubleUnaryOperator {
+	public static final class SimpleStats implements DoubleUnaryOperator, DoubleConsumer {
 		private final StatsType type;
 		private final Stats     stats;
 		
@@ -336,7 +355,13 @@ public final class DoubleUtil {
 		@Override
 		public double applyAsDouble(double value) {
 			stats.accept(value);
-			
+			return getValue();
+		}
+		@Override
+		public void accept(double value) {
+			stats.accept(value);
+		}
+		public double getValue() {
 			switch(type) {
 			case MIN:
 				return stats.getMin();
@@ -451,7 +476,6 @@ public final class DoubleUtil {
 		return new Stats(dataSize);
 	}
 	
-	
 	//
 	// test code
 	//
@@ -511,11 +535,19 @@ public final class DoubleUtil {
 			// To calculate standard deviation apply sqrt
 			logger.info("Table 5.2    sema   {}", String.format("%8.3f  %8.3f", Math.sqrt(stats.getSum()), stats.getSum()));
 		}
-		// TODO not working as expected - value should be near 0.333
 		{
-			double result[] = Arrays.stream(b).map(ema(alpha)).toArray();
+//			EMA_NR ema = ema_nr(b.length, alpha);
+			EMA_NR ema = ema_nr(alpha);
+			Arrays.stream(b).forEach(ema);
 			// To calculate standard deviation apply sqrt
-			logger.info("Table 5.2    sema   {}", String.format("%8.3f", result[result.length - 1]));
+			logger.info("Table 5.2    sema   {}", String.format("%8.3f  %8.3f", Math.sqrt(ema.getValue()), ema.getValue()));
+		}
+		// TODO There is significant difference between sema and ema.
+		{
+			EMA ema = ema(alpha);
+			Arrays.stream(b).forEach(ema);
+			// To calculate standard deviation apply sqrt
+			logger.info("Table 5.2    ema    {}", String.format("%8.3f  %8.3f", Math.sqrt(ema.getValue()), ema.getValue()));
 		}
 		
 	}
@@ -545,7 +577,7 @@ public final class DoubleUtil {
 			};
 
 		double var_r[] = Arrays.stream(multiply(data, data)).map(ema(alpha)).toArray();
-		double var_s[] = Arrays.stream(multiply(data, data)).map(sema(alpha)).toArray();
+		double var_s[] = Arrays.stream(multiply(data, data)).map(ema_nr(alpha)).toArray();
 		
 		logger.info("");
 		for(int i = 0; i < var_s.length; i++) {
@@ -600,11 +632,11 @@ public final class DoubleUtil {
 			-0.217,
 		};
 
-		final double alpha = DoubleUtil.getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
-		double rva[] = DoubleUtil.getVariance(alpha, data_a);
-		double rvb[] = DoubleUtil.getVariance(alpha, data_b);
-		double cov[] = DoubleUtil.getCovariance(alpha, data_a, data_b);
-		double cor[] = DoubleUtil.getCorrelation(alpha, data_a, data_b);
+		final double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
+		double rva[] = getVariance(alpha, data_a);
+		double rvb[] = getVariance(alpha, data_b);
+		double cov[] = getCovariance(alpha, data_a, data_b);
+		double cor[] = getCorrelation(alpha, data_a, data_b);
 		
 		logger.info("");
 		for(int i = 0; i < data_a.length; i++) {

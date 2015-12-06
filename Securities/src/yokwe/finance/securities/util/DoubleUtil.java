@@ -203,6 +203,16 @@ public final class DoubleUtil {
 		public  final double weightRatio;
 
 		public EMA_NR(int dataSize, double alpha) {
+			// Sanity check
+			if (dataSize <= 0) {
+				logger.info("dataSize = {}", dataSize);
+				throw new SecuritiesException("invalid dataSize");
+			}
+			if (alpha <= 0.0 || 1.0 <= alpha) {
+				logger.info("alpha = {}", String.format("%.2f", alpha));
+				throw new SecuritiesException("invalid alpha");
+			}
+
 			size = dataSize;
 			if (size <= 1) {
 				logger.error("size = {}", size);
@@ -297,6 +307,12 @@ public final class DoubleUtil {
 		}
 		
 		private EMA(double alpha) {
+			// Sanity check
+			if (alpha <= 0.0 || 1.0 <= alpha) {
+				logger.info("alpha = {}", String.format("%.2f", alpha));
+				throw new SecuritiesException("invalid alpha");
+			}
+
 			this.alpha = alpha;
 			this.avg   = Double.NaN;
 		}

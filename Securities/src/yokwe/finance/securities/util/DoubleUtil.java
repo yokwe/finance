@@ -15,6 +15,8 @@ import yokwe.finance.securities.SecuritiesException;
 
 public final class DoubleUtil {
 	private static final Logger logger = LoggerFactory.getLogger(DoubleUtil.class);
+	
+	public static final double DEFAULT_DECAY_FACTOR = 0.94;
 
 	//
 	// Utility Methods for array of double
@@ -35,6 +37,13 @@ public final class DoubleUtil {
 		double ret[] = new double[a.length];
 		for(int i = 0; i < a.length; i++) {
 			ret[i] = a[i] * b[i];
+		}
+		return ret;
+	}
+	public static double[] multiply(double a[], double b) {
+		double ret[] = new double[a.length];
+		for(int i = 0; i < a.length; i++) {
+			ret[i] = a[i] * b;
 		}
 		return ret;
 	}
@@ -182,6 +191,95 @@ public final class DoubleUtil {
 	public static int getDataSize99(double alpha) {
 		return (int)Math.round(Math.log(0.01) / Math.log(1 - alpha));
 	}
+	// Exponential Moving Average
+	public static final class SEMA implements DoubleUnaryOperator {
+		private final int    size;
+		private final double data[];
+		// pos point to next position
+		private int          pos;
+		
+		public  final double alpha;
+		private final double weight[];
+		public  final double weightRatio;
+
+		public SEMA(int dataSize) {
+			this(dataSize, getAlpha(dataSize));
+		}
+		public SEMA(double alpha) {
+			this(getDataSize99(alpha), alpha);
+		}
+		public SEMA(int dataSize, double alpha) {
+			size = dataSize;
+			if (size <= 1) {
+				logger.error("size = {}", size);
+				throw new SecuritiesException("size <= 1");
+			}
+			data      = new double[size];
+			Arrays.fill(data, 0.0);
+			pos       = -1;
+			
+			this.alpha = alpha;
+			// From 0:high to size-1:low weight
+			weight = new double[size];
+			{
+				double w  = alpha;
+				double wr = 0;
+				for(int i = 0; i < size; i++) {
+					weight[size - i - 1] = w;
+					wr += w;
+					w *= (1 - alpha);
+				}
+				weightRatio = (1.0 / wr);
+			}
+
+		}
+		
+		private double getWeightedSum() {
+			double ret = 0.0;
+			
+			int index = 0;
+			// [pos .. size)
+			for(int dIndex = pos; dIndex < size; dIndex++) {
+				ret += data[dIndex] * weight[index];
+				index++;
+			}
+			// [0 .. pos)
+			for(int dIndex = 0; dIndex < pos; dIndex++) {
+				ret += data[dIndex] * weight[index];
+				index++;
+			}
+			return ret;
+		}
+
+		@Override
+		public double applyAsDouble(double value) {
+			// Ignore NaN value
+			if (Double.isNaN(value)) return Double.NaN;
+			
+			if (pos == -1) {
+				for(int i = 0; i < size; i++) {
+					data[i] = value;
+				}
+				pos = 0;
+				return getWeightedSum();
+			}
+			data[pos++] = value;
+			if (pos == size) pos = 0;
+			return getWeightedSum();
+		}
+	}
+	public static DoubleUnaryOperator sema(double alpha) {
+		return new SEMA(alpha);
+	}
+	public static DoubleUnaryOperator semaFromDecayFactor(double decayFactor) {
+		return new SEMA(getAlphaFromDecayFactor(decayFactor));
+	}
+	public static DoubleUnaryOperator sema(int dataSize) {
+		return new SEMA(getAlpha(dataSize));
+	}
+
+	
+	// Recursive Exponential Moving Average
 	private static final class EMA implements DoubleUnaryOperator {
 		private final double alpha;
 		private double       var;
@@ -351,5 +449,171 @@ public final class DoubleUtil {
 	}
 	public DoubleConsumer stats(int dataSize) {
 		return new Stats(dataSize);
+	}
+	
+	
+	//
+	// test code
+	//
+	private static void testTable52() {
+		double[] a = {
+			 0.634,
+			 0.115,
+			-0.460,
+			 0.094,
+			 0.176,
+			-0.088,
+			-0.142,
+			 0.324,
+			-0.943,
+			-0.528,
+			-0.107,
+			-0.160,
+			-0.445,
+		 	 0.053,
+			 0.152,
+			-0.318,
+			 0.424,
+			-0.708,
+			-0.105,
+			-0.257,
+			};
+
+		logger.info("");
+		double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
+		double c[] = new double[a.length];
+		Arrays.fill(c, 1.0 / a.length);
+		double d[] = new double[a.length];
+		{
+			double decayFactor = DEFAULT_DECAY_FACTOR;
+			double t = 1.0 - decayFactor;
+			for(int i = 0; i < a.length; i++) {
+				d[d.length - i - 1] = t;
+				t *= decayFactor;
+			}
+		}
+		double b[] = multiply(a, a);
+		double e[] = multiply(b, c);
+		double f[] = multiply(b, d);
+		for(int i = 0; i < a.length; i++) {
+			logger.info("Table 5.2 {}", String.format("%8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", a[i], b[i], c[i], d[i], e[i], f[i]));
+		}
+		logger.info("Table 5.2");
+		{
+			Stats stats = new Stats();
+			Arrays.stream(e).forEach(stats);
+			// To calculate standard deviation apply sqrt
+			logger.info("Table 5.2    equal  {}", String.format("%8.3f  %8.3f", Math.sqrt(stats.getSum()), stats.getSum()));
+		}
+		{
+			Stats stats = new Stats();
+			Arrays.stream(f).forEach(stats);
+			// To calculate standard deviation apply sqrt
+			logger.info("Table 5.2    sema   {}", String.format("%8.3f  %8.3f", Math.sqrt(stats.getSum()), stats.getSum()));
+		}
+		// TODO not working as expected - value should be near 0.333
+		{
+			double result[] = Arrays.stream(b).map(ema(alpha)).toArray();
+			// To calculate standard deviation apply sqrt
+			logger.info("Table 5.2    sema   {}", String.format("%8.3f", result[result.length - 1]));
+		}
+		
+	}
+	private static void testTable53() {
+		double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
+		double[] data = {
+			 0.633,
+			 0.115,
+			-0.459,
+			 0.093,
+			 0.176,
+			-0.087,
+			-0.142,
+			 0.324,
+			-0.943,
+			-0.528,
+			-0.107,
+			-0.159,
+			-0.445,
+		 	 0.053,
+			 0.152,
+			-0.318,
+			 0.424,
+			-0.708,
+			-0.105,
+			-0.257,
+			};
+
+		double var_r[] = Arrays.stream(multiply(data, data)).map(ema(alpha)).toArray();
+		double var_s[] = Arrays.stream(multiply(data, data)).map(sema(alpha)).toArray();
+		
+		logger.info("");
+		for(int i = 0; i < var_s.length; i++) {
+			logger.info("Table 5.3 {}", String.format("%8.3f  %8.3f  %8.3f", data[i], var_r[i], var_s[i]));
+		}
+	}
+	private static void testTable55() {
+		// Calculation of variance, covariance and correlation
+		double[] data_a = {
+			 0.634,
+			 0.115,
+			-0.460,
+			 0.094,
+			 0.176,
+			-0.088,
+			-0.142,
+			 0.324,
+			-0.943,
+			-0.528,
+			-0.107,
+			-0.160,
+			-0.445,
+		 	 0.053,
+			 0.152,
+			-0.318,
+			 0.424,
+			-0.708,
+			-0.105,
+			-0.257,
+		};
+
+		double data_b[] = {
+			 0.005,
+			-0.532,
+			 1.267,
+			 0.234,
+			 0.095,
+			-0.003,
+			-0.144,
+			-1.643,
+			-0.319,
+			-1.362,
+			-0.367,
+			 0.872,
+			 0.904,
+			 0.390,
+			-0.527,
+			 0.311,
+			 0.227,
+			 0.436,
+			 0.568,
+			-0.217,
+		};
+
+		final double alpha = DoubleUtil.getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
+		double rva[] = DoubleUtil.getVariance(alpha, data_a);
+		double rvb[] = DoubleUtil.getVariance(alpha, data_b);
+		double cov[] = DoubleUtil.getCovariance(alpha, data_a, data_b);
+		double cor[] = DoubleUtil.getCorrelation(alpha, data_a, data_b);
+		
+		logger.info("");
+		for(int i = 0; i < data_a.length; i++) {
+			logger.info("Table 5.5 {}", String.format("%8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", data_a[i], data_b[i], rva[i], rvb[i], cov[i], cor[i]));
+		}
+	}
+	public static void main(String args[]) {
+		testTable52();
+		testTable53();
+		testTable55();
 	}
 }

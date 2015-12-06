@@ -542,7 +542,7 @@ public final class DoubleUtil {
 			// To calculate standard deviation apply sqrt
 			logger.info("Table 5.2    sema   {}", String.format("%8.3f  %8.3f", Math.sqrt(ema.getValue()), ema.getValue()));
 		}
-		// TODO There is significant difference between sema and ema.
+		// TODO There is significant difference between EMA_NR and EMA.
 		{
 			EMA ema = ema(alpha);
 			Arrays.stream(b).forEach(ema);

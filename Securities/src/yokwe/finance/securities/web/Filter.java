@@ -8,12 +8,11 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleUtil;
-import yokwe.finance.securities.util.MovingStats;
 
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|sma[msv]|ema[msv]|rema[msv])([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|hv|var|ema|ema_nr)([0-9]+)").matcher("");
 	
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;
@@ -48,24 +47,10 @@ class Filter {
 			return DoubleUtil.simpleStats(DoubleUtil.StatsType.SKEW, interval);
 		case "kurt":
 			return DoubleUtil.simpleStats(DoubleUtil.StatsType.KURT, interval);
-		case "smam":
-			return MovingStats.S.mean(interval);
-		case "smas":
-			return MovingStats.S.sd(interval);
-		case "smav":
-			return MovingStats.S.var(interval);
-		case "emam":
-			return MovingStats.E.mean(interval * 0.01);
-		case "emas":
-			return MovingStats.E.sd(interval * 0.01);
-		case "emav":
-			return MovingStats.E.var(interval * 0.01);
-		case "remam":
-			return MovingStats.RE.mean(interval * 0.01);
-		case "remas":
-			return MovingStats.RE.sd(interval * 0.01);
-		case "remav":
-			return MovingStats.RE.var(interval * 0.01);
+		case "ema":
+			return DoubleUtil.ema(interval * 0.01); // argument is alpha
+		case "ema_nr":
+			return DoubleUtil.ema_nr(interval * 0.01); // argument is alpha
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

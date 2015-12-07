@@ -495,6 +495,30 @@ public final class DoubleUtil {
 	//
 	// test code
 	//
+	private static void testTable41() {
+		double[] data = {
+			0.67654,
+			0.67732,
+			0.67422,
+			0.67485,
+			0.67604,
+			0.67545,
+			0.67449,
+			0.67668,
+			0.67033,
+			0.66680,
+			0.66609,
+			0.66503,
+		};
+		
+		double rr[] = DoubleUtil.relativeReturn(data).toArray();
+		double lr[] = DoubleUtil.logReturn(data).toArray();
+
+		logger.info("");
+		for(int i = 0; i < rr.length; i++) {
+			logger.info("Table 4.1 {}", String.format("%8.3f  %8.3f  %8.3f", data[i + 1], rr[i], lr[i]));
+		}
+	}
 	private static void testTable52() {
 		double[] a = {
 			 0.634,
@@ -660,6 +684,7 @@ public final class DoubleUtil {
 		}
 	}
 	public static void main(String args[]) {
+		testTable41();
 		testTable52();
 		testTable53();
 		testTable55();

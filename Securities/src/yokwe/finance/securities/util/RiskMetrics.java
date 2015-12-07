@@ -17,13 +17,27 @@ import yokwe.finance.securities.database.PriceTable;
 public final class RiskMetrics {
 	private static final Logger logger = LoggerFactory.getLogger(RiskMetrics.class);
 
-	public static double CONFIDENCE_95_PERCENT = 1.62;
+	public static double CONFIDENCE_95_PERCENT = 1.65;
 	public static double CONFIDENCE_99_PERCENT = 2.33;
+	public static double DEFAULT_CONFIDENCE    = CONFIDENCE_95_PERCENT;
 
 	public static double DEFAULT_DECAY_FACTOR = 0.94;
-	public static double DEFAULT_CONFIDENCE   = CONFIDENCE_95_PERCENT;
+	public static double DEFAULT_ALPHA        = 1.0 - DEFAULT_DECAY_FACTOR;
 	
 	
+	// 
+	static void valueAtRisk(Connection connection, LocalDate dateFrom, LocalDate dateTo, String symbol) {
+		double data[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
+		double lr[] = DoubleUtil.logReturn(data).toArray();
+		double sd[] = DoubleUtil.getStandardDeviation(DEFAULT_ALPHA, lr);
+
+		logger.info("");
+		for(int i = lr.length - 10; i < lr.length; i++) {
+			double oneDay = 1000 * sd[i] * 0.01;
+			
+			logger.info("{}", String.format("%-5s %8.3f  %8.3f  %8.3f, %8.3f, %8.3f", symbol, data[i + 1], lr[i], sd[i], oneDay, oneDay * Math.sqrt(21)));
+		}
+	}
 		
 	public static void main(String args[]) {
 		// Difference between relative return and log return
@@ -43,76 +57,17 @@ public final class RiskMetrics {
 				0.66503,
 			};
 			
-			double rr[] = DoubleUtil.relativeReturn(data).toArray();
 			double lr[] = DoubleUtil.logReturn(data).toArray();
+			double sd[] = DoubleUtil.getStandardDeviation(DEFAULT_ALPHA, lr);
 
-			
 			logger.info("");
-			for(int i = 0; i < rr.length; i++) {
-				logger.info("{}", String.format("111 %8.3f  %8.3f  %8.3f", data[i + 1], rr[i], lr[i]));
+			for(int i = 0; i < lr.length; i++) {
+				double oneDay = 1000 * sd[i] * 0.01;
+				
+				logger.info("SD {}", String.format("%8.3f  %8.3f  %8.3f, %8.3f, %8.3f", data[i + 1], lr[i], sd[i], oneDay, oneDay * Math.sqrt(21)));
 			}
 		}
 		
-		// Calculation of variance, covariance and correlation
-		{
-			double[] data_a = {
-				 0.634,
-				 0.115,
-				-0.460,
-				 0.094,
-				 0.176,
-				-0.088,
-				-0.142,
-				 0.324,
-				-0.943,
-				-0.528,
-				-0.107,
-				-0.160,
-				-0.445,
-			 	 0.053,
-				 0.152,
-				-0.318,
-				 0.424,
-				-0.708,
-				-0.105,
-				-0.257,
-			};
-
-			double data_b[] = {
-				  0.005,
-				 -0.532,
-				  1.267,
-				  0.234,
-				  0.095,
-				 -0.003,
-				 -0.144,
-				 -1.643,
-				 -0.319,
-				 -1.362,
-				 -0.367,
-				  0.872,
-				  0.904,
-				  0.390,
-				 -0.527,
-				  0.311,
-				  0.227,
-				  0.436,
-				  0.568,
-				 -0.217,
-			};
-
-			final double alpha = DoubleUtil.getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
-			double rva[] = DoubleUtil.getVariance(alpha, data_a);
-			double rvb[] = DoubleUtil.getVariance(alpha, data_b);
-			double cov[] = DoubleUtil.getCovariance(alpha, data_a, data_b);
-			double cor[] = DoubleUtil.getCorrelation(alpha, data_a, data_b);
-			
-			logger.info("");
-			for(int i = 0; i < data_a.length; i++) {
-				logger.info("{}", String.format("222 %8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", data_a[i], data_b[i], rva[i], rvb[i], cov[i], cor[i]));
-			}
-		}
-
 		// Calculation of Value at Risk
 		{
 			try {
@@ -127,27 +82,12 @@ public final class RiskMetrics {
 			try (Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL)) {
 				LocalDate dateFrom = LocalDate.now().minusYears(10);
 				LocalDate dateTo   = LocalDate.now();
-				double data[] = PriceTable.getAllBySymbolDateRange(connection, "QQQ", dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
-				double lr[]   = DoubleUtil.logReturn(data).toArray();
 				
 				logger.info("");
-				logger.info("QQQ {} - {}", dateFrom, dateTo);
-				
-				{
-					DescriptiveStatistics stats = new DescriptiveStatistics();
-					Arrays.stream(data).forEach(o -> stats.addValue(o));
-					
-					logger.info("{}", String.format("data %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
-							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
-				}
-				{
-					DescriptiveStatistics stats = new DescriptiveStatistics();
-					Arrays.stream(lr).forEach(o -> stats.addValue(o));
-					
-					logger.info("{}", String.format("lr   %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
-							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
-				}
-				
+				logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
+				valueAtRisk(connection, dateFrom, dateTo, "QQQ");
+				valueAtRisk(connection, dateFrom, dateTo, "VYM");
+				valueAtRisk(connection, dateFrom, dateTo, "VCLT");
 			} catch (SQLException e) {
 				logger.error(e.getClass().getName());
 				logger.error(e.getMessage());
@@ -162,6 +102,7 @@ public final class RiskMetrics {
 					DescriptiveStatistics stats = new DescriptiveStatistics();
 					Arrays.stream(data).forEach(o -> stats.addValue(o));
 					
+					logger.info("");
 					logger.info("{}", String.format("gaus %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
 							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
 				}
@@ -174,6 +115,7 @@ public final class RiskMetrics {
 					DescriptiveStatistics stats = new DescriptiveStatistics();
 					Arrays.stream(data).forEach(o -> stats.addValue(o));
 					
+					logger.info("");
 					logger.info("{}", String.format("rand %4d  min %8.3f  max %8.3f  mean %8.3f  sd %8.3f  skew %8.3f  kurt %8.3f",
 							stats.getN(), stats.getMin(), stats.getMax(), stats.getMean(), stats.getStandardDeviation(), stats.getSkewness(), stats.getKurtosis()));
 				}

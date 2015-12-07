@@ -17,19 +17,10 @@ import yokwe.finance.securities.database.PriceTable;
 public final class RiskMetrics {
 	private static final Logger logger = LoggerFactory.getLogger(RiskMetrics.class);
 
-	public static double CONFIDENCE_95_PERCENT = 1.65;
-	public static double CONFIDENCE_99_PERCENT = 2.33;
-	public static double DEFAULT_CONFIDENCE    = CONFIDENCE_95_PERCENT;
-
-	public static double DEFAULT_DECAY_FACTOR = 0.94;
-	public static double DEFAULT_ALPHA        = 1.0 - DEFAULT_DECAY_FACTOR;
-	
-	
-	// 
 	static void valueAtRisk(Connection connection, LocalDate dateFrom, LocalDate dateTo, String symbol) {
 		double data[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
 		double lr[] = DoubleUtil.logReturn(data).toArray();
-		double sd[] = DoubleUtil.getStandardDeviation(DEFAULT_ALPHA, lr);
+		double sd[] = DoubleUtil.getStandardDeviation(DoubleUtil.DEFAULT_ALPHA, lr);
 
 		logger.info("");
 		for(int i = lr.length - 10; i < lr.length; i++) {
@@ -58,7 +49,7 @@ public final class RiskMetrics {
 			};
 			
 			double lr[] = DoubleUtil.logReturn(data).toArray();
-			double sd[] = DoubleUtil.getStandardDeviation(DEFAULT_ALPHA, lr);
+			double sd[] = DoubleUtil.getStandardDeviation(DoubleUtil.DEFAULT_ALPHA, lr);
 
 			logger.info("");
 			for(int i = 0; i < lr.length; i++) {

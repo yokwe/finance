@@ -16,7 +16,12 @@ import yokwe.finance.securities.SecuritiesException;
 public final class DoubleUtil {
 	private static final Logger logger = LoggerFactory.getLogger(DoubleUtil.class);
 	
+	public static final double CONFIDENCE_95_PERCENT = 1.65;
+	public static final double CONFIDENCE_99_PERCENT = 2.33;
+	public static final double DEFAULT_CONFIDENCE    = CONFIDENCE_95_PERCENT;
+
 	public static final double DEFAULT_DECAY_FACTOR = 0.94;
+	public static final double DEFAULT_ALPHA        = 1.0 - DEFAULT_DECAY_FACTOR;
 
 	//
 	// Utility Methods for array of double
@@ -72,6 +77,15 @@ public final class DoubleUtil {
 	public static double[] getStandardDeviation(double alpha, double data[]) {
 		return getCovarianceDoubleStream(alpha, data, data).map(sqrt()).toArray();
 	}
+	public static double[] getValueAtRisk(double alpha, double confidence, double data[]) {
+		return getCovarianceDoubleStream(alpha, data, data).map(sqrt()).map(multiply(confidence)).toArray();
+	}
+	public static double[] getValueAtRisk(double confidence, double data[]) {
+		return getCovarianceDoubleStream(DEFAULT_ALPHA, data, data).map(sqrt()).map(multiply(confidence)).toArray();
+	}
+	public static double[] getValueAtRisk(double data[]) {
+		return getCovarianceDoubleStream(DEFAULT_ALPHA, data, data).map(sqrt()).map(multiply(DEFAULT_CONFIDENCE)).toArray();
+	}
 	public static double[] getCorrelation(double alpha, double data1[], double data2[]) {
 		double sd1[] = getStandardDeviation(alpha, data1);
 		double sd2[] = getStandardDeviation(alpha, data2);
@@ -79,7 +93,6 @@ public final class DoubleUtil {
 		
 		return divide(cov, multiply(sd1, sd2));
 	}
-
 
 
 	//
@@ -98,6 +111,23 @@ public final class DoubleUtil {
 	//
 	// DoubleUnaryOperator
 	//
+	
+	// multiply
+	private static final class multiply implements DoubleUnaryOperator {
+		private final double factor;
+		
+		private multiply(double factor) {
+			this.factor = factor;
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			if (Double.isNaN(value)) return Double.NaN; 
+			return value * factor;
+		}
+	};
+	public static DoubleUnaryOperator multiply(double factor) {
+		return new multiply(factor);
+	}
 	
 	// square
 	private static final DoubleUnaryOperator squareInstance = new DoubleUnaryOperator() {

@@ -19,14 +19,14 @@ public final class RiskMetrics {
 
 	static void valueAtRisk(Connection connection, LocalDate dateFrom, LocalDate dateTo, String symbol) {
 		double data[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
-		double lr[] = DoubleUtil.logReturn(data).toArray();
-		double sd[] = DoubleUtil.getStandardDeviation(DoubleUtil.DEFAULT_ALPHA, lr);
+		double lr[]   = DoubleUtil.logReturn(data).toArray();
+		double var[]  = DoubleUtil.getValueAtRisk(DoubleUtil.DEFAULT_ALPHA, DoubleUtil.DEFAULT_CONFIDENCE, lr);
 
 		logger.info("");
-		for(int i = lr.length - 10; i < lr.length; i++) {
-			double oneDay = 1000 * sd[i] * 0.01;
+		for(int i = lr.length - 5; i < lr.length; i++) {
+			double oneDay = 1000 * var[i] * 0.01; // Unit of logReturn is percent. So need to multiply by 0.01 in this case.
 			
-			logger.info("{}", String.format("%-5s %8.3f  %8.3f  %8.3f, %8.3f, %8.3f", symbol, data[i + 1], lr[i], sd[i], oneDay, oneDay * Math.sqrt(21)));
+			logger.info("{}", String.format("%-5s %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", symbol, data[i + 1], lr[i], var[i], oneDay, oneDay * Math.sqrt(21)));
 		}
 	}
 		

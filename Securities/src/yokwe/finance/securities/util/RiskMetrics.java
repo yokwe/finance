@@ -20,13 +20,13 @@ public final class RiskMetrics {
 	static void valueAtRisk(Connection connection, LocalDate dateFrom, LocalDate dateTo, String symbol) {
 		double data[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
 		double lr[]   = DoubleUtil.logReturn(data).toArray();
-		double var[]  = DoubleUtil.getValueAtRisk(DoubleUtil.DEFAULT_ALPHA, DoubleUtil.Confidence.DEFAULT, lr).toArray();
+		double var[] = Arrays.stream(lr).map(DoubleUtil.valueAtRisk(DoubleUtil.DEFAULT_ALPHA, DoubleUtil.Confidence.DEFAULT)).toArray();
 
 		logger.info("");
 		for(int i = lr.length - 5; i < lr.length; i++) {
-			double oneDay = 1000 * var[i];
+			double oneDay = var[i] * 1000;
 			
-			logger.info("{}", String.format("%-5s %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", symbol, data[i + 1], lr[i], var[i], oneDay, oneDay * Math.sqrt(21)));
+			logger.info("{}", String.format("%-5s %8.3f  %8.3f  %8.3f  %8.3f", symbol, data[i + 1], lr[i], oneDay, oneDay * Math.sqrt(21)));
 		}
 	}
 		
@@ -49,7 +49,7 @@ public final class RiskMetrics {
 			};
 			
 			double lr[] = DoubleUtil.logReturn(data).toArray();
-			double sd[] = DoubleUtil.getStandardDeviation(DoubleUtil.DEFAULT_ALPHA, lr).toArray();
+			double sd[] = Arrays.stream(lr).map(DoubleUtil.ema_sd(DoubleUtil.DEFAULT_ALPHA)).toArray();
 
 			logger.info("");
 			for(int i = 0; i < lr.length; i++) {
@@ -76,9 +76,10 @@ public final class RiskMetrics {
 				
 				logger.info("");
 				logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
-				valueAtRisk(connection, dateFrom, dateTo, "QQQ");
-				valueAtRisk(connection, dateFrom, dateTo, "VYM");
 				valueAtRisk(connection, dateFrom, dateTo, "VCLT");
+				valueAtRisk(connection, dateFrom, dateTo, "PGX");
+				valueAtRisk(connection, dateFrom, dateTo, "ARR");
+				valueAtRisk(connection, dateFrom, dateTo, "VYM");
 			} catch (SQLException e) {
 				logger.error(e.getClass().getName());
 				logger.error(e.getMessage());

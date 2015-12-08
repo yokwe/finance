@@ -71,29 +71,16 @@ public final class DoubleUtil {
 	}
 	
 	// EWMA variance, covariance and correlation
-	public static DoubleStream getCovariance(double alpha, double data1[], double data2[]) {
+	public static DoubleStream ema_covariance(double alpha, double data1[], double data2[]) {
 		return Arrays.stream(multiply(data1, data2)).map(ema(alpha));
-	}
-	public static DoubleStream getVariance(double alpha, double data[]) {
-		return getCovariance(alpha, data, data);
-	}
-	public static DoubleStream getStandardDeviation(double alpha, double data[]) {
-		return getVariance(alpha, data).map(sqrt());
-	}
-	//
-	// ValueAtRisk
-	//
-	public static DoubleStream getValueAtRisk(double alpha, Confidence confidence, double data[]) {
-		return getCovariance(alpha, data, data).map(sqrt()).map(multiply(confidence.getValue()));
 	}
 	//
 	// Correlation
 	//
-	public static double[] getCorrelation(double alpha, double data1[], double data2[]) {
-		double sd1[] = getStandardDeviation(alpha, data1).toArray();
-		double sd2[] = getStandardDeviation(alpha, data2).toArray();
-		double cov[] = getCovariance(alpha, data1, data2).toArray();
-		
+	public static double[] ema_correlation(double alpha, double data1[], double data2[]) {
+		double sd1[] = Arrays.stream(data1).map(ema_sd(alpha)).toArray();
+		double sd2[] = Arrays.stream(data2).map(ema_sd(alpha)).toArray();
+		double cov[] = ema_covariance(alpha, data1, data2).toArray();
 		return divide(cov, multiply(sd1, sd2));
 	}
 
@@ -384,6 +371,53 @@ public final class DoubleUtil {
 		return new EMA(getAlpha(dataSize));
 	}
 	
+	// ema_var
+	private static final class EMA_Variance implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator ema;
+		private EMA_Variance(double alpha) {
+			ema = ema(alpha);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			return ema.applyAsDouble(value * value);
+		}
+	}
+	public static DoubleUnaryOperator ema_variance(double alpha) {
+		return new EMA_Variance(alpha);
+	}
+	// ema_sd
+	private static final class EMA_StandardDeviation implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator var;
+		private EMA_StandardDeviation(double alpha) {
+			var = new EMA_Variance(alpha);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			return Math.sqrt(var.applyAsDouble(value));
+		}
+	}
+	public static DoubleUnaryOperator ema_sd(double alpha) {
+		return new EMA_StandardDeviation(alpha);
+	}
+	// valueAtRisk
+	private static class ValueAtRisk implements DoubleUnaryOperator {
+		private final EMA ema;
+		private final double factor;
+		
+		private ValueAtRisk(double alpha, Confidence confidence) {
+			ema    = new EMA(alpha);
+			factor = confidence.getValue();
+		}
+		// applyAsDouble will takes log return (not squared log return)
+		@Override
+		public double applyAsDouble(double value) {
+			return Math.sqrt(ema.applyAsDouble(value * value)) * factor;
+		}
+	}
+	public static DoubleUnaryOperator valueAtRisk(double alpha, Confidence confidence) {
+		return new ValueAtRisk(alpha, confidence);
+	}
+
 	// simpleStats
 	public enum StatsType {
 		MIN, MAX, SUM, MEAN, VAR, SD, KURT, SKEW,
@@ -704,10 +738,10 @@ public final class DoubleUtil {
 		};
 
 		final double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
-		double rva[] = getVariance(alpha, data_a).toArray();
-		double rvb[] = getVariance(alpha, data_b).toArray();
-		double cov[] = getCovariance(alpha, data_a, data_b).toArray();
-		double cor[] = getCorrelation(alpha, data_a, data_b);
+		double rva[] = Arrays.stream(data_a).map(ema_variance(alpha)).toArray();
+		double rvb[] = Arrays.stream(data_b).map(ema_variance(alpha)).toArray();
+		double cov[] = ema_covariance(alpha, data_a, data_b).toArray();
+		double cor[] = ema_correlation(alpha, data_a, data_b);
 		
 		logger.info("");
 		for(int i = 0; i < data_a.length; i++) {

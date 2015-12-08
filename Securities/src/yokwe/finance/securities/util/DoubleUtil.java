@@ -415,6 +415,61 @@ public final class DoubleUtil {
 	public static DoubleUnaryOperator valueAtRisk(double alpha, Confidence confidence) {
 		return new ValueAtRisk(alpha, confidence);
 	}
+	
+	// Simple Moving Average
+	public static final class SMA implements DoubleUnaryOperator, DoubleConsumer {
+		private final int    size;
+		private final double data[];
+		private double       sum;
+		private int          pos;
+		private int          count;
+		
+		private SMA(int dataSize) {
+			size  = dataSize;
+			data  = new double[size];
+			sum   = Double.NaN;
+			pos   = 0;
+			count = 0;
+			
+			Arrays.fill(data, 0.0);
+		}
+		
+		@Override
+		public double applyAsDouble(double value) {
+			// Ignore Nan
+			if (Double.isNaN(value)) return sum;
+			
+			accept(value);
+			return sum / count;
+		}
+
+		@Override
+		public void accept(double value) {
+			// Ignore Nan
+			if (Double.isNaN(value)) return;
+			
+			if (count < size) {
+				if (count == 0) sum = 0.0;
+				data[pos++] = value;
+				if (pos == size) pos = 0;
+				sum += value;
+				count++;
+			} else {
+				sum += value - data[pos];
+				data[pos++] = value;
+				if (pos == size) pos = 0;
+			}
+		}
+		
+		public double getValue() {
+			if (count == 0) return Double.NaN;
+			return sum / count;
+		}
+	};
+	public static SMA sma(int dataSize) {
+		return new SMA(dataSize);
+	}
+
 
 	// simpleStats
 	public enum StatsType {

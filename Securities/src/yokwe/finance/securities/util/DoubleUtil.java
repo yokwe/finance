@@ -70,17 +70,15 @@ public final class DoubleUtil {
 		return ret;
 	}
 	
-	// EWMA variance, covariance and correlation
-	public static DoubleStream ema_covariance(double alpha, double data1[], double data2[]) {
-		return Arrays.stream(multiply(data1, data2)).map(ema(alpha));
+	// ema covariance
+	public static double[] ema_covariance(double alpha, double data1[], double data2[]) {
+		return Arrays.stream(multiply(data1, data2)).map(ema(alpha)).toArray();
 	}
-	//
-	// Correlation
-	//
+	// ema correlation
 	public static double[] ema_correlation(double alpha, double data1[], double data2[]) {
 		double sd1[] = Arrays.stream(data1).map(ema_sd(alpha)).toArray();
 		double sd2[] = Arrays.stream(data2).map(ema_sd(alpha)).toArray();
-		double cov[] = ema_covariance(alpha, data1, data2).toArray();
+		double cov[] = ema_covariance(alpha, data1, data2);
 		return divide(cov, multiply(sd1, sd2));
 	}
 
@@ -740,7 +738,7 @@ public final class DoubleUtil {
 		final double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
 		double rva[] = Arrays.stream(data_a).map(ema_variance(alpha)).toArray();
 		double rvb[] = Arrays.stream(data_b).map(ema_variance(alpha)).toArray();
-		double cov[] = ema_covariance(alpha, data_a, data_b).toArray();
+		double cov[] = ema_covariance(alpha, data_a, data_b);
 		double cor[] = ema_correlation(alpha, data_a, data_b);
 		
 		logger.info("");

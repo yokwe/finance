@@ -114,7 +114,18 @@ public class CSVServlet extends HttpServlet {
 			relative = paramMap.containsKey("r");
 			
 			// lr - log return
-			logReturn = paramMap.containsKey("lr");
+			if (paramMap.containsKey("f")) {
+				String filter = paramMap.get("f")[0];
+				if (filter.startsWith("ema")) {
+					logReturn = true;
+				} else if (filter.startsWith("var")) {
+					logReturn = true;
+				} else {
+					logReturn = false;
+				}
+			} else {
+				logReturn = false;
+			}
 		}
 
 		resp.setContentType("text/csv; charset=UTF-8");
@@ -140,7 +151,7 @@ public class CSVServlet extends HttpServlet {
 				for(String key: dailyDataMap.keySet()) {
 					List<Data.Daily> dailyList = dailyDataMap.get(key);
 					double raw[] = dailyList.stream().mapToDouble(o -> o.value).toArray();
-					double lr[] = DoubleUtil.logReturn(raw).map(DoubleUtil.square()).toArray();
+					double lr[] = DoubleUtil.logReturn(raw).toArray();
 					List<Data.Daily> newDailyList = new ArrayList<>();
 					for(int i = 1; i < lr.length; i++) {
 						Data.Daily oldDaily = dailyList.get(i);

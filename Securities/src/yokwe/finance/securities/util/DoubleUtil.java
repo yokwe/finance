@@ -610,6 +610,9 @@ public final class DoubleUtil {
 		return new Stats(dataSize);
 	}
 	
+	// TODO Write the code that calculate mean using reduce
+	// TODO Write the code that calculate standard deviation using reduce 
+	
 	//
 	// test code
 	//

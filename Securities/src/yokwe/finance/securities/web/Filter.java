@@ -46,7 +46,7 @@ class Filter {
 		
 		switch(type) {
 		case "avg":
-			return DoubleUtil.simpleStats(DoubleUtil.StatsType.MEAN, interval);
+			return DoubleUtil.sma(interval);
 		case "sd":
 			return DoubleUtil.simpleStats(DoubleUtil.StatsType.SD, interval);
 		case "skew":

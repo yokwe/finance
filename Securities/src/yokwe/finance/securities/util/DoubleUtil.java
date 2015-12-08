@@ -18,8 +18,21 @@ public final class DoubleUtil {
 	
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
-	public static final double DEFAULT_CONFIDENCE    = CONFIDENCE_95_PERCENT;
 
+	public enum Confidence {
+		PERCENT_95(CONFIDENCE_95_PERCENT),
+		PERCENT_99(CONFIDENCE_99_PERCENT),
+		DEFAULT(CONFIDENCE_95_PERCENT);
+		
+		private double value;
+		double getValue() {
+			return value;
+		}
+		Confidence(double value) {
+			this.value = value;
+		}
+	}
+	
 	public static final double DEFAULT_DECAY_FACTOR = 0.94;
 	public static final double DEFAULT_ALPHA        = 1.0 - DEFAULT_DECAY_FACTOR;
 
@@ -45,13 +58,6 @@ public final class DoubleUtil {
 		}
 		return ret;
 	}
-	public static double[] multiply(double a[], double b) {
-		double ret[] = new double[a.length];
-		for(int i = 0; i < a.length; i++) {
-			ret[i] = a[i] * b;
-		}
-		return ret;
-	}
 	public static double[] divide(double a[], double b[]) {
 		if (a.length != b.length) {
 			logger.error("a.length = {}  b.length = {}", a.length, b.length);
@@ -65,31 +71,28 @@ public final class DoubleUtil {
 	}
 	
 	// EWMA variance, covariance and correlation
-	public static DoubleStream getCovarianceDoubleStream(double alpha, double data1[], double data2[]) {
+	public static DoubleStream getCovariance(double alpha, double data1[], double data2[]) {
 		return Arrays.stream(multiply(data1, data2)).map(ema(alpha));
 	}
-	public static double[] getCovariance(double alpha, double data1[], double data2[]) {
-		return getCovarianceDoubleStream(alpha, data1, data2).toArray();
-	}
-	public static double[] getVariance(double alpha, double data[]) {
+	public static DoubleStream getVariance(double alpha, double data[]) {
 		return getCovariance(alpha, data, data);
 	}
-	public static double[] getStandardDeviation(double alpha, double data[]) {
-		return getCovarianceDoubleStream(alpha, data, data).map(sqrt()).toArray();
+	public static DoubleStream getStandardDeviation(double alpha, double data[]) {
+		return getVariance(alpha, data).map(sqrt());
 	}
-	public static double[] getValueAtRisk(double alpha, double confidence, double data[]) {
-		return getCovarianceDoubleStream(alpha, data, data).map(sqrt()).map(multiply(confidence)).toArray();
+	//
+	// ValueAtRisk
+	//
+	public static DoubleStream getValueAtRisk(double alpha, Confidence confidence, double data[]) {
+		return getCovariance(alpha, data, data).map(sqrt()).map(multiply(confidence.getValue()));
 	}
-	public static double[] getValueAtRisk(double confidence, double data[]) {
-		return getCovarianceDoubleStream(DEFAULT_ALPHA, data, data).map(sqrt()).map(multiply(confidence)).toArray();
-	}
-	public static double[] getValueAtRisk(double data[]) {
-		return getCovarianceDoubleStream(DEFAULT_ALPHA, data, data).map(sqrt()).map(multiply(DEFAULT_CONFIDENCE)).toArray();
-	}
+	//
+	// Correlation
+	//
 	public static double[] getCorrelation(double alpha, double data1[], double data2[]) {
-		double sd1[] = getStandardDeviation(alpha, data1);
-		double sd2[] = getStandardDeviation(alpha, data2);
-		double cov[] = getCovariance(alpha, data1, data2);
+		double sd1[] = getStandardDeviation(alpha, data1).toArray();
+		double sd2[] = getStandardDeviation(alpha, data2).toArray();
+		double cov[] = getCovariance(alpha, data1, data2).toArray();
 		
 		return divide(cov, multiply(sd1, sd2));
 	}
@@ -167,7 +170,7 @@ public final class DoubleUtil {
 				lastValue = value;
 				return Double.NaN;
 			}
-			final double ret = ((value / lastValue) - 1.0) * 100.0;
+			final double ret = (value / lastValue) - 1.0;
 			lastValue = value;
 			return ret;
 		}
@@ -192,7 +195,7 @@ public final class DoubleUtil {
 				lastValue = value;
 				return Double.NaN;
 			}
-			final double ret = Math.log(value / lastValue) * 100.0;
+			final double ret = Math.log(value / lastValue);
 			lastValue = value;
 			return ret;
 		}
@@ -437,8 +440,6 @@ public final class DoubleUtil {
 	public static DoubleUnaryOperator simpleStats(StatsType type, int dataSize) {
 		return new SimpleStats(type, dataSize);
 	}
-
-	
 	
 	//
 	// DoubleFunction
@@ -546,7 +547,7 @@ public final class DoubleUtil {
 
 		logger.info("");
 		for(int i = 0; i < rr.length; i++) {
-			logger.info("Table 4.1 {}", String.format("%8.3f  %8.3f  %8.3f", data[i + 1], rr[i], lr[i]));
+			logger.info("Table 4.1 {}", String.format("%8.3f  %8.3f  %8.3f", data[i + 1], rr[i] * 100, lr[i] * 100));
 		}
 	}
 	private static void testTable52() {
@@ -703,9 +704,9 @@ public final class DoubleUtil {
 		};
 
 		final double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
-		double rva[] = getVariance(alpha, data_a);
-		double rvb[] = getVariance(alpha, data_b);
-		double cov[] = getCovariance(alpha, data_a, data_b);
+		double rva[] = getVariance(alpha, data_a).toArray();
+		double rvb[] = getVariance(alpha, data_b).toArray();
+		double cov[] = getCovariance(alpha, data_a, data_b).toArray();
 		double cor[] = getCorrelation(alpha, data_a, data_b);
 		
 		logger.info("");

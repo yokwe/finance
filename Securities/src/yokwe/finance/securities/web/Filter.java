@@ -12,7 +12,7 @@ import yokwe.finance.securities.util.DoubleUtil;
 class Filter {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Filter.class);
 
-	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt)([0-9]+)").matcher("");
+	private static Matcher matcher = Pattern.compile("(avg|sd|skew|kurt|smasd)([0-9]+)").matcher("");
 	
 	public static DoubleUnaryOperator getInstance(String value) {
 		final String type;
@@ -53,6 +53,8 @@ class Filter {
 			return DoubleUtil.simpleStats(DoubleUtil.StatsType.SKEW, interval);
 		case "kurt":
 			return DoubleUtil.simpleStats(DoubleUtil.StatsType.KURT, interval);
+		case "smasd":
+			return DoubleUtil.sma_sd(interval);
 		default:
 			logger.error("Unknonw type = {}", type);
 			throw new SecuritiesException("Unknown type");

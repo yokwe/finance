@@ -23,7 +23,7 @@ clean:
 	echo rm -rf tmp/*
 
 prepare-log:
-	touch /tmp/securities.log
+	sudo touch /tmp/securities.log
 	sudo chmod 777 /tmp/securities.log
 
 prepare-sqlite:

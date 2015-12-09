@@ -397,6 +397,10 @@ public final class DoubleUtil {
 	public static DoubleUnaryOperator ema_sd(double alpha) {
 		return new EMA_StandardDeviation(alpha);
 	}
+	
+	// TODO we should define methods that return standard deviation of log return;
+	//   also provide more than one version of HistoricalVolatility or ValueAtRisk
+
 	// valueAtRisk
 	private static class ValueAtRisk implements DoubleUnaryOperator {
 		private final EMA ema;
@@ -469,7 +473,35 @@ public final class DoubleUtil {
 	public static SMA sma(int dataSize) {
 		return new SMA(dataSize);
 	}
-
+	// sma_var
+	private static final class SMA_Variance implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator sma;
+		private SMA_Variance(int dataSize) {
+			sma = sma(dataSize);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			return sma.applyAsDouble(value * value);
+		}
+	}
+	public static DoubleUnaryOperator sma_variance(int dataSize) {
+		return new SMA_Variance(dataSize);
+	}
+	// ema_sd
+	private static final class SMA_StandardDeviation implements DoubleUnaryOperator {
+		private final DoubleUnaryOperator var;
+		private SMA_StandardDeviation(int dataSize) {
+			var = new SMA_Variance(dataSize);
+		}
+		@Override
+		public double applyAsDouble(double value) {
+			return Math.sqrt(var.applyAsDouble(value));
+		}
+	}
+	public static DoubleUnaryOperator sma_sd(int dataSize) {
+		return new SMA_StandardDeviation(dataSize);
+	}
+	
 
 	// simpleStats
 	public enum StatsType {

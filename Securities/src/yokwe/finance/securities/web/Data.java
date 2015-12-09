@@ -50,6 +50,27 @@ public abstract class Data {
 
 	public abstract List<Daily> generate(Connection connection, String symbol, Period period);
 	
+	public static List<Daily> logReturn(List<Daily> dailyList) {
+		if (dailyList == null) return null;
+		if (dailyList.size() <= 1) return null;
+		
+		List<Daily> ret = new ArrayList<>();
+		
+		boolean firstTime = true;
+		double lastValue = 0;;
+		for(Daily daily: dailyList) {
+			if (firstTime) {
+				lastValue = daily.value;
+				firstTime = false;
+			} else {
+				double value = daily.value;
+				ret.add(new Daily(daily.date, daily.symbol, Math.log(value / lastValue)));
+				lastValue = value;
+			}
+		}
+		return ret;
+	}
+	
 	public static final class Price extends Data {
 		@Override
 		public List<Daily> generate(Connection connection, String symbol, Period period) {

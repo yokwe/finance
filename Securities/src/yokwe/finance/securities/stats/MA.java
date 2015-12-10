@@ -41,7 +41,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 	}
 	
 	public static final class SMA extends MA {
-		private final int    size;
+		public  final int    size;
 		private final double data[];
 		private double       sum;
 		private int          pos;
@@ -81,9 +81,12 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			return sum / count;
 		}
 	}
+	public static SMA sma(int dataSize) {
+		return new SMA(dataSize);
+	}
 
 	public static final class EMA_NR extends MA {
-		private final int    size;
+		public  final int    size;
 		private final double data[];
 		// pos point to next position
 		private int          pos;
@@ -96,7 +99,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			this(getDataSize99(alpha), alpha);
 		}
 
-		public EMA_NR(int dataSize, double alpha) {			
+		public EMA_NR(int dataSize, double alpha) {
 			// Sanity check
 			if (dataSize <= 0) {
 				logger.info("dataSize = {}", dataSize);
@@ -176,10 +179,17 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			return getWeightedSum();
 		}
 	}
+	public static EMA_NR ema_nr(double alpha) {
+		return new EMA_NR(alpha);
+	}
+	public static EMA_NR ema_nr(int dataSize, double alpha) {
+		return new EMA_NR(dataSize, alpha);
+	}
+
 	
 	public static final class EMA extends MA {
-		private final double alpha;
-		private double       avg;
+		public  final double alpha;
+		private       double avg;
 		
 		public EMA(double alpha) {
 			// Sanity check
@@ -208,13 +218,16 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			return avg;
 		}
 	}
+	public static EMA ema(double alpha) {
+		return new EMA(alpha);
+	}
 
 
 	private static void testSimple() {
 		double data[] = {1.0, 2.0, 3.0, 4.0, 5.0};
 		{
 			logger.info("");
-			MA ma = new SMA(2);
+			MA ma = sma(2);
 			for(int i = 0; i < data.length; i++) {
 				double result = ma.applyAsDouble(data[i]);
 				logger.info("SMA 2 {}", String.format("%4.2f  %4.2f", data[i], result));
@@ -222,7 +235,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		}
 		{
 			logger.info("");
-			MA ma = new SMA(5);
+			MA ma = sma(5);
 			for(int i = 0; i < data.length; i++) {
 				double result = ma.applyAsDouble(data[i]);
 				logger.info("SMA 5 {}", String.format("%4.2f  %4.2f", data[i], result));
@@ -254,8 +267,8 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			-0.257,
 			};
 
-		double var_r[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(new MA.EMA(alpha)).toArray();
-		double var_s[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(new MA.EMA_NR(alpha)).toArray();
+		double var_r[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(ema(alpha)).toArray();
+		double var_s[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(ema_nr(alpha)).toArray();
 		
 		logger.info("");
 		for(int i = 0; i < var_s.length; i++) {

@@ -11,6 +11,9 @@ import yokwe.finance.securities.util.DoubleUtil;
 
 public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MA.class);
+	
+	public static final double DEFAULT_DECAY_FACTOR = 0.94;
+	public static final double DEFAULT_ALPHA        = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
 
 	// dataSize 32 => decayFactor 93.94
 	public static double getAlpha(int dataSize) {

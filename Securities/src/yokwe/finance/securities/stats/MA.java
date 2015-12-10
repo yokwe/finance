@@ -39,14 +39,14 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		return getValue();
 	}
 	
-	public static final class Simple extends MA {
+	public static final class SMA extends MA {
 		private final int    size;
 		private final double data[];
 		private double       sum;
 		private int          pos;
 		private int          count;
 
-		public Simple(int dataSize) {
+		public SMA(int dataSize) {
 			size  = dataSize;
 			data  = new double[size];
 			sum   = Double.NaN;
@@ -81,7 +81,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		}
 	}
 
-	public static final class Exp extends MA {
+	public static final class EMA extends MA {
 		private final int    size;
 		private final double data[];
 		// pos point to next position
@@ -91,11 +91,13 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		public  final double alpha;
 		private final double weight[];
 		
-		public Exp(double alpha) {
-			this(getDataSize99(alpha), alpha);
+		public EMA(double alpha) {
+			this(getDataSize(alpha), alpha);
 		}
 
-		public Exp(int dataSize, double alpha) {
+		public EMA(int dataSize, double alpha) {
+			logger.info("{}", String.format("Exp %3d  %4.2f", dataSize, alpha));
+			
 			// Sanity check
 			if (dataSize <= 0) {
 				logger.info("dataSize = {}", dataSize);
@@ -122,9 +124,13 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			{
 				double w  = alpha;
 				for(int i = 0; i < size; i++) {
-					weight[size - i - 1] = w;
+					weight[i] = w;
 					w *= (1 - alpha);
 				}
+				
+//				for(int i = 0; i < size; i++) {
+//					logger.info("{}", String.format("weight %3d  %6.4f", i, weight[i]));
+//				}
 			}
 		}
 		
@@ -132,15 +138,15 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			double ret = 0.0;
 			
 			int index = 0;
-			// [pos .. size)
-			for(int dIndex = pos; dIndex < size; dIndex++) {
+			// pos - 1 -> 0
+			for(int dIndex = pos - 1; 0 <= dIndex; dIndex--) {
 				if (index == count) break;
 				ret += data[dIndex] * weight[index];
 //				logger.info("gws {}", String.format("%2d  %8.3f  %8.3f  %8.3f  %8.3f", dIndex, ret, data[dIndex], weight[index], data[dIndex] * weight[index]));
 				index++;
 			}
-			// [0 .. pos)
-			for(int dIndex = 0; dIndex < pos; dIndex++) {
+			// pos - 1 -> pos
+			for(int dIndex = size - 1; pos <= dIndex; dIndex--) {
 				if (index == count) break;
 				ret += data[dIndex] * weight[index];
 //				logger.info("gws {}", String.format("%2d  %8.3f  %8.3f  %8.3f  %8.3f", dIndex, ret, data[dIndex], weight[index], data[dIndex] * weight[index]));
@@ -176,6 +182,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		private double       avg;
 		
 		public RExp(double alpha) {
+			logger.info("{}", String.format("RExp %4.2f", alpha));
 			// Sanity check
 			if (alpha <= 0.0 || 1.0 <= alpha) {
 				logger.info("alpha = {}", String.format("%.2f", alpha));
@@ -201,5 +208,65 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		public double getValue() {
 			return avg;
 		}
+	}
+
+
+	private static void testSimple() {
+//		double data[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+		double data[] = {1.0, 1.0, 1.0, 1.0, 1.0};
+		{
+			MA ma = new SMA(2);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("simple 2 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+		{
+			MA ma = new SMA(5);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("simple 5 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+	}
+	private static void testExp() {
+		double data[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+		{
+			MA ma = new EMA(0.1);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("Exp   2 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+		{
+			MA ma = new EMA(0.8);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("Exp   5 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+	}
+	private static void testRExp() {
+//		double data[] = {1.0, 2.0, 3.0, 4.0, 5.0};
+		double data[] = {1.0, 1.0, 1.0, 1.0, 1.0};
+		{
+			MA ma = new RExp(0.1);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("RExp  2 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+		{
+			MA ma = new RExp(0.8);
+			for(int i = 0; i < data.length; i++) {
+				double result = ma.applyAsDouble(data[i]);
+				logger.info("RExp  5 {}", String.format("%4.2f  %4.2f", data[i], result));
+			}
+		}
+	}
+	public static void main(String[] args) {
+		testSimple();
+		testExp();
+		testRExp();
 	}
 }

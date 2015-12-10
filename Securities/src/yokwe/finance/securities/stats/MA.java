@@ -7,7 +7,6 @@ import java.util.function.DoubleUnaryOperator;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.DoubleUtil;
 
 public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MA.class);
@@ -246,7 +245,7 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 		}
 	}
 	private static void testTable53() {
-		double alpha = getAlphaFromDecayFactor(DoubleUtil.DEFAULT_DECAY_FACTOR);
+		double alpha = getAlphaFromDecayFactor(DEFAULT_DECAY_FACTOR);
 		double[] data = {
 			 0.633,
 			 0.115,
@@ -270,8 +269,8 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 			-0.257,
 			};
 
-		double var_r[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(ema(alpha)).toArray();
-		double var_s[] = Arrays.stream(DoubleUtil.multiply(data, data)).map(ema_nr(alpha)).toArray();
+		double var_r[] = Arrays.stream(DoubleArray.multiply(data, data)).map(ema(alpha)).toArray();
+		double var_s[] = Arrays.stream(DoubleArray.multiply(data, data)).map(ema_nr(alpha)).toArray();
 		
 		logger.info("");
 		for(int i = 0; i < var_s.length; i++) {

@@ -2,6 +2,9 @@ package yokwe.finance.securities.stats;
 
 import java.util.Arrays;
 
+import org.apache.commons.math3.stat.correlation.Covariance;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
@@ -54,24 +57,66 @@ public final class DoubleArray {
 		for(double value: data) ret += value;
 		return ret / data.length;
 	}
-	public static double variance(double[] data, double mean) {
-		if (data.length == 0) return Double.NaN;
+	
+	public static double cov(double[] data1, double data2[]) {
+		if (data1.length != data2.length) {
+			logger.error("data1.length = {}  data2.length = {}", data1.length, data2.length);
+			throw new SecuritiesException("data1.length != data2.length");
+		}
+		final int size = data1.length;
+		
+		double mean1 = mean(data1);
+		double mean2 = mean(data2);
+		double ret = 0;
+		for(int i = 0; i < size; i++) {
+			double diff1 = data1[i] - mean1;
+			double diff2 = data2[i] - mean2;
+			ret += diff1 * diff2;
+		}
+		return ret / size;
+	}
+	
+	public static double cor(double[] data1, double data2[]) {
+		if (data1.length != data2.length) {
+			logger.error("data1.length = {}  data2.length = {}", data1.length, data2.length);
+			throw new SecuritiesException("data1.length != data2.length");
+		}
+		final int size = data1.length;
+		
+		double mean1 = mean(data1);
+		double mean2 = mean(data2);
+		double cov   = 0;
+		double var1  = 0;
+		double var2  = 0;
+		for(int i = 0; i < size; i++) {
+			double diff1 = data1[i] - mean1;
+			double diff2 = data2[i] - mean2;
+			cov  += diff1 * diff2;
+			var1 += diff1 * diff1;
+			var2 += diff2 * diff2;
+		}
+		return cov / (Math.sqrt(var1) * Math.sqrt(var2));
+	}
+	
+	public static double var(double[] data, double mean) {
+		final int size = data.length;
+		if (size == 0) return Double.NaN;
 		double ret = 0;
 		for(double value: data) {
-			double t = mean - value;
-			ret += t * t;
+			double diff = mean - value;
+			ret += diff * diff;
 		}
-		return ret / data.length;
+		return ret / size;
 	}
-	public static double variance(double[] data) {
-		return variance(data, mean(data));
+	public static double var(double[] data) {
+		return var(data, mean(data));
 	}
-	public static double standardDeviation(double[] data) {
-		return standardDeviation(data);
+	public static double sd(double[] data) {
+		return sd(data, mean(data));
 	}
-	public static double standardDeviation(double[] data, double mean) {
+	public static double sd(double[] data, double mean) {
 		if (data.length == 0) return Double.NaN;
-		return Math.sqrt(variance(data, mean));
+		return Math.sqrt(var(data, mean));
 	}
 	
 	public static double[] var_sma(double lr[], final int dataSize) {
@@ -89,7 +134,7 @@ public final class DoubleArray {
 			save[pos++] = data;
 			if (pos == dataSize) pos = 0;
 			
-			double sd = variance(save, sum / dataSize);
+			double sd = var(save, sum / dataSize);
 
 			ret[i] = sma.applyAsDouble(sd);
 		}
@@ -224,9 +269,86 @@ public final class DoubleArray {
 			logger.info("Table 5.5 {}", String.format("%8.3f  %8.3f  %8.3f  %8.3f  %8.3f  %8.3f", data_a[i], data_b[i], rva[i], rvb[i], cov[i], cor[i]));
 		}
 	}
+	
+	static void testVarCovCor() {
+		double[] data_a = {
+			 0.634,
+			 0.115,
+			-0.460,
+			 0.094,
+			 0.176,
+			-0.088,
+			-0.142,
+			 0.324,
+			-0.943,
+			-0.528,
+			-0.107,
+			-0.160,
+			-0.445,
+		 	 0.053,
+			 0.152,
+			-0.318,
+			 0.424,
+			-0.708,
+			-0.105,
+			-0.257,
+		};
+
+		double data_b[] = {
+			 0.005,
+			-0.532,
+			 1.267,
+			 0.234,
+			 0.095,
+			-0.003,
+			-0.144,
+			-1.643,
+			-0.319,
+			-1.362,
+			-0.367,
+			 0.872,
+			 0.904,
+			 0.390,
+			-0.527,
+			 0.311,
+			 0.227,
+			 0.436,
+			 0.568,
+			-0.217,
+		};
+
+		logger.info("");
+		{
+			DescriptiveStatistics desca = new DescriptiveStatistics();
+			DescriptiveStatistics descb = new DescriptiveStatistics();
+			for(double data: data_a) desca.addValue(data);
+			for(double data: data_b) descb.addValue(data);
+			double avga = desca.getMean();
+			double avgb = descb.getMean();
+			double vara = desca.getPopulationVariance();
+			double varb = descb.getPopulationVariance();
+			double cov  = new Covariance().covariance(data_a, data_b, false);
+			double cor  = new PearsonsCorrelation().correlation(data_a, data_b);
+			
+			logger.info("math3 {}", String.format("%8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f", avga, avgb, vara, varb, Math.sqrt(vara), Math.sqrt(varb), cov, cor));
+		}
+		{
+			double avga = mean(data_a);
+			double avgb = mean(data_b);
+			double vara = var(data_a);
+			double varb = var(data_b);
+			double sda  = sd(data_a);
+			double sdb  = sd(data_b);
+			double cov  = cov(data_a, data_b);
+			double cor  = cor(data_a, data_b);
+			
+			logger.info("mine  {}", String.format("%8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f  %8.5f", avga, avgb, vara, varb, sda, sdb, cov, cor));
+		}
+	}
 
 	public static void main(String[] args) {
 		testTable53();
 		testTable55();
+		testVarCovCor();
 	}
 }

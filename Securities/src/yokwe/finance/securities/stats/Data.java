@@ -1,6 +1,7 @@
 package yokwe.finance.securities.stats;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,9 @@ public class Data {
 		}
 	}
 	
-	public final String      symbol;
-	public final List<Daily> list;
-	private      int         size;
+	public  final String      symbol;
+	private final List<Daily> list;
+	private       int         size;
 	public Data(String symbol, List<Daily> that) {
 		if (symbol == null) {
 			logger.error("symbol == null");
@@ -41,27 +42,42 @@ public class Data {
 		list   = new ArrayList<>(that);
 		size   = list.size();
 	}
+	public Daily[] toArray() {
+		return list.toArray(new Daily[0]);
+	}
+	public List<Daily> toList() {
+		return new ArrayList<>(list);
+	}
+	public double[] toDoubleArray() {
+		return list.stream().mapToDouble(o -> o.value).toArray();
+	}
+	public void setList(Daily[] newList) {
+		setList(Arrays.asList(newList));
+	}
+	public void setList(List<Daily> newList) {
+		list.clear();
+		list.addAll(newList);
+		size = list.size();
+	}
 	public void logReturn() {
 		if (size <= 1) {
 			logger.error("size = {}	, size");
 			throw new SecuritiesException("size <= 1");
 		}
 
-		List<Daily> save = new ArrayList<>(list);
-		list.clear();
-		
+		List<Daily> newList = new ArrayList<>();
 		boolean firstTime = true;
 		Daily yesterday = null;
-		for(Daily today: save) {
+		for(Daily today: list) {
 			if (firstTime) {
 				yesterday = today;
 				firstTime = false;
 			} else {
-				list.add(today.logReturn(yesterday));
+				newList.add(today.logReturn(yesterday));
 				yesterday = today;
 			}
 		}
-		size = list.size();
+		setList(newList);
 	}
 	public void relativeReturn() {
 		if (size <= 1) {
@@ -69,20 +85,18 @@ public class Data {
 			throw new SecuritiesException("size <= 1");
 		}
 
-		List<Daily> save = new ArrayList<>(list);
-		list.clear();
-		
+		List<Daily> newList = new ArrayList<>();
 		boolean firstTime = true;
 		Daily yesterday = null;
-		for(Daily today: save) {
+		for(Daily today: list) {
 			if (firstTime) {
 				yesterday = today;
 				firstTime = false;
 			} else {
-				list.add(today.relativeReturn(yesterday));
+				newList.add(today.relativeReturn(yesterday));
 				yesterday = today;
 			}
 		}
-		size = list.size();
+		setList(newList);
 	}
 }

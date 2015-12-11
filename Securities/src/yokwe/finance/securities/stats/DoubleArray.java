@@ -177,6 +177,30 @@ public final class DoubleArray {
 		}
 	}
 	
+	public static BiStats[][] getMatrix(UniStats stats[]) {
+		if (stats.length == 0) {
+			logger.error("stats.length == 0");
+			throw new SecuritiesException("stats.length == 0");
+		}
+		final int size = stats[0].size;
+		for(int i = 0; i < size; i++) {
+			if (stats[i].size != size) {
+				logger.error("stats[i].size != size");
+				logger.error("stats[{}].size = {}  size = {}", i, stats[i], size);
+				throw new SecuritiesException("stats[i].size != size");
+			}
+		}
+		BiStats ret[][] = new BiStats[size][size];
+		for(int i = 0; i < size; i++) {
+			for(int j = 0; j < size; j++) {
+				ret[i][j] = ret[j][i] = new DoubleArray.BiStats(stats[i], stats[j]);
+				if (i == j) break;
+			}
+		}
+		
+		return ret;
+	}
+
 	public static double cor(double[] data1, double data2[]) {
 		if (data1.length != data2.length) {
 			logger.error("data1.length = {}  data2.length = {}", data1.length, data2.length);

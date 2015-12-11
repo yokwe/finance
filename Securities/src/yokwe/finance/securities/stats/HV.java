@@ -103,9 +103,9 @@ public class HV {
 		final String JDBC_CONNECTION_URL = "jdbc:sqlite:/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3";
 
 		try (Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL)) {
-//			LocalDate dateFrom = LocalDate.now().minusYears(1);
-			LocalDate dateFrom = LocalDate.now().minusMonths(1);
-			LocalDate dateTo   = dateFrom.plusMonths(1);
+			LocalDate dateTo   = LocalDate.now();
+			LocalDate dateFrom = dateTo.minusYears(1);
+//			LocalDate dateFrom = dateTo.minusMonths(1);
 			
 			Map<String, Double> allocationMap = new TreeMap<>();
 			allocationMap.put("VCLT", 8600.0);

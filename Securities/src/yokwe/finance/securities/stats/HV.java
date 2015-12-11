@@ -80,6 +80,7 @@ public class HV {
 				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
 			}
 		}
+		hv = Math.sqrt(hv);
 		logger.info("HV    {}", String.format("              %8.4f", hv));
 		return hv;
 	}

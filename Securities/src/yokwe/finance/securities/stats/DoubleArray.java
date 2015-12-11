@@ -204,7 +204,6 @@ public final class DoubleArray {
 			final int statsSize = stats[0].size;
 			for(int i = 0; i < stats.length; i++) {
 				if (stats[i].size != statsSize) {
-					// TODO debug code
 					logger.error("stats[i].size != statsSize");
 					logger.error("stats[{}].size = {}  statsSize = {}", i, stats[i], statsSize);
 					throw new SecuritiesException("stats[i].size != size");

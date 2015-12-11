@@ -4,9 +4,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
@@ -19,34 +18,61 @@ import yokwe.finance.securities.stats.DoubleArray.UniStats;
 public class HV {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(HV.class);
 
-	public static class Asset {
-		public final int    amount;
-		public final Data   data;
-		public Asset(int amount, Data data) {
-			this.amount = amount;
-			this.data   = data;
-		}
-	}
-
 	// calculate composite Historical Volatility
-	public static double calculate(List<Asset> assetList) {
-		final Asset assets[] = assetList.toArray(new Asset[0]);
-		final int size = assets.length;
+	public static double calculate(Map<String, Data> dataMap, Map<String, Double>allocationMap) {
+		final int size = allocationMap.size();
 		
-		// TODO take log return of Data.Daily
+		Map<Integer, String> nameMap = new TreeMap<>();
+		{
+			int i = 0;
+			for(String key: allocationMap.keySet()) {
+				nameMap.put(i, key);
+				i++;
+			}
+		}
 		
 		double ratioArray[] = new double[size];
 		{
-			double sum = Arrays.stream(assets).mapToDouble(o -> o.amount).sum();
-			for(int i = 0; i < size; i++) ratioArray[i] = sum / assets[i].amount;
+			double sum = allocationMap.values().stream().mapToDouble(o -> o).sum();
+			logger.info("SUM          {}", String.format("%5.0f", sum));
+			int i = 0;
+			for(String key: allocationMap.keySet()) {
+				double allocation = allocationMap.get(key);
+				double ratio = allocation / sum;;
+				ratioArray[i] = ratio;
+				logger.info("RATIO {}", String.format("%-6s %5.0f  %8.4f", key, allocation, ratio));
+				i++;
+			}
 		}
 		
 		UniStats statsArray[] = new UniStats[size];
-		for(int i = 0; i < size; i++) {
-			statsArray[i] = new DoubleArray.UniStats(assets[i].data.toDoubleArray());
-			logger.info("{}", String.format("%-6s  %s", assets[i].data.symbol, statsArray[i]));
+		{
+			int i = 0;
+			for(String key: allocationMap.keySet()) {
+				Data data = dataMap.get(key);
+				statsArray[i] = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray()));
+				logger.info("HV    {}", String.format("%-6s        %8.4f", data.symbol, statsArray[i].sd));
+				i++;
+			}
 		}
 		BiStats statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+		{
+			StringBuffer sb = new StringBuffer();
+			sb.append("CORR        ");
+			for(int i = 0; i < size; i++) {
+				sb.append(String.format("  %-6s", nameMap.get(i)));
+			}
+			logger.info(sb.toString());
+		}
+		for(int i = 0; i < size; i++) {
+			StringBuffer sb = new StringBuffer();
+			sb.append(String.format("CORR  %-6s", nameMap.get(i)));
+			for(int j = 0; j < size; j++) {
+				sb.append(String.format("%8.4f", statsMatrix[i][j].correlation));
+			}
+			logger.info("{}", sb.toString());
+		}
+		
 		
 		double hv = 0;
 		for(int i = 0; i < size; i++) {
@@ -54,7 +80,7 @@ public class HV {
 				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
 			}
 		}
-		
+		logger.info("HV    {}", String.format("              %8.4f", hv));
 		return hv;
 	}
 	
@@ -76,19 +102,22 @@ public class HV {
 			LocalDate dateFrom = LocalDate.now().minusYears(1);
 			LocalDate dateTo   = LocalDate.now();
 			
-			String symbolArray[] = {"VCLT", "PGX", "ARR", "VYM", };
+			Map<String, Double> allocationMap = new TreeMap<>();
+			allocationMap.put("VCLT", 1000.0);
+			allocationMap.put("PGX",  1000.0);
+			allocationMap.put("ARR",  1000.0);
+			allocationMap.put("VYM",  1000.0);
 			
 			logger.info("");
 			logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
 			
-			List<Asset> assetList = new ArrayList<>();
-			for(String symbol: symbolArray) {
+			Map<String, Data> dataMap = new TreeMap<>();
+			for(String symbol: allocationMap.keySet()) {
 				Data data = getData(connection, symbol, dateFrom, dateTo);
-				assetList.add(new Asset(100, data));
+				dataMap.put(symbol, data);
 			}
 			
-			logger.info("{}", String.format("hv = %8.4f", calculate(assetList)));
-			
+			calculate(dataMap, allocationMap);			
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

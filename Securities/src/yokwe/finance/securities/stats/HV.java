@@ -18,6 +18,9 @@ import yokwe.finance.securities.stats.DoubleArray.UniStats;
 public class HV {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(HV.class);
 
+	public static final double CONFIDENCE_95_PERCENT = 1.65;
+	public static final double CONFIDENCE_99_PERCENT = 2.33;
+
 	// calculate composite Historical Volatility
 	public static double calculate(Map<String, Data> dataMap, Map<String, Double>allocationMap) {
 		final int size = allocationMap.size();
@@ -51,7 +54,7 @@ public class HV {
 			for(String key: allocationMap.keySet()) {
 				Data data = dataMap.get(key);
 				statsArray[i] = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray()));
-				logger.info("HV    {}", String.format("%-6s        %8.4f", data.symbol, statsArray[i].sd));
+				logger.info("HV    {}", String.format("%-6s        %8.4f %8.4f", data.symbol, statsArray[i].sd, statsArray[i].mean));
 				i++;
 			}
 		}
@@ -100,14 +103,16 @@ public class HV {
 		final String JDBC_CONNECTION_URL = "jdbc:sqlite:/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3";
 
 		try (Connection connection = DriverManager.getConnection(JDBC_CONNECTION_URL)) {
-			LocalDate dateFrom = LocalDate.now().minusYears(1);
-			LocalDate dateTo   = LocalDate.now();
+//			LocalDate dateFrom = LocalDate.now().minusYears(1);
+			LocalDate dateFrom = LocalDate.now().minusMonths(1);
+			LocalDate dateTo   = dateFrom.plusMonths(1);
 			
 			Map<String, Double> allocationMap = new TreeMap<>();
-			allocationMap.put("VCLT", 1000.0);
-			allocationMap.put("PGX",  1000.0);
-			allocationMap.put("ARR",  1000.0);
-			allocationMap.put("VYM",  1000.0);
+			allocationMap.put("VCLT", 8600.0);
+			allocationMap.put("PGX",  4400.0);
+			allocationMap.put("VYM",  3400.0);
+			allocationMap.put("ARR",  2100.0);
+			double sum = allocationMap.values().stream().mapToDouble(o -> o).sum();
 			
 			logger.info("");
 			logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
@@ -118,7 +123,10 @@ public class HV {
 				dataMap.put(symbol, data);
 			}
 			
-			calculate(dataMap, allocationMap);			
+			double hv = calculate(dataMap, allocationMap);
+			logger.info("");
+			logger.info("{}", String.format("SUM         %8.2f", sum));
+			logger.info("{}", String.format("ValueAtRisk %8.2f", hv * sum * CONFIDENCE_95_PERCENT));
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

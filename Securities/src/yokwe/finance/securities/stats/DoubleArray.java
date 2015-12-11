@@ -178,16 +178,20 @@ public final class DoubleArray {
 	}
 	
 	public static BiStats[][] getMatrix(UniStats stats[]) {
+		final int size = stats.length;
 		if (stats.length == 0) {
 			logger.error("stats.length == 0");
 			throw new SecuritiesException("stats.length == 0");
 		}
-		final int size = stats[0].size;
-		for(int i = 0; i < size; i++) {
-			if (stats[i].size != size) {
-				logger.error("stats[i].size != size");
-				logger.error("stats[{}].size = {}  size = {}", i, stats[i], size);
-				throw new SecuritiesException("stats[i].size != size");
+		{
+			final int statsSize = stats[0].size;
+			for(int i = 0; i < stats.length; i++) {
+				if (stats[i].size != statsSize) {
+					// TODO debug code
+					logger.error("stats[i].size != statsSize");
+					logger.error("stats[{}].size = {}  statsSize = {}", i, stats[i], statsSize);
+					throw new SecuritiesException("stats[i].size != size");
+				}
 			}
 		}
 		BiStats ret[][] = new BiStats[size][size];

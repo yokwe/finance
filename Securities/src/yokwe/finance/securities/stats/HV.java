@@ -4,9 +4,10 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +23,13 @@ public class HV {
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
 
 	// calculate composite Historical Volatility
-	public static double calculate(Map<String, Data> dataMap, Map<String, Double>allocationMap) {
-		final int size = allocationMap.size();
+	public static double calculate(Data data, Map<String, Double>assetMap) {
+		final int size = assetMap.size();
 		
 		Map<Integer, String> nameMap = new TreeMap<>();
 		{
 			int i = 0;
-			for(String key: allocationMap.keySet()) {
+			for(String key: assetMap.keySet()) {
 				nameMap.put(i, key);
 				i++;
 			}
@@ -36,11 +37,11 @@ public class HV {
 		
 		double ratioArray[] = new double[size];
 		{
-			double sum = allocationMap.values().stream().mapToDouble(o -> o).sum();
+			double sum = assetMap.values().stream().mapToDouble(o -> o).sum();
 			logger.info("SUM          {}", String.format("%5.0f", sum));
 			int i = 0;
-			for(String key: allocationMap.keySet()) {
-				double allocation = allocationMap.get(key);
+			for(String key: assetMap.keySet()) {
+				double allocation = assetMap.get(key);
 				double ratio = allocation / sum;;
 				ratioArray[i] = ratio;
 				logger.info("RATIO {}", String.format("%-6s %5.0f  %8.4f", key, allocation, ratio));
@@ -51,10 +52,9 @@ public class HV {
 		UniStats statsArray[] = new UniStats[size];
 		{
 			int i = 0;
-			for(String key: allocationMap.keySet()) {
-				Data data = dataMap.get(key);
-				statsArray[i] = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray()));
-				logger.info("HV    {}", String.format("%-6s        %8.4f %8.4f", data.symbol, statsArray[i].sd, statsArray[i].mean));
+			for(String symbol: assetMap.keySet()) {
+				statsArray[i] = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				logger.info("HV    {}", String.format("%-6s        %8.4f %8.4f", symbol, statsArray[i].sd, statsArray[i].mean));
 				i++;
 			}
 		}
@@ -89,8 +89,8 @@ public class HV {
 	}
 	
 	public static Data getData(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
-		Data.Daily daily[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().map(o -> new Data.Daily(o.date, o.volume)).collect(Collectors.toList()).toArray(new Data.Daily[0]);
-		return new Data(symbol, daily);
+		List<PriceTable> priceList = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
+		return new Data(priceList);
 	}
 	public static void main(String args[]) {
 		try {
@@ -107,23 +107,25 @@ public class HV {
 			LocalDate dateFrom = dateTo.minusYears(1);
 //			LocalDate dateFrom = dateTo.minusMonths(1);
 			
-			Map<String, Double> allocationMap = new TreeMap<>();
-			allocationMap.put("VCLT", 8600.0);
-			allocationMap.put("PGX",  4400.0);
-			allocationMap.put("VYM",  3400.0);
-			allocationMap.put("ARR",  2100.0);
-			double sum = allocationMap.values().stream().mapToDouble(o -> o).sum();
+			Map<String, Double> assetMap = new TreeMap<>();
+			assetMap.put("VCLT", 8600.0);
+			assetMap.put("PGX",  4400.0);
+			assetMap.put("VYM",  3400.0);
+			assetMap.put("ARR",  2100.0);
+			double sum = assetMap.values().stream().mapToDouble(o -> o).sum();
 			
 			logger.info("");
 			logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
 			
-			Map<String, Data> dataMap = new TreeMap<>();
-			for(String symbol: allocationMap.keySet()) {
-				Data data = getData(connection, symbol, dateFrom, dateTo);
-				dataMap.put(symbol, data);
-			}
-			
-			double hv = calculate(dataMap, allocationMap);
+			Data data;
+			{
+				List<PriceTable> all = new ArrayList<>();
+				for(String symbol: assetMap.keySet()) {
+					all.addAll(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
+				}
+				data = new Data(all);
+			}			
+			double hv = calculate(data, assetMap);
 			logger.info("");
 			logger.info("{}", String.format("SUM         %8.2f", sum));
 			logger.info("{}", String.format("ValueAtRisk %8.2f", hv * sum * CONFIDENCE_95_PERCENT));

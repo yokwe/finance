@@ -1,10 +1,15 @@
 package yokwe.finance.securities.stats;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.database.PriceTable;
 
 public final class Data {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Data.class);
@@ -21,44 +26,42 @@ public final class Data {
 		}
 	}
 	
-	public  final String symbol;
-	private final Daily  daily[];
-	public Data(String symbol, Daily that[]) {
-		if (symbol == null) {
-			logger.error("symbol == null");
-			throw new SecuritiesException("symbol == null");
+	private Map<String, Daily[]> map = new TreeMap<>();
+	public Data(List<PriceTable> dataList) {
+		Map<String, List<Daily>> symbolMap = new TreeMap<>();
+		for(PriceTable priceTable: dataList) {
+			String symbol = priceTable.symbol;
+			Daily  daily  = new Daily(priceTable.date, priceTable.close);
+			
+			final List<Daily> dailyList;
+			if (symbolMap.containsKey(symbol)) {
+				dailyList = symbolMap.get(symbol);
+			} else {
+				dailyList = new ArrayList<>();
+				symbolMap.put(symbol, dailyList);
+			}
+			dailyList.add(daily);
 		}
-		if (that == null) {
-			logger.error("that == null");
-			throw new SecuritiesException("that == null");
+		for(String symbol: symbolMap.keySet()) {
+			logger.info("symbol = {}", symbol);
+			List<Daily> dailyList = symbolMap.get(symbol);
+			map.put(symbol, dailyList.toArray(new Daily[0]));
 		}
-		this.symbol = symbol;
-		this.daily  = Arrays.copyOf(that, that.length);
 	}
-	public Data getInstance(Daily that[]) {
-		return new Data(symbol, Arrays.copyOf(that, that.length));
-	}
-	public Data getInstance(double that[]) {
-		if (that == null) {
-			logger.error("that == null");
-			throw new SecuritiesException("that == null");
+	public Daily[] toArray(String symbol) {
+		if (!map.containsKey(symbol)) {
+			logger.error("Unknown symbol = {}", symbol);
+			throw new SecuritiesException("Unknown symol");
 		}
-		if (that.length != daily.length) {
-			logger.error("that.length != daily.length");
-			logger.error("that.length = {}  daily.length = {}", that.length, daily.length);
-			throw new SecuritiesException("that.length != daily.length");
-		}
-		Daily newDaily[] = new Daily[that.length];
-		for(int i = 0; i < that.length; i++) {
-			newDaily[i] = daily[i].getInstance(that[i]);
-		}
-		
-		return new Data(symbol, newDaily);
+		Daily dailyArray[] = map.get(symbol);
+		return Arrays.copyOf(dailyArray, dailyArray.length);
 	}
-	public Daily[] toArray() {
-		return Arrays.copyOf(daily, daily.length);
-	}
-	public double[] toDoubleArray() {
-		return Arrays.stream(daily).mapToDouble(o -> o.value).toArray();
+	public double[] toDoubleArray(String symbol) {
+		if (!map.containsKey(symbol)) {
+			logger.error("Unknown symbol = {}", symbol);
+			throw new SecuritiesException("Unknown symol");
+		}
+		Daily dailyArray[] = map.get(symbol);
+		return Arrays.stream(dailyArray).mapToDouble(o -> o.value).toArray();
 	}
 }

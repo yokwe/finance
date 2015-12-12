@@ -132,7 +132,7 @@ update:
 	make update-price load-data update-correlation tar load-correlation
 
 prepare-update:
-	rm -rf tmp/update/*/*
+	@echo 'rm -rf tmp/update/*/*'
 
 update-google-finance: prepare-update
 	ant run-update-google-finance

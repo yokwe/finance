@@ -129,10 +129,10 @@ fetch-yahoo-dividend-40y:
 #
 
 update:
-	@echo make update-google-getprices update-yahoo-dividend update-google-finance
+	make update-price load-data update-correlation tar load-correlation
 
 prepare-update:
-	mkdir -p ${DIR_DATABASE}
+	rm -rf tmp/update/*/*
 
 update-google-finance: prepare-update
 	ant run-update-google-finance

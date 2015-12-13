@@ -24,6 +24,9 @@ import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
+import yokwe.finance.securities.stats.Data;
+import yokwe.finance.securities.stats.DoubleArray;
+import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.util.DoubleUtil.Stats;
 import yokwe.finance.securities.util.NasdaqUtil;
 
@@ -120,7 +123,7 @@ public class ScreenByDividend {
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());
 		
 		Map<String, CompanyTable> companyMap = CompanyTable.getMap(connection);
-		logger.info("companyMap     = {}", companyMap.size());
+		logger.info("companyMap    = {}", companyMap.size());
 		
 		// candidateList has all
 		List<String> candidateList = nasdaqMap.keySet().stream().collect(Collectors.toList());
@@ -166,6 +169,20 @@ public class ScreenByDividend {
 			candidateList = newCandidateList;
 		}
 		logger.info("candidateList = {}", candidateList.size());
+		
+		// Build varMap
+		Map<String, Double> varMap = new TreeMap<>();
+		{
+			LocalDate dateTo   = lastTradeDate;
+			LocalDate dateFrom = dateTo.minusYears(1);
+			
+			for(String symbol: candidateList) {
+				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
+				DoubleArray.UniStats stats = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				double valueAtRisk = stats.sd * HV.CONFIDENCE_95_PERCENT;
+				varMap.put(symbol, valueAtRisk);
+			}
+		}
 
 		// Build dividendMap
 		Map<String, Map<String, List<Double>>> dividendMap = new TreeMap<>();
@@ -209,7 +226,7 @@ public class ScreenByDividend {
 			final String y1 = String.format("%d", y0Number - 1);
 			
 			// Output title line
-			w.append("symbol,sector,industry,name,freq,price");
+			w.append("symbol,sector,industry,name,freq,price,var");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
 			w.append(",last");
 			w.append("\n");
@@ -285,6 +302,7 @@ public class ScreenByDividend {
 				}
 				w.append(String.format(",%s", name));
 				w.append(String.format(",%d,%.2f", freq, price));
+				w.append(String.format(",%.4f", varMap.get(symbol)));
 
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
 					final double p = profit[i];

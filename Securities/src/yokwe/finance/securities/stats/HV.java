@@ -51,10 +51,15 @@ public class HV {
 		
 		UniStats statsArray[] = new UniStats[size];
 		{
+			logger.info("HV                    SD      VAR 1d VAR 1m");
 			int i = 0;
 			for(String symbol: assetMap.keySet()) {
-				statsArray[i] = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
-				logger.info("HV    {}", String.format("%-6s        %8.4f %8.4f", symbol, statsArray[i].sd, statsArray[i].mean));
+				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				double amount = assetMap.get(symbol);
+				double sd     = statsArray[i].sd;
+				double var1d  = sd * CONFIDENCE_95_PERCENT * amount;
+				double var1m  = sd * CONFIDENCE_95_PERCENT * amount * Math.sqrt(21);
+				logger.info("HV    {}", String.format("%-6s        %8.4f%8.2f%8.2f", symbol, sd, var1d, var1m));
 				i++;
 			}
 		}
@@ -128,7 +133,8 @@ public class HV {
 			double hv = calculate(data, assetMap);
 			logger.info("");
 			logger.info("{}", String.format("SUM         %8.2f", sum));
-			logger.info("{}", String.format("ValueAtRisk %8.2f", hv * sum * CONFIDENCE_95_PERCENT));
+			logger.info("{}", String.format("VAR 1d      %8.2f", hv * sum * CONFIDENCE_95_PERCENT));
+			logger.info("{}", String.format("VAR 1m      %8.2f", hv * sum * CONFIDENCE_95_PERCENT  * Math.sqrt(21)));
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

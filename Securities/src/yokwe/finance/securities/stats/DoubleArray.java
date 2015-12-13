@@ -94,11 +94,11 @@ public final class DoubleArray {
 	}
 	
 	public static class UniStats {
-		final int    size;
-		final double mean;
-		final double variance;
-		final double sd;
-		final double diff[];
+		public final int    size;
+		public final double mean;
+		public final double variance;
+		public final double sd;
+		public final double diff[];
 		
 		public UniStats(int size, double mean, double variance, double diff[]) {
 			this.size     = size;

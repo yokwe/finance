@@ -171,7 +171,7 @@ public class ScreenByDividend {
 		logger.info("candidateList = {}", candidateList.size());
 		
 		// Build varMap
-		Map<String, Double> varMap = new TreeMap<>();
+		Map<String, String> varMap = new TreeMap<>();
 		{
 			LocalDate dateTo   = lastTradeDate;
 			LocalDate dateFrom = dateTo.minusYears(1);
@@ -179,8 +179,8 @@ public class ScreenByDividend {
 			for(String symbol: candidateList) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
 				DoubleArray.UniStats stats = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
-				double valueAtRisk = stats.sd * HV.CONFIDENCE_95_PERCENT;
-				varMap.put(symbol, valueAtRisk);
+				double valueAtRisk = stats.sd * HV.CONFIDENCE_95_PERCENT * Math.sqrt(21); // 21 for  one month period
+				varMap.put(symbol, String.format("%.4f", valueAtRisk));
 			}
 		}
 
@@ -226,7 +226,7 @@ public class ScreenByDividend {
 			final String y1 = String.format("%d", y0Number - 1);
 			
 			// Output title line
-			w.append("symbol,sector,industry,name,freq,price,var");
+			w.append("symbol,sector,industry,name,var1m,freq,price");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
 			w.append(",last");
 			w.append("\n");
@@ -300,9 +300,9 @@ public class ScreenByDividend {
 					w.append(",").append(sector);
 					w.append(",").append(industry);
 				}
-				w.append(String.format(",%s", name));
+				w.append(",").append(name);
+				w.append(",").append(varMap.get(symbol));
 				w.append(String.format(",%d,%.2f", freq, price));
-				w.append(String.format(",%.4f", varMap.get(symbol)));
 
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {
 					final double p = profit[i];

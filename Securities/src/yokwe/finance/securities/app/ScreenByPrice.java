@@ -20,6 +20,9 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
+import yokwe.finance.securities.stats.Data;
+import yokwe.finance.securities.stats.DoubleArray;
+import yokwe.finance.securities.stats.HV;
 
 public class ScreenByPrice {
 	private static final Logger logger = LoggerFactory.getLogger(ScreenByPrice.class);
@@ -113,11 +116,26 @@ public class ScreenByPrice {
 			}
 		}
 		
+		// Build varMap
+		Map<String, String> varMap = new TreeMap<>();
+		{
+			LocalDate dateTo   = origin;
+			LocalDate dateFrom = dateTo.minusYears(1);
+			
+			for(String symbol: ratioMap.keySet()) {
+				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
+				DoubleArray.UniStats stats = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				double valueAtRisk = stats.sd * HV.CONFIDENCE_95_PERCENT * Math.sqrt(21); // 21 for  one month period
+				varMap.put(symbol, String.format("%.4f", valueAtRisk));
+			}
+		}
+		
 		// Output header
 		w.append("symbol");
 		w.append(",sector");
 		w.append(",industry");
 		w.append(",name");
+		w.append(",var1m");
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
 		}
@@ -156,6 +174,7 @@ public class ScreenByPrice {
 				
 				w.append(",").append(name);
 			}
+			w.append(",").append(varMap.get(symbol));
 			
 			Map<String, String> map = ratioMap.get(symbol);
 			if (map == null) {

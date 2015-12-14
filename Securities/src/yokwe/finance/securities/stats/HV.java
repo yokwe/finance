@@ -161,7 +161,7 @@ public class HV {
 			assetMap.put("VCLT", 8600.0);
 			assetMap.put("PGX",  4400.0);
 			assetMap.put("VYM",  3400.0);
-			assetMap.put("ARR",  2100.0);
+//			assetMap.put("ARR",  2100.0);
 			double assetSum = assetMap.values().stream().mapToDouble(o -> o).sum();
 			
 			logger.info("");
@@ -182,17 +182,18 @@ public class HV {
 			logger.info("{}", String.format("VAR 1m      %8.2f", hv * assetSum * CONFIDENCE_95_PERCENT  * Math.sqrt(21)));
 			
 			{
+				final double assetUnit = 10;
 				Random random = new Random(System.currentTimeMillis());
 				final int numberOfAsset = assetMap.size();
 				double ratio[] = new double[numberOfAsset];
 				Map<String, Double> randomAssetMap = new TreeMap<>();
 
 				double minHV = hv;
-				for(int i = 0; i < 100; i++) {
+				for(int i = 0; i < 10000; i++) {
 					double ratioSum = 0.0;
 					for(int j = 0; j < ratio.length; j++) ratio[j] = random.nextDouble();
 					for(int j = 0; j < ratio.length; j++) ratioSum += ratio[j];
-					for(int j = 0; j < ratio.length; j++) ratio[j] = assetSum * (ratio[j] / ratioSum);
+					for(int j = 0; j < ratio.length; j++) ratio[j] = Math.round(assetSum * (ratio[j] / ratioSum) / assetUnit) * assetUnit;
 					{
 						int j = numberOfAsset;
 						double remain = assetSum;
@@ -211,8 +212,18 @@ public class HV {
 					if (tempHV < minHV) {
 						minHV = tempHV;
 
+						logger.info("");
 						logger.info("minHV {}", String.format("              %8.4f", minHV));
-						for(int j = 0; j < ratio.length; j++) logger.info("ratio {}", String.format("%6.0f", ratio[j]));
+//						for(int j = 0; j < ratio.length; j++) logger.info("ratio {}", String.format("%6.0f", ratio[j]));
+						{
+							double sum = randomAssetMap.values().stream().mapToDouble(o -> o).sum();
+							logger.info("SUM          {}", String.format("%5.0f", sum));
+							for(String key: randomAssetMap.keySet()) {
+								double allocation = randomAssetMap.get(key);
+								logger.info("RATIO {}", String.format("%-6s %5.0f  %8.4f", key, allocation, allocation / sum));
+							}
+						}
+
 
 //						{
 //							double assetSum = randomAssetMap.values().stream().mapToDouble(o -> o).sum();

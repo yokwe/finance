@@ -196,10 +196,12 @@ public final class Allocation {
 					}
 					
 					{
-//						logger.info("SUM          {}", String.format("%5d", (int)amountTotal));
+						double total = 0;
 						for(Allocation allocation: allocations) {
-							logger.info("RATIO {}", String.format("%-6s %5d  %8.4f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.ratio, allocation.amount * allocation.asset.lastPrice));
+							total += allocation.value;
+							logger.info("RATIO {}", String.format("%-6s %5d  %8.4f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.ratio, allocation.value));
 						}
+						logger.info("TOTAL                         {}", String.format("%8.2f %7.2f", total, valueTotal - total));
 					}
 				}
 			}

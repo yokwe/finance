@@ -55,7 +55,7 @@ public final class Asset {
 	
 	@Override
 	public String toString() {
-		return String.format("{%-6s %8.4f %8.4f %8.4f}", symbol, lastPrice, dividend, divYield);
+		return String.format("{%-5s %5.2f %5.3f %5.3f}", symbol, lastPrice, dividend, divYield);
 	}
 	
 	public UniStats toUniStats() {

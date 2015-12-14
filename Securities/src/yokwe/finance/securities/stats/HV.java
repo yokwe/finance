@@ -46,14 +46,14 @@ public class HV {
 				double allocation = assetMap.get(key);
 				double ratio = allocation / sum;;
 				ratioArray[i] = ratio;
-				logger.info("RATIO {}", String.format("%-6s %5.0f  %8.4f", key, allocation, ratio));
+				logger.info("RATIO {}", String.format("%-6s %5.0f %8.2f", key, allocation, ratio));
 				i++;
 			}
 		}
 		
 		UniStats statsArray[] = new UniStats[size];
 		{
-			logger.info("HV                    SD      VAR 1d VAR 1m");
+			logger.info("HV                    SD      VAR 1d  VAR 1m");
 			int i = 0;
 			for(String symbol: assetMap.keySet()) {
 				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
@@ -161,28 +161,26 @@ public class HV {
 		
 		double ratioArray[] = new double[size];
 		{
-			double amountTotal = Arrays.stream(allocations).mapToInt(o -> o.amount).sum();
-			logger.info("SUM          {}", String.format("%5d", (int)amountTotal));
+			double valueTotal = Arrays.stream(allocations).mapToDouble(o -> o.value).sum();
+			logger.info("TOTAL        {}", String.format("%6.2f", valueTotal));
 			for(int i = 0; i < size; i++) {
 				Allocation allocation = allocations[i];
-				double ratio = allocation.amount / amountTotal;;
-				ratioArray[i] = ratio;
-				logger.info("RATIO {}", String.format("%-6s %5d  %8.4f", allocation.asset.symbol, allocation.amount, ratio));
+				ratioArray[i] = allocation.ratio;
+				logger.info("RATIO {}", String.format("%-6s %8.2f %6.2f", allocation.asset.symbol, allocation.value, allocation.ratio));
 			}
 		}
 		
 		UniStats statsArray[] = new UniStats[size];
 		{
-			logger.info("HV                    SD      VAR 1d  VAR 1m");
+			logger.info("HV                     VALUE  VAR 1d  VAR 1m");
 			int i = 0;
 			for(Allocation allocation: allocations) {
 				String symbol = allocation.asset.symbol;
-				double amount = allocation.amount;
 				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(allocation.asset.price));
 				double sd     = statsArray[i].sd;
-				double var1d  = sd * CONFIDENCE_95_PERCENT * amount;
-				double var1m  = sd * CONFIDENCE_95_PERCENT * amount * Math.sqrt(21);
-				logger.info("HV    {}", String.format("%-6s        %8.4f%8.2f%8.2f", symbol, sd, var1d, var1m));
+				double var1d  = sd * CONFIDENCE_95_PERCENT * allocation.value;
+				double var1m  = sd * CONFIDENCE_95_PERCENT * allocation.value * Math.sqrt(21);
+				logger.info("HV    {}", String.format("%-6s        %8.2f%8.2f%8.2f", symbol, allocation.value, var1d, var1m));
 				i++;
 			}
 		}

@@ -21,44 +21,63 @@ public final class Allocation {
 	
 	private static Random random = new Random(System.currentTimeMillis());
 	
-	// TODO Unit of numberOfAllocation need to be total dollar value
-	public static List<Integer> allocateRandom(int allocationTotal, int numberOfAllocation, int allocationUnit) {
-		double ratio[]    = new double[numberOfAllocation];
-		double ratioTotal = 0.0;
-		for(int i = 0; i < ratio.length; i++) {
-			ratio[i] = random.nextDouble();
-			ratioTotal += ratio[i];
+	public static List<Integer> allocateRandom(List<Asset> assetList, double valueTotal, int allocationUnit) {
+		final int size = assetList.size();
+		double values[] = new double[size];
+		{
+			double total = 0.0;
+			for(int i = 0; i < size; i++) {
+				values[i] = random.nextDouble();
+				total += values[i];
+			}
+			for(int i = 0; i < size; i++) {
+				values[i] = (values[i] / total) * valueTotal;
+			}			
 		}
 		
-		List<Integer> ret = new ArrayList<>();
+		int ret[] = new int[size];
 		{
-			int remaining = allocationTotal;
-			for(int i = ratio.length; 0 < i;) {
-				i--;
-				if (i == 0) {
-					ret.add(remaining);
-				} else {
-					int amount = (int)Math.round(allocationTotal * (ratio[i] / ratioTotal) / allocationUnit) * allocationUnit;
-					ret.add(amount);
-					remaining -= amount;
+			double remaining = valueTotal;
+			// First try
+			for(int i = 0; i < size; i++) {
+				double lastPrice = assetList.get(i).lastPrice;
+				int count = (int)Math.floor(values[i] / lastPrice);
+				ret[i]    = count;
+				remaining -= lastPrice * count;
+			}
+			// Second try
+			final double minPrice = assetList.stream().mapToDouble(o -> o.lastPrice).min().getAsDouble();
+			for(;;) {
+				if (remaining < minPrice) break;
+				
+				int index = random.nextInt(size);
+				if (assetList.get(index).lastPrice <= remaining) {
+					double lastPrice = assetList.get(index).lastPrice;
+					int count = (int)Math.floor(remaining / lastPrice);
+					ret[index] += count;
+					remaining -= lastPrice * count;
+					if (remaining < 0) {
+						logger.error("remaining < 0");
+						throw new SecuritiesException("remaining < 0");
+					}
 				}
 			}
 		}
 
-		return ret;
+		List<Integer> retList = new ArrayList<>();
+		for(int e: ret) retList.add(e);
+		return retList;
 	}
-	public static Allocation[] random(List<Asset> assetList, int allocationTotal) {
-		List<Integer> amountList = allocateRandom(allocationTotal, assetList.size(), ALLOCAIONT_UNIT);
+	public static Allocation[] random(List<Asset> assetList, double valueTotal) {
+		List<Integer> amountList = allocateRandom(assetList, valueTotal, ALLOCAIONT_UNIT);
 		return getInstance(assetList, amountList);
 	}
-	public static Allocation[] random(Allocation[] allocations) {
-		int allocationTotal = 0;
+	public static Allocation[] random(Allocation[] allocations, double valueTotal) {
 		List<Asset> assetList = new ArrayList<>();
 		for(Allocation allocation: allocations) {
 			assetList.add(allocation.asset);
-			allocationTotal += allocation.amount;
 		}
-		return random(assetList, allocationTotal);
+		return random(assetList, valueTotal);
 	}
 	
 	public static double dividend(Allocation[] allocations) {
@@ -92,12 +111,21 @@ public final class Allocation {
 			throw new SecuritiesException("amountList.size() != assetList.size()");
 		}
 		final int    size  = amountList.size();
-		final double total = amountList.stream().mapToDouble(o -> (double)o).sum();
+		final double total;
+		{
+			double t = 0;
+			for(int i = 0; i < size; i++) {
+				Asset asset  = assetList.get(i);
+				int   amount = amountList.get(i);
+				t += asset.lastPrice * amount;
+			}
+			total = t;
+		}
 		Allocation ret[] = new Allocation[size];
 		for(int i = 0; i < size; i++) {
 			Asset asset  = assetList.get(i);
 			int   amount = amountList.get(i);
-			ret[i] = new Allocation(asset, amount, (amount / total));
+			ret[i] = new Allocation(asset, amount, (asset.lastPrice * amount) / total);
 		}
 		return ret;
 	}
@@ -115,7 +143,7 @@ public final class Allocation {
 	
 	@Override
 	public String toString() {
-		return String.format("{%6d %8.4f %8.4f %s}", amount, ratio, value, asset.toString());
+		return String.format("{%d %5.2f %8.2f %s}", amount, ratio, value, asset.toString());
 	}
 	
 	public static void main(String args[]) {
@@ -133,27 +161,39 @@ public final class Allocation {
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
-			assetMap.put("VCLT", 8600);
-			assetMap.put("PGX",  4400);
-			assetMap.put("VYM",  3400);
-//			assetMap.put("ARR",  2100);
+			assetMap.put("VCLT", 100);
+			assetMap.put("PGX",  300);
+			assetMap.put("VYM",  100);
+//			assetMap.put("ARR",   50);
+			double valueTotal = 0;
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
 			for(Allocation allocation: allocations) {
 				logger.info("ALLOC     {}", allocation.toString());
+				valueTotal += allocation.value;
 			}
 			double hv  = HV.calculate(allocations);
 			double div = Allocation.dividend(allocations);
-			logger.info("hv        {}", String.format("%8.4f  %8.2f", hv, div));
+			{
+				double sd     = hv;
+				double var1d  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal;
+				double var1m  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal * Math.sqrt(21);
+				logger.info("hv    {}", String.format("    %8.2f  %8.2f  %8.2f%8.2f", div, valueTotal, var1d, var1m));
+			}
 			
-			for(int i = 0; i < 1000; i++) {
-				allocations = random(allocations);
+			for(int i = 0; i < 100; i++) {
+				allocations = random(allocations, valueTotal);
 				double hvTemp  = HV.calculateTerse(allocations);
 				double divTemp = Allocation.dividend(allocations);
 				if (hvTemp < hv && div < divTemp) {
 					hv  = hvTemp;
 					div = divTemp;
 					logger.info("");
-					logger.info("hv        {}", String.format("%8.4f  %8.2f", hv, div));
+					{
+						double sd     = hv;
+						double var1d  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal;
+						double var1m  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal * Math.sqrt(21);
+						logger.info("hv    {}", String.format("    %8.2f  %8.2f  %8.2f%8.2f", div, valueTotal, var1d, var1m));
+					}
 					
 					{
 //						logger.info("SUM          {}", String.format("%5d", (int)amountTotal));

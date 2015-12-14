@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -134,6 +135,141 @@ public class HV {
 			}
 		}
 		hv = Math.sqrt(hv);
+		return hv;
+	}
+	public static double calculate(UniStats statsArray[], double ratioArray[]) {
+		if (statsArray.length != ratioArray.length) {
+			logger.error("statsArray.length = {}  ratioArray.length = {}", statsArray.length, ratioArray.length);
+			throw new SecuritiesException("statsArray.length != ratioArray.length");
+		}
+
+		final int size = statsArray.length;
+		BiStats statsMatrix[][] = DoubleArray.getMatrix(statsArray);		
+		
+		double hv = 0;
+		for(int i = 0; i < size; i++) {
+			for(int j = 0; j < size; j++) {
+				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
+			}
+		}
+		hv = Math.sqrt(hv);
+		return hv;
+	}
+
+	public static double calculate(Allocation allocations[]) {
+		final int size = allocations.length;
+		
+		double ratioArray[] = new double[size];
+		{
+			double amountTotal = Arrays.stream(allocations).mapToInt(o -> o.amount).sum();
+			logger.info("SUM          {}", String.format("%5d", (int)amountTotal));
+			for(int i = 0; i < size; i++) {
+				Allocation allocation = allocations[i];
+				double ratio = allocation.amount / amountTotal;;
+				ratioArray[i] = ratio;
+				logger.info("RATIO {}", String.format("%-6s %5d  %8.4f", allocation.asset.symbol, allocation.amount, ratio));
+			}
+		}
+		
+		UniStats statsArray[] = new UniStats[size];
+		{
+			logger.info("HV                    SD      VAR 1d  VAR 1m");
+			int i = 0;
+			for(Allocation allocation: allocations) {
+				String symbol = allocation.asset.symbol;
+				double amount = allocation.amount;
+				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(allocation.asset.price));
+				double sd     = statsArray[i].sd;
+				double var1d  = sd * CONFIDENCE_95_PERCENT * amount;
+				double var1m  = sd * CONFIDENCE_95_PERCENT * amount * Math.sqrt(21);
+				logger.info("HV    {}", String.format("%-6s        %8.4f%8.2f%8.2f", symbol, sd, var1d, var1m));
+				i++;
+			}
+		}
+		BiStats statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+		{
+			StringBuffer sb = new StringBuffer();
+			sb.append("CORR        ");
+			for(int i = 0; i < size; i++) {
+				sb.append(String.format("  %-6s", allocations[i].asset.symbol));
+			}
+			logger.info(sb.toString());
+		}
+		for(int i = 0; i < size; i++) {
+			StringBuffer sb = new StringBuffer();
+			sb.append(String.format("CORR  %-6s", allocations[i].asset.symbol));
+			for(int j = 0; j < size; j++) {
+				sb.append(String.format("%8.4f", statsMatrix[i][j].correlation));
+			}
+			logger.info("{}", sb.toString());
+		}
+		
+		double hv = 0;
+		for(int i = 0; i < size; i++) {
+			for(int j = 0; j < size; j++) {
+				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
+			}
+		}
+		hv = Math.sqrt(hv);
+		logger.info("HV    {}", String.format("              %8.4f", hv));
+		return hv;
+	}
+	public static double calculateTerse(Allocation allocations[]) {
+		final int size = allocations.length;
+		
+		double ratioArray[] = new double[size];
+		{
+			double amountTotal = Arrays.stream(allocations).mapToInt(o -> o.amount).sum();
+//			logger.info("SUM          {}", String.format("%5d", (int)amountTotal));
+			for(int i = 0; i < size; i++) {
+				Allocation allocation = allocations[i];
+				double ratio = allocation.amount / amountTotal;;
+				ratioArray[i] = ratio;
+//				logger.info("RATIO {}", String.format("%-6s %5d  %8.4f", allocation.asset.symbol, allocation.amount, ratio));
+			}
+		}
+		
+		UniStats statsArray[] = new UniStats[size];
+		{
+//			logger.info("HV                    SD      VAR 1d  VAR 1m");
+			int i = 0;
+			for(Allocation allocation: allocations) {
+				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(allocation.asset.price));
+//				String symbol = allocation.asset.symbol;
+//				double amount = allocation.amount;
+//				double sd     = statsArray[i].sd;
+//				double var1d  = sd * CONFIDENCE_95_PERCENT * amount;
+//				double var1m  = sd * CONFIDENCE_95_PERCENT * amount * Math.sqrt(21);
+//				logger.info("HV    {}", String.format("%-6s        %8.4f%8.2f%8.2f", symbol, sd, var1d, var1m));
+				i++;
+			}
+		}
+		BiStats statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+//		{
+//			StringBuffer sb = new StringBuffer();
+//			sb.append("CORR        ");
+//			for(int i = 0; i < size; i++) {
+//				sb.append(String.format("  %-6s", allocations[i].asset.symbol));
+//			}
+//			logger.info(sb.toString());
+//		}
+//		for(int i = 0; i < size; i++) {
+//			StringBuffer sb = new StringBuffer();
+//			sb.append(String.format("CORR  %-6s", allocations[i].asset.symbol));
+//			for(int j = 0; j < size; j++) {
+//				sb.append(String.format("%8.4f", statsMatrix[i][j].correlation));
+//			}
+//			logger.info("{}", sb.toString());
+//		}
+		
+		double hv = 0;
+		for(int i = 0; i < size; i++) {
+			for(int j = 0; j < size; j++) {
+				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
+			}
+		}
+		hv = Math.sqrt(hv);
+//		logger.info("HV    {}", String.format("              %8.4f", hv));
 		return hv;
 	}
 

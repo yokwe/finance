@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -22,6 +21,7 @@ public final class Allocation {
 	
 	private static Random random = new Random(System.currentTimeMillis());
 	
+	// TODO Unit of numberOfAllocation need to be total dollar value
 	public static List<Integer> allocateRandom(int allocationTotal, int numberOfAllocation, int allocationUnit) {
 		double ratio[]    = new double[numberOfAllocation];
 		double ratioTotal = 0.0;
@@ -61,6 +61,21 @@ public final class Allocation {
 		return random(assetList, allocationTotal);
 	}
 	
+	public static double yield(Allocation[] allocations) {
+		double ret = 0;
+		for(Allocation allocation: allocations) {
+			ret += allocation.amount * allocation.asset.yield;
+		}
+		return ret;
+	}
+	public static double value(Allocation[] allocations) {
+		double ret = 0;
+		for(Allocation allocation: allocations) {
+			ret += allocation.value;
+		}
+		return ret;
+	}
+	
 
 	public static Allocation[] getInstance(Connection connection, LocalDate dateFrom, LocalDate dateTo, Map<String, Integer> assetMap) {
 		List<Integer> amountList = new ArrayList<>();
@@ -89,11 +104,18 @@ public final class Allocation {
 	public final Asset  asset;
 	public final int    amount;
 	public final double ratio;
+	public final double value; // dollar value = amount * asset.lastPrice
 	
 	public Allocation(Asset asset, int amount, double ratio) {
 		this.asset  = asset;
 		this.amount = amount;
 		this.ratio  = ratio;
+		this.value  = amount * asset.lastPrice;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("{%6d %8.4f %8.4f %s}", amount, ratio, value, asset.toString());
 	}
 	
 	public static void main(String args[]) {
@@ -116,24 +138,27 @@ public final class Allocation {
 			assetMap.put("VYM",  3400);
 //			assetMap.put("ARR",  2100);
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
+			for(Allocation allocation: allocations) {
+				logger.info("ALLOC     {}", allocation.toString());
+			}
+			double hv    = HV.calculate(allocations);
+			double yield = Allocation.yield(allocations);
+			logger.info("HV        {}", String.format("%8.4f  %8.2f", hv, yield));
 			
-			double hv = HV.calculate(allocations);
-			logger.info("HV        {}", String.format("%8.4f", hv));
-			
-			for(int i = 0; i < 100000; i++) {
+			for(int i = 0; i < 1000; i++) {
 				allocations = random(allocations);
 				double hvTemp = HV.calculateTerse(allocations);
-				if (hvTemp < hv) {
-					hv = hvTemp;
+				double yieldTemp = Allocation.yield(allocations);
+				if (hvTemp < hv && yield < yieldTemp) {
+					hv    = hvTemp;
+					yield = yieldTemp;
 					logger.info("");
-					logger.info("HV        {}", String.format("%8.4f", hv));
+					logger.info("HV        {}", String.format("%8.4f  %8.2f", hv, yield));
 					
 					{
-						double amountTotal = Arrays.stream(allocations).mapToInt(o -> o.amount).sum();
 //						logger.info("SUM          {}", String.format("%5d", (int)amountTotal));
 						for(Allocation allocation: allocations) {
-							double ratio = allocation.amount / amountTotal;;
-							logger.info("RATIO {}", String.format("%-6s %5d  %8.4f", allocation.asset.symbol, allocation.amount, ratio));
+							logger.info("RATIO {}", String.format("%-6s %5d  %8.4f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.ratio, allocation.amount * allocation.asset.lastPrice));
 						}
 					}
 				}

@@ -61,10 +61,10 @@ public final class Allocation {
 		return random(assetList, allocationTotal);
 	}
 	
-	public static double yield(Allocation[] allocations) {
+	public static double dividend(Allocation[] allocations) {
 		double ret = 0;
 		for(Allocation allocation: allocations) {
-			ret += allocation.amount * allocation.asset.yield;
+			ret += allocation.amount * allocation.asset.dividend;
 		}
 		return ret;
 	}
@@ -141,19 +141,19 @@ public final class Allocation {
 			for(Allocation allocation: allocations) {
 				logger.info("ALLOC     {}", allocation.toString());
 			}
-			double hv    = HV.calculate(allocations);
-			double yield = Allocation.yield(allocations);
-			logger.info("HV        {}", String.format("%8.4f  %8.2f", hv, yield));
+			double hv  = HV.calculate(allocations);
+			double div = Allocation.dividend(allocations);
+			logger.info("hv        {}", String.format("%8.4f  %8.2f", hv, div));
 			
 			for(int i = 0; i < 1000; i++) {
 				allocations = random(allocations);
-				double hvTemp = HV.calculateTerse(allocations);
-				double yieldTemp = Allocation.yield(allocations);
-				if (hvTemp < hv && yield < yieldTemp) {
-					hv    = hvTemp;
-					yield = yieldTemp;
+				double hvTemp  = HV.calculateTerse(allocations);
+				double divTemp = Allocation.dividend(allocations);
+				if (hvTemp < hv && div < divTemp) {
+					hv  = hvTemp;
+					div = divTemp;
 					logger.info("");
-					logger.info("HV        {}", String.format("%8.4f  %8.2f", hv, yield));
+					logger.info("hv        {}", String.format("%8.4f  %8.2f", hv, div));
 					
 					{
 //						logger.info("SUM          {}", String.format("%5d", (int)amountTotal));

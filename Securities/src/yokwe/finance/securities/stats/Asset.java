@@ -17,12 +17,14 @@ public final class Asset {
 	public final String symbol;    // symbol
 	public final double lastPrice; // last price
 	public final double dividend;  // annual dividend
+	public final double divYield;  // annual dividend yield (unit is percent)
 	public final double price[];   // historical price
 	
 	public Asset (String symbol, double lastPrice, double dividend, double price[]) {
 		this.symbol    = symbol;
 		this.lastPrice = lastPrice;
 		this.dividend  = dividend;
+		this.divYield  = dividend / lastPrice;
 		this.price     = price;
 	}
 	
@@ -47,7 +49,13 @@ public final class Asset {
 		this.symbol    = symbol;
 		this.lastPrice = lastPrice;
 		this.dividend  = dividend;
+		this.divYield  = dividend / lastPrice;
 		this.price     = price;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("{%-6s %8.4f %8.4f %8.4f}", symbol, lastPrice, dividend, divYield);
 	}
 	
 	public UniStats toUniStats() {

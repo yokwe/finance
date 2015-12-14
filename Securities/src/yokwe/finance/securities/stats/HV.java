@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
@@ -92,6 +93,50 @@ public class HV {
 		logger.info("HV    {}", String.format("              %8.4f", hv));
 		return hv;
 	}
+	public static double calculateTerse(Data data, Map<String, Double>assetMap) {
+		final int size = assetMap.size();
+		
+		Map<Integer, String> nameMap = new TreeMap<>();
+		{
+			int i = 0;
+			for(String key: assetMap.keySet()) {
+				nameMap.put(i, key);
+				i++;
+			}
+		}
+		
+		double ratioArray[] = new double[size];
+		{
+			double sum = assetMap.values().stream().mapToDouble(o -> o).sum();
+			int i = 0;
+			for(String key: assetMap.keySet()) {
+				double allocation = assetMap.get(key);
+				double ratio = allocation / sum;;
+				ratioArray[i] = ratio;
+				i++;
+			}
+		}
+		
+		UniStats statsArray[] = new UniStats[size];
+		{
+			int i = 0;
+			for(String symbol: assetMap.keySet()) {
+				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				i++;
+			}
+		}
+		BiStats statsMatrix[][] = DoubleArray.getMatrix(statsArray);		
+		
+		double hv = 0;
+		for(int i = 0; i < size; i++) {
+			for(int j = 0; j < size; j++) {
+				hv += ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
+			}
+		}
+		hv = Math.sqrt(hv);
+		return hv;
+	}
+
 	
 	public static Data getData(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {
 		List<PriceTable> priceList = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
@@ -117,7 +162,7 @@ public class HV {
 			assetMap.put("PGX",  4400.0);
 			assetMap.put("VYM",  3400.0);
 			assetMap.put("ARR",  2100.0);
-			double sum = assetMap.values().stream().mapToDouble(o -> o).sum();
+			double assetSum = assetMap.values().stream().mapToDouble(o -> o).sum();
 			
 			logger.info("");
 			logger.info("{}", String.format("Date range  %s - %s", dateFrom, dateTo));
@@ -132,9 +177,56 @@ public class HV {
 			}			
 			double hv = calculate(data, assetMap);
 			logger.info("");
-			logger.info("{}", String.format("SUM         %8.2f", sum));
-			logger.info("{}", String.format("VAR 1d      %8.2f", hv * sum * CONFIDENCE_95_PERCENT));
-			logger.info("{}", String.format("VAR 1m      %8.2f", hv * sum * CONFIDENCE_95_PERCENT  * Math.sqrt(21)));
+			logger.info("{}", String.format("SUM         %8.2f", assetSum));
+			logger.info("{}", String.format("VAR 1d      %8.2f", hv * assetSum * CONFIDENCE_95_PERCENT));
+			logger.info("{}", String.format("VAR 1m      %8.2f", hv * assetSum * CONFIDENCE_95_PERCENT  * Math.sqrt(21)));
+			
+			{
+				Random random = new Random(System.currentTimeMillis());
+				final int numberOfAsset = assetMap.size();
+				double ratio[] = new double[numberOfAsset];
+				Map<String, Double> randomAssetMap = new TreeMap<>();
+
+				double minHV = hv;
+				for(int i = 0; i < 100; i++) {
+					double ratioSum = 0.0;
+					for(int j = 0; j < ratio.length; j++) ratio[j] = random.nextDouble();
+					for(int j = 0; j < ratio.length; j++) ratioSum += ratio[j];
+					for(int j = 0; j < ratio.length; j++) ratio[j] = assetSum * (ratio[j] / ratioSum);
+					{
+						int j = numberOfAsset;
+						double remain = assetSum;
+						for(String symbol: assetMap.keySet()) {
+							j--;
+							if (j == 0) {
+								randomAssetMap.put(symbol, remain);
+								break;
+							}
+							double value = Math.round(ratio[j]);
+							remain -= value;
+							randomAssetMap.put(symbol, value);
+						}
+					}
+					double tempHV = calculateTerse(data, randomAssetMap);
+					if (tempHV < minHV) {
+						minHV = tempHV;
+
+						logger.info("minHV {}", String.format("              %8.4f", minHV));
+						for(int j = 0; j < ratio.length; j++) logger.info("ratio {}", String.format("%6.0f", ratio[j]));
+
+//						{
+//							double assetSum = randomAssetMap.values().stream().mapToDouble(o -> o).sum();
+//							logger.info("XX SUM          {}", String.format("%5.0f", assetSum));
+//							for(String key: assetMap.keySet()) {
+//								double allocation = assetMap.get(key);
+//								logger.info("RATIO {}", String.format("%-6s %5.0f  %8.4f", key, allocation, allocation / assetSum));
+//							}
+//						}
+//						logger.info("XX {}", String.format("VAR 1d      %8.2f", hv * sum * CONFIDENCE_95_PERCENT));
+//						logger.info("XX {}", String.format("VAR 1m      %8.2f", hv * sum * CONFIDENCE_95_PERCENT  * Math.sqrt(21)));
+					}
+				}
+			}
 		} catch (SQLException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

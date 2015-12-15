@@ -14,8 +14,7 @@ public class FinStats {
 		
 		beta  = biStats.covariance / market.variance;
 		alpha = stock.mean - (interestRatesOfSafeAssets + beta * (market.mean - interestRatesOfSafeAssets));
-		// TODO Is calculation of r-squared correct?
-		r2    = biStats.covariance / (market.sd * stock.sd);
+		r2    = biStats.correlation * biStats.correlation;
 	}
 	
 	@Override

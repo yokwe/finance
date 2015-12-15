@@ -19,6 +19,6 @@ public class FinStats {
 	
 	@Override
 	public String toString() {
-		return String.format("{alpha %7.4f  beta %7.4f  r2 %7.4f}", alpha, beta, r2);
+		return String.format("{alpha %7.4f  beta %5.2f  r2 %4.2f}", alpha, beta, r2);
 	}
 }

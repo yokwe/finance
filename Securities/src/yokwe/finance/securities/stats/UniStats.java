@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class UniStats {
+public final class UniStats {
 	private static final Logger logger = LoggerFactory.getLogger(UniStats.class);
 
 	public final int    size;

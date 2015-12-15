@@ -236,18 +236,9 @@ public final class Allocation {
 				UniStats pgx  = map.get("PGX").asset.toUniStats();
 				UniStats vclt = map.get("VCLT").asset.toUniStats();
 				
-				{
-					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, vym);
-					logger.info("IVV VYM  {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
-				}
-				{
-					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, pgx);
-					logger.info("IVV PGX  {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
-				}
-				{
-					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, vclt);
-					logger.info("IVV VCLT {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
-				}
+				logger.info("IVV VYM  {}", new FinStats(ivv, vym));
+				logger.info("IVV PGX  {}", new FinStats(ivv, pgx));
+				logger.info("IVV VCLT {}", new FinStats(ivv, vclt));
 			}
 			
 			for(int i = 0; i < 10; i++) {

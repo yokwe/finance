@@ -165,8 +165,7 @@ public class HV {
 			logger.info("TOTAL        {}", String.format("%6.2f", valueTotal));
 			for(int i = 0; i < size; i++) {
 				Allocation allocation = allocations[i];
-				ratioArray[i] = allocation.ratio;
-				logger.info("RATIO {}", String.format("%-6s %8.2f %6.2f", allocation.asset.symbol, allocation.value, allocation.ratio));
+				logger.info("RATIO {}", String.format("%-6s %8.2f", allocation.asset.symbol, allocation.value));
 			}
 		}
 		

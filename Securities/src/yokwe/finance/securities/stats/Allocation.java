@@ -13,15 +13,18 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.stats.DoubleArray.BiStats;
+import yokwe.finance.securities.stats.DoubleArray.UniStats;
 
 public final class Allocation {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Allocation.class);
 
-	public static final int ALLOCAIONT_UNIT = 10;
+	public static final double CONFIDENCE_95_PERCENT = 1.65;
+	public static final double CONFIDENCE_99_PERCENT = 2.33;
 	
 	private static Random random = new Random(System.currentTimeMillis());
 	
-	public static List<Integer> allocateRandom(List<Asset> assetList, double valueTotal, int allocationUnit) {
+	public static List<Integer> allocateRandom(List<Asset> assetList, double valueTotal) {
 		final int size = assetList.size();
 		double values[] = new double[size];
 		{
@@ -69,7 +72,7 @@ public final class Allocation {
 		return retList;
 	}
 	public static Allocation[] random(List<Asset> assetList, double valueTotal) {
-		List<Integer> amountList = allocateRandom(assetList, valueTotal, ALLOCAIONT_UNIT);
+		List<Integer> amountList = allocateRandom(assetList, valueTotal);
 		return getInstance(assetList, amountList);
 	}
 	public static Allocation[] random(Allocation[] allocations, double valueTotal) {
@@ -83,7 +86,7 @@ public final class Allocation {
 	public static double dividend(Allocation[] allocations) {
 		double ret = 0;
 		for(Allocation allocation: allocations) {
-			ret += allocation.amount * allocation.asset.dividend;
+			ret += allocation.dividend;
 		}
 		return ret;
 	}
@@ -94,6 +97,48 @@ public final class Allocation {
 		}
 		return ret;
 	}
+	public static double[] ratio(Allocation[] allocations) {
+		final int    size       = allocations.length;
+		final double valueTotal = Allocation.value(allocations);
+		
+		double ret[] = new double[size];
+		for(int i = 0; i < size; i++) {
+			ret[i] = allocations[i].value / valueTotal;
+		}
+		return ret;
+	}
+	public static UniStats[] uniStats(Allocation[] allocations) {
+		final int    size       = allocations.length;
+		
+		UniStats ret[] = new UniStats[size];
+		for(int i = 0; i < size; i++) {
+			ret[i] = new DoubleArray.UniStats(DoubleArray.logReturn(allocations[i].asset.price));
+		}
+		return ret;
+	}
+	
+	public static double hv(Allocation allocations[]) {
+		double   ratioArray[]    = ratio(allocations);
+		UniStats statsArray[]    = uniStats(allocations);
+		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+		return hv(ratioArray, statsArray, statsMatrix);
+	}
+	private static double hv(double ratioArray[], UniStats statsArray[], BiStats statsMatrix[][]) {
+		int size = ratioArray.length;
+		double hv = 0;
+		// Calculate upper right triangle area
+		for(int i = 0; i < size; i++) {
+			for(int j = i + 1; j < size; j++) {
+				hv += 2.0 * ratioArray[i] * ratioArray[j] * statsMatrix[i][j].correlation * statsArray[i].sd * statsArray[j].sd;
+			}
+		}
+		// Calculate diagonal area
+		for(int i = 0; i < size; i++) {
+			hv += ratioArray[i] * ratioArray[i] * statsArray[i].variance;
+		}
+		return Math.sqrt(hv);
+	}
+
 	
 
 	public static Allocation[] getInstance(Connection connection, LocalDate dateFrom, LocalDate dateTo, Map<String, Integer> assetMap) {
@@ -110,40 +155,30 @@ public final class Allocation {
 			logger.error("mountList.size = {}  assetList.size = {}", amountList.size(), assetList.size());
 			throw new SecuritiesException("amountList.size() != assetList.size()");
 		}
-		final int    size  = amountList.size();
-		final double total;
-		{
-			double t = 0;
-			for(int i = 0; i < size; i++) {
-				Asset asset  = assetList.get(i);
-				int   amount = amountList.get(i);
-				t += asset.lastPrice * amount;
-			}
-			total = t;
-		}
+		final int size  = amountList.size();
 		Allocation ret[] = new Allocation[size];
 		for(int i = 0; i < size; i++) {
 			Asset asset  = assetList.get(i);
 			int   amount = amountList.get(i);
-			ret[i] = new Allocation(asset, amount, (asset.lastPrice * amount) / total);
+			ret[i] = new Allocation(asset, amount);
 		}
 		return ret;
 	}
 	public final Asset  asset;
 	public final int    amount;
-	public final double ratio;
-	public final double value; // dollar value = amount * asset.lastPrice
+	public final double value;
+	public final double dividend;
 	
-	public Allocation(Asset asset, int amount, double ratio) {
-		this.asset  = asset;
-		this.amount = amount;
-		this.ratio  = ratio;
-		this.value  = amount * asset.lastPrice;
+	public Allocation(Asset asset, int amount) {
+		this.asset    = asset;
+		this.amount   = amount;
+		this.value    = amount * asset.lastPrice;
+		this.dividend = amount * asset.dividend;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("{%d %5.2f %8.2f %s}", amount, ratio, value, asset.toString());
+		return String.format("{%d %8.2f %8.2f %s}", amount, value, dividend, asset.toString());
 	}
 	
 	public static void main(String args[]) {
@@ -164,44 +199,54 @@ public final class Allocation {
 			assetMap.put("VCLT", 100);
 			assetMap.put("PGX",  300);
 			assetMap.put("VYM",  100);
+			assetMap.put("IVV",   10);
 //			assetMap.put("ARR",   50);
-			double valueTotal = 0;
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
-			for(Allocation allocation: allocations) {
-				logger.info("ALLOC     {}", allocation.toString());
-				valueTotal += allocation.value;
-			}
-			double hv  = HV.calculate(allocations);
-			double div = Allocation.dividend(allocations);
+			final double valueTotal  = Allocation.value(allocations);
+			
+			double hv  = 0;
+			double div = 0;
 			{
-				double sd     = hv;
-				double var1d  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal;
-				double var1m  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal * Math.sqrt(21);
-				logger.info("hv    {}", String.format("    %8.2f  %8.2f  %8.2f%8.2f", div, valueTotal, var1d, var1m));
+				double   ratioArray[]    = ratio(allocations);
+				UniStats statsArray[]    = uniStats(allocations);
+				BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+				
+				hv = hv(ratioArray, statsArray, statsMatrix);
+				div = Allocation.dividend(allocations);
 			}
+			{
+				double total = Allocation.value(allocations);;
+				double var1d = hv * CONFIDENCE_95_PERCENT * total;
+				double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
+
+				for(Allocation allocation: allocations) {
+					logger.info("RATIO {}", String.format("%-6s %5d  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value));
+				}
+				logger.info("TOTAL               {}", String.format("%8.2f %7.2f", total, total - valueTotal));
+
+				logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
+			}
+			
 			
 			for(int i = 0; i < 100; i++) {
 				allocations = random(allocations, valueTotal);
-				double hvTemp  = HV.calculateTerse(allocations);
+				double hvTemp  = hv(allocations);
 				double divTemp = Allocation.dividend(allocations);
 				if (hvTemp < hv && div < divTemp) {
 					hv  = hvTemp;
 					div = divTemp;
 					logger.info("");
 					{
-						double sd     = hv;
-						double var1d  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal;
-						double var1m  = sd * HV.CONFIDENCE_95_PERCENT * valueTotal * Math.sqrt(21);
-						logger.info("hv    {}", String.format("    %8.2f  %8.2f  %8.2f%8.2f", div, valueTotal, var1d, var1m));
-					}
-					
-					{
-						double total = 0;
+						double total = Allocation.value(allocations);;
+						double var1d = hv * CONFIDENCE_95_PERCENT * total;
+						double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
+
 						for(Allocation allocation: allocations) {
-							total += allocation.value;
-							logger.info("RATIO {}", String.format("%-6s %5d  %8.4f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.ratio, allocation.value));
+							logger.info("RATIO {}", String.format("%-6s %5d  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value));
 						}
-						logger.info("TOTAL                         {}", String.format("%8.2f %7.2f", total, valueTotal - total));
+						logger.info("TOTAL               {}", String.format("%8.2f %7.2f", total, total - valueTotal));
+
+						logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
 					}
 				}
 			}

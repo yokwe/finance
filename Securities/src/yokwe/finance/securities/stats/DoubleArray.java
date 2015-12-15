@@ -68,6 +68,23 @@ public final class DoubleArray {
 		return ret;
 	}
 	
+	public static double[] simpleReturn(double data[]) {
+		double ret[] = new double[data.length - 1];
+		double lastValue = Double.NaN;
+		boolean firstTime = true;
+		int index = 0;
+		for(double value: data) {
+			if (firstTime) {
+				lastValue = value;
+				firstTime = false;
+			} else {
+				ret[index++] = (value / lastValue) - 1.0;
+				lastValue = value;
+			}
+		}
+		return ret;
+	}
+	
 	public static double mean(double[] data) {
 		if (data.length == 0) return Double.NaN;
 		double ret = 0;

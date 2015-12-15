@@ -11,15 +11,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.PriceTable;
-import yokwe.finance.securities.stats.DoubleArray.BiStats;
-import yokwe.finance.securities.stats.DoubleArray.UniStats;
 
 public class HV {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(HV.class);
+	private static final Logger logger = LoggerFactory.getLogger(HV.class);
 
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
@@ -56,7 +55,7 @@ public class HV {
 			logger.info("HV                    SD      VAR 1d  VAR 1m");
 			int i = 0;
 			for(String symbol: assetMap.keySet()) {
-				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				statsArray[i]  = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
 				double amount = assetMap.get(symbol);
 				double sd     = statsArray[i].sd;
 				double var1d  = sd * CONFIDENCE_95_PERCENT * amount;
@@ -122,7 +121,7 @@ public class HV {
 		{
 			int i = 0;
 			for(String symbol: assetMap.keySet()) {
-				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
+				statsArray[i]  = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
 				i++;
 			}
 		}
@@ -175,7 +174,7 @@ public class HV {
 			int i = 0;
 			for(Allocation allocation: allocations) {
 				String symbol = allocation.asset.symbol;
-				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(allocation.asset.price));
+				statsArray[i]  = new UniStats(DoubleArray.logReturn(allocation.asset.price));
 				double sd     = statsArray[i].sd;
 				double var1d  = sd * CONFIDENCE_95_PERCENT * allocation.value;
 				double var1m  = sd * CONFIDENCE_95_PERCENT * allocation.value * Math.sqrt(21);
@@ -231,7 +230,7 @@ public class HV {
 //			logger.info("HV                    SD      VAR 1d  VAR 1m");
 			int i = 0;
 			for(Allocation allocation: allocations) {
-				statsArray[i]  = new DoubleArray.UniStats(DoubleArray.logReturn(allocation.asset.price));
+				statsArray[i]  = new UniStats(DoubleArray.logReturn(allocation.asset.price));
 //				String symbol = allocation.asset.symbol;
 //				double amount = allocation.amount;
 //				double sd     = statsArray[i].sd;

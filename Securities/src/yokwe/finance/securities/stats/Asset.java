@@ -4,15 +4,15 @@ import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.PriceTable;
-import yokwe.finance.securities.stats.DoubleArray.UniStats;
 
 public final class Asset {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Asset.class);
+	private static final Logger logger = LoggerFactory.getLogger(Asset.class);
 
 	public final String symbol;    // symbol
 	public final double lastPrice; // last price
@@ -59,6 +59,6 @@ public final class Asset {
 	}
 	
 	public UniStats toUniStats() {
-		return new DoubleArray.UniStats(DoubleArray.logReturn(price));
+		return new UniStats(DoubleArray.logReturn(price));
 	}
 }

@@ -10,14 +10,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.stats.DoubleArray.BiStats;
-import yokwe.finance.securities.stats.DoubleArray.UniStats;
 
 public final class Allocation {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Allocation.class);
+	private static final Logger logger = LoggerFactory.getLogger(Allocation.class);
 
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
@@ -112,7 +111,7 @@ public final class Allocation {
 		
 		UniStats ret[] = new UniStats[size];
 		for(int i = 0; i < size; i++) {
-			ret[i] = new DoubleArray.UniStats(DoubleArray.logReturn(allocations[i].asset.price));
+			ret[i] = new UniStats(DoubleArray.logReturn(allocations[i].asset.price));
 		}
 		return ret;
 	}
@@ -227,8 +226,31 @@ public final class Allocation {
 				logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
 			}
 			
+			{
+				Map<String, Allocation> map = new TreeMap<>();
+				for(Allocation allocation: allocations) {
+					map.put(allocation.asset.symbol, allocation);
+				}
+				UniStats ivv  = map.get("IVV").asset.toUniStats();
+				UniStats vym  = map.get("VYM").asset.toUniStats();
+				UniStats pgx  = map.get("PGX").asset.toUniStats();
+				UniStats vclt = map.get("VCLT").asset.toUniStats();
+				
+				{
+					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, vym);
+					logger.info("IVV VYM  {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
+				}
+				{
+					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, pgx);
+					logger.info("IVV PGX  {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
+				}
+				{
+					DoubleArray.AlphaBeta alphaBeta = new DoubleArray.AlphaBeta(ivv, vclt);
+					logger.info("IVV VCLT {}", String.format("alpha = %7.4f  beta = %7.4f  corr = %7.4f", alphaBeta.alpha, alphaBeta.beta, alphaBeta.corr));
+				}
+			}
 			
-			for(int i = 0; i < 100; i++) {
+			for(int i = 0; i < 10; i++) {
 				allocations = random(allocations, valueTotal);
 				double hvTemp  = hv(allocations);
 				double divTemp = Allocation.dividend(allocations);

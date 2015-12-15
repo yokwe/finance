@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.PriceTable;
 
 public final class Data {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Data.class);
+	private static final Logger logger = LoggerFactory.getLogger(Data.class);
 
 	public static class Daily {
 		public final String date;

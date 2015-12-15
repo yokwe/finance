@@ -5,12 +5,13 @@ import java.util.Arrays;
 import org.apache.commons.math3.stat.correlation.Covariance;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
 public final class DoubleArray {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DoubleArray.class);
+	private static final Logger logger = LoggerFactory.getLogger(DoubleArray.class);
 
 	public static double[] multiply(double a[], double b[]) {
 		if (a.length != b.length) {
@@ -110,104 +111,16 @@ public final class DoubleArray {
 		return ret / size;
 	}
 	
-	public static class UniStats {
-		public final int    size;
-		public final double mean;
-		public final double variance;
-		public final double sd;
-		public final double diff[];
+	public static class AlphaBeta {
+		public final double alpha;
+		public final double beta;
+		public final double corr;
 		
-		public UniStats(int size, double mean, double variance, double diff[]) {
-			this.size     = size;
-			this.mean     = mean;
-			this.variance = variance;
-			this.sd       = Math.sqrt(variance);
-			this.diff     = diff;
-		}
-		public UniStats(double data[]) {
-			if (data.length == 0) {
-				logger.error("data.length == 0");
-				throw new SecuritiesException("data.length == 0");
-			}
-			size = data.length;
-			diff = new double[size];
-			mean = mean(data);
-			double var = 0;
-			for(int i = 0; i < size; i++) {
-				double diff = mean - data[i];
-				var += diff * diff;
-				this.diff[i] = diff;
-			}
-			variance = var / size;
-			sd       = Math.sqrt(variance);
-		}
-		@Override
-		public String toString() {
-			return String.format("{%d %8.4f %8.4f %8.4f}", size, mean, variance, sd);
-		}
-	}
-	public static class BiStats {
-		public final UniStats stats1;
-		public final UniStats stats2;
-		public final double   covariance;
-		public final double   correlation;
-		
-		public BiStats(UniStats stats1, UniStats stats2, double covariance, double correlation) {
-			this.stats1 = stats1;
-			this.stats2 = stats2;
-			this.covariance  = covariance;
-			this.correlation = correlation;
-		}
-		
-		public BiStats(double data1[], double data2[]) {
-			if (data1.length != data2.length) {
-				logger.error("data1.length = {}  data2.length = {}", data1.length, data2.length);
-				throw new SecuritiesException("data1.length != data2.length");
-			}
-			final int size = data1.length;
-			
-			double mean1 = mean(data1);
-			double mean2 = mean(data2);
-			double cov   = 0;
-			double var1  = 0;
-			double var2  = 0;
-			double diff1[] = new double[size];
-			double diff2[] = new double[size];
-			for(int i = 0; i < size; i++) {
-				double d1 = data1[i] - mean1;
-				double d2 = data2[i] - mean2;
-				cov  += d1 * d2;
-				var1 += d1 * d1;
-				var2 += d2 * d2;
-				diff1[i] = d1;
-				diff2[i] = d2;
-			}
-			correlation = cov / (Math.sqrt(var1) * Math.sqrt(var2));
-			covariance  = cov /size;
-			stats1      = new UniStats(size, mean1, var1 / size, diff1);
-			stats2      = new UniStats(size, mean2, var2 / size, diff2);
-		}
-		
-		public BiStats(UniStats stats1, UniStats stats2) {
-			if (stats1.size != stats1.size) {
-				logger.error("stats1.size != stats1.size", stats1.size, stats1.size);
-				throw new SecuritiesException("stats1.size != stats1.size");
-			}
-			final int size = stats1.size;
-			this.stats1 = stats1;
-			this.stats2 = stats2;
-			
-			double cov = 0;
-			for(int i = 0; i < size; i++) {
-				cov  += stats1.diff[i] * stats2.diff[i];
-			}
-			this.covariance  = cov / size;
-			this.correlation = this.covariance / (stats1.sd * stats2.sd);
-		}
-		
-		@Override
-		public String toString() {
-			return String.format("{%s %s %8.4f %8.4f", stats1, stats2, covariance, correlation);
+		public AlphaBeta(UniStats index, UniStats target) {
+			BiStats biStats = new BiStats(index, target);
+			beta  = biStats.covariance / index.variance;
+			alpha = target.mean - beta * index.mean;
+			corr  = biStats.correlation;
 		}
 	}
 	
@@ -230,7 +143,7 @@ public final class DoubleArray {
 		BiStats ret[][] = new BiStats[size][size];
 		for(int i = 0; i < size; i++) {
 			for(int j = 0; j < size; j++) {
-				ret[i][j] = ret[j][i] = new DoubleArray.BiStats(stats[i], stats[j]);
+				ret[i][j] = ret[j][i] = new BiStats(stats[i], stats[j]);
 				if (i == j) break;
 			}
 		}

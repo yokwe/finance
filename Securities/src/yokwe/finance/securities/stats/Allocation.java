@@ -138,8 +138,6 @@ public final class Allocation {
 		return Math.sqrt(hv);
 	}
 
-	
-
 	public static Allocation[] getInstance(Connection connection, LocalDate dateFrom, LocalDate dateTo, Map<String, Integer> assetMap) {
 		List<Integer> amountList = new ArrayList<>();
 		List<Asset>   assetList  = new ArrayList<>();
@@ -199,10 +197,11 @@ public final class Allocation {
 			assetMap.put("PGX",  300);
 			assetMap.put("VYM",  100);
 			assetMap.put("IVV",   10);
+			assetMap.put("IJH",   10);
 //			assetMap.put("ARR",   50);
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
 			final double valueTotal  = Allocation.value(allocations);
-			
+						
 			double hv  = 0;
 			double div = 0;
 			{
@@ -226,19 +225,26 @@ public final class Allocation {
 				logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
 			}
 			
+			// Show relation to stock market
 			{
-				Map<String, Allocation> map = new TreeMap<>();
+				String   marketSymbol = "SPY";
+				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+				logger.info("");
 				for(Allocation allocation: allocations) {
-					map.put(allocation.asset.symbol, allocation);
+					UniStats stock = allocation.asset.toUniStats();
+					logger.info("{}", String.format("%-5s %-5s %s", marketSymbol, allocation.asset.symbol, new FinStats(market, stock)));
 				}
-				UniStats ivv  = map.get("IVV").asset.toUniStats();
-				UniStats vym  = map.get("VYM").asset.toUniStats();
-				UniStats pgx  = map.get("PGX").asset.toUniStats();
-				UniStats vclt = map.get("VCLT").asset.toUniStats();
-				
-				logger.info("IVV VYM  {}", new FinStats(ivv, vym));
-				logger.info("IVV PGX  {}", new FinStats(ivv, pgx));
-				logger.info("IVV VCLT {}", new FinStats(ivv, vclt));
+			}
+			
+			// Show relation to bond market
+			{
+				String   marketSymbol = "BND";
+				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+				logger.info("");
+				for(Allocation allocation: allocations) {
+					UniStats stock = allocation.asset.toUniStats();
+					logger.info("{}", String.format("%-5s %-5s %s", marketSymbol, allocation.asset.symbol, new FinStats(market, stock)));
+				}
 			}
 			
 			for(int i = 0; i < 10; i++) {

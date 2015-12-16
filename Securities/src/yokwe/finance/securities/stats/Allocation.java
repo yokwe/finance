@@ -199,11 +199,13 @@ public final class Allocation {
 			assetMap.put("IVV",   10);
 			assetMap.put("IJH",   10);
 //			assetMap.put("ARR",   50);
+			assetMap.put("BSV",   10);
+			assetMap.put("BIV",   10);
+			assetMap.put("BLV",   10);
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
 			final double valueTotal  = Allocation.value(allocations);
 			final int    size        = allocations.length;
-
-						
+		
 			double hv  = 0;
 			double div = 0;
 			{
@@ -216,28 +218,36 @@ public final class Allocation {
 				
 				// show allocation
 				{
+					logger.info("");
 					double total = Allocation.value(allocations);;
 					double var1d = hv * CONFIDENCE_95_PERCENT * total;
 					double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
 
 					for(Allocation allocation: allocations) {
-						logger.info("ASSET {}", String.format("%-6s %5d  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value));
+						logger.info("ASSET {}", String.format("%-6s %5d  %8.2f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value, allocation.dividend));
 					}
-					logger.info("TOTAL               {}", String.format("%8.2f %7.2f", total, total - valueTotal));
-
-					logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
+					logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)", total, div, total - valueTotal));
+					logger.info("VAR   (1d 1m)       {}", String.format("%8.2f  %8.2f", var1d, var1m));
 				}
 				
 				// Show characteristic
 				{
 					logger.info("");
-					logger.info("STATS         MEAN     SD   SD-LR");
+					logger.info("STATS         MEAN     SD   SD-LR    VALUE  VaR1d VaR1m");
 					for(int i = 0; i < size; i++) {
-						double data[] = allocations[i].asset.price;
-						logger.info("STATS {}", String.format("%-5s %6.2f %6.2f  %6.4f", allocations[i].asset.symbol, DoubleArray.mean(data), DoubleArray.sd(data), statsArray[i].sd));
+						Asset asset   = allocations[i].asset;
+						double value  = 1000;
+						String symbol = asset.symbol;
+						double data[] = asset.price;
+						double mean   = DoubleArray.mean(data);
+						double sd     = DoubleArray.sd(data);
+						double sdlr   = statsArray[i].sd;
+						double var1d  = sdlr * CONFIDENCE_95_PERCENT * value;
+						double var1m  = sdlr * CONFIDENCE_95_PERCENT * value * Math.sqrt(21);
+						logger.info("STATS {}", String.format("%-5s %6.2f %6.2f  %6.4f  %6.2f %6.2f %6.2f", symbol, mean, sd, sdlr, value, var1d, var1m));
 					}
 				}
-
+				
 				// Show correlation
 				{
 					logger.info("");
@@ -281,25 +291,25 @@ public final class Allocation {
 				}
 			}
 						
-			for(int i = 0; i < 10; i++) {
+			for(int i = 0; i < 100; i++) {
 				allocations = random(allocations, valueTotal);
 				double hvTemp  = hv(allocations);
 				double divTemp = Allocation.dividend(allocations);
 				if (hvTemp < hv && div < divTemp) {
 					hv  = hvTemp;
 					div = divTemp;
-					logger.info("");
+					
 					{
+						logger.info("");
 						double total = Allocation.value(allocations);;
 						double var1d = hv * CONFIDENCE_95_PERCENT * total;
 						double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
 
 						for(Allocation allocation: allocations) {
-							logger.info("RATIO {}", String.format("%-6s %5d  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value));
+							logger.info("ASSET {}", String.format("%-6s %5d  %8.2f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value, allocation.dividend));
 						}
-						logger.info("TOTAL               {}", String.format("%8.2f %7.2f", total, total - valueTotal));
-
-						logger.info("{}", String.format("div%8.2f  value  %8.2f  var1d%8.2f  var1m%8.2f", div, total, var1d, var1m));
+						logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)", total, div, total - valueTotal));
+						logger.info("VAR   (1d 1m)       {}", String.format("%8.2f  %8.2f", var1d, var1m));
 					}
 				}
 			}

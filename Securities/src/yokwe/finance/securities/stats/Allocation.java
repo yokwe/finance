@@ -231,7 +231,7 @@ public final class Allocation {
 				// Show characteristic
 				{
 					logger.info("");
-					logger.info("STATS         MEAN     SD  sd(log-return)");
+					logger.info("STATS         MEAN     SD   SD-LR");
 					for(int i = 0; i < size; i++) {
 						double data[] = allocations[i].asset.price;
 						logger.info("STATS {}", String.format("%-5s %6.2f %6.2f  %6.4f", allocations[i].asset.symbol, DoubleArray.mean(data), DoubleArray.sd(data), statsArray[i].sd));

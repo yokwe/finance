@@ -222,7 +222,7 @@ public final class Portfolio {
 		logger.info("");
 		for(int i = 0; i < portfolios.length; i++) {
 			Portfolio portfolio = portfolios[i];
-			logger.info("ASSET {}", String.format("%-5s %3d %7.2f  %9.2f  %8.2f  %8.2f            %8.4f",
+			logger.info("ASSET {}", String.format("%-5s%4d %7.2f  %9.2f  %8.2f  %8.2f            %8.4f",
 					portfolio.asset.symbol, portfolio.volume, portfolio.asset.lastPrice, portfolio.value, portfolio.dividend, portfolio.value * portfolio.beta * marketGrowthPercent * 0.01, statsArray[i].sd));
 		}
 		logger.info("VALUE {}", String.format("         %8.2f =%9.2f +%8.2f +%8.2f -%8.2f  %8.4f", value, sum, div, growth, var, hv));

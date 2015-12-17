@@ -22,7 +22,7 @@ import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.Data;
 import yokwe.finance.securities.stats.DoubleArray;
-import yokwe.finance.securities.stats.HV;
+import yokwe.finance.securities.stats.Portfolio;
 import yokwe.finance.securities.stats.UniStats;
 
 public class ScreenByPrice {
@@ -126,7 +126,7 @@ public class ScreenByPrice {
 			for(String symbol: ratioMap.keySet()) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
 				UniStats stats = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
-				double valueAtRisk = stats.sd * HV.CONFIDENCE_95_PERCENT * Math.sqrt(21); // 21 for  one month period
+				double valueAtRisk = stats.sd * Portfolio.CONFIDENCE_95_PERCENT * Math.sqrt(21); // 21 for  one month period
 				varMap.put(symbol, String.format("%.4f", valueAtRisk));
 			}
 		}

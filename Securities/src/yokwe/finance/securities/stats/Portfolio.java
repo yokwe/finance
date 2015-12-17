@@ -270,16 +270,19 @@ public final class Portfolio {
 			final double   confidence          = CONFIDENCE_95_PERCENT;
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
-			assetMap.put("BLV",   50); // Vanguard Long Term Bond ETF
-			assetMap.put("BIV",   50); // Vanguard Intermediate Term Bond ETF
-			assetMap.put("BSV",   50); // Vanguard Short Term Bond ETF
-			assetMap.put("VIG",   50); // Vanguard Dividend Appreciation ETF
+//			assetMap.put("BLV",   50); // Vanguard Long Term Bond ETF
+//			assetMap.put("BIV",   50); // Vanguard Intermediate Term Bond ETF
+//			assetMap.put("BSV",   50); // Vanguard Short Term Bond ETF
+//			assetMap.put("VIG",   50); // Vanguard Dividend Appreciation ETF
 			assetMap.put("IVV",   50); // iShares Core S&P 500 ETF
 			assetMap.put("IJH",   50); // iShares Core S&P Mid-Cap ETF
 //			assetMap.put("VBK",   50); // Vanguard Small Cap Growth ETF
 //			assetMap.put("VWO",   50); // Vanguard Emerging Markets ETF
 //			assetMap.put("FXI",   50); // iShares FTSE/Xinhua China 25 Index Fund
 //			assetMap.put("DBC",   10); // PowerShares DB Commodity Index Tracking Fund
+			assetMap.put("VCLT",  50); // Vanguard Long-Term Corporate Bond ETF
+			assetMap.put("PGX",   50); // PowerShares Preferred Portfolio
+			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
 			Portfolio[]  portfolios   = Portfolio.getInstance(connection, dateFrom, dateTo, assetMap, market);
 			double valueTotal = sum(portfolios);
 		

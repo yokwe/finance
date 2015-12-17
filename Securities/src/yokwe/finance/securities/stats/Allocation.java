@@ -143,7 +143,7 @@ public final class Allocation {
 		List<Asset>   assetList  = new ArrayList<>();
 		for(Map.Entry<String, Integer> entry: assetMap.entrySet()) {
 			amountList.add(entry.getValue());
-			assetList.add(new Asset(connection, entry.getKey(), dateFrom, dateTo));
+			assetList.add(Asset.getInstance(connection, entry.getKey(), dateFrom, dateTo));
 		}
 		return getInstance(assetList, amountList);
 	}
@@ -211,7 +211,7 @@ public final class Allocation {
 			// calculate spyBeta
 			{
 				String   marketSymbol = "SPY";
-				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+				UniStats market       = Asset.getInstance(connection, marketSymbol, dateFrom, dateTo).toUniStats();
 				for(int i = 0; i < size; i++) {
 					UniStats stock = allocations[i].asset.toUniStats();
 					FinStats stats = new FinStats(market, stock);
@@ -234,7 +234,7 @@ public final class Allocation {
 				// Show relation to stock market
 				{
 					String   marketSymbol = "SPY";
-					UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+					UniStats market       = Asset.getInstance(connection, marketSymbol, dateFrom, dateTo).toUniStats();
 					logger.info("");
 					for(Allocation allocation: allocations) {
 						UniStats stock = allocation.asset.toUniStats();
@@ -284,7 +284,7 @@ public final class Allocation {
 			// Show relation to stock market
 			{
 				String   marketSymbol = "SPY";
-				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+				UniStats market       = Asset.getInstance(connection, marketSymbol, dateFrom, dateTo).toUniStats();
 				logger.info("");
 				for(Allocation allocation: allocations) {
 					UniStats stock = allocation.asset.toUniStats();

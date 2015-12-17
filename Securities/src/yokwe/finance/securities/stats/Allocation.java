@@ -193,41 +193,53 @@ public final class Allocation {
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
-			assetMap.put("VCLT", 100);
-			assetMap.put("PGX",  300);
-			assetMap.put("VYM",  100);
-			assetMap.put("IVV",   10);
-			assetMap.put("IJH",   10);
-//			assetMap.put("ARR",   50);
-			assetMap.put("BSV",   10);
-			assetMap.put("BIV",   10);
-			assetMap.put("BLV",   10);
+			assetMap.put("BLV",   50);
+			assetMap.put("BIV",   50);
+			assetMap.put("BSV",   50);
+			assetMap.put("VIG",   50);
+			assetMap.put("IVV",   50);
+			assetMap.put("IJH",   50);
+			assetMap.put("VBK",   50);
+			assetMap.put("VWO",   50);
+			assetMap.put("FXI",   50);
+//			assetMap.put("DBC",   10);
 			Allocation[] allocations = Allocation.getInstance(connection, dateFrom, dateTo, assetMap);
 			final double valueTotal  = Allocation.value(allocations);
 			final int    size        = allocations.length;
+			final double spyBeta[]   = new double[size];
 		
-			double hv  = 0;
-			double div = 0;
+			// calculate spyBeta
+			{
+				String   marketSymbol = "SPY";
+				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+				for(int i = 0; i < size; i++) {
+					UniStats stock = allocations[i].asset.toUniStats();
+					FinStats stats = new FinStats(market, stock);
+					spyBeta[i] = (0.7 <= stats.r2) ? stats.beta : 0;
+				}
+			}
+
+			double hv     = 0;
+			double div    = 0;
+			double growth = 0;
 			{
 				double   ratioArray[]    = ratio(allocations);
 				UniStats statsArray[]    = uniStats(allocations);
 				BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 				
-				hv = hv(ratioArray, statsArray, statsMatrix);
-				div = Allocation.dividend(allocations);
+				hv     = hv(ratioArray, statsArray, statsMatrix);
+				div    = Allocation.dividend(allocations);
+				growth = DoubleArray.multiplyAndAdd(ratio(allocations), spyBeta);
 				
-				// show allocation
+				// Show relation to stock market
 				{
+					String   marketSymbol = "SPY";
+					UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
 					logger.info("");
-					double total = Allocation.value(allocations);;
-					double var1d = hv * CONFIDENCE_95_PERCENT * total;
-					double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
-
 					for(Allocation allocation: allocations) {
-						logger.info("ASSET {}", String.format("%-6s %5d  %8.2f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value, allocation.dividend));
+						UniStats stock = allocation.asset.toUniStats();
+						logger.info("{}", String.format("%-5s %-5s %s", marketSymbol, allocation.asset.symbol, new FinStats(market, stock)));
 					}
-					logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)", total, div, total - valueTotal));
-					logger.info("VAR   (1d 1m)       {}", String.format("%8.2f  %8.2f", var1d, var1m));
 				}
 				
 				// Show characteristic
@@ -281,24 +293,42 @@ public final class Allocation {
 			}
 			
 			// Show relation to bond market
+//			{
+//				String   marketSymbol = "BND";
+//				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
+//				logger.info("");
+//				for(Allocation allocation: allocations) {
+//					UniStats stock = allocation.asset.toUniStats();
+//					logger.info("{}", String.format("%-5s %-5s %s", marketSymbol, allocation.asset.symbol, new FinStats(market, stock)));
+//				}
+//			}
+			
+			// show allocation
 			{
-				String   marketSymbol = "BND";
-				UniStats market       = new Asset(connection, marketSymbol, dateFrom, dateTo).toUniStats();
 				logger.info("");
+				double total = Allocation.value(allocations);;
+				double var1d = hv * CONFIDENCE_95_PERCENT * total;
+				double var1m = hv * CONFIDENCE_95_PERCENT * total * Math.sqrt(21);
+
 				for(Allocation allocation: allocations) {
-					UniStats stock = allocation.asset.toUniStats();
-					logger.info("{}", String.format("%-5s %-5s %s", marketSymbol, allocation.asset.symbol, new FinStats(market, stock)));
+					logger.info("ASSET {}", String.format("%-6s %5d  %8.2f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value, allocation.dividend));
 				}
+				logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)  %5.2f %%  %8.4f", total, div, total - valueTotal, (div / total) * 100, growth));
+				logger.info("HV VAR    {}", String.format("%8.4f  %8.2f  %8.2f", hv, var1d, var1m));
 			}
 						
-			for(int i = 0; i < 100; i++) {
+			for(int i = 0; i < 1000000; i++) {
 				allocations = random(allocations, valueTotal);
-				double hvTemp  = hv(allocations);
-				double divTemp = Allocation.dividend(allocations);
-				if (hvTemp < hv && div < divTemp) {
-					hv  = hvTemp;
-					div = divTemp;
-					
+				double hvTemp       = hv(allocations);
+				double divTemp      = Allocation.dividend(allocations);
+				double growthTemp   = DoubleArray.multiplyAndAdd(ratio(allocations), spyBeta);
+
+				if (hvTemp < hv && div < divTemp && growth < growthTemp) {
+//				if (hvTemp < 0.01 && growth < growthTemp) {
+//				if (hvTemp < 0.01 && div < divTemp) {
+					hv     = hvTemp;
+					div    = divTemp;
+					growth = growthTemp;
 					{
 						logger.info("");
 						double total = Allocation.value(allocations);;
@@ -308,8 +338,8 @@ public final class Allocation {
 						for(Allocation allocation: allocations) {
 							logger.info("ASSET {}", String.format("%-6s %5d  %8.2f  %8.2f", allocation.asset.symbol, allocation.amount, allocation.value, allocation.dividend));
 						}
-						logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)", total, div, total - valueTotal));
-						logger.info("VAR   (1d 1m)       {}", String.format("%8.2f  %8.2f", var1d, var1m));
+						logger.info("TOTAL               {}", String.format("%8.2f  %8.2f (%7.2f)  %5.2f %%  %8.4f", total, div, total - valueTotal, (div / total) * 100, growth));
+						logger.info("HV VAR    {}", String.format("%8.4f  %8.2f  %8.2f", hv, var1d, var1m));
 					}
 				}
 			}

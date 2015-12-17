@@ -24,6 +24,17 @@ public final class DoubleArray {
 		}
 		return ret;
 	}
+	public static double multiplyAndAdd(double a[], double b[]) {
+		if (a.length != b.length) {
+			logger.error("a.length = {}  b.length = {}", a.length, b.length);
+			throw new SecuritiesException("a.length != b.length");
+		}
+		double ret = 0;
+		for(int i = 0; i < a.length; i++) {
+			ret += a[i] * b[i];
+		}
+		return ret;
+	}
 	public static double[] divide(double a[], double b[]) {
 		if (a.length != b.length) {
 			logger.error("a.length = {}  b.length = {}", a.length, b.length);

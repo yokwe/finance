@@ -198,16 +198,30 @@ public final class Portfolio {
 		final double growth = getGrowth(portfolios, (marketGrowthPercent * 0.01));
 		final double var    = hv * confidence * sum * Math.sqrt((double)timeHorizonDay);
 		final double value  = sum + div + growth - var;
-		
-//		logger.info("");
-//		for(int i = 0; i < portfolios.length; i++) {
-//			Portfolio portfolio = portfolios[i];
-//			logger.info("ASSET {}", String.format("%-5s %3d %7.2f  %9.2f  %8.2f  %8.2f", portfolio.asset.symbol, portfolio.volume, portfolio.asset.lastPrice, portfolio.value, portfolio.dividend, portfolio.value * portfolio.beta * marketGrowthRatio));
-//		}
-//		logger.info("TOTAL          {}", String.format("%8.2f =%9.2f +%8.2f +%8.2f -%8.2f", value, sum, div, growth, var));
 		return value;
 	}
-	public static double estimateValueDebug(Portfolio portfolios[], int marketGrowthPercent, int timeHorizonDay, double confidence) {
+	
+	public static void dumpCorrelation(Portfolio portfolios[]) {
+		UniStats statsArray[]    = uniStats(portfolios);
+		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
+		
+		StringBuilder line = new StringBuilder();
+		logger.info("");
+		line.append("     ");
+		for(int i = 0; i < portfolios.length; i++) {
+			line.append(String.format("%6s", portfolios[i].asset.symbol));
+		}
+		logger.info("CORR  {}", line);
+		for(int i = 0; i < portfolios.length; i++) {
+			line.setLength(0);
+			line.append(String.format("%-5s", portfolios[i].asset.symbol));
+			for(int j = 0; j < portfolios.length; j++) {
+				line.append(String.format("%6.2f", statsMatrix[i][j].correlation));
+			}
+			logger.info("CORR  {}", line);
+		}		
+	}
+	public static double dumpEstimateValue(Portfolio portfolios[], int marketGrowthPercent, int timeHorizonDay, double confidence) {
 		double   ratioArray[]    = ratio(portfolios);
 		UniStats statsArray[]    = uniStats(portfolios);
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
@@ -265,8 +279,8 @@ public final class Portfolio {
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
 			final UniStats market              = getUniStats(connection, dateFrom, dateTo, "SPY");
-			final int      marketGrowthPercent = 5; // 5% increase
-			final int      timeHorizonDay      = 5; // 5 days => 1 week
+			final int      marketGrowthPercent = 10; // 10% increase
+			final int      timeHorizonDay      = 21; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
 			final double   confidence          = CONFIDENCE_95_PERCENT;
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
@@ -274,20 +288,22 @@ public final class Portfolio {
 //			assetMap.put("BIV",   50); // Vanguard Intermediate Term Bond ETF
 //			assetMap.put("BSV",   50); // Vanguard Short Term Bond ETF
 //			assetMap.put("VIG",   50); // Vanguard Dividend Appreciation ETF
-			assetMap.put("IVV",   50); // iShares Core S&P 500 ETF
-			assetMap.put("IJH",   50); // iShares Core S&P Mid-Cap ETF
+			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
+			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
 //			assetMap.put("VBK",   50); // Vanguard Small Cap Growth ETF
 //			assetMap.put("VWO",   50); // Vanguard Emerging Markets ETF
 //			assetMap.put("FXI",   50); // iShares FTSE/Xinhua China 25 Index Fund
 //			assetMap.put("DBC",   10); // PowerShares DB Commodity Index Tracking Fund
-			assetMap.put("VCLT",  50); // Vanguard Long-Term Corporate Bond ETF
-			assetMap.put("PGX",   50); // PowerShares Preferred Portfolio
+			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
+			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
 			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
+//			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
 			Portfolio[]  portfolios   = Portfolio.getInstance(connection, dateFrom, dateTo, assetMap, market);
 			double valueTotal = sum(portfolios);
 		
 			double value = estimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
-			estimateValueDebug(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
+			dumpCorrelation(portfolios);
+			dumpEstimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
 			
 			for(int i = 0; i < 100000; i++) {
 				portfolios = random(portfolios, valueTotal, market);
@@ -295,7 +311,7 @@ public final class Portfolio {
 				
 				if (value < valueTemp) {
 					value = valueTemp;
-					estimateValueDebug(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
+					dumpEstimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
 				}
 			}
 			

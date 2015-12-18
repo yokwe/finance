@@ -26,7 +26,6 @@ import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.Data;
 import yokwe.finance.securities.stats.DoubleArray;
-import yokwe.finance.securities.stats.Portfolio;
 import yokwe.finance.securities.stats.UniStats;
 import yokwe.finance.securities.util.DoubleUtil.Stats;
 import yokwe.finance.securities.util.NasdaqUtil;
@@ -172,7 +171,7 @@ public class ScreenByDividend {
 		logger.info("candidateList = {}", candidateList.size());
 		
 		// Build varMap
-		Map<String, String> varMap = new TreeMap<>();
+		Map<String, String> sdMap = new TreeMap<>();
 		{
 			LocalDate dateTo   = lastTradeDate;
 			LocalDate dateFrom = dateTo.minusYears(1);
@@ -180,8 +179,8 @@ public class ScreenByDividend {
 			for(String symbol: candidateList) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
 				UniStats stats = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
-				double valueAtRisk = stats.sd * Portfolio.CONFIDENCE_95_PERCENT * Math.sqrt(21); // 21 for  one month period
-				varMap.put(symbol, String.format("%.4f", valueAtRisk));
+				double valueAtRisk = stats.sd;
+				sdMap.put(symbol, String.format("%.4f", valueAtRisk));
 			}
 		}
 
@@ -227,7 +226,7 @@ public class ScreenByDividend {
 			final String y1 = String.format("%d", y0Number - 1);
 			
 			// Output title line
-			w.append("symbol,sector,industry,name,var1m,freq,price");
+			w.append("symbol,sector,industry,name,sd,freq,price");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
 			w.append(",last");
 			w.append("\n");
@@ -302,7 +301,7 @@ public class ScreenByDividend {
 					w.append(",").append(industry);
 				}
 				w.append(",").append(name);
-				w.append(",").append(varMap.get(symbol));
+				w.append(",").append(sdMap.get(symbol));
 				w.append(String.format(",%d,%.2f", freq, price));
 
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {

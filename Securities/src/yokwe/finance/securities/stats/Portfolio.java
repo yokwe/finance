@@ -328,6 +328,27 @@ public final class Portfolio {
 			assetMap.put("CAT",  50); // Caterpillar
 			assetMap.put("JPM",  50); // JPMorgan
 			
+			// UK Blue Chip
+			// Royal Dutch Shell
+			// BP
+			// HSBC
+			// Vodafone Group
+			// GlaxoSmithKline
+			// Rio Tingo Group
+			// Royal Bank of Scotland Group
+			// Anglo American
+			// British American Tabacco
+			// BG Group
+			
+			// Australia Blue Chip
+			// BHP Billiton
+			// Commonwealth Bank of Australia
+			// Telstra Corporation
+			// Rio Tinto
+			// National Australia Bank
+			// Australia and New Zealand Banking Group
+			
+			
 			Portfolio[]  portfolios   = Portfolio.getInstance(connection, dateFrom, dateTo, assetMap, market);
 			double valueTotal = sum(portfolios);
 		

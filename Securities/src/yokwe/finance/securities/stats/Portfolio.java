@@ -166,6 +166,9 @@ public final class Portfolio {
 		return ret;
 	}
 	
+	// TODO Use plain value to use FinStats.
+	//      No meaning to use log return value to calculate beta, r2
+	
 	public static double[] getMarketBeta(Portfolio portfolios[], UniStats market) {
 		int size = portfolios.length;
 		double ret[] = new double[size];

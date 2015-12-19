@@ -201,10 +201,19 @@ public final class Portfolio {
 		return value;
 	}
 	
-	public static void dumpCorrelation(Portfolio portfolios[]) {
+	public static void dumpStats(Portfolio portfolios[], UniStats market) {
 		UniStats statsArray[]    = uniStats(portfolios);
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 		
+		logger.info("");
+		logger.info("STAT         BETA  R2    SD");
+		for(int i = 0; i < portfolios.length; i++) {
+			Asset asset = portfolios[i].asset;
+			UniStats stock = asset.toUniStats();
+			FinStats stats = new FinStats(market, stock);
+			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.4f", asset.symbol, stats.beta, stats.r2, stock.sd));
+		}
+
 		StringBuilder line = new StringBuilder();
 		logger.info("");
 		line.append("     ");
@@ -284,25 +293,46 @@ public final class Portfolio {
 			final double   confidence          = CONFIDENCE_95_PERCENT;
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
+			
+			// Firstrade commission free ETF
 //			assetMap.put("BLV",   50); // Vanguard Long Term Bond ETF
 //			assetMap.put("BIV",   50); // Vanguard Intermediate Term Bond ETF
 //			assetMap.put("BSV",   50); // Vanguard Short Term Bond ETF
 //			assetMap.put("VIG",   50); // Vanguard Dividend Appreciation ETF
-			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
-			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
+//			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
+//			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
 //			assetMap.put("VBK",   50); // Vanguard Small Cap Growth ETF
 //			assetMap.put("VWO",   50); // Vanguard Emerging Markets ETF
 //			assetMap.put("FXI",   50); // iShares FTSE/Xinhua China 25 Index Fund
 //			assetMap.put("DBC",   10); // PowerShares DB Commodity Index Tracking Fund
-			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
-			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
-			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
-//			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
+			
+			// My Portfolio
+//			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
+//			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
+//			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
+////			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
+//			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
+//			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
+			
+			// US Blue Chip
+			assetMap.put("IBM",  50); // IBM
+			assetMap.put("XOM",  50); // Exxon Mobile
+			assetMap.put("PG",   50); // Procter & Gamble
+			assetMap.put("MMM",  50); // 3M
+			assetMap.put("JNJ",  50); // Johnson & Johnson
+			assetMap.put("MCD",  50); // McDonald's Corp
+			assetMap.put("WMT",  50); // Wal-Mart Stores
+			assetMap.put("UTX",  50); // United Technologies
+			assetMap.put("KO",   50); // Coca-Cola
+			assetMap.put("BA",   50); // Boeing
+			assetMap.put("CAT",  50); // Caterpillar
+			assetMap.put("JPM",  50); // JPMorgan
+			
 			Portfolio[]  portfolios   = Portfolio.getInstance(connection, dateFrom, dateTo, assetMap, market);
 			double valueTotal = sum(portfolios);
 		
 			double value = estimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
-			dumpCorrelation(portfolios);
+			dumpStats(portfolios, market);
 			dumpEstimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
 			
 			for(int i = 0; i < 100000; i++) {

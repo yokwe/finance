@@ -33,8 +33,12 @@ public final class Asset {
 		return String.format("{%-5s %5.2f %5.3f %5.3f}", symbol, lastPrice, dividend, divYield);
 	}
 	
-	public UniStats toUniStats() {
+	public UniStats toLogReturnUniStats() {
 		return new UniStats(DoubleArray.logReturn(price));
+	}
+	
+	public UniStats toSimpleUniStats() {
+		return new UniStats(price);
 	}
 	
 	public static Asset getInstance(Connection connection, String symbol, LocalDate dateFrom, LocalDate dateTo) {

@@ -111,7 +111,7 @@ public final class Portfolio {
 		
 		UniStats ret[] = new UniStats[size];
 		for(int i = 0; i < size; i++) {
-			ret[i] = portfolios[i].asset.toUniStats();
+			ret[i] = portfolios[i].asset.toLogReturnUniStats();
 		}
 		return ret;
 	}
@@ -138,9 +138,6 @@ public final class Portfolio {
 		return Math.sqrt(hv);
 	}
 
-	public static UniStats getUniStats(Connection connection, LocalDate dateFrom, LocalDate dateTo, String symbol) {
-		return Asset.getInstance(connection, symbol, dateFrom, dateTo).toUniStats();
-	}
 	public static Portfolio[] getInstance(Connection connection, LocalDate dateFrom, LocalDate dateTo, Map<String, Integer> assetMap, UniStats market) {
 		List<Integer> volumeList = new ArrayList<>();
 		List<Asset>   assetList  = new ArrayList<>();
@@ -159,8 +156,8 @@ public final class Portfolio {
 		Portfolio ret[] = new Portfolio[size];
 		for(int i = 0; i < size; i++) {
 			Asset    asset  = assetList.get(i);
+			FinStats stats  = new FinStats(market, asset);
 			int      volume = volumeList.get(i);
-			FinStats stats  = new FinStats(market, asset.toUniStats());
 			ret[i] = new Portfolio(asset, volume, stats.getBeta());
 		}
 		return ret;
@@ -173,8 +170,7 @@ public final class Portfolio {
 		int size = portfolios.length;
 		double ret[] = new double[size];
 		for(int i = 0; i < size; i++) {
-			UniStats stock = portfolios[i].asset.toUniStats();
-			FinStats stats = new FinStats(market, stock);
+			FinStats stats = new FinStats(market, portfolios[i].asset);
 			ret[i] = stats.getBeta();
 		}
 		return ret;
@@ -209,12 +205,11 @@ public final class Portfolio {
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 		
 		logger.info("");
-		logger.info("STAT         BETA  R2    SD");
+		logger.info("STAT         BETA    R2    MEAN      SD     RSD");
 		for(int i = 0; i < portfolios.length; i++) {
 			Asset asset = portfolios[i].asset;
-			UniStats stock = asset.toUniStats();
-			FinStats stats = new FinStats(market, stock);
-			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.4f", asset.symbol, stats.beta, stats.r2, stock.sd));
+			FinStats stats = new FinStats(market, asset);
+			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.2f%8.2f%8.3f", asset.symbol, stats.beta, stats.r2, stats.stock.mean, stats.stock.sd, stats.stock.rsd));
 		}
 
 		StringBuilder line = new StringBuilder();
@@ -290,7 +285,7 @@ public final class Portfolio {
 			LocalDate dateTo   = LocalDate.now();
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
-			final UniStats market              = getUniStats(connection, dateFrom, dateTo, "SPY");
+			final UniStats market              = Asset.getInstance(connection, "SPY", dateFrom, dateTo).toSimpleUniStats();
 			final int      marketGrowthPercent = 10; // 10% increase
 			final int      timeHorizonDay      = 21; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
 			final double   confidence          = CONFIDENCE_95_PERCENT;
@@ -310,26 +305,26 @@ public final class Portfolio {
 //			assetMap.put("DBC",   10); // PowerShares DB Commodity Index Tracking Fund
 			
 			// My Portfolio
-//			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
-//			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
-//			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
-////			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
-//			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
-//			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
+			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
+			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
+			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
+//			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
+			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
+			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
 			
 			// US Blue Chip
-			assetMap.put("IBM",  50); // IBM
-			assetMap.put("XOM",  50); // Exxon Mobile
-			assetMap.put("PG",   50); // Procter & Gamble
-			assetMap.put("MMM",  50); // 3M
-			assetMap.put("JNJ",  50); // Johnson & Johnson
-			assetMap.put("MCD",  50); // McDonald's Corp
-			assetMap.put("WMT",  50); // Wal-Mart Stores
-			assetMap.put("UTX",  50); // United Technologies
-			assetMap.put("KO",   50); // Coca-Cola
-			assetMap.put("BA",   50); // Boeing
-			assetMap.put("CAT",  50); // Caterpillar
-			assetMap.put("JPM",  50); // JPMorgan
+//			assetMap.put("IBM",  50); // IBM
+//			assetMap.put("XOM",  50); // Exxon Mobile
+//			assetMap.put("PG",   50); // Procter & Gamble
+//			assetMap.put("MMM",  50); // 3M
+//			assetMap.put("JNJ",  50); // Johnson & Johnson
+//			assetMap.put("MCD",  50); // McDonald's Corp
+//			assetMap.put("WMT",  50); // Wal-Mart Stores
+//			assetMap.put("UTX",  50); // United Technologies
+//			assetMap.put("KO",   50); // Coca-Cola
+//			assetMap.put("BA",   50); // Boeing
+//			assetMap.put("CAT",  50); // Caterpillar
+//			assetMap.put("JPM",  50); // JPMorgan
 			
 			// UK Blue Chip
 			// Royal Dutch Shell

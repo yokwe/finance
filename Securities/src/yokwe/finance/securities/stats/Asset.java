@@ -49,8 +49,8 @@ public final class Asset {
 			logger.error("priceList is empty.  symbol = {}", symbol);
 			throw new SecuritiesException("priceList is empty");
 		}
-		if (dividendList == null || dividendList.size() == 0) {
-			logger.error("dividendList is empty.  symbol = {}", symbol);
+		if (dividendList == null) {
+			logger.error("dividendList is null.  symbol = {}", symbol);
 			throw new SecuritiesException("dividendList is empty");
 		}
 		

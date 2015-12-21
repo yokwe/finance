@@ -3,13 +3,17 @@ package yokwe.finance.securities.stats;
 public final class FinStats {
 	public static final double MIN_R2_FOR_BETA = 0.7;
 	
+	public static UniStats toUniStats(Asset stock) {
+		return stock.toSimpleUniStats();
+	}
+	
 	public final double   alpha;
 	public final double   beta;
 	public final double   r2;
 	public final UniStats stock;
 	
 	public FinStats(UniStats market, Asset stock) {
-		this(market, stock.toSimpleUniStats(), 0.0);
+		this(market, toUniStats(stock), 0.0);
 	}
 
 	public FinStats(UniStats market, UniStats stock, double interestRatesOfSafeAssets) {

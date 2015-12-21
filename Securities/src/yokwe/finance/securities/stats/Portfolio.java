@@ -163,9 +163,6 @@ public final class Portfolio {
 		return ret;
 	}
 	
-	// TODO Use plain value to use FinStats.
-	//      No meaning to use log return value to calculate beta, r2
-	
 	public static double[] getMarketBeta(Portfolio portfolios[], UniStats market) {
 		int size = portfolios.length;
 		double ret[] = new double[size];
@@ -285,7 +282,7 @@ public final class Portfolio {
 			LocalDate dateTo   = LocalDate.now();
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
-			final UniStats market              = Asset.getInstance(connection, "SPY", dateFrom, dateTo).toSimpleUniStats();
+			final UniStats market              = FinStats.toUniStats(Asset.getInstance(connection, "SPY", dateFrom, dateTo));
 			final int      marketGrowthPercent = 10; // 10% increase
 			final int      timeHorizonDay      = 21; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
 			final double   confidence          = CONFIDENCE_95_PERCENT;
@@ -327,24 +324,27 @@ public final class Portfolio {
 //			assetMap.put("JPM",  50); // JPMorgan
 			
 			// UK Blue Chip
-			// Royal Dutch Shell
-			// BP
-			// HSBC
-			// Vodafone Group
-			// GlaxoSmithKline
-			// Rio Tingo Group
-			// Royal Bank of Scotland Group
-			// Anglo American
-			// British American Tabacco
-			// BG Group
+//			assetMap.put("RDS.A",  50); // ADR Royal Dutch Shell 8.3%
+//			assetMap.put("RDS.B",  50); // ADR Royal Dutch Shell 8.3%
+//			assetMap.put("BP",     50); // ADR BP 7.8%
+//			assetMap.put("HSBC",   50); // ADR HSBC  6.5%
+//			assetMap.put("HSEA",   50); // ADR HSBC  HSEA 7.7%
+//			assetMap.put("HSEB",   50); // ADR HSBC  HSEB 7.7%
+//			assetMap.put("VOD",    50); // ADR Vodafone Group
+//			assetMap.put("GSK",    50); // GlaxoSmithKline 6.2%
+//			assetMap.put("RIO",    50); // Rio Tinto Group 8.0%
+			//assetMap.put("RBS",    50); // Royal Bank of Scotland Group
+			//assetMap.put("NGLOY",  50); // Anglo American
+			//assetMap.put("BTI",    50); // British American Tabacco
+			//assetMap.put("BRGYY",  50); // BG Group
 			
 			// Australia Blue Chip
-			// BHP Billiton
-			// Commonwealth Bank of Australia
-			// Telstra Corporation
-			// Rio Tinto
-			// National Australia Bank
-			// Australia and New Zealand Banking Group
+//			assetMap.put("BHP",    50); // BHP Billiton 10%
+			//assetMap.put("CBAUY",  50); // Commonwealth Bank of Australia
+			//assetMap.put("TLSYY",  50); // Telstra Corporation
+			//assetMap.put("RIO",    50); // Rio Tinto
+			//assetMap.put("NABZY",  50); // National Australia Bank
+			//assetMap.put("ANZBY",  50); // Australia and New Zealand Banking Group
 			
 			
 			Portfolio[]  portfolios   = Portfolio.getInstance(connection, dateFrom, dateTo, assetMap, market);

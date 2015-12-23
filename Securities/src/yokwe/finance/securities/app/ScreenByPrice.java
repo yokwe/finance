@@ -21,7 +21,6 @@ import yokwe.finance.securities.database.CompanyTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.Data;
-import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.UniStats;
 
 public class ScreenByPrice {
@@ -116,17 +115,16 @@ public class ScreenByPrice {
 			}
 		}
 		
-		// Build sdMap
-		Map<String, String> sdMap = new TreeMap<>();
+		// Build rsdMap
+		Map<String, String> rsdMap = new TreeMap<>();
 		{
 			LocalDate dateTo   = origin;
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
 			for(String symbol: ratioMap.keySet()) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
-				UniStats stats = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
-				double valueAtRisk = stats.sd;
-				sdMap.put(symbol, String.format("%.4f", valueAtRisk));
+				UniStats stats = new UniStats(data.toDoubleArray(symbol));
+				rsdMap.put(symbol, String.format("%.4f", stats.rsd));
 			}
 		}
 		
@@ -135,7 +133,7 @@ public class ScreenByPrice {
 		w.append(",sector");
 		w.append(",industry");
 		w.append(",name");
-		w.append(",sd");
+		w.append(",rsd");
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
 		}
@@ -174,7 +172,7 @@ public class ScreenByPrice {
 				
 				w.append(",").append(name);
 			}
-			w.append(",").append(sdMap.get(symbol));
+			w.append(",").append(rsdMap.get(symbol));
 			
 			Map<String, String> map = ratioMap.get(symbol);
 			if (map == null) {

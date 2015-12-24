@@ -115,8 +115,8 @@ public class ScreenByPrice {
 			}
 		}
 		
-		// Build rsdMap
-		Map<String, String> rsdMap = new TreeMap<>();
+		// Build sdMap (sd of log return)
+		Map<String, String> sdMap = new TreeMap<>();
 		{
 			LocalDate dateTo   = origin;
 			LocalDate dateFrom = dateTo.minusYears(1);
@@ -124,7 +124,7 @@ public class ScreenByPrice {
 			for(String symbol: ratioMap.keySet()) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
 				UniStats stats = new UniStats(data.toDoubleArray(symbol));
-				rsdMap.put(symbol, String.format("%.4f", stats.rsd));
+				sdMap.put(symbol, String.format("%.4f", stats.sd));
 			}
 		}
 		
@@ -133,7 +133,7 @@ public class ScreenByPrice {
 		w.append(",sector");
 		w.append(",industry");
 		w.append(",name");
-		w.append(",rsd");
+		w.append(",sd");
 		for(String name: priceMapMap.keySet()) {
 			w.append(",").append(name);
 		}
@@ -172,7 +172,7 @@ public class ScreenByPrice {
 				
 				w.append(",").append(name);
 			}
-			w.append(",").append(rsdMap.get(symbol));
+			w.append(",").append(sdMap.get(symbol));
 			
 			Map<String, String> map = ratioMap.get(symbol);
 			if (map == null) {

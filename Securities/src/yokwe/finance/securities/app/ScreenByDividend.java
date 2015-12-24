@@ -169,8 +169,8 @@ public class ScreenByDividend {
 		}
 		logger.info("candidateList = {}", candidateList.size());
 		
-		// Build rsdMap
-		Map<String, String> rsdMap = new TreeMap<>();
+		// Build sdMap (sd of log return)
+		Map<String, String> sdMap = new TreeMap<>();
 		{
 			LocalDate dateTo   = lastTradeDate;
 			LocalDate dateFrom = dateTo.minusYears(1);
@@ -178,7 +178,7 @@ public class ScreenByDividend {
 			for(String symbol: candidateList) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
 				UniStats stats = new UniStats(data.toDoubleArray(symbol));
-				rsdMap.put(symbol, String.format("%.4f", stats.rsd));
+				sdMap.put(symbol, String.format("%.4f", stats.sd));
 			}
 		}
 
@@ -224,7 +224,7 @@ public class ScreenByDividend {
 			final String y1 = String.format("%d", y0Number - 1);
 			
 			// Output title line
-			w.append("symbol,sector,industry,name,rsd,freq,price");
+			w.append("symbol,sector,industry,name,sd,freq,price");
 			for(int i = LAST_N_YEARS - 1; 0 <= i; i--) w.append(String.format(",y%d", i));
 			w.append(",last");
 			w.append("\n");
@@ -299,7 +299,7 @@ public class ScreenByDividend {
 					w.append(",").append(industry);
 				}
 				w.append(",").append(name);
-				w.append(",").append(rsdMap.get(symbol));
+				w.append(",").append(sdMap.get(symbol));
 				w.append(String.format(",%d,%.2f", freq, price));
 
 				for(int i = LAST_N_YEARS - 1; 0 <= i; i--) {

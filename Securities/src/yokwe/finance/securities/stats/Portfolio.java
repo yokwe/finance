@@ -18,10 +18,14 @@ import yokwe.finance.securities.SecuritiesException;
 public final class Portfolio {
 	private static final Logger logger = LoggerFactory.getLogger(Portfolio.class);
 
-	public static final double CONFIDENCE_95_PERCENT = 1.65;
-	public static final double CONFIDENCE_99_PERCENT = 2.33;
+	public  static final double CONFIDENCE_95_PERCENT = 1.65;
+	public  static final double CONFIDENCE_99_PERCENT = 2.33;
+	private static final double CONFIDENCE = CONFIDENCE_95_PERCENT;
 	
-	private static final int TIME_HORIZON_WEEK       = 5; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
+	public  static final int TIME_HORIZON_WEEK  =   5;
+	public  static final int TIME_HORIZON_MONTH =  21;
+	public  static final int TIME_HORIZON_YEAR  = 252;
+	private static final int TIME_HORIZON       = TIME_HORIZON_WEEK;
 
 	
 	private static Random random = new Random(System.currentTimeMillis());
@@ -200,7 +204,7 @@ public final class Portfolio {
 		return value;
 	}
 	
-	public static void dumpStats(Portfolio portfolios[], UniStats market) {
+	public static void dumpStats(Portfolio portfolios[], UniStats market, final int timeHorizonDay, final double confidence) {
 		UniStats statsArray[]    = uniStats(portfolios);
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 		
@@ -209,7 +213,7 @@ public final class Portfolio {
 		for(int i = 0; i < portfolios.length; i++) {
 			Asset asset = portfolios[i].asset;
 			FinStats stats = new FinStats(market, asset);
-			double var1m = stats.stock.sd * CONFIDENCE_95_PERCENT * Math.sqrt(TIME_HORIZON_WEEK);
+			double var1m = stats.stock.sd * confidence * Math.sqrt(timeHorizonDay);
 			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.4f%8.4f%8.4f", asset.symbol, stats.beta, stats.r2, stats.stock.mean, stats.stock.sd, var1m));
 		}
 
@@ -235,20 +239,30 @@ public final class Portfolio {
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 		double   sum             = sum(portfolios);
 		
-		final double hv     = hv(ratioArray, statsArray, statsMatrix);
-		final double div    = dividend(portfolios);
-		final double growth = getGrowth(portfolios, (marketGrowthPercent * 0.01));
-		final double var    = hv * confidence * sum * Math.sqrt((double)timeHorizonDay);
-		final double value  = sum + div + growth - var;
-		
 		logger.info("");
+		double varSum = 0;
 		for(int i = 0; i < portfolios.length; i++) {
 			Portfolio portfolio = portfolios[i];
-			logger.info("ASSET {}", String.format("%-5s%4d %7.2f  %9.2f  %8.2f  %8.2f            %8.4f",
-					portfolio.asset.symbol, portfolio.volume, portfolio.asset.lastPrice, portfolio.value, portfolio.dividend, portfolio.value * portfolio.beta * marketGrowthPercent * 0.01, statsArray[i].sd));
+			double sd     = statsArray[i].sd;
+			double growth = portfolio.value * portfolio.beta * (marketGrowthPercent * 0.01);
+			double var    = sd * portfolio.value * Math.sqrt((double)timeHorizonDay);
+			varSum += var;
+			logger.info("ASSET {}", String.format("%-5s%4d %7.2f  %9.2f  %8.2f  %8.2f  %8.2f  %8.4f",
+					portfolio.asset.symbol, portfolio.volume, portfolio.asset.lastPrice, portfolio.value,
+					portfolio.dividend, growth, var, sd));
 		}
-		logger.info("VALUE {}", String.format("         %8.2f =%9.2f +%8.2f +%8.2f -%8.2f  %8.4f", value, sum, div, growth, var, hv));
-		logger.info("PERCENT        {}", String.format("%7.3f%% =%8.2f%% +%7.2f%% +%7.2f%% -%7.2f%%", value / sum * 100, sum / sum * 100, div / sum * 100, growth / sum * 100, var / sum * 100));
+		
+		final double value;
+		{
+			final double hv     = hv(ratioArray, statsArray, statsMatrix);
+			final double div    = dividend(portfolios);
+			final double growth = getGrowth(portfolios, (marketGrowthPercent * 0.01));
+			final double var    = hv * confidence * sum * Math.sqrt((double)timeHorizonDay);
+			value  = sum + div + growth - var;
+			
+			logger.info("VALUE {}", String.format("         %8.2f =%9.2f +%8.2f +%8.2f -%8.2f  %8.4f  (%.2f)", value, sum, div, growth, var, hv, var - varSum));
+			logger.info("PERCENT        {}", String.format("%7.3f%% =%8.2f%% +%7.2f%% +%7.2f%% -%7.2f%%", value / sum * 100, sum / sum * 100, div / sum * 100, growth / sum * 100, var / sum * 100));
+		}
 		return value;
 	}
 	
@@ -288,8 +302,8 @@ public final class Portfolio {
 			
 			final UniStats market              = Asset.getInstance(connection, "SPY", dateFrom, dateTo).toLogReturnUniStats();
 			final int      marketGrowthPercent = 10; // 10% increase
-			final int      timeHorizonDay      = TIME_HORIZON_WEEK;
-			final double   confidence          = CONFIDENCE_95_PERCENT;
+			final int      timeHorizonDay      = TIME_HORIZON;
+			final double   confidence          = CONFIDENCE;
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
 			
@@ -312,8 +326,9 @@ public final class Portfolio {
 //			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
 			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
 			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
-			assetMap.put("CG",   100); // Carlyle Group
-			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
+			
+//			assetMap.put("CG",   100); // Carlyle Group
+//			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM
@@ -357,7 +372,7 @@ public final class Portfolio {
 			double valueTotal = sum(portfolios);
 		
 			double value = estimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
-			dumpStats(portfolios, market);
+			dumpStats(portfolios, market, timeHorizonDay, confidence);
 			dumpEstimateValue(portfolios, marketGrowthPercent, timeHorizonDay, confidence);
 			
 			for(int i = 0; i < 100000; i++) {

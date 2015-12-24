@@ -50,8 +50,8 @@ public final class BiStats {
 	}
 	
 	public BiStats(UniStats stats1, UniStats stats2) {
-		if (stats1.size != stats1.size) {
-			logger.error("stats1.size != stats1.size", stats1.size, stats1.size);
+		if (stats1.size != stats2.size) {
+			logger.error("stats1.size = {}  stats2.size = {}", stats1.size, stats2.size);
 			throw new SecuritiesException("stats1.size != stats1.size");
 		}
 		final int size = stats1.size;

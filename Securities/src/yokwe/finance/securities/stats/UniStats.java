@@ -12,7 +12,6 @@ public final class UniStats {
 	public final double mean;
 	public final double variance;
 	public final double sd;       // standard deviation
-	public final double rsd;      // relative standard deviation == coefficient of variation
 	public final double diff[];
 	
 	public UniStats(int size, double mean, double variance, double diff[]) {
@@ -20,7 +19,6 @@ public final class UniStats {
 		this.mean     = mean;
 		this.variance = variance;
 		this.sd       = Math.sqrt(variance);
-		this.rsd      = sd / mean;
 		this.diff     = diff;
 	}
 	public UniStats(double data[]) {
@@ -39,10 +37,9 @@ public final class UniStats {
 		}
 		variance = var / size;
 		sd       = Math.sqrt(variance);
-		rsd      = sd / mean;
 	}
 	@Override
 	public String toString() {
-		return String.format("{%d %8.4f %8.4f %8.4f %8.4f}", size, mean, variance, sd, rsd);
+		return String.format("{%d %8.4f %8.4f %8.4f}", size, mean, variance, sd);
 	}
 }

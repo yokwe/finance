@@ -21,6 +21,9 @@ public final class Portfolio {
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
 	
+	private static final int TIME_HORIZON_WEEK       = 5; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
+
+	
 	private static Random random = new Random(System.currentTimeMillis());
 	
 	public static List<Integer> allocateRandom(List<Asset> assetList, double valueTotal) {
@@ -202,11 +205,12 @@ public final class Portfolio {
 		BiStats  statsMatrix[][] = DoubleArray.getMatrix(statsArray);
 		
 		logger.info("");
-		logger.info("STAT         BETA    R2    MEAN      SD     RSD");
+		logger.info("STAT         BETA    R2    MEAN      SD     VaR");
 		for(int i = 0; i < portfolios.length; i++) {
 			Asset asset = portfolios[i].asset;
 			FinStats stats = new FinStats(market, asset);
-			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.2f%8.2f%8.3f", asset.symbol, stats.beta, stats.r2, stats.stock.mean, stats.stock.sd, stats.stock.rsd));
+			double var1m = stats.stock.sd * CONFIDENCE_95_PERCENT * Math.sqrt(TIME_HORIZON_WEEK);
+			logger.info("STAT  {}", String.format("%-5s%6.2f%6.2f%8.4f%8.4f%8.4f", asset.symbol, stats.beta, stats.r2, stats.stock.mean, stats.stock.sd, var1m));
 		}
 
 		StringBuilder line = new StringBuilder();
@@ -282,9 +286,9 @@ public final class Portfolio {
 			LocalDate dateTo   = LocalDate.now();
 			LocalDate dateFrom = dateTo.minusYears(1);
 			
-			final UniStats market              = FinStats.toUniStats(Asset.getInstance(connection, "SPY", dateFrom, dateTo));
+			final UniStats market              = Asset.getInstance(connection, "SPY", dateFrom, dateTo).toLogReturnUniStats();
 			final int      marketGrowthPercent = 10; // 10% increase
-			final int      timeHorizonDay      = 21; // 5 days => 1 week  21 days => 1 month  252 days => 1 year
+			final int      timeHorizonDay      = TIME_HORIZON_WEEK;
 			final double   confidence          = CONFIDENCE_95_PERCENT;
 			
 			Map<String, Integer> assetMap = new TreeMap<>();
@@ -308,6 +312,8 @@ public final class Portfolio {
 //			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
 			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
 			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
+			assetMap.put("CG",   100); // Carlyle Group
+			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM

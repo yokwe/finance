@@ -326,9 +326,9 @@ public final class Portfolio {
 //			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
 			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
 			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
-			
-//			assetMap.put("CG",   100); // Carlyle Group
-//			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
+			assetMap.put("CG",   100); // Carlyle Group
+			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
+//			assetMap.put("NRF-E",100); // NorthStar Realty Finance Corp., 8.75% Series E Cumulative Redeem Preferred Stock
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM

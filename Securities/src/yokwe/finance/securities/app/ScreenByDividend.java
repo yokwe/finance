@@ -145,29 +145,29 @@ public class ScreenByDividend {
 		logger.info("candidateList = {}", candidateList.size());
 		
 		// Filter out securities that has average volume for last 90 days is less than 50,000
-		{
-			List<String> newCandidateList = new ArrayList<>();
-
-			final int DURATION_DAYS = 90;
-			final int MIN_AVG_VOL   = 50_000;
-			logger.info("DURATION_DAYS = {}", DURATION_DAYS);
-			logger.info("MIN_AVG_VOL   = {}", MIN_AVG_VOL);
-			
-			String dateTo   = lastTradeDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
-			String dateFrom = lastTradeDate.plusDays(-DURATION_DAYS).format(DateTimeFormatter.ISO_LOCAL_DATE);
-			Map<String, Integer> avgVolumeMap = PriceTable.getAverageVolume(connection, dateFrom, dateTo);
-			logger.info("avgVolumeMap  = {}", avgVolumeMap.size());
-			for(String symbol: candidateList) {
-				if (!avgVolumeMap.containsKey(symbol)) continue;
-				
-				final int averageVolume = avgVolumeMap.get(symbol);
-				if (averageVolume < MIN_AVG_VOL) continue;
-				
-				newCandidateList.add(symbol);
-			}
-			candidateList = newCandidateList;
-		}
-		logger.info("candidateList = {}", candidateList.size());
+//		{
+//			List<String> newCandidateList = new ArrayList<>();
+//
+//			final int DURATION_DAYS = 90;
+//			final int MIN_AVG_VOL   = 50_000;
+//			logger.info("DURATION_DAYS = {}", DURATION_DAYS);
+//			logger.info("MIN_AVG_VOL   = {}", MIN_AVG_VOL);
+//			
+//			String dateTo   = lastTradeDate.format(DateTimeFormatter.ISO_LOCAL_DATE);
+//			String dateFrom = lastTradeDate.plusDays(-DURATION_DAYS).format(DateTimeFormatter.ISO_LOCAL_DATE);
+//			Map<String, Integer> avgVolumeMap = PriceTable.getAverageVolume(connection, dateFrom, dateTo);
+//			logger.info("avgVolumeMap  = {}", avgVolumeMap.size());
+//			for(String symbol: candidateList) {
+//				if (!avgVolumeMap.containsKey(symbol)) continue;
+//				
+//				final int averageVolume = avgVolumeMap.get(symbol);
+//				if (averageVolume < MIN_AVG_VOL) continue;
+//				
+//				newCandidateList.add(symbol);
+//			}
+//			candidateList = newCandidateList;
+//		}
+//		logger.info("candidateList = {}", candidateList.size());
 		
 		// Build sdMap (sd of log return)
 		Map<String, String> sdMap = new TreeMap<>();

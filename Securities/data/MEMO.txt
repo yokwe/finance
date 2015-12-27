@@ -229,6 +229,22 @@ hasegawa@ubuntu:~/git/finance/Securities/tmp/database$ ls -l price-*
 -rw-rw-r-- 1 hasegawa hasegawa 43616378 Nov  5 06:07 price-2015.BAD
 ----
 
+STAT         BETA    R2    MEAN      SD     VaR
+STAT  BIV   -0.08  0.07 -0.0001  0.0031  0.0113
+STAT  BLV   -0.19  0.07 -0.0003  0.0069  0.0256
+STAT  BSV   -0.03  0.07 -0.0000  0.0011  0.0039
+STAT  LQD   -0.06  0.02 -0.0002  0.0039  0.0143
+STAT  VCIT  -0.05  0.03 -0.0001  0.0031  0.0114
+STAT  VCLT  -0.14  0.05 -0.0003  0.0064  0.0235
+
+CORR          BIV   BLV   BSV   LQD  VCIT  VCLT
+CORR  BIV    1.00  0.90  0.85  0.92  0.92  0.86
+CORR  BLV    0.90  1.00  0.68  0.92  0.87  0.94
+CORR  BSV    0.85  0.68  1.00  0.76  0.79  0.64
+CORR  LQD    0.92  0.92  0.76  1.00  0.92  0.91
+CORR  VCIT   0.92  0.87  0.79  0.92  1.00  0.85
+CORR  VCLT   0.86  0.94  0.64  0.91  0.85  1.00
+
                                          DIVIDEND                  SD
 LQD  PERCENT        101.752% =  100.00% +   3.18% +   0.00% -   1.43%
 BLV  PERCENT        101.784% =  100.00% +   4.34% +   0.00% -   2.56%

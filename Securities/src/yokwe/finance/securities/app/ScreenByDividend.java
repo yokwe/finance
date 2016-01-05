@@ -258,7 +258,7 @@ public class ScreenByDividend {
 				// special for Y0
 				{
 					// Should we remove exceptional value?
-					double[] y0Array = yearMap.get(y0).stream().mapToDouble(o -> o).toArray();
+					double[] y0Array = yearMap.get(y0) != null ? yearMap.get(y0).stream().mapToDouble(o -> o).toArray() : new double[0];
 					double[] y1Array = yearMap.get(y1).stream().mapToDouble(o -> o).toArray();
 					
 					y0Array = adjust(y0Array);

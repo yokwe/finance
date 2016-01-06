@@ -117,7 +117,6 @@ public class ScreenByDividend {
 			lastTradeDate = LocalDate.parse(dateString);
 		}
 		logger.info("lastTradeDate = {}", lastTradeDate);
-		final String thisYear = String.format("%d", lastTradeDate.getYear());
 		
 		Map<String, NasdaqTable>  nasdaqMap  = NasdaqTable.getMap(connection);
 		logger.info("nasdaqMap     = {}", nasdaqMap.size());

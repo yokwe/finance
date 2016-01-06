@@ -25,6 +25,7 @@ import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.Data;
+import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.UniStats;
 import yokwe.finance.securities.util.DoubleUtil.Stats;
 import yokwe.finance.securities.util.NasdaqUtil;
@@ -177,7 +178,7 @@ public class ScreenByDividend {
 			
 			for(String symbol: candidateList) {
 				Data data = new Data(PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo));
-				UniStats stats = new UniStats(data.toDoubleArray(symbol));
+				UniStats stats = new UniStats(DoubleArray.logReturn(data.toDoubleArray(symbol)));
 				sdMap.put(symbol, String.format("%.4f", stats.sd));
 			}
 		}

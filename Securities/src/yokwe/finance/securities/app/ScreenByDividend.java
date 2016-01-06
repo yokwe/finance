@@ -199,7 +199,7 @@ public class ScreenByDividend {
 		}
 		logger.info("dividendMap   = {}", dividendMap.size());
 		
-		// Filter out securities that has no dividend for this year, last year and last last year
+		// Filter out securities that has no dividend for last year and last last year
 		{
 			final String lastLastYear = String.format("%d", lastTradeDate.plusYears(-2).getYear());
 			final String lastYear = String.format("%d", lastTradeDate.plusYears(-1).getYear());
@@ -208,7 +208,7 @@ public class ScreenByDividend {
 			
 			for(String symbol: candidateList) {
 				Map<String, List<Double>> yearMap = dividendMap.get(symbol);
-				if (yearMap.containsKey(lastLastYear) && yearMap.containsKey(lastYear) && yearMap.containsKey(thisYear)) {
+				if (yearMap.containsKey(lastLastYear) && yearMap.containsKey(lastYear)) {
 					newCandidateList.add(symbol);
 				};
 			}

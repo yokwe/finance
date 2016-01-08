@@ -28,6 +28,13 @@ public final class Data {
 	}
 	
 	private Map<String, Daily[]> map = new TreeMap<>();
+	public void add(String symbol, Daily[] daily) {
+		if (map.containsKey(symbol)) {
+			logger.error("Registered symbol = {}", symbol);
+			throw new SecuritiesException("Registered symol");
+		}
+		map.put(symbol, daily);
+	}
 	public Data(List<PriceTable> dataList) {
 		Map<String, List<Daily>> symbolMap = new TreeMap<>();
 		for(PriceTable priceTable: dataList) {
@@ -46,7 +53,7 @@ public final class Data {
 		for(String symbol: symbolMap.keySet()) {
 			logger.info("symbol = {}", symbol);
 			List<Daily> dailyList = symbolMap.get(symbol);
-			map.put(symbol, dailyList.toArray(new Daily[0]));
+			add(symbol, dailyList.toArray(new Daily[0]));
 		}
 	}
 	public Daily[] toArray(String symbol) {

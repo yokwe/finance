@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -129,7 +128,7 @@ public class ScreenByDividend {
 		
 		// Build priceMap
 		Map<String, Double> priceMap = new TreeMap<>();
-		PriceTable.getAllByDate(connection, lastTradeDate.format(DateTimeFormatter.ISO_LOCAL_DATE)).stream().forEach(o -> priceMap.put(o.symbol, o.close));
+		PriceTable.getAllByDate(connection, lastTradeDate).stream().forEach(o -> priceMap.put(o.symbol, o.close));
 
 		// Filter out securities that has no price in lastTradedDate
 		{

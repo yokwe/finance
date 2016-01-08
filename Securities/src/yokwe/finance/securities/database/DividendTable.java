@@ -22,6 +22,10 @@ public final class DividendTable {
 		final String sql = String.format("select * from dividend where symbol = '%s' and '%s' <= date and date <= '%s'", symbol, stringFrom, stringTo);
 		return getAll(connection, sql);
 	}
+	public static List<DividendTable> getAllByDate(Connection connection, String date) {
+		String sql = String.format("select * from dividend where date = '%s'", date);
+		return getAll(connection, sql);
+	}
 	
 
 	public String date;

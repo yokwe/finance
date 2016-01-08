@@ -13,6 +13,12 @@ import yokwe.finance.securities.SecuritiesException;
 public final class DoubleArray {
 	private static final Logger logger = LoggerFactory.getLogger(DoubleArray.class);
 
+	public static double sum(double values[]) {
+		double ret = 0;
+		for(double value: values) ret += value;
+		return ret;
+	}
+	
 	public static double[] multiply(double a[], double b[]) {
 		if (a.length != b.length) {
 			logger.error("a.length = {}  b.length = {}", a.length, b.length);

@@ -112,11 +112,6 @@ public final class PriceTable {
 		return result.get(0).date;
 	}
 	
-	public static List<PriceTable> getAllByDate(Connection connection, String date) {
-		String sql = String.format("select * from price where date = '%s'", date);
-		return getAll(connection, sql);
-	}
-	
 	public static boolean isTradingDay(Connection connection, LocalDate date) {
 		PriceTable priceTable = PriceTable.getBySymbolDate(connection, "NYT", date);
 		return priceTable != null;

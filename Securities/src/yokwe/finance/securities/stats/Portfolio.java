@@ -328,7 +328,9 @@ public final class Portfolio {
 			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
 			assetMap.put("CG",   100); // Carlyle Group
 			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
-//			assetMap.put("NRF-E",100); // NorthStar Realty Finance Corp., 8.75% Series E Cumulative Redeem Preferred Stock
+			assetMap.put("CRF",  100); // Cornerstone Total Return Fund Inc
+			assetMap.put("PDI",   60); // PIMCO Dynamic Income Fund
+			assetMap.put("DMO",   70); // PIMCO Dynamic Income Fund
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM

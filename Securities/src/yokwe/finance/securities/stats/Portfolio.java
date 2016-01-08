@@ -330,7 +330,8 @@ public final class Portfolio {
 			assetMap.put("KKR",  100); // Hohlberg Kravis Roverts
 			assetMap.put("CRF",  100); // Cornerstone Total Return Fund Inc
 			assetMap.put("PDI",   60); // PIMCO Dynamic Income Fund
-			assetMap.put("DMO",   70); // PIMCO Dynamic Income Fund
+			assetMap.put("DMO",   70); // Western Asset Mortgage Defined Opportunity Fund Inc Common Stock
+			assetMap.put("VGI",  120); // Virtus Global Multi-Sector Income Fund Common Shares of Beneficial Interest
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM

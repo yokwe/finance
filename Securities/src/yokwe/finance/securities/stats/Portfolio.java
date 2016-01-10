@@ -322,8 +322,8 @@ public final class Portfolio {
 			// My Portfolio
 			assetMap.put("VCLT", 100); // Vanguard Long-Term Corporate Bond ETF
 			assetMap.put("PGX",  300); // PowerShares Preferred Portfolio
-			assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
 //			assetMap.put("ARR",  100); // ARMOUR Residential REIT, Inc.
+// SOLD		assetMap.put("VYM",   50); // Vanguard High Dividend Yield ETF
 			assetMap.put("IVV",   10); // iShares Core S&P 500 ETF
 			assetMap.put("IJH",   20); // iShares Core S&P Mid-Cap ETF
 			assetMap.put("CG",   100); // Carlyle Group
@@ -332,6 +332,8 @@ public final class Portfolio {
 			assetMap.put("PDI",   60); // PIMCO Dynamic Income Fund
 			assetMap.put("DMO",   70); // Western Asset Mortgage Defined Opportunity Fund Inc Common Stock
 			assetMap.put("VGI",  120); // Virtus Global Multi-Sector Income Fund Common Shares of Beneficial Interest
+//			assetMap.put("NRF",  100); // Northstar Realty Finance Corp
+			assetMap.put("NRF-A", 70); // Northstar Realty Finance Corp
 			
 			// US Blue Chip
 //			assetMap.put("IBM",  50); // IBM

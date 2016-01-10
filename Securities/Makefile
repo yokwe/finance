@@ -12,9 +12,12 @@ DIR_FETCH_NASDAQ		=tmp/fetch/nasdaq
 # Form yahoo.com
 DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
+# From mizuho
+DIR_FETCH_MIZUHO		=tmp/fetch/mizuho
 
 DIR_SCRIPT			=data/script
 DIR_DATABASE			=tmp/database
+DIR_MIZUHO			=tmp/mizuho
 
 all:
 	@echo all
@@ -129,10 +132,10 @@ fetch-yahoo-dividend-40y:
 #
 
 update:
-	make update-price load-data update-correlation tar load-correlation
+	make update-price load-data tar
 
 prepare-update:
-	@echo 'rm -rf tmp/update/*/*'
+	rm -rf tmp/update/*/*
 
 update-google-finance: prepare-update
 	ant run-update-google-finance
@@ -149,3 +152,18 @@ update-yahoo-daily: prepare-update
 
 update-yahoo-dividend: prepare-update
 	ant run-update-yahoo-dividend
+
+#
+# mizuno
+#
+fetch-mizuho:
+	mkdir -p ${DIR_FETCH_MIZUHO}
+	rm    -f ${DIR_FETCH_MIZUHO}/*
+	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+	
+update-mizuho:
+	mkdir -p ${DIR_MIZUHO}
+	rm    -f ${DIR_MIZUHO}/*
+	echo "DATE,USD" >${DIR_MIZUHO}/quote-usd.csv
+	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f\n",$$1,$$2,$$3,$$4)}' >>${DIR_MIZUHO}/quote-usd.csv
+	cp ${DIR_MIZUHO}/quote-usd.csv ~/Dropbox/Trade/みずほ銀行外国為替公示相場.csv

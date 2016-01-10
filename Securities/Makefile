@@ -14,10 +14,11 @@ DIR_FETCH_YAHOO_DAILY		=tmp/fetch/yahoo-daily
 DIR_FETCH_YAHOO_DIVIDEND	=tmp/fetch/yahoo-dividend
 # From mizuho
 DIR_FETCH_MIZUHO		=tmp/fetch/mizuho
+# From quantumonline
+DIR_FETCH_QUANTUM		=tmp/fetch/quantum
 
 DIR_SCRIPT			=data/script
 DIR_DATABASE			=tmp/database
-DIR_MIZUHO			=tmp/mizuho
 
 all:
 	@echo all
@@ -164,6 +165,15 @@ fetch-mizuho:
 update-mizuho:
 	mkdir -p ${DIR_MIZUHO}
 	rm    -f ${DIR_MIZUHO}/*
-	echo "DATE,USD" >${DIR_MIZUHO}/quote-usd.csv
-	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f\n",$$1,$$2,$$3,$$4)}' >>${DIR_MIZUHO}/quote-usd.csv
-	cp ${DIR_MIZUHO}/quote-usd.csv ~/Dropbox/Trade/みずほ銀行外国為替公示相場.csv
+	echo "DATE,USD" >${DIR_DATABASE}/quote-usd.csv
+	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f\n",$$1,$$2,$$3,$$4)}' >>${DIR_DATABASE}/quote-usd.csv
+	cp ${DIR_DATABASE}/quote-usd.csv ~/Dropbox/Trade/みずほ銀行外国為替公示相場.csv
+
+#
+# quantumonline
+#
+fetch-quantum:
+	mkdir -p ${DIR_FETCH_QUANTUM}
+	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
+	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	ant run-fetch

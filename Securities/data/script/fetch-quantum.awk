@@ -18,5 +18,5 @@ BEGIN {
 #  if (index(SYMBOL, "-") == 0) next;
   
   printf("%s/%-10s http://www.quantumonline.com/search.cfm?sopt=symbol&tickersymbol=%s\n",
-    DIR_OUTPUT, (SYMBOL ".csv"), SYMBOL)
+    DIR_OUTPUT, (SYMBOL ".html"), SYMBOL)
 }

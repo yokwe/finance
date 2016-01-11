@@ -19,16 +19,16 @@ CREATE TABLE cc (
 
 .separator ,
 
-select time('now', 'localtime');
-.import tmp/database/correlation-01.csv   cc
-select time('now', 'localtime');
-.import tmp/database/correlation-03.csv   cc
+-- select time('now', 'localtime');
+-- .import tmp/database/correlation-01.csv   cc
+-- select time('now', 'localtime');
+-- .import tmp/database/correlation-03.csv   cc
 select time('now', 'localtime');
 .import tmp/database/correlation-12.csv   cc
 select time('now', 'localtime');
 .import tmp/database/correlation-36.csv   cc
-select time('now', 'localtime');
-.import tmp/database/correlation-60.csv   cc
+-- select time('now', 'localtime');
+-- .import tmp/database/correlation-60.csv   cc
 select time('now', 'localtime');
 
 CREATE        INDEX cc_month           ON cc(month);

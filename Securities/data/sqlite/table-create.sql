@@ -41,6 +41,19 @@ CREATE TABLE dividend (
   dividend  REAL  NOT NULL  -- in 1000th of value 1.234 = 1.234
 );
 
+-- symbol, cpnRate, annAmt, liqPref, callPrice, callDate, maturDate, type, name
+CREATE TABLE quantum (
+  symbol    TEXT  NOT NULL, -- ticker symbol
+  cpnRate   REAL  NOT NULL, -- coupon rate
+  annAmt    REAL  NOT NULL, -- annual dividend amount
+  liqPref   REAL  NOT NULL, -- liquidation preference
+  callPrice REAL  NOT NULL, -- call price
+  callDate  TEXT  NOT NULL, -- call date
+  maturDate TEXT  NOT NULL, -- mature date
+  type      TEXT  NOT NULL, -- security type
+  name      TEXT  NOT NULL  -- security name
+);
+
 .tables
 
 .separator ,
@@ -58,6 +71,9 @@ select time('now', 'localtime');
 -- .import tmp/database/yahoo-daily.csv      price
 -- .import tmp/database/google-getprices.csv price
 .import tmp/database/price-all.csv        price
+select time('now', 'localtime');
+
+.import tmp/database/quantum.csv          quantum
 select time('now', 'localtime');
 
 CREATE        INDEX nasdaq_etf           ON nasdaq(etf);
@@ -82,6 +98,9 @@ select time('now', 'localtime');
 CREATE UNIQUE INDEX price_symbol_date    ON price(symbol, date);
 select time('now', 'localtime');
 
+CREATE        INDEX quantum_symbol       ON quantum(symbol);
+CREATE        INDEX quantum_type         ON quantum(type);
+
 select count(*) from nasdaq;
 select time('now', 'localtime');
 select count(*) from company;
@@ -94,3 +113,6 @@ select date, count(*) from price group by date order by date desc limit 5;
 select time('now', 'localtime');
 select * from dividend order by date desc limit 5;
 select time('now', 'localtime');
+
+select count(*) from quantum;
+select count(*), type from quantum group by type order by type;

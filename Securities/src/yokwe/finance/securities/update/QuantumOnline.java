@@ -60,6 +60,20 @@ public class QuantumOnline {
 				ret = String.format("%s?%s?%s", mdy[2], mdy[0], mdy[1]);
 			}
 			
+			// 9.99%
+			if (ret.matches("^[0-9]+\\.[0-9]+%$")) {
+				ret = String.format("%.4f", Double.valueOf(ret.substring(0, ret.length() - 1)) * 0.01);
+			}
+
+			if (ret.matches("^\\$[0-9,\\.]+$")) {
+				// $1.40625
+				if (ret.matches("^\\$[0-5](\\.[0-9]+)?$")) {
+					ret = String.format("%.5f", Double.valueOf(ret.substring(1)));
+				} else {
+					ret = String.format("%.2f", Double.valueOf(ret.replace(",", "").substring(1)));
+				}
+			}
+
 			if (ret.equals("n.a."))         ret = "*NA*";
 			if (ret.equals("Reset Rate"))   ret = "RESET";
 			if (ret.equals("Reset rate"))   ret = "RESET";
@@ -148,8 +162,25 @@ public class QuantumOnline {
 				String callDate  = CALL_DATE.getValue(content);
 				String maturDate = MATUR_DATE.getValue(content);
 				
+				// name
+				name = name.replace("\"", "\"\"");
+				if (name.contains(",")) {
+					name = "\"" + name + "\"";
+				}
+				
+				// cpnRate
+				if (cpnRate.matches("[0-9\\.]+")) {
+					cpnRate = String.format("%.5f", Double.valueOf(cpnRate));
+				}
+				// annAmt
+				if (annAmt.matches("[0-9\\.]+")) {
+					annAmt = String.format("%.5f", Double.valueOf(annAmt));
+				}
+				
 				logger.info("{}", String.format("%4d %-8s %-9s %-4s %10s %10s %10s %10s %10s %10s %-40s %s", ++count, symbol, cusip, exch, cpnRate, annAmt, liqPref, callPrice, callDate, maturDate, type, name));
 				
+				// symbol, cpnRate, annAmt, liqPref, callPrice, callDate, maturDate, type, name
+				bw.write(String.format("%s,%s,%s,%s,%s,%s,%s,%s,%s\n", symbol, cpnRate, annAmt, liqPref, callPrice, callDate, maturDate, type, name));
 			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e);
@@ -158,10 +189,10 @@ public class QuantumOnline {
 	}
 	
 	public static void main(String[] args) {
-//		String dirPath = args[0];
-//		String csvPath = args[1];
-		String dirPath = "tmp/fetch/quantum";
-		String csvPath = "tmp/quantum.csv";
+//		String dirPath = "tmp/fetch/quantum";
+//		String csvPath = "tmp/quantum.csv";
+		String dirPath = args[0];
+		String csvPath = args[1];
 		
 		logger.info("START");
 		logger.info("dirPath = {}", dirPath);

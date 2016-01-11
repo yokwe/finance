@@ -57,8 +57,28 @@ public class QuantumOnline {
 				if (mdy[0].length() == 1) mdy[0] = "0" + mdy[0];
 				if (mdy[1].length() == 1) mdy[1] = "0" + mdy[1];
 				if (mdy[2].length() == 2) mdy[2] = "20" + mdy[2];
-				ret = String.format("%s-%s-%s?", mdy[2], mdy[0], mdy[1]);
+				ret = String.format("%s?%s?%s", mdy[2], mdy[0], mdy[1]);
 			}
+			
+			if (ret.equals("n.a."))         ret = "*NA*";
+			if (ret.equals("Reset Rate"))   ret = "RESET";
+			if (ret.equals("Reset rate"))   ret = "RESET";
+			if (ret.equals("Floating"))     ret = "FLOAT";
+			if (ret.equals("Fixed/Adj"))    ret = "FIXED_ADJ";
+			if (ret.equals("Adj Rate"))     ret = "ADJ";
+			if (ret.equals("Var Rate"))     ret = "VAR";
+			if (ret.equals("None"))         ret = "NONE";
+			if (ret.equals("Tender Offer")) ret = "TENDER";
+			if (ret.equals("anytime"))      ret = "ANYTIME";
+			if (ret.equals("any time"))     ret = "ANYTIME";
+			if (ret.equals("Any time"))     ret = "ANYTIME";
+			if (ret.equals("Any Time"))     ret = "ANYTIME";
+			if (ret.equals("Partial Call")) ret = "PARTIAL";
+			if (ret.equals("Called for"))   ret = "CALLED";
+			if (ret.equals("noncallable"))  ret = "NO_REDEEM";
+			if (ret.equals("Noncallable"))  ret = "NO_REDEEM";
+			if (ret.equals("Nonredeem"))    ret = "NO_REDEEM";
+			if (ret.equals("Unredeemable")) ret = "NO_REDEEM";
 
 			return ret;
 		}
@@ -116,25 +136,20 @@ public class QuantumOnline {
 				
 //				logger.info("FILE {}", file.getName());
 				
-				String symbol = SYMBOL.getValue(content);
-				String cusip  = CUSIP.getValue(content);
-				String exch   = EXCHANGE.getValue(content);
-				String type   = TYPE.getValue(content);
-				String name   = NAME.getValue(content);
-				String cpnRate = CPN_RATE.getValue(content);
-				String annAmt = ANN_AMT.getValue(content);
-				String liqPref = LIQ_PREF.getValue(content);
+				String symbol    = SYMBOL.getValue(content);
+				String cusip     = CUSIP.getValue(content);
+				String exch      = EXCHANGE.getValue(content);
+				String type      = TYPE.getValue(content);
+				String name      = NAME.getValue(content);
+				String cpnRate   = CPN_RATE.getValue(content);
+				String annAmt    = ANN_AMT.getValue(content);
+				String liqPref   = LIQ_PREF.getValue(content);
 				String callPrice = CALL_PRICE.getValue(content);
-				String callDate = CALL_DATE.getValue(content);
+				String callDate  = CALL_DATE.getValue(content);
 				String maturDate = MATUR_DATE.getValue(content);
 				
 				logger.info("{}", String.format("%4d %-8s %-9s %-4s %10s %10s %10s %10s %10s %10s %-40s %s", ++count, symbol, cusip, exch, cpnRate, annAmt, liqPref, callPrice, callDate, maturDate, type, name));
 				
-				
-				// type sub-type
-				// Traditional Preferred Stock
-				//   cpn-rate ann-amt liq-pref call-price call-date matur-date moody sp distribution-date
-				// 
 			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e);

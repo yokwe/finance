@@ -155,4 +155,13 @@
 			<arg value="tmp/database/google-historical-update.csv"/>
 		</java>
 	</target>
+	
+	<target name="run-update-quantum">
+		<java classname="yokwe.finance.securities.update.QuantumOnline" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/fetch/quantum"/>
+			<arg value="tmp/database/quantum.csv"/>
+		</java>
+	</target>
 </project>

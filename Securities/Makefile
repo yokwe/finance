@@ -133,7 +133,7 @@ fetch-yahoo-dividend-40y:
 #
 
 update:
-	make update-price load-data tar
+	make update-price load-data update-correlation tar load-correlation
 
 prepare-update:
 	rm -rf tmp/update/*/*
@@ -177,3 +177,7 @@ fetch-quantum:
 	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
+
+update-quantum:
+	ant run-update-quantum
+	

@@ -177,7 +177,15 @@ fetch-quantum:
 	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
+	cp ${DIR_DATABASE}/quantum.csv ~/Dropbox/Trade
 
 update-quantum:
 	ant run-update-quantum
+
+#
+# equityStats
+#
+update-equityStats:
+	ant run-equityStats
+	cp ${DIR_DATABASE}/equityStats.csv ~/Dropbox/Trade
 	

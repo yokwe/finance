@@ -164,4 +164,12 @@
 			<arg value="tmp/database/quantum.csv"/>
 		</java>
 	</target>
+
+	<target name="run-equityStats">
+		<java classname="yokwe.finance.securities.app.EquityStats" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+			<arg value="tmp/database/equityStats.csv"/>
+		</java>
+	</target>
 </project>

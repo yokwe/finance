@@ -65,7 +65,7 @@ public class EquityStats {
 		LocalDate dateFrom = dateTo.minusYears(1);
 
 		// symbol, name, sd, price, divAnnual divCount
-		w.write("symbol,name,sd,price,count,divAnnual,divCount,yield\n");
+		w.write("symbol,sd,div,freq\n");
 		for(String symbol: candidateList) {
 			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
 			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
@@ -75,23 +75,23 @@ public class EquityStats {
 			if (name.contains(","))  name = "\"" + name + "\"";
 			
 			double sd        = new UniStats(DoubleArray.logReturn(priceArray)).sd;
-			int    count     = priceArray.length;
-			double price     = priceArray[count - 1];
 			double divAnnual = DoubleArray.sum(divArray);
 			int    divCount  = divArray.length;
-			double yield     = divAnnual / price;
 
-			w.write(String.format("%s,%s,%.5f,%.2f,%d,%.4f,%d,%.4f\n", symbol, name, sd, price, count, divAnnual, divCount, yield));
+			w.write(String.format("%s,%.5f,%.2f,%d\n", symbol, sd, divAnnual, divCount));
 		}
 	}
 	
-	private static final String OUTPUT_PATH = "tmp/equityStats.csv";
 	public static void main(String[] args) {
 		logger.info("START");
+//		String outputPath = "tmp/equityStats.csv";
+		String outputPath = args[0];
+		logger.info("outputPath    = {}", outputPath);
+		
 		try {
 			Class.forName("org.sqlite.JDBC");
 			try (Connection connection = DriverManager.getConnection("jdbc:sqlite:tmp/sqlite/securities.sqlite3");
-				BufferedWriter bw = new BufferedWriter(new FileWriter(OUTPUT_PATH))) {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(outputPath))) {
 				stats(connection, bw);
 			}
 		} catch (ClassNotFoundException | SQLException | IOException e) {

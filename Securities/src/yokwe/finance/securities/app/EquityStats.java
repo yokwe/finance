@@ -64,8 +64,8 @@ public class EquityStats {
 		LocalDate dateTo   = lastTradeDate;
 		LocalDate dateFrom = dateTo.minusYears(1);
 
-		// symbol, name, sd, price, divAnnual divCount
-		w.write("symbol,sd,div,freq\n");
+		// symbol, price, sd, div, freq
+		w.write("symbol,price,sd,div,freq\n");
 		for(String symbol: candidateList) {
 			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
 			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
@@ -74,11 +74,12 @@ public class EquityStats {
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
 			if (name.contains(","))  name = "\"" + name + "\"";
 			
-			double sd        = new UniStats(DoubleArray.logReturn(priceArray)).sd;
-			double divAnnual = DoubleArray.sum(divArray);
-			int    divCount  = divArray.length;
+			double price = priceArray[priceArray.length - 1];
+			double sd    = new UniStats(DoubleArray.logReturn(priceArray)).sd;
+			double div   = DoubleArray.sum(divArray);
+			int    freq  = divArray.length;
 
-			w.write(String.format("%s,%.5f,%.2f,%d\n", symbol, sd, divAnnual, divCount));
+			w.write(String.format("%s,%.2f,%.5f,%.2f,%d\n", symbol, price, sd, div, freq));
 		}
 	}
 	

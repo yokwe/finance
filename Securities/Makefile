@@ -163,11 +163,10 @@ fetch-mizuho:
 	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 	
 update-mizuho:
-	mkdir -p ${DIR_MIZUHO}
-	rm    -f ${DIR_MIZUHO}/*
-	echo "DATE,USD" >${DIR_DATABASE}/quote-usd.csv
-	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f\n",$$1,$$2,$$3,$$4)}' >>${DIR_DATABASE}/quote-usd.csv
-	cp ${DIR_DATABASE}/quote-usd.csv ~/Dropbox/Trade/みずほ銀行外国為替公示相場.csv
+	echo "DATE,USD" >${DIR_DATABASE}/mizuho-header.csv
+	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f\n",$$1,$$2,$$3,$$4)}' >>${DIR_DATABASE}/mizuho-header.csv
+	tail -n +2 ${DIR_DATABASE}/mizuho-header.csv >${DIR_DATABASE}/mizuho.csv
+	cp ${DIR_DATABASE}/mizuho-header.csv ~/Dropbox/Trade
 
 #
 # quantumonline
@@ -177,15 +176,17 @@ fetch-quantum:
 	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
 	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
 	ant run-fetch
-	cp ${DIR_DATABASE}/quantum.csv ~/Dropbox/Trade
 
 update-quantum:
 	ant run-update-quantum
+	tail -n +2 ${DIR_DATABASE}/quantum-header.csv >${DIR_DATABASE}/quantum.csv
+	cp ${DIR_DATABASE}/quantum-header.csv ~/Dropbox/Trade
 
 #
 # equityStats
 #
 update-equityStats:
 	ant run-equityStats
-	cp ${DIR_DATABASE}/equityStats.csv ~/Dropbox/Trade
+	tail -n +2 ${DIR_DATABASE}/equityStats-header.csv >${DIR_DATABASE}/equityStats.csv
+	cp ${DIR_DATABASE}/equityStats-header.csv ~/Dropbox/Trade
 	

@@ -161,7 +161,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
 			<arg value="tmp/fetch/quantum"/>
-			<arg value="tmp/database/quantum.csv"/>
+			<arg value="tmp/database/quantum-header.csv"/>
 		</java>
 	</target>
 
@@ -169,7 +169,7 @@
 		<java classname="yokwe.finance.securities.app.EquityStats" fork="true">
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
-			<arg value="tmp/database/equityStats.csv"/>
+			<arg value="tmp/database/equityStats-header.csv"/>
 		</java>
 	</target>
 </project>

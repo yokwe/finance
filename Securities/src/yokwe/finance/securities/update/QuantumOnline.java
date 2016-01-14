@@ -122,6 +122,9 @@ public class QuantumOnline {
 		Arrays.sort(fileList, (a, b) -> a.getName().compareTo(b.getName()));
 		
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(csvPath), BUFFER_SIZE)) {
+			// Outpu header
+			bw.append("symbol,cpnRate,annAmt,liqPref,callPrice,callDate,maturDate,type,name\n");
+			
 			int count = 0;
 			for(File file: fileList) {
 				if (file.length() == 0) {

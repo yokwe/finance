@@ -85,9 +85,9 @@ public class EquityStats {
 			double sd        = new UniStats(DoubleArray.logReturn(priceArray)).sd;
 			double div       = DoubleArray.sum(divArray);
 			int    freq      = divArray.length;
-			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2];
+			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2] - 1.0;
 
-			w.write(String.format("%s,%.2f,%.5f,%.2f,%d,%.2f,%s\n", symbol, price, sd, div, freq, changepct, name));
+			w.write(String.format("%s,%.2f,%.5f,%.2f,%d,%.4f,%s\n", symbol, price, sd, div, freq, changepct, name));
 		}
 	}
 	

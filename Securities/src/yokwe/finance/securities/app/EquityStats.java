@@ -64,8 +64,8 @@ public class EquityStats {
 		LocalDate dateTo   = lastTradeDate;
 		LocalDate dateFrom = dateTo.minusYears(1);
 
-		// symbol, price, sd, div, freq, changepct, name
-		w.write("symbol,price,sd,div,freq,changepct,name\n");
+		// symbol, name, price, sd, div, freq, changepct
+		w.write("symbol,name,price,sd,div,freq,changepct\n");
 		for(String symbol: candidateList) {
 			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
 			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
@@ -87,7 +87,7 @@ public class EquityStats {
 			int    freq      = divArray.length;
 			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2] - 1.0;
 
-			w.write(String.format("%s,%.2f,%.5f,%.2f,%d,%.4f,%s\n", symbol, price, sd, div, freq, changepct, name));
+			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f\n", symbol, name, price, sd, div, freq, changepct));
 		}
 	}
 	

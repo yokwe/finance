@@ -224,6 +224,9 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 	public static EMA ema(double alpha) {
 		return new EMA(alpha);
 	}
+	public static EMA ema() {
+		return new EMA(DEFAULT_ALPHA);
+	}
 
 
 	private static void testSimple() {

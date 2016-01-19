@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,6 +22,8 @@ import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.DoubleArray;
+import yokwe.finance.securities.stats.MA;
+import yokwe.finance.securities.stats.Portfolio;
 import yokwe.finance.securities.stats.UniStats;
 import yokwe.finance.securities.util.NasdaqUtil;
 
@@ -64,30 +67,39 @@ public class EquityStats {
 		LocalDate dateTo   = lastTradeDate;
 		LocalDate dateFrom = dateTo.minusYears(1);
 
-		// symbol, name, price, sd, div, freq, changepct
-		w.write("symbol,name,price,sd,div,freq,changepct\n");
+		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,\n");
 		for(String symbol: candidateList) {
 			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
 			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
 			
+			double logReturn[]  = DoubleArray.logReturn(priceArray);
+
 			// Skip symbol that has small number of price data (1 month)
 			if (priceArray.length <= 21) {
 				logger.warn("SKIP {}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
 				continue;
 			}
 			//logger.info("{}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
-			
+
+			UniStats uni = new UniStats(logReturn);
+			MA ema = MA.EMA.ema();
+			Arrays.stream(DoubleArray.multiply(logReturn, logReturn)).forEach(ema);
+
 			String name = NasdaqUtil.get(symbol).name;
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
 			if (name.contains(","))  name = "\"" + name + "\"";
 			
 			double price     = priceArray[priceArray.length - 1];
-			double sd        = new UniStats(DoubleArray.logReturn(priceArray)).sd;
 			double div       = DoubleArray.sum(divArray);
 			int    freq      = divArray.length;
 			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2] - 1.0;
-
-			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f\n", symbol, name, price, sd, div, freq, changepct));
+			int    count     = priceArray.length;
+			double hv        = Math.sqrt(ema.getValue());
+			double change    = priceArray[priceArray.length - 1] - priceArray[priceArray.length - 2];
+			double var95     = hv * Portfolio.CONFIDENCE_95_PERCENT;
+			double var99     = hv * Portfolio.CONFIDENCE_99_PERCENT;
+			
+			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99));
 		}
 	}
 	

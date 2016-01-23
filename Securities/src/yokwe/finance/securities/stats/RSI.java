@@ -6,7 +6,7 @@ import java.util.function.DoubleUnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RSI implements DoubleUnaryOperator, DoubleConsumer {
+public final class RSI implements DoubleUnaryOperator, DoubleConsumer {
 	private static final Logger logger = LoggerFactory.getLogger(RSI.class);
 
 	public static final int DEFAULT_PERIDO = 14;

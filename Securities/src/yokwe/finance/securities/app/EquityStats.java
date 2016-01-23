@@ -26,7 +26,6 @@ import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.Portfolio;
 import yokwe.finance.securities.stats.RSI;
 import yokwe.finance.securities.stats.UniStats;
-import yokwe.finance.securities.util.NasdaqUtil;
 
 public class EquityStats {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(EquityStats.class);
@@ -90,7 +89,7 @@ public class EquityStats {
 			MA ma200 = MA.sma(200);
 			Arrays.stream(priceArray).forEach(ma200);
 			
-			String name = NasdaqUtil.get(symbol).name;
+			String name = nasdaqMap.get(symbol).name;
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
 			if (name.contains(","))  name = "\"" + name + "\"";
 			
@@ -104,7 +103,7 @@ public class EquityStats {
 			double var95     = hv * Portfolio.CONFIDENCE_95_PERCENT;
 			double var99     = hv * Portfolio.CONFIDENCE_99_PERCENT;
 			
-			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.5f,%.5f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99, rsi.getValue() ,ma200.getValue()));
+			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99, rsi.getValue() ,ma200.getValue()));
 		}
 	}
 	

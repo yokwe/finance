@@ -16,7 +16,6 @@ public class RSI implements DoubleUnaryOperator, DoubleConsumer {
 	
 	
 	private final int  period;
-	private final double alpha;
 	
 	private int    count = 0;
 	private double last  = Double.NaN;
@@ -31,7 +30,8 @@ public class RSI implements DoubleUnaryOperator, DoubleConsumer {
 	
 	public RSI(int period) {
 		this.period = period;
-		alpha = 1.0 / period;
+		
+		double alpha = 1.0 / period;
 		gainEMA = MA.ema(alpha);
 		lossEMA = MA.ema(alpha);
 	}

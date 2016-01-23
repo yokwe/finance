@@ -24,6 +24,7 @@ import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.Portfolio;
+import yokwe.finance.securities.stats.RSI;
 import yokwe.finance.securities.stats.UniStats;
 import yokwe.finance.securities.util.NasdaqUtil;
 
@@ -67,7 +68,7 @@ public class EquityStats {
 		LocalDate dateTo   = lastTradeDate;
 		LocalDate dateFrom = dateTo.minusYears(1);
 
-		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,\n");
+		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,ma200\n");
 		for(String symbol: candidateList) {
 			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
 			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
@@ -82,9 +83,13 @@ public class EquityStats {
 			//logger.info("{}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
 
 			UniStats uni = new UniStats(logReturn);
-			MA ema = MA.EMA.ema();
-			Arrays.stream(DoubleArray.multiply(logReturn, logReturn)).forEach(ema);
-
+			MA emaHV = MA.ema();
+			Arrays.stream(DoubleArray.multiply(logReturn, logReturn)).forEach(emaHV);
+			RSI rsi = new RSI();
+			Arrays.stream(priceArray).forEach(rsi);
+			MA ma200 = MA.sma(200);
+			Arrays.stream(priceArray).forEach(ma200);
+			
 			String name = NasdaqUtil.get(symbol).name;
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
 			if (name.contains(","))  name = "\"" + name + "\"";
@@ -94,12 +99,12 @@ public class EquityStats {
 			int    freq      = divArray.length;
 			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2] - 1.0;
 			int    count     = priceArray.length;
-			double hv        = Math.sqrt(ema.getValue());
+			double hv        = Math.sqrt(emaHV.getValue());
 			double change    = priceArray[priceArray.length - 1] - priceArray[priceArray.length - 2];
 			double var95     = hv * Portfolio.CONFIDENCE_95_PERCENT;
 			double var99     = hv * Portfolio.CONFIDENCE_99_PERCENT;
 			
-			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99));
+			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.5f,%.5f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99, rsi.getValue() ,ma200.getValue()));
 		}
 	}
 	

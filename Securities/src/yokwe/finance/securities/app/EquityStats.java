@@ -22,8 +22,8 @@ import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.DoubleArray;
+import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
-import yokwe.finance.securities.stats.Portfolio;
 import yokwe.finance.securities.stats.RSI;
 import yokwe.finance.securities.stats.UniStats;
 
@@ -81,9 +81,9 @@ public class EquityStats {
 			}
 			//logger.info("{}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
 
-			UniStats uni = new UniStats(logReturn);
-			MA emaHV = MA.ema();
-			Arrays.stream(DoubleArray.multiply(logReturn, logReturn)).forEach(emaHV);
+			UniStats uni = new UniStats(logReturn);			
+			HV hv = new HV();
+			Arrays.stream(priceArray).forEach(hv);
 			RSI rsi = new RSI();
 			Arrays.stream(priceArray).forEach(rsi);
 			MA ma200 = MA.sma(200);
@@ -93,17 +93,15 @@ public class EquityStats {
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
 			if (name.contains(","))  name = "\"" + name + "\"";
 			
+			double lastPrice = priceArray[priceArray.length - 2];
 			double price     = priceArray[priceArray.length - 1];
+			double changepct = price / lastPrice - 1.0;
+			double change    = price - lastPrice;
 			double div       = DoubleArray.sum(divArray);
 			int    freq      = divArray.length;
-			double changepct = priceArray[priceArray.length - 1] / priceArray[priceArray.length - 2] - 1.0;
 			int    count     = priceArray.length;
-			double hv        = Math.sqrt(emaHV.getValue());
-			double change    = priceArray[priceArray.length - 1] - priceArray[priceArray.length - 2];
-			double var95     = hv * Portfolio.CONFIDENCE_95_PERCENT;
-			double var99     = hv * Portfolio.CONFIDENCE_99_PERCENT;
 			
-			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv, change, var95, var99, rsi.getValue() ,ma200.getValue()));
+			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv.getValue(), change, hv.getVaR95(1), hv.getVaR99(1), rsi.getValue() ,ma200.getValue()));
 		}
 	}
 	

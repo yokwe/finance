@@ -133,7 +133,7 @@ fetch-yahoo-dividend-40y:
 #
 
 update:
-	make update-price load-data update-equityStats update-correlation tar load-correlation
+	make fetch-mizuho update-mizuho update-price load-data update-equityStats update-correlation tar load-correlation
 
 prepare-update:
 	rm -rf tmp/update/*/*

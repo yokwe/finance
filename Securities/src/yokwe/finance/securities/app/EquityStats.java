@@ -77,7 +77,7 @@ public class EquityStats {
 		}
 
 
-		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,ma200,divYield,beta,r2,vol5\n");
+		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,price200,divYield,beta,r2,vol5\n");
 		for(String symbol: candidateList) {
 			List<PriceTable> priceTable = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
 			double priceArray[]  = priceTable.stream().mapToDouble(o -> o.close).toArray();
@@ -98,8 +98,8 @@ public class EquityStats {
 			Arrays.stream(priceArray).forEach(hv);
 			RSI rsi = new RSI();
 			Arrays.stream(priceArray).forEach(rsi);
-			MA ma200 = MA.sma(200);
-			Arrays.stream(priceArray).forEach(ma200);
+			MA price200 = MA.sma(200);
+			Arrays.stream(priceArray).forEach(price200);
 			MA vol5 = MA.sma(5);
 			Arrays.stream(volumeArray).forEach(vol5);
 			
@@ -132,7 +132,7 @@ public class EquityStats {
 			w.write(
 				String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f,%.3f,%.3f,%.3f,%d\n",
 					symbol, name, price, stock.sd, div, freq, changepct, count, hv.getValue(), change, hv.getVaR95(1), hv.getVaR99(1),
-					rsi.getValue() ,ma200.getValue(), divYield, beta, r2, Math.round(vol5.getValue())));
+					rsi.getValue(), price200.getValue(), divYield, beta, r2, Math.round(vol5.getValue())));
 		}
 	}
 	

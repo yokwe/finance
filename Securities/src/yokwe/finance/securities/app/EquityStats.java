@@ -22,6 +22,7 @@ import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.stats.DoubleArray;
+import yokwe.finance.securities.stats.FinStats;
 import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.RSI;
@@ -43,6 +44,7 @@ public class EquityStats {
 		
 		Map<String, CompanyTable> companyMap = CompanyTable.getMap(connection);
 		logger.info("companyMap    = {}", companyMap.size());
+		
 		
 		// candidateList has all
 		List<String> candidateList = nasdaqMap.keySet().stream().collect(Collectors.toList());
@@ -66,11 +68,21 @@ public class EquityStats {
 		
 		LocalDate dateTo   = lastTradeDate;
 		LocalDate dateFrom = dateTo.minusYears(1);
+		
+		final UniStats market;
+		{
+			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, "SPY", dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
+			double logReturn[]  = DoubleArray.logReturn(priceArray);
+			market = new UniStats(logReturn);
+		}
 
-		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,ma200,divYield\n");
+
+		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,ma200,divYield,beta,r2,vol5\n");
 		for(String symbol: candidateList) {
-			double priceArray[] = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.close).toArray();
-			double divArray[]   = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
+			List<PriceTable> priceTable = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
+			double priceArray[]  = priceTable.stream().mapToDouble(o -> o.close).toArray();
+			double volumeArray[] = priceTable.stream().mapToDouble(o -> o.volume).toArray();
+			double divArray[]    = DividendTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo).stream().mapToDouble(o -> o.dividend).toArray();
 			
 			double logReturn[]  = DoubleArray.logReturn(priceArray);
 
@@ -81,13 +93,15 @@ public class EquityStats {
 			}
 			//logger.info("{}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
 
-			UniStats uni = new UniStats(logReturn);			
+			UniStats stock = new UniStats(logReturn);			
 			HV hv = new HV();
 			Arrays.stream(priceArray).forEach(hv);
 			RSI rsi = new RSI();
 			Arrays.stream(priceArray).forEach(rsi);
 			MA ma200 = MA.sma(200);
 			Arrays.stream(priceArray).forEach(ma200);
+			MA vol5 = MA.sma(5);
+			Arrays.stream(volumeArray).forEach(vol5);
 			
 			String name = nasdaqMap.get(symbol).name;
 			if (name.contains("\"")) name = name.replace("\"", "\"\"");
@@ -102,7 +116,23 @@ public class EquityStats {
 			int    count     = priceArray.length;
 			double divYield  = div / price;
 			
-			w.write(String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f,%.3f\n", symbol, name, price, uni.sd, div, freq, changepct, count, hv.getValue(), change, hv.getVaR95(1), hv.getVaR99(1), rsi.getValue() ,ma200.getValue(), divYield));
+			double beta;
+			double r2;
+			{
+				if (market.size == stock.size) {
+					FinStats finStats = new FinStats(market, stock, 0.0);
+					beta = finStats.beta;
+					r2   = finStats.r2;
+				} else {
+					beta = 0;
+					r2   = 0;
+				}
+			}
+			
+			w.write(
+				String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f,%.3f,%.3f,%.3f,%d\n",
+					symbol, name, price, stock.sd, div, freq, changepct, count, hv.getValue(), change, hv.getVaR95(1), hv.getVaR99(1),
+					rsi.getValue() ,ma200.getValue(), divYield, beta, r2, Math.round(vol5.getValue())));
 		}
 	}
 	

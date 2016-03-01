@@ -31,8 +31,8 @@ public final class Nasdaq {
 		exchNameMap.put("Z", "BATS");
 	}
 	
-	private static final String HEADER           = "Nasdaq Traded|Symbol|Security Name|Listing Exchange|Market Category|ETF|Round Lot Size|Test Issue|Financial Status|CQS Symbol|NASDAQ Symbol";
-	private static final int    NUMBER_OF_FIELDS = 11;
+	private static final String HEADER           = "Nasdaq Traded|Symbol|Security Name|Listing Exchange|Market Category|ETF|Round Lot Size|Test Issue|Financial Status|CQS Symbol|NASDAQ Symbol|NextShares";
+	private static final int    NUMBER_OF_FIELDS = 12;
 
 	private static final String NEWLINE = "\n";
 	

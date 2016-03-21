@@ -78,7 +78,7 @@ public class EquityStats {
 		}
 
 
-		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,price200,divYield,beta,r2,vol5,min,max\n");
+		w.write("symbol,name,price,sd,div,freq,changepct,count,hv,change,var95,var99,rsi,price200,divYield,beta,r2,vol5,min,max,minpct,maxpct\n");
 		for(String symbol: candidateList) {
 			List<PriceTable> priceTable = PriceTable.getAllBySymbolDateRange(connection, symbol, dateFrom, dateTo);
 			double priceArray[]  = priceTable.stream().mapToDouble(o -> o.close).toArray();
@@ -130,11 +130,15 @@ public class EquityStats {
 					r2   = 0;
 				}
 			}
+			double min = summaryStats.getMin();
+			double max = summaryStats.getMax();
+			double minpct = (price - min) / price;
+			double maxpct = (max - price) / price;
 			
 			w.write(
-				String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f,%.3f,%.3f,%.3f,%d,%.2f,%.2f\n",
+				String.format("%s,%s,%.2f,%.5f,%.2f,%d,%.4f,%d,%5f,%.5f,%.5f,%.5f,%.1f,%.3f,%.3f,%.3f,%.3f,%d,%.2f,%.2f,%.4f,%.4f\n",
 					symbol, name, price, stock.sd, div, freq, changepct, count, hv.getValue(), change, hv.getVaR95(1), hv.getVaR99(1),
-					rsi.getValue(), price200.getValue(), divYield, beta, r2, Math.round(vol5.getValue()), summaryStats.getMin(), summaryStats.getMax()));
+					rsi.getValue(), price200.getValue(), divYield, beta, r2, Math.round(vol5.getValue()), min, max, minpct, maxpct));
 		}
 	}
 	

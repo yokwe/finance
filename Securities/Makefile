@@ -37,7 +37,7 @@ build-jar:
 	ant build
 
 prepare-deploy-jar:
-	sudo chmod 777 /var/lib/tomcat7/webapps/
+	sudo chmod 777 /var/lib/tomcat8/webapps/
 	
 deploy-jar: prepare-deploy-jar
 	ant deploy

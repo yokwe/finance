@@ -8,8 +8,8 @@
 
 	<property name="dir.web" location="./web" />
 
-	<property name="catalina.base" location="/var/lib/tomcat7" />
-	<property name="catalina.home" location="/usr/share/tomcat7" />
+	<property name="catalina.base" location="/var/lib/tomcat8" />
+	<property name="catalina.home" location="/usr/share/tomcat8" />
 
 	<path id="ext.jar">
 		<fileset dir="${dir.ext.jar}">

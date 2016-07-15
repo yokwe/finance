@@ -87,8 +87,8 @@ public class EquityStats {
 			
 			double logReturn[]  = DoubleArray.logReturn(priceArray);
 
-			// Skip symbol that has small number of price data (1 month)
-			if (priceArray.length <= 21) {
+			// Skip symbol that has small number of price data (1 week)
+			if (priceArray.length <= 5) {
 				logger.warn("SKIP {}", String.format("%-6s  %3d %2d", symbol, priceArray.length, divArray.length));
 				continue;
 			}

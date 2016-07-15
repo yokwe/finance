@@ -23,7 +23,6 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.update.GoogleHistorical;
-import yokwe.finance.securities.update.YahooDaily;
 import yokwe.finance.securities.util.NasdaqUtil;
 
 public final class UpdatePrice {
@@ -46,6 +45,16 @@ public final class UpdatePrice {
 		Map<String, PriceTable> ibmMap = map.get("IBM");
 		Map<String, PriceTable> nytMap = map.get("NYT");
 		Map<String, PriceTable> pepMap = map.get("PEP");
+		
+		if (ibmMap == null) {
+			logger.error("ibm == null");
+		}
+		if (nytMap == null) {
+			logger.error("nytMap == null");
+		}
+		if (pepMap == null) {
+			logger.error("pepMap == null");
+		}
 		
 		if (ibmMap.size() != nytMap.size()) {
 			logger.error("ibm = {}  nyt = {}", ibmMap.size(), nytMap.size());
@@ -98,27 +107,9 @@ public final class UpdatePrice {
 		
 		// Download price file from yahoo and google		
 		logger.info("Build pathURLMap");
-		Map<String, PathURL> yahooPathURLMap  = new TreeMap<>();
 		Map<String, PathURL> googlePathURLMap = new TreeMap<>();
 		for(String symbol: nasdaqMap.keySet()) {
 			NasdaqTable nasdaq = nasdaqMap.get(symbol);
-			// yahoo
-			{
-				final String path = getFilePath(year, symbol, Provider.YAHOO);
-				
-				// http://real-chart.finance.yahoo.com/table.csv?s=SPY&a=00&b=01&c=2015&d=12&e=30&f=2015&ignore=.csv
-				final String s = nasdaq.yahoo;
-				final int a = dateFrom.getMonthValue() - 1;
-				final int b = dateFrom.getDayOfMonth();
-				final int c = dateFrom.getYear();
-				final int d = dateTo.getMonthValue() - 1;
-				final int e = dateTo.getDayOfMonth();
-				final int f = dateTo.getYear();
-				
-				final String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%d&d=%02d&e=%02d&f=%d&g=d&ignore=.csv", s, a, b, c, d, e, f);
-
-				yahooPathURLMap.put(symbol, new PathURL(path, url));
-			}
 			// google
 			{
 				final String path = getFilePath(year, symbol, Provider.GOOGLE);
@@ -145,22 +136,17 @@ public final class UpdatePrice {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
 				{
-					PathURL yahooPathURL = yahooPathURLMap.get(symbol);
-					File yahooFile = new File(yahooPathURL.path);
 					
 					PathURL googlePathURL = googlePathURLMap.get(symbol);
 					File googleFile = new File(googlePathURL.path);
 					
-					if (yahooFile.exists() && googleFile.exists()) continue;
+					if (googleFile.exists()) continue;
 					
 					long thisTime = System.currentTimeMillis();
 					long sleepTime = lastTime + WAIT_TIME - thisTime;
 					lastTime = thisTime;
 					if (0 < sleepTime) Thread.sleep(sleepTime);
 
-					if (!yahooFile.exists()) {
-						Fetch.download(yahooPathURL.url, yahooPathURL.path, new ArrayList<>());
-					}
 					if (!googleFile.exists()) {
 						Fetch.download(googlePathURL.url, googlePathURL.path, new ArrayList<>());
 					}
@@ -170,7 +156,6 @@ public final class UpdatePrice {
 		
 		// Build map   Map<Symbol, Map<Date, PriceTable>>
 		logger.info("Build map");
-		Map<String, Map<String, PriceTable>> yahooMap  = new HashMap<>();
 		Map<String, Map<String, PriceTable>> googleMap = new HashMap<>();
 		{
 			final int total = nasdaqMap.keySet().size();
@@ -180,28 +165,6 @@ public final class UpdatePrice {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
 
-				{
-					final String path = yahooPathURLMap.get(symbol).path;
-					final File file = new File(path);
-					if (!file.isFile()) {
-						logger.error("no file  {}", path);
-						throw new SecuritiesException("no file");
-					}
-					final Map<String, PriceTable> dateMap = new HashMap<>();
-					yahooMap.put(symbol, dateMap);
-					try (BufferedReader br = new BufferedReader(new FileReader(file), BUFFER_SIZE)) {
-						final String header = br.readLine();
-						if (header != null) {
-							YahooDaily.CSVRecord.checkHeader(header);
-							for(;;) {
-								final String line = br.readLine();
-								if (line == null) break;
-								final PriceTable priceTable = YahooDaily.CSVRecord.toPriceTable(symbol, line);
-								dateMap.put(priceTable.date, priceTable);
-							}
-						}
-					}
-				}
 				{
 					final String path = googlePathURLMap.get(symbol).path;
 					final File file = new File(path);
@@ -230,8 +193,6 @@ public final class UpdatePrice {
 		// Merge yahoo and google dateList
 		final List<String> dateList = new ArrayList<>();
 		{
-			dateList.addAll(getDateList(yahooMap));
-			
 			List<String> googleDateList = getDateList(googleMap);
 			for(String date: googleDateList) {
 				if (dateList.contains(date)) continue;
@@ -254,19 +215,14 @@ public final class UpdatePrice {
 					logger.info("{}", String.format("%4d / %4d  %s", count, total, symbol));
 				}
 
-				final Map<String, PriceTable> yahoo  = yahooMap.get(symbol);
 				final Map<String, PriceTable> google = googleMap.get(symbol);
 
 				int countMissing = 0;
 				for(String date: dateList) {
-					if (yahoo.containsKey(date)) {
-						data.add(yahoo.get(date));
+					if (google.containsKey(date)) {
+						data.add(google.get(date));
 					} else {
-						if (google.containsKey(date)) {
-							data.add(google.get(date));
-						} else {
-							countMissing++;
-						}
+						countMissing++;
 					}
 				}
 				if (0 < countMissing) {

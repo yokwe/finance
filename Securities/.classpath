@@ -12,10 +12,10 @@
 	<classpathentry kind="lib" path="/Common/jar/slf4j-api-1.7.12.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/sqlite-jdbc-3.8.11.1.jar"/>
 	<classpathentry kind="lib" path="/usr/share/tomcat8/lib/servlet-api.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/unoloader.jar"/>
+	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/unoil.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/juh.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/jurt.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/ridl.jar"/>
-	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/unoil.jar"/>
-	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/unoloader.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

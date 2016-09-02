@@ -7,6 +7,8 @@
 	<property name="dir.build.jar" location="${dir.build}/jar" />
 
 	<property name="dir.web" location="./web" />
+	
+	<property name="dir.libreoffice.jar" location="/usr/lib/libreoffice/program/classes" />
 
 	<property name="catalina.base" location="/var/lib/tomcat8" />
 	<property name="catalina.home" location="/usr/share/tomcat8" />
@@ -18,8 +20,15 @@
 		<fileset dir="${catalina.home}/lib" >
 			<include name="servlet-api.jar" />
 		</fileset>
+                <fileset dir="${dir.libreoffice.jar}">
+                        <include name="unoloader.jar" />
+                        <include name="unoil.jar" />
+                        <include name="juh.jar" />
+                        <include name="jurt.jar" />
+                        <include name="ridl.jar" />
+                </fileset>
 	</path>
-
+	
 	<property name="jar.yokwe" location="${dir.build.jar}/yokwe.jar" />
 
 	<target name="deploy">
@@ -56,8 +65,8 @@
 		<delete dir="${dir.build.jar}" quiet="true" />
 		<mkdir dir="${dir.build.jar}" />
 		<!-- compile -->
-		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false"
-		        debug="true" debuglevel="lines,vars,source"/>
+		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false" 
+			debug="true" debuglevel="lines,vars,source" />
 		<!-- copy resource file -->
 		<copy todir="${dir.build.bin}">
 			<fileset dir="${dir.src}" excludes="**/*.java" />
@@ -172,4 +181,14 @@
 			<arg value="tmp/database/equityStats-header.csv"/>
 		</java>
 	</target>
+	
+       <target name="run-T001">
+                <java classname="yokwe.finance.securities.book.T001" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+
 </project>

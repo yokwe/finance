@@ -38,12 +38,15 @@ public class SheetData {
 		String value();
 	}
 	
-	public static <E extends SheetData> List<E> getInstance(XSpreadsheet spreadsheet, Class<E> clazz) {
+	public static <E extends SheetData> List<E> getInstance(LibreOffice libreOffice, Class<E> clazz) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		if (sheetName == null) {
 			logger.error("No SheetName annotation = {}", clazz.getName());
 			throw new SecuritiesException("No SheetName annotation");
 		}
+		logger.info("sheetName {}", sheetName.value());
+		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName.value());
+		
 		Map<String, Field> fieldMap = new TreeMap<>();
 		for(Field field: clazz.getDeclaredFields()) {
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
@@ -72,7 +75,7 @@ public class SheetData {
 					XText text = UnoRuntime.queryInterface(XText.class, cell);
 					String value = text.getString();
 					columnMap.put(value, i);
-					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
+//					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
 				}
 			} catch (IndexOutOfBoundsException e) {
 				logger.info("Exception {}", e.toString());
@@ -90,7 +93,6 @@ public class SheetData {
 		List<E> ret = new ArrayList<>();
 		{
 			try {
-				// Build header map
 				for(int i = 1; i < 65535; i++) {
 					final XCell firstCell = cellRange.getCellByPosition(0, i);
 					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
@@ -105,14 +107,11 @@ public class SheetData {
 						Class<?> fieldType = field.getType();
 						if (fieldType.equals(String.class)) {
 							// String
-							if (cellType.equals(CellContentType.TEXT)) {
+							if (cellType.equals(CellContentType.TEXT) || cellType.equals(CellContentType.VALUE)) {
 								XText text = UnoRuntime.queryInterface(XText.class, cell);
 								field.set(instance, text.getString());
 							} else if (cellType.equals(CellContentType.EMPTY)) {
 								field.set(instance, "");
-							} else if (cellType.equals(CellContentType.VALUE)) {
-								XText text = UnoRuntime.queryInterface(XText.class, cell);
-								field.set(instance, text.getString());
 							} else {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
 								throw new SecuritiesException("Unexpected");
@@ -130,14 +129,11 @@ public class SheetData {
 							}
 						} else if (fieldType.equals(Double.TYPE)) {
 							// double
-							if (cellType.equals(CellContentType.VALUE)) {
+							if (cellType.equals(CellContentType.VALUE) || cellType.equals(CellContentType.FORMULA)) {
 								double value = cell.getValue();
 								field.set(instance, value);
 							} else if (cellType.equals(CellContentType.EMPTY)) {
 								field.set(instance, 0);
-							} else if (cellType.equals(CellContentType.FORMULA)) {
-								double value = cell.getValue();
-								field.set(instance, value);
 							} else {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
 								throw new SecuritiesException("Unexpected");
@@ -162,13 +158,13 @@ public class SheetData {
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016_SAVE.ods";
 		
 		logger.info("START");
-		try (LibreOffice lo = new LibreOffice(url)) {			
-			XSpreadsheet spreadsheet = lo.getSpreadSheet("売買履歴");
-			
-			List<Transaction> transactionList = SheetData.getInstance(spreadsheet, Transaction.class);
+		try (LibreOffice libreOffice = new LibreOffice(url)) {			
+			List<Transaction> transactionList = SheetData.getInstance(libreOffice, Transaction.class);
 			for(Transaction transaction: transactionList) {
 				logger.info("{}", transaction);
 			}
 		}
+		logger.info("STOP");
+		System.exit(0);
 	}
 }

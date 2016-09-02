@@ -1,6 +1,8 @@
 package yokwe.finance.securities.book;
 
 import java.io.Closeable;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
@@ -8,13 +10,18 @@ import com.sun.star.beans.PropertyState;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.comp.helper.Bootstrap;
 import com.sun.star.comp.helper.BootstrapException;
+import com.sun.star.container.NoSuchElementException;
+import com.sun.star.container.XNameAccess;
 import com.sun.star.document.UpdateDocMode;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XModel;
 import com.sun.star.io.IOException;
 import com.sun.star.lang.IllegalArgumentException;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.table.CellContentType;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.uno.UnoRuntime;
@@ -39,6 +46,22 @@ public class LibreOffice implements Closeable {
 			"--headless",
 			"--invisible",
 	};
+	
+	private static final Map<CellContentType, String> cellContentTypeMap = new HashMap<>();
+	static {
+		cellContentTypeMap.put(CellContentType.EMPTY, "EMPTY");
+		cellContentTypeMap.put(CellContentType.FORMULA, "FORMULA");
+		cellContentTypeMap.put(CellContentType.TEXT, "TEXT");
+		cellContentTypeMap.put(CellContentType.VALUE, "VALUE");
+	}
+	public static String toString(CellContentType type) {
+		String ret = cellContentTypeMap.get(type);
+		if (ret == null) {
+			logger.info("Unexpected {}", type.toString());
+			throw new SecuritiesException("Unexpected type");
+		}
+		return ret;
+	}
 	
 	private static final XComponentLoader componentLoader;
 
@@ -72,12 +95,22 @@ public class LibreOffice implements Closeable {
 		return component;
 	}
 	public XSpreadsheets getSpreadSheets() {
-		XSpreadsheets ret = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component).getSheets();
-		if (ret == null) {
+		XSpreadsheets spreadSheets = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component).getSheets();
+		if (spreadSheets == null) {
 			logger.info("component {}", component.toString());
 			throw new SecuritiesException("Unexpected component");
 		}
-		return ret;
+		return spreadSheets;
+	}
+	public XSpreadsheet getSpreadSheet(String name) {
+		try {
+			XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSpreadSheets());
+			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, nameAccess.getByName(name));
+			return sheet;
+		} catch (NoSuchElementException | WrappedTargetException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
 	}
 	
 	public void close() {

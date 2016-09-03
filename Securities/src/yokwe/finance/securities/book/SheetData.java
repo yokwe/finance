@@ -103,40 +103,63 @@ public class SheetData {
 						int index = columnMap.get(columnName);
 						XCell cell = cellRange.getCellByPosition(index, i);
 						CellContentType cellType = cell.getType();
+						int cellTypeValue = cellType.getValue();
 						
 						Class<?> fieldType = field.getType();
 						if (fieldType.equals(String.class)) {
 							// String
-							if (cellType.equals(CellContentType.TEXT) || cellType.equals(CellContentType.VALUE)) {
+							switch (cellTypeValue) {
+							case CellContentType.TEXT_value:
+							case CellContentType.VALUE_value: {
 								XText text = UnoRuntime.queryInterface(XText.class, cell);
 								field.set(instance, text.getString());
-							} else if (cellType.equals(CellContentType.EMPTY)) {
+								break;
+							}
+							case CellContentType.EMPTY_value: {
 								field.set(instance, "");
-							} else {
+								break;
+							}
+							default: {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
 								throw new SecuritiesException("Unexpected");
+							}
 							}
 						} else if (fieldType.equals(Integer.TYPE)) {
 							// int
-							if (cellType.equals(CellContentType.VALUE)) {
+							switch (cellTypeValue) {
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
 								double value = cell.getValue();
+								// TODO do we need to check existence of fraction value?
 								field.set(instance, (int)value);
-							} else if (cellType.equals(CellContentType.EMPTY)) {
+								break;
+							}
+							case CellContentType.EMPTY_value: {
 								field.set(instance, 0);
-							} else {
+								break;
+							}
+							default: {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
 								throw new SecuritiesException("Unexpected");
 							}
+							}
 						} else if (fieldType.equals(Double.TYPE)) {
 							// double
-							if (cellType.equals(CellContentType.VALUE) || cellType.equals(CellContentType.FORMULA)) {
+							switch (cellTypeValue) {
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
 								double value = cell.getValue();
 								field.set(instance, value);
-							} else if (cellType.equals(CellContentType.EMPTY)) {
+								break;
+							}
+							case CellContentType.EMPTY_value: {
 								field.set(instance, 0);
-							} else {
+								break;
+							}
+							default: {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
 								throw new SecuritiesException("Unexpected");
+							}
 							}
 						} else {
 							logger.error("Unknow field type = {}", fieldType.getName());

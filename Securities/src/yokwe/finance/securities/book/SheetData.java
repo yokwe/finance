@@ -184,18 +184,4 @@ public class SheetData {
 			}
 		}
 	}
-
-	public static void main(String[] args) {
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016_SAVE.ods";
-		
-		logger.info("START");
-		try (LibreOffice libreOffice = new LibreOffice(url)) {			
-			List<Transaction> transactionList = SheetData.getInstance(libreOffice, Transaction.class);
-			for(Transaction transaction: transactionList) {
-				logger.info("{}", transaction);
-			}
-		}
-		logger.info("STOP");
-		System.exit(0);
-	}
 }

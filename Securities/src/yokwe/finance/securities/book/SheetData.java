@@ -130,7 +130,15 @@ public class SheetData {
 							case CellContentType.VALUE_value:
 							case CellContentType.FORMULA_value: {
 								double value = cell.getValue();
-								// TODO do we need to check existence of fraction value?
+								// Sanity check of value - fraction value
+								{
+									long iPart = (long)value;
+									double fPart = value - iPart;
+									if (0.00001 < fPart) {
+										logger.error("cell value have fraction value {}", value);
+										throw new SecuritiesException("Unexpected");
+									}
+								}
 								field.set(instance, (int)value);
 								break;
 							}

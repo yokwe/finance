@@ -39,6 +39,8 @@ public class Securities {
 			if (map.containsKey(symbol)) {
 				Securities securities = map.get(symbol);
 				
+				// See below for calculation of obtaining cost of sesurities.
+				//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
 				double unitCost = Math.ceil(securities.value / securities.quantities);
 				double sellValue = Math.round(sellQuantities * unitCost);
 				

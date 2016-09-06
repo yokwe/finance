@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.book.Securities.Map;
 
 @SheetData.SheetName("Buy-Sell-Transaction")
 public class BuySellTransaction extends SheetData {	
@@ -63,17 +62,17 @@ public class BuySellTransaction extends SheetData {
 	
 	public static void main(String[] args) {
 		logger.info("START");
-		Map securitiesMap = new Map();
+		Stock.Map stockMap = new Stock.Map();
 		
 		List<BuySellTransaction> transactionList = getTestData();
 		for(BuySellTransaction transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {
-				securitiesMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.debit));
+				stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.debit));
 				break;
 			}
 			case "SOLD": {
-				securitiesMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.credit));
+				stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.credit));
 				break;
 			}
 			default: {

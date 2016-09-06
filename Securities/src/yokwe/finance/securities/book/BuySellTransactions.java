@@ -1,8 +1,6 @@
 package yokwe.finance.securities.book;
 
-import java.util.List;
-
-@SheetData.SheetName("Buy-Sell-Transactions-TEST")
+@SheetData.SheetName("Buy-Sell-Transactions")
 public class BuySellTransactions extends SheetData {	
 	@ColumnName("YYYY-MM")
 	String yyyyMM;
@@ -33,19 +31,4 @@ public class BuySellTransactions extends SheetData {
 		return String.format("%s %s %-8s %s %s %-8s %-60s %7.2f %8.4f %5.2f %8.2f %8.2f",
 				yyyyMM, page, transaction, date, tradeDate, symbol, name, quantity, price, commission, debit, credit);
 	}
-	
-	public static void main(String[] args) {
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016_SAVE.ods";
-		
-		logger.info("START");
-		try (LibreOffice libreOffice = new LibreOffice(url)) {			
-			List<BuySellTransactions> transactionList = SheetData.getInstance(libreOffice, BuySellTransactions.class);
-			for(BuySellTransactions transaction: transactionList) {
-				logger.info("{}", transaction);
-			}
-		}
-		logger.info("STOP");
-		System.exit(0);
-	}
-
 }

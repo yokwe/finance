@@ -34,13 +34,6 @@ import yokwe.finance.securities.SecuritiesException;
 public class LibreOffice implements Closeable {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(LibreOffice.class);
 
-	private static final PropertyValue[] props = new PropertyValue[] {
-			// Set document as read only
-			new PropertyValue("ReadOnly", 0, true, PropertyState.DIRECT_VALUE),
-			// Update linked reference
-			new PropertyValue("UpdateDocMode", 0, UpdateDocMode.QUIET_UPDATE, PropertyState.DIRECT_VALUE),
-	};
-	
 	private static final String[] bootstrapOptions = {
 			"--minimized",
 			"--headless",
@@ -83,7 +76,18 @@ public class LibreOffice implements Closeable {
 	private final XComponent component;
 	
 	public LibreOffice(String url) {
+		this(url, true); // readOnly == true
+	}
+	
+	public LibreOffice(String url, boolean readOnly) {
 		try {
+			PropertyValue[] props = new PropertyValue[] {
+					// Set document as read only
+					new PropertyValue("ReadOnly", 0, readOnly, PropertyState.DIRECT_VALUE),
+					// Update linked reference
+					new PropertyValue("UpdateDocMode", 0, UpdateDocMode.QUIET_UPDATE, PropertyState.DIRECT_VALUE),
+			};
+
 			component = componentLoader.loadComponentFromURL(url, "_blank", 0, props);
 		} catch (IllegalArgumentException | IOException e) {
 			logger.info("Exception {}", e.toString());
@@ -91,6 +95,7 @@ public class LibreOffice implements Closeable {
 		}
 	}
 	
+
 	public XComponent getComponent() {
 		return component;
 	}

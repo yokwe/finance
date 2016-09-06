@@ -51,6 +51,7 @@ public class Stock {
 		
 		// TODO USD must be round to unit of cent and multiply by USDJPY and round to integer
 		// TODO Use NFLX as sample   valueSell=188,052  value buy = 181,918
+		// TODO Use BigDecimal to calculate precious value using rounding mode and scale
 		void buy(String symbol, double quantity, String tradeDate, double price, double commission, double usdjpy) {
 			double buyValue = Math.round((quantity * price + commission) * usdjpy);
 			if (stockMap.containsKey(symbol)) {

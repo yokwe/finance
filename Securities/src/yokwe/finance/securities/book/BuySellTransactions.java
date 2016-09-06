@@ -2,7 +2,7 @@ package yokwe.finance.securities.book;
 
 import java.util.List;
 
-@SheetData.SheetName("Buy-Sell-Transactions")
+@SheetData.SheetName("Buy-Sell-Transactions-TEST")
 public class BuySellTransactions extends SheetData {	
 	@ColumnName("YYYY-MM")
 	String yyyyMM;

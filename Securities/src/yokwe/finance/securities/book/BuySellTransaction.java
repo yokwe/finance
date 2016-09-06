@@ -37,7 +37,7 @@ public class BuySellTransaction extends SheetData {
 				yyyyMM, page, transaction, date, tradeDate, symbol, name, quantity, price, commission, debit, credit);
 	}
 	
-	static BuySellTransaction getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price) {
+	static BuySellTransaction getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price, double commission) {
 		BuySellTransaction ret = new BuySellTransaction();
 		ret.yyyyMM      = "2000-01";
 		ret.page        = "1";
@@ -46,17 +46,18 @@ public class BuySellTransaction extends SheetData {
 		ret.symbol      = symbol;
 		ret.quantity    = quantity;
 		ret.price       = price;
-		ret.debit       = transaction.equals("BOUGHT") ? quantity * price : 0;
-		ret.credit      = transaction.equals("SOLD") ? quantity * price : 0;
+		ret.commission  = commission;
+		ret.debit       = transaction.equals("BOUGHT") ? (quantity * price) + commission : 0;
+		ret.credit      = transaction.equals("SOLD")   ? (quantity * price) - commission : 0;
 		return ret;
 	}
 	static List<BuySellTransaction> getTestData() {
 		List<BuySellTransaction> ret = new ArrayList<>();
-		ret.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800));
-		ret.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850));
-		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900));
-		ret.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870));
-		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 6000, 950));
+		ret.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
+		ret.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
+		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
+		ret.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
+		ret.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
 		return ret;
 	}
 	
@@ -68,11 +69,11 @@ public class BuySellTransaction extends SheetData {
 		for(BuySellTransaction transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {
-				stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.debit));
+				stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
 				break;
 			}
 			case "SOLD": {
-				stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.credit));
+				stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
 				break;
 			}
 			default: {

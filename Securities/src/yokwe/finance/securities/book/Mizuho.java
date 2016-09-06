@@ -48,17 +48,17 @@ public class Mizuho extends SheetData implements Comparable<Mizuho> {
 
 	
 	@ColumnName("DATE")
-	String date;
+	public String date;
 	@ColumnName("USD")
-	double usd;
+	public double usd;
 	@ColumnName("GBP")
-	double gbp;
+	public double gbp;
 	@ColumnName("EUR")
-	double eur;
+	public double eur;
 	@ColumnName("AUD")
-	double aud;
+	public double aud;
 	@ColumnName("NZD")
-	double nzd;
+	public double nzd;
 	
 	@Override
 	public String toString() {

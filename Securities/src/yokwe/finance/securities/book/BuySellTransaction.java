@@ -6,8 +6,8 @@ import java.util.List;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.book.Securities.Map;
 
-@SheetData.SheetName("Buy-Sell-Transactions")
-public class BuySellTransactions extends SheetData {	
+@SheetData.SheetName("Buy-Sell-Transaction")
+public class BuySellTransaction extends SheetData {	
 	@ColumnName("YYYY-MM")
 	public String yyyyMM;
 	@ColumnName("Page")
@@ -38,8 +38,8 @@ public class BuySellTransactions extends SheetData {
 				yyyyMM, page, transaction, date, tradeDate, symbol, name, quantity, price, commission, debit, credit);
 	}
 	
-	static BuySellTransactions getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price) {
-		BuySellTransactions ret = new BuySellTransactions();
+	static BuySellTransaction getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price) {
+		BuySellTransaction ret = new BuySellTransaction();
 		ret.yyyyMM      = "2000-01";
 		ret.page        = "1";
 		ret.transaction = transaction;
@@ -51,8 +51,8 @@ public class BuySellTransactions extends SheetData {
 		ret.credit      = transaction.equals("SOLD") ? quantity * price : 0;
 		return ret;
 	}
-	static List<BuySellTransactions> getTestData() {
-		List<BuySellTransactions> ret = new ArrayList<>();
+	static List<BuySellTransaction> getTestData() {
+		List<BuySellTransaction> ret = new ArrayList<>();
 		ret.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800));
 		ret.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850));
 		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900));
@@ -65,8 +65,8 @@ public class BuySellTransactions extends SheetData {
 		logger.info("START");
 		Map securitiesMap = new Map();
 		
-		List<BuySellTransactions> transactionList = getTestData();
-		for(BuySellTransactions transaction: transactionList) {
+		List<BuySellTransaction> transactionList = getTestData();
+		for(BuySellTransaction transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {
 				securitiesMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, (int)Math.round(transaction.debit));
@@ -85,6 +85,4 @@ public class BuySellTransactions extends SheetData {
 		logger.info("STOP");
 		System.exit(0);
 	}
-
-	
 }

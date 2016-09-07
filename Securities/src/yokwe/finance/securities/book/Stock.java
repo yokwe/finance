@@ -10,6 +10,7 @@ import yokwe.finance.securities.SecuritiesException;
 public class Stock {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
 	
+	// Need to record value in USD, JPY and conversion rate.
 	public final String symbol;
 	public String tradeDateFirst;
 	public String tradeDateLast;
@@ -58,6 +59,7 @@ public class Stock {
 				
 				if (stock.count == 1) {
 					// If stock was bought just once, calculation of priceBuy be done with ratio of buy and sell.
+					//   https://www.nta.go.jp/taxanswer/shotoku/1464.htm
 					double buyRatio       = (sellQuantity / stock.quantity);
 					double priceBuy       = stock.value * buyRatio;
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);

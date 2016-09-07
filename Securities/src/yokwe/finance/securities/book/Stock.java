@@ -30,7 +30,7 @@ public class Stock {
 		}
 		
 		public String toString() {
-			return String.format("%s  %-8s  %5.0f  %8d  %8d  %3d  %s  -  %8d", dateSell, symbol, quantity, priceSell, priceBuy, commissionSell, dateBuy, priceSell - priceBuy - commissionSell);
+			return String.format("%s  %-8s  %5.0f  %8d  %8d  %3d  %s  -  %8d  %8d", dateSell, symbol, quantity, priceSell, priceBuy, commissionSell, dateBuy, priceSell - commissionSell, priceSell - priceBuy - commissionSell);
 		}
 	}
 
@@ -38,12 +38,14 @@ public class Stock {
 	public String tradeDate;
 	public double quantity;
 	public double value; // value in JPY for tax declaration
+	public int    count; // count of transaction
 	
 	private Stock(String symbol, String tradeDate, double quantity, double value) {
 		this.symbol    = symbol;
 		this.tradeDate = tradeDate;
 		this.quantity  = quantity;
 		this.value     = value;
+		this.count     = 1;
 	}
 	
 	public static class Map {
@@ -59,29 +61,57 @@ public class Stock {
 				stock.tradeDate  = tradeDate;
 				stock.quantity  += quantity;
 				stock.value     += buyValue;
+				stock.count     += 1;
 			} else { 
 				stockMap.put(symbol, new Stock(symbol, tradeDate, quantity, buyValue));
 			}
+//			logger.info("{}", String.format("BUY  %s  %s  %6.2f  %3.0f  %8.0f", tradeDate, symbol, usdjpy, quantity, buyValue));
 		}
 		
 		Result sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
 				
-				// See below for calculation of obtaining cost of securities.
-				//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
-				double unitCost = Math.ceil(stock.value / stock.quantity);
-				double priceBuy = Math.round(sellQuantity * unitCost);
+				{
+					double remainingQuantity = stock.quantity - sellQuantity;
+					if (remainingQuantity < 0.00001) {
+						// remove symbol if quantity is zero
+						stockMap.remove(symbol);
+					}
+				}
 				
-				Result result = new Result(tradeDate, symbol, sellQuantity, (int)Math.round(sellQuantity * price * usdjpy), (int)priceBuy, (int)Math.round(commission * usdjpy), stock.tradeDate);
-				
-				stock.tradeDate = tradeDate;
-				stock.quantity  = stock.quantity - sellQuantity;
-				stock.value     = (int)Math.round(stock.quantity * unitCost);
-				
-				logger.info("{}", result);
-				
-				return result;
+				if (stock.count == 1) {
+					// If stock was bought just once, calculation of priceBuy be done with ratio of buy and sell.
+					double buyRatio       = (sellQuantity / stock.quantity);
+					double priceBuy       = stock.value * buyRatio;
+					double priceSell      = Math.round(sellQuantity * price * usdjpy);
+					double commissionSell = Math.round(commission * usdjpy);
+					
+					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDate);
+					logger.info("{}", result);
+					
+					stock.tradeDate = tradeDate;
+					stock.quantity  = stock.quantity - sellQuantity;
+					stock.value     = stock.value - priceBuy;
+									
+					return result;
+				} else {
+					// If same stock was bought more than once, calculation of priceBuy must be done with Weighted-Average method (Sou heikin hou) describe below.
+					//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
+					double unitCost       = Math.ceil(stock.value / stock.quantity); // Round up
+					double priceBuy       = Math.round(sellQuantity * unitCost);
+					double priceSell      = Math.round(sellQuantity * price * usdjpy);
+					double commissionSell = Math.round(commission * usdjpy);
+					
+					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDate);
+					logger.info("{}", result);
+					
+					stock.tradeDate = tradeDate;
+					stock.quantity  = stock.quantity - sellQuantity;
+					stock.value     = (int)Math.round(stock.quantity * unitCost);
+									
+					return result;
+				}
 			} else {
 				logger.error("Unknown symbol = {}", symbol);
 				throw new SecuritiesException("Unexptected");
@@ -100,7 +130,7 @@ public class Stock {
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
 
 			for(BuySellTransaction transaction: transactionList) {
-				double usdjpy = mizuhoMap.get(transaction.date).usd;
+				double usdjpy = mizuhoMap.get(transaction.tradeDate).usd;
 				
 				switch (transaction.transaction) {
 				case "BOUGHT": {

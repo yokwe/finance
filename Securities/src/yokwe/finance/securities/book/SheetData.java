@@ -184,4 +184,9 @@ public class SheetData {
 			}
 		}
 	}
+
+	// TODO implements save methods
+	public static <E extends SheetData> void saveSheet(LibreOffice libreOffice, List<E> data) {
+		
+	}
 }

@@ -10,33 +10,6 @@ import yokwe.finance.securities.SecuritiesException;
 public class Stock {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
 	
-	public static class Result {
-		public final String dateSell;
-		public final String symbol;
-		public final double quantity;
-		public final int    priceSell;
-		public final int    priceBuy;
-		public final int    commissionSell;
-		public final String dateBuyFirst;
-		public final String dateBuyLast;
-		
-		public Result(String dateSell, String symbol, double quantity, int priceSell, int priceBuy, int commissionSell, String dateBuyFirst, String dateBuyLast) {
-			this.dateSell       = dateSell;
-			this.symbol         = symbol;
-			this.quantity       = quantity;
-			this.priceSell      = priceSell;
-			this.priceBuy       = priceBuy;
-			this.commissionSell = commissionSell;
-			this.dateBuyFirst   = dateBuyFirst;
-			this.dateBuyLast    = dateBuyLast;
-		}
-		
-		@Override
-		public String toString() {
-			return String.format("%s  %-8s  %5.0f  %8d  %8d  %3d  %s  %s", dateSell, symbol, quantity, priceSell, priceBuy, commissionSell, dateBuyFirst, dateBuyLast);
-		}
-	}
-
 	public final String symbol;
 	public String tradeDateFirst;
 	public String tradeDateLast;
@@ -56,8 +29,6 @@ public class Stock {
 	public static class Map {
 		private java.util.Map<String, Stock> stockMap = new TreeMap<>();
 		
-		// TODO USD must be round to unit of cent and multiply by USDJPY and round to integer
-		// TODO Use NFLX as sample   valueSell=188,052  value buy = 181,918
 		// TODO Use BigDecimal to calculate precious value using rounding mode and scale
 		void buy(String symbol, double quantity, String tradeDate, double price, double commission, double usdjpy) {
 			double buyValue = Math.round((quantity * price + commission) * usdjpy);
@@ -73,7 +44,7 @@ public class Stock {
 //			logger.info("{}", String.format("BUY  %s  %s  %6.2f  %3.0f  %8.0f", tradeDate, symbol, usdjpy, quantity, buyValue));
 		}
 		
-		Result sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
+		SellReport sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
 				
@@ -92,7 +63,8 @@ public class Stock {
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);
 					double commissionSell = Math.round(commission * usdjpy);
 					
-					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
+					// TODO How to get symbolName?
+					SellReport result = new SellReport(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
 					logger.info("{}", result);
 					
 					stock.quantity  = stock.quantity - sellQuantity;
@@ -107,7 +79,7 @@ public class Stock {
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);
 					double commissionSell = Math.round(commission * usdjpy);
 					
-					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
+					SellReport result = new SellReport(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
 					logger.info("{}", result);
 					
 					stock.quantity        = stock.quantity - sellQuantity;

@@ -44,7 +44,7 @@ public class Stock {
 //			logger.info("{}", String.format("BUY  %s  %s  %6.2f  %3.0f  %8.0f", tradeDate, symbol, usdjpy, quantity, buyValue));
 		}
 		
-		SellReport sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
+		ReportSell sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
 				
@@ -64,7 +64,7 @@ public class Stock {
 					double commissionSell = Math.round(commission * usdjpy);
 					
 					// TODO How to get symbolName?
-					SellReport result = new SellReport(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
+					ReportSell result = new ReportSell(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
 					logger.info("{}", result);
 					
 					stock.quantity  = stock.quantity - sellQuantity;
@@ -80,7 +80,7 @@ public class Stock {
 					double commissionSell = Math.round(commission * usdjpy);
 					
 					// TODO How to get symbolName?
-					SellReport result = new SellReport(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
+					ReportSell result = new ReportSell(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
 					logger.info("{}", result);
 					
 					stock.quantity        = stock.quantity - sellQuantity;
@@ -101,11 +101,11 @@ public class Stock {
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016.ods";
 		
 		try (LibreOffice libreOffice = new LibreOffice(url)) {
-			List<BuySellTransaction> transactionList = SheetData.getInstance(libreOffice, BuySellTransaction.class);
+			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
 
-			for(BuySellTransaction transaction: transactionList) {
+			for(TransactionBuySell transaction: transactionList) {
 				double usdjpy = mizuhoMap.get(transaction.tradeDate).usd;
 				
 				switch (transaction.transaction) {

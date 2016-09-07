@@ -5,8 +5,8 @@ import java.util.List;
 
 import yokwe.finance.securities.SecuritiesException;
 
-@SheetData.SheetName("Buy-Sell-Transaction")
-public class BuySellTransaction extends SheetData {	
+@SheetData.SheetName("Transaction-Buy-Sell")
+public class TransactionBuySell extends SheetData {	
 	@ColumnName("YYYY-MM")
 	public String yyyyMM;
 	@ColumnName("Page")
@@ -37,8 +37,8 @@ public class BuySellTransaction extends SheetData {
 				yyyyMM, page, transaction, date, tradeDate, symbol, name, quantity, price, commission, debit, credit);
 	}
 	
-	static BuySellTransaction getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price, double commission) {
-		BuySellTransaction ret = new BuySellTransaction();
+	static TransactionBuySell getTestInstance(String transaction, String tradeDate, String symbol, double quantity, double price, double commission) {
+		TransactionBuySell ret = new TransactionBuySell();
 		ret.yyyyMM      = "2000-01";
 		ret.page        = "1";
 		ret.transaction = transaction;
@@ -51,8 +51,8 @@ public class BuySellTransaction extends SheetData {
 		ret.credit      = transaction.equals("SOLD")   ? (quantity * price) - commission : 0;
 		return ret;
 	}
-	static List<BuySellTransaction> getTestData() {
-		List<BuySellTransaction> ret = new ArrayList<>();
+	static List<TransactionBuySell> getTestData() {
+		List<TransactionBuySell> ret = new ArrayList<>();
 		ret.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
 		ret.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
 		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
@@ -65,8 +65,8 @@ public class BuySellTransaction extends SheetData {
 		logger.info("START");
 		Stock.Map stockMap = new Stock.Map();
 		
-		List<BuySellTransaction> transactionList = getTestData();
-		for(BuySellTransaction transaction: transactionList) {
+		List<TransactionBuySell> transactionList = getTestData();
+		for(TransactionBuySell transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {
 				stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);

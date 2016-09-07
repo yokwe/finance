@@ -1,7 +1,7 @@
 package yokwe.finance.securities.book;
 
 @SheetData.SheetName("譲渡所得計算明細書")
-public class SellReport extends SheetData {
+public class ReportSell extends SheetData {
 	@ColumnName("譲渡日")
 	public final String dateSell;
 	@ColumnName("銘柄コード")
@@ -21,7 +21,7 @@ public class SellReport extends SheetData {
 	@ColumnName("取得日最後")
 	public final String dateBuyLast;
 	
-	public SellReport(String dateSell, String symbol, String symbolName, double quantity, int priceSell, int priceBuy, int commissionSell, String dateBuyFirst, String dateBuyLast) {
+	public ReportSell(String dateSell, String symbol, String symbolName, double quantity, int priceSell, int priceBuy, int commissionSell, String dateBuyFirst, String dateBuyLast) {
 		this.dateSell       = dateSell;
 		this.symbol         = symbol;
 		this.symbolName     = symbolName;

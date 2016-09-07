@@ -17,35 +17,40 @@ public class Stock {
 		public final int    priceSell;
 		public final int    priceBuy;
 		public final int    commissionSell;
-		public final String dateBuy;
+		public final String dateBuyFirst;
+		public final String dateBuyLast;
 		
-		public Result(String dateSell, String symbol, double quantity, int priceSell, int priceBuy, int commissionSell, String dateBuy) {
+		public Result(String dateSell, String symbol, double quantity, int priceSell, int priceBuy, int commissionSell, String dateBuyFirst, String dateBuyLast) {
 			this.dateSell       = dateSell;
 			this.symbol         = symbol;
 			this.quantity       = quantity;
 			this.priceSell      = priceSell;
 			this.priceBuy       = priceBuy;
 			this.commissionSell = commissionSell;
-			this.dateBuy        = dateBuy;
+			this.dateBuyFirst   = dateBuyFirst;
+			this.dateBuyLast    = dateBuyLast;
 		}
 		
+		@Override
 		public String toString() {
-			return String.format("%s  %-8s  %5.0f  %8d  %8d  %3d  %s  -  %8d  %8d", dateSell, symbol, quantity, priceSell, priceBuy, commissionSell, dateBuy, priceSell - commissionSell, priceSell - priceBuy - commissionSell);
+			return String.format("%s  %-8s  %5.0f  %8d  %8d  %3d  %s  %s", dateSell, symbol, quantity, priceSell, priceBuy, commissionSell, dateBuyFirst, dateBuyLast);
 		}
 	}
 
 	public final String symbol;
-	public String tradeDate;
+	public String tradeDateFirst;
+	public String tradeDateLast;
 	public double quantity;
 	public double value; // value in JPY for tax declaration
 	public int    count; // count of transaction
 	
 	private Stock(String symbol, String tradeDate, double quantity, double value) {
-		this.symbol    = symbol;
-		this.tradeDate = tradeDate;
-		this.quantity  = quantity;
-		this.value     = value;
-		this.count     = 1;
+		this.symbol         = symbol;
+		this.tradeDateFirst = tradeDate;
+		this.tradeDateLast  = tradeDate;
+		this.quantity       = quantity;
+		this.value          = value;
+		this.count          = 1;
 	}
 	
 	public static class Map {
@@ -58,10 +63,10 @@ public class Stock {
 			double buyValue = Math.round((quantity * price + commission) * usdjpy);
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
-				stock.tradeDate  = tradeDate;
-				stock.quantity  += quantity;
-				stock.value     += buyValue;
-				stock.count     += 1;
+				stock.tradeDateLast  = tradeDate;
+				stock.quantity      += quantity;
+				stock.value         += buyValue;
+				stock.count         += 1;
 			} else { 
 				stockMap.put(symbol, new Stock(symbol, tradeDate, quantity, buyValue));
 			}
@@ -87,10 +92,9 @@ public class Stock {
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);
 					double commissionSell = Math.round(commission * usdjpy);
 					
-					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDate);
+					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
 					logger.info("{}", result);
 					
-					stock.tradeDate = tradeDate;
 					stock.quantity  = stock.quantity - sellQuantity;
 					stock.value     = stock.value - priceBuy;
 									
@@ -103,12 +107,11 @@ public class Stock {
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);
 					double commissionSell = Math.round(commission * usdjpy);
 					
-					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDate);
+					Result result = new Result(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
 					logger.info("{}", result);
 					
-					stock.tradeDate = tradeDate;
-					stock.quantity  = stock.quantity - sellQuantity;
-					stock.value     = (int)Math.round(stock.quantity * unitCost);
+					stock.quantity        = stock.quantity - sellQuantity;
+					stock.value           = (int)Math.round(stock.quantity * unitCost);
 									
 					return result;
 				}
@@ -122,7 +125,7 @@ public class Stock {
 	public static void main(String[] args) {
 		logger.info("START");
 		Stock.Map stockMap = new Stock.Map();
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016_SAVE.ods";
+		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016.ods";
 		
 		try (LibreOffice libreOffice = new LibreOffice(url)) {
 			List<BuySellTransaction> transactionList = SheetData.getInstance(libreOffice, BuySellTransaction.class);

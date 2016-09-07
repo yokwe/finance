@@ -79,7 +79,8 @@ public class Stock {
 					double priceSell      = Math.round(sellQuantity * price * usdjpy);
 					double commissionSell = Math.round(commission * usdjpy);
 					
-					SellReport result = new SellReport(tradeDate, symbol, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
+					// TODO How to get symbolName?
+					SellReport result = new SellReport(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
 					logger.info("{}", result);
 					
 					stock.quantity        = stock.quantity - sellQuantity;

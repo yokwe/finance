@@ -18,7 +18,7 @@ public class Mizuho extends SheetData implements Comparable<Mizuho> {
 		private java.util.Map<String, Mizuho> map = new HashMap<>();
 		
 		public Map(String url) {
-			try (LibreOffice libreOffice = new LibreOffice(url)) {
+			try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 				for(Mizuho mizuho: SheetData.getInstance(libreOffice, Mizuho.class)) {
 					String key = mizuho.date;
 					map.put(key, mizuho);

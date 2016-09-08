@@ -17,7 +17,7 @@ public class T001 {
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016_SAVE.ods";
 		
 		logger.info("START");
-		try (LibreOffice lo = new LibreOffice(url)) {
+		try (LibreOffice lo = new LibreOffice(url, true)) {
 			XSpreadsheets spreadSheets = lo.getSpreadSheets();
 			
 			// Enumerate all sheet using name access

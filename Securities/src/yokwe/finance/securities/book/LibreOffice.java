@@ -11,12 +11,14 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.comp.helper.Bootstrap;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.container.NoSuchElementException;
+import com.sun.star.container.XIndexAccess;
 import com.sun.star.container.XNameAccess;
 import com.sun.star.document.UpdateDocMode;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XModel;
 import com.sun.star.io.IOException;
 import com.sun.star.lang.IllegalArgumentException;
+import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
@@ -75,9 +77,7 @@ public class LibreOffice implements Closeable {
 	
 	private final XComponent component;
 	
-	public LibreOffice(String url) {
-		this(url, true); // readOnly == true
-	}
+	public static String NEW_SPREADSHEET_URL = "private:factory/scalc";
 	
 	public LibreOffice(String url, boolean readOnly) {
 		try {
@@ -113,6 +113,17 @@ public class LibreOffice implements Closeable {
 			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, nameAccess.getByName(name));
 			return sheet;
 		} catch (NoSuchElementException | WrappedTargetException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
+	}
+	
+	public XSpreadsheet getSpreadSheet(int index) {
+		try {
+			XIndexAccess indexAccess = UnoRuntime.queryInterface(XIndexAccess.class, getSpreadSheets());
+			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, indexAccess.getByIndex(index));
+			return sheet;
+		} catch (IndexOutOfBoundsException | WrappedTargetException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}

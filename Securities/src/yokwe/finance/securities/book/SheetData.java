@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -35,6 +36,12 @@ public class SheetData {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	public @interface ColumnName {
+		String value();
+	}
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface CellFormat {
 		String value();
 	}
 	
@@ -186,7 +193,69 @@ public class SheetData {
 	}
 
 	// TODO implements save methods
-	public static <E extends SheetData> void saveSheet(LibreOffice libreOffice, List<E> data) {
+	public static <E extends SheetData> void saveSheet(LibreOffice libreOffice, Class<E> clazz, List<E> dataList) {
+		// add sheet with name
+		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
+		if (sheetName == null) {
+			logger.error("No SheetName annotation = {}", clazz.getName());
+			throw new SecuritiesException("No SheetName annotation");
+		}
+		logger.info("sheetName {}", sheetName.value());
 		
+		// Insertion order is important, So we use LinkedHashMap instead of HashMap
+		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
+		Map<String, Field> fieldMap = new LinkedHashMap<>();
+		Map<String, String> formatMap = new HashMap<>();
+		for(Field field: clazz.getDeclaredFields()) {
+			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
+			CellFormat cellFormat = field.getDeclaredAnnotation(CellFormat.class);
+			if (columnName == null) continue;
+			if (cellFormat != null) {
+				formatMap.put(columnName.value(), cellFormat.value());
+			}
+			fieldMap.put(columnName.value(), field);
+		}
+		if (fieldMap.size() == 0) {
+			logger.error("No ColumnName annotation = {}", clazz.getName());
+			throw new SecuritiesException("No ColumnName annotation");
+		}
+		
+		// Header
+		{
+			List<String> record = new ArrayList<>();
+			for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
+				record.add(entry.getKey());
+			}
+			// Output record
+		}
+		
+		try {
+			for(E data: dataList) {
+				List<String> record = new ArrayList<>();
+				for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
+					Field field = entry.getValue();
+					Class<?> fieldType = field.getType();
+	
+					if (fieldType.equals(String.class)) {
+						Object value = field.get(data);
+						record.add(String.format("%s", value.toString()));
+					} else if (fieldType.equals(Integer.TYPE)) {
+						int value = field.getInt(data);
+						record.add(String.format("%d", value));
+					} else if (fieldType.equals(Double.TYPE)) {
+						double value = field.getDouble(data);
+						record.add(String.format("%.5f", value));
+					} else {
+						logger.error("Unknow field type = {}", fieldType.getName());
+						throw new SecuritiesException("Unexpected");
+					}
+					record.add(entry.getKey());
+				}
+				// Output record
+			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
+		}
 	}
 }

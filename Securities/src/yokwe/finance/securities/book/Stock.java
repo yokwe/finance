@@ -102,7 +102,7 @@ public class Stock {
 		Stock.Map stockMap = new Stock.Map();
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016.ods";
 		
-		try (LibreOffice libreOffice = new LibreOffice(url)) {
+		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);

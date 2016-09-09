@@ -16,6 +16,7 @@ import com.sun.star.container.XNameAccess;
 import com.sun.star.document.UpdateDocMode;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.frame.XModel;
+import com.sun.star.frame.XStorable;
 import com.sun.star.io.IOException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
@@ -155,4 +156,19 @@ public class LibreOffice implements Closeable {
 			component.dispose();
 		}
 	}
+	
+	// Store Document to URL
+	public void store(String urlStore) {
+		try {
+			XStorable storable = UnoRuntime.queryInterface(XStorable.class, getComponent());
+			PropertyValue[] values = new PropertyValue[] {
+				new PropertyValue("Overwrite", 0, true, PropertyState.DIRECT_VALUE),
+			};
+			storable.storeToURL(urlStore, values);
+		} catch (IOException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
+	}
+
 }

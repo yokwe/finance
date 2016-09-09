@@ -30,6 +30,8 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.CloseVetoException;
 import com.sun.star.util.XCloseable;
+import com.sun.star.util.XNumberFormats;
+import com.sun.star.util.XNumberFormatsSupplier;
 
 import yokwe.finance.securities.SecuritiesException;
 
@@ -127,6 +129,11 @@ public class LibreOffice implements Closeable {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}
+	}
+	
+	public XNumberFormats getNumberFormats() {
+		XNumberFormatsSupplier numberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
+		return numberFormatsSupplier.getNumberFormats();
 	}
 	
 	public void close() {

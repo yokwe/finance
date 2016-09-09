@@ -9,16 +9,12 @@ public class ReportSell extends SheetData {
 	@ColumnName("銘柄")
 	public final String symbolName;
 	@ColumnName("数量")
-	@CellFormat("#,##0.00000")
 	public final double quantity;
-	@ColumnName("譲渡金額")
-	@CellFormat("#,##0")
+	@ColumnName("譲渡価額")
 	public final int    priceSell;
 	@ColumnName("取得費")
-	@CellFormat("#,##0")
 	public final int    priceBuy;
-	@ColumnName("譲渡手数料")
-	@CellFormat("#,##0")
+	@ColumnName("売却手数料")
 	public final int    commissionSell;
 	@ColumnName("取得日最初")
 	public final String dateBuyFirst;

@@ -39,12 +39,6 @@ public class SheetData {
 		String value();
 	}
 	
-	@Retention(RetentionPolicy.RUNTIME)
-	@Target(ElementType.FIELD)
-	public @interface CellFormat {
-		String value();
-	}
-	
 	public static <E extends SheetData> List<E> getInstance(LibreOffice libreOffice, Class<E> clazz) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		if (sheetName == null) {
@@ -201,18 +195,14 @@ public class SheetData {
 			throw new SecuritiesException("No SheetName annotation");
 		}
 		logger.info("sheetName {}", sheetName.value());
+		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName.value());
 		
 		// Insertion order is important, So we use LinkedHashMap instead of HashMap
 		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
 		Map<String, Field> fieldMap = new LinkedHashMap<>();
-		Map<String, String> formatMap = new HashMap<>();
 		for(Field field: clazz.getDeclaredFields()) {
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
-			CellFormat cellFormat = field.getDeclaredAnnotation(CellFormat.class);
 			if (columnName == null) continue;
-			if (cellFormat != null) {
-				formatMap.put(columnName.value(), cellFormat.value());
-			}
 			fieldMap.put(columnName.value(), field);
 		}
 		if (fieldMap.size() == 0) {
@@ -220,40 +210,64 @@ public class SheetData {
 			throw new SecuritiesException("No ColumnName annotation");
 		}
 		
-		// Header
+		//
+		// Take information from SpreadSheet
+		//
+		// Build columnMap - column name to column index
+		Map<String, Integer> columnMap = new HashMap<>();
 		{
-			List<String> record = new ArrayList<>();
-			for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
-				record.add(entry.getKey());
+			int row = 0;
+			try {
+				// Build header map
+				for(int column = 0; column < 100; column++) {
+					final XCell cell = spreadsheet.getCellByPosition(column, row);
+					final CellContentType type = cell.getType();
+					if (type.equals(CellContentType.EMPTY)) break;
+					
+					XText text = UnoRuntime.queryInterface(XText.class, cell);
+					String value = text.getString();
+					columnMap.put(value, column);
+//					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
+				}
+			} catch (IndexOutOfBoundsException e) {
+				logger.info("Exception {}", e.toString());
 			}
-			// Output record
+			
+			// Sanity check
+			for(String name: fieldMap.keySet()) {
+				if (columnMap.containsKey(name)) continue;
+				logger.error("columnMap contains no field name = {}", name);
+				throw new SecuritiesException("Unexpected");
+			}
 		}
 		
 		try {
+			int row = 1;
 			for(E data: dataList) {
-				List<String> record = new ArrayList<>();
 				for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
+					int column = columnMap.get(entry.getKey());
+					XCell cell = spreadsheet.getCellByPosition(column, row);
+
 					Field field = entry.getValue();
 					Class<?> fieldType = field.getType();
 	
 					if (fieldType.equals(String.class)) {
 						Object value = field.get(data);
-						record.add(String.format("%s", value.toString()));
+						cell.setFormula(value.toString());
 					} else if (fieldType.equals(Integer.TYPE)) {
 						int value = field.getInt(data);
-						record.add(String.format("%d", value));
+						cell.setValue(value);
 					} else if (fieldType.equals(Double.TYPE)) {
 						double value = field.getDouble(data);
-						record.add(String.format("%.5f", value));
+						cell.setValue(value);
 					} else {
 						logger.error("Unknow field type = {}", fieldType.getName());
 						throw new SecuritiesException("Unexpected");
 					}
-					record.add(entry.getKey());
 				}
-				// Output record
+				row++;
 			}
-		} catch (IllegalArgumentException | IllegalAccessException e) {
+		} catch (IllegalArgumentException | IllegalAccessException | IndexOutOfBoundsException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}

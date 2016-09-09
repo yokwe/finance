@@ -1,5 +1,6 @@
 package yokwe.finance.securities.book;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -102,6 +103,8 @@ public class Stock {
 		Stock.Map stockMap = new Stock.Map();
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016.ods";
 		
+		List<ReportSell> reportSellList = new ArrayList<>();
+		
 		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
 	
@@ -116,13 +119,24 @@ public class Stock {
 					break;
 				}
 				case "SOLD": {
-					stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
+					ReportSell reportSell = stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
+					reportSellList.add(reportSell);
 					break;
 				}
 				default: {
 					logger.error("Unknown transaction = {}", transaction.transaction);
 					throw new SecuritiesException("Unexpected");
 				}
+				}
+			}
+			
+			{
+				String urlLoad = "file:///home/hasegawa/Dropbox/Trade/T002_LOAD.ods";
+				String urlSave = "file:///home/hasegawa/Dropbox/Trade/T002_SAVE.ods";
+				
+				try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
+					SheetData.saveSheet(docLoad, ReportSell.class, reportSellList);
+					docLoad.store(urlSave);
 				}
 			}
 			logger.info("STOP");

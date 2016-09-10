@@ -13,14 +13,16 @@ public class Stock {
 	
 	// Need to record value in USD, JPY and conversion rate.
 	public final String symbol;
+	public final String name;
 	public String tradeDateFirst;
 	public String tradeDateLast;
 	public double quantity;
 	public double value; // value in JPY for tax declaration
 	public int    count; // count of transaction
 	
-	private Stock(String symbol, String tradeDate, double quantity, double value) {
+	private Stock(String symbol, String name, String tradeDate, double quantity, double value) {
 		this.symbol         = symbol;
+		this.name           = name;
 		this.tradeDateFirst = tradeDate;
 		this.tradeDateLast  = tradeDate;
 		this.quantity       = quantity;
@@ -32,7 +34,7 @@ public class Stock {
 		private java.util.Map<String, Stock> stockMap = new TreeMap<>();
 		
 		// TODO Use BigDecimal to calculate precious value using rounding mode and scale
-		void buy(String symbol, double quantity, String tradeDate, double price, double commission, double usdjpy) {
+		void buy(String symbol, String name, double quantity, String tradeDate, double price, double commission, double usdjpy) {
 			double buyValue = Math.round((quantity * price + commission) * usdjpy);
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
@@ -41,12 +43,12 @@ public class Stock {
 				stock.value         += buyValue;
 				stock.count         += 1;
 			} else { 
-				stockMap.put(symbol, new Stock(symbol, tradeDate, quantity, buyValue));
+				stockMap.put(symbol, new Stock(symbol, name, tradeDate, quantity, buyValue));
 			}
 //			logger.info("{}", String.format("BUY  %s  %s  %6.2f  %3.0f  %8.0f", tradeDate, symbol, usdjpy, quantity, buyValue));
 		}
 		
-		ReportSell sell(String symbol, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
+		ReportSell sell(String symbol, String symbolName, double sellQuantity, String tradeDate, double price, double commission, double usdjpy) {
 			if (stockMap.containsKey(symbol)) {
 				Stock stock = stockMap.get(symbol);
 				
@@ -67,7 +69,7 @@ public class Stock {
 					double commissionSell = Math.round(commission * usdjpy);
 					
 					// TODO How to get symbolName?
-					ReportSell result = new ReportSell(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
+					ReportSell result = new ReportSell(tradeDate, symbol, symbolName, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, "");
 					logger.info("{}", result);
 					
 					stock.quantity  = stock.quantity - sellQuantity;
@@ -83,7 +85,7 @@ public class Stock {
 					double commissionSell = Math.round(commission * usdjpy);
 					
 					// TODO How to get symbolName?
-					ReportSell result = new ReportSell(tradeDate, symbol, "", sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
+					ReportSell result = new ReportSell(tradeDate, symbol, symbolName, sellQuantity, (int)priceSell, (int)priceBuy, (int)commissionSell, stock.tradeDateFirst, stock.tradeDateLast);
 					logger.info("{}", result);
 					
 					stock.quantity        = stock.quantity - sellQuantity;
@@ -109,17 +111,18 @@ public class Stock {
 			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
+			SymbolName.Map symbolNameMap = new SymbolName.Map(url);
 
 			for(TransactionBuySell transaction: transactionList) {
 				double usdjpy = mizuhoMap.get(transaction.tradeDate).usd;
-				
+				String symbolName = symbolNameMap.getName(transaction.symbol);
 				switch (transaction.transaction) {
 				case "BOUGHT": {
-					stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
+					stockMap.buy(transaction.symbol, symbolName, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
 					break;
 				}
 				case "SOLD": {
-					ReportSell reportSell = stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
+					ReportSell reportSell = stockMap.sell(transaction.symbol, symbolName, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, usdjpy);
 					reportSellList.add(reportSell);
 					break;
 				}
@@ -139,6 +142,9 @@ public class Stock {
 					docLoad.store(urlSave);
 				}
 			}
+			
+			logger.info("IVV  {}", symbolNameMap.getName("IVV"));
+			logger.info("IJH  {}", symbolNameMap.getName("IJH"));
 			logger.info("STOP");
 			System.exit(0);
 		}

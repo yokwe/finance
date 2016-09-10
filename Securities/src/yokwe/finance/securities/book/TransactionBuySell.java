@@ -69,11 +69,11 @@ public class TransactionBuySell extends SheetData {
 		for(TransactionBuySell transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {
-				stockMap.buy(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
+				stockMap.buy(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
 				break;
 			}
 			case "SOLD": {
-				stockMap.sell(transaction.symbol, transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
+				stockMap.sell(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
 				break;
 			}
 			default: {

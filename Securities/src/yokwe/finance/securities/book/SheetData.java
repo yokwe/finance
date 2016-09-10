@@ -111,7 +111,8 @@ public class SheetData {
 							// String
 							switch (cellTypeValue) {
 							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value: {
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
 								XText text = UnoRuntime.queryInterface(XText.class, cell);
 								field.set(instance, text.getString());
 								break;
@@ -122,6 +123,7 @@ public class SheetData {
 							}
 							default: {
 								logger.error("cellType = {}", LibreOffice.toString(cellType));
+								logger.error("cell  {} {}  {}", index, i, UnoRuntime.queryInterface(XText.class, cell).getString());
 								throw new SecuritiesException("Unexpected");
 							}
 							}
@@ -214,10 +216,10 @@ public class SheetData {
 		// Take information from SpreadSheet
 		//
 		// Build columnMap - column name to column index
-		Map<String, Integer> columnMap = new HashMap<>();
-		{
+		try {
+			Map<String, Integer> columnMap = new HashMap<>();
 			int row = 0;
-			try {
+			{
 				// Build header map
 				for(int column = 0; column < 100; column++) {
 					final XCell cell = spreadsheet.getCellByPosition(column, row);
@@ -229,20 +231,16 @@ public class SheetData {
 					columnMap.put(value, column);
 //					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
 				}
-			} catch (IndexOutOfBoundsException e) {
-				logger.info("Exception {}", e.toString());
+				
+				// Sanity check
+				for(String name: fieldMap.keySet()) {
+					if (columnMap.containsKey(name)) continue;
+					logger.error("columnMap contains no field name = {}", name);
+					throw new SecuritiesException("Unexpected");
+				}
+				row++;
 			}
 			
-			// Sanity check
-			for(String name: fieldMap.keySet()) {
-				if (columnMap.containsKey(name)) continue;
-				logger.error("columnMap contains no field name = {}", name);
-				throw new SecuritiesException("Unexpected");
-			}
-		}
-		
-		try {
-			int row = 1;
 			for(E data: dataList) {
 				for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
 					int column = columnMap.get(entry.getKey());
@@ -250,7 +248,7 @@ public class SheetData {
 
 					Field field = entry.getValue();
 					Class<?> fieldType = field.getType();
-	
+					
 					if (fieldType.equals(String.class)) {
 						Object value = field.get(data);
 						cell.setFormula(value.toString());

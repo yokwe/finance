@@ -51,21 +51,22 @@ public class TransactionBuySell extends SheetData {
 		ret.credit      = transaction.equals("SOLD")   ? (quantity * price) - commission : 0;
 		return ret;
 	}
-	static List<TransactionBuySell> getTestData() {
-		List<TransactionBuySell> ret = new ArrayList<>();
-		ret.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
-		ret.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
-		ret.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
-		ret.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
-		ret.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
-		return ret;
-	}
 	
 	public static void main(String[] args) {
 		logger.info("START");
 		Stock.Map stockMap = new Stock.Map();
 		
-		List<TransactionBuySell> transactionList = getTestData();
+		// See page below
+		//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
+		//   2001-09-01  Acquisition cost = 815 x 3,000 = 2,445,000
+		//   2002-07-01  Acquisition cost = 846 x 6,000 = 5,076,000
+		List<TransactionBuySell> transactionList = new ArrayList<>();
+		transactionList.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
+		transactionList.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
+		transactionList.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
+		transactionList.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
+		transactionList.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
+
 		for(TransactionBuySell transaction: transactionList) {
 			switch (transaction.transaction) {
 			case "BOUGHT": {

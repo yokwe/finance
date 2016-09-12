@@ -11,6 +11,8 @@ import yokwe.finance.securities.SecuritiesException;
 public class Securities {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Securities.class);
 	
+	private static final double ALMOST_ZERO = 0.000001;
+	
 	String dateBuyFirst;
 	String dateBuyLast;
 	String symbol;
@@ -51,14 +53,13 @@ public class Securities {
 			securities.count++;
 			securities.acquisionCostJPY += (int)Math.round((quantity * price + commission) * usdjpy);
 			
-			if (Math.abs(securities.quantity) < 0.0000001) {
+			// Special case for TAL/TRTN(negative quantity for BUY)
+			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				securitiesMap.remove(symbol);
 			}
-
 		} else {
 			securitiesMap.put(symbol, new Securities(date, symbol, name, quantity, price, commission, usdjpy));
 		}
-		
 	}
 	
 	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
@@ -69,25 +70,15 @@ public class Securities {
 			Securities securities = securitiesMap.get(symbol);
 			
 			if (securities.count == 1) {
-				// Remove securities if quantity is small enough
-				if (Math.abs(securities.quantity - quantity) < 0.0000001) {
-					securitiesMap.remove(symbol);
-					
-					int acquisionCostJPY = securities.acquisionCostJPY;
-					// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-					logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-							date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
-				} else {
-					int acquisionCostJPY = (int)Math.round(securities.acquisionCostJPY * (quantity / securities.quantity));
-					
-					// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-					logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-							date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
-					
-					// maintain securities
-					securities.acquisionCostJPY -= acquisionCostJPY;
-					securities.quantity         -= quantity;
-				}
+				int acquisionCostJPY = (int)Math.round(securities.acquisionCostJPY * (quantity / securities.quantity));
+				
+				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
+				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
+						date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
+				
+				// maintain securities
+				securities.quantity         -= quantity;
+				securities.acquisionCostJPY -= acquisionCostJPY;
 			} else {
 				double unitCost = Math.ceil(securities.acquisionCostJPY / securities.quantity);
 				int acquisionCostJPY = (int)Math.round(unitCost * quantity);
@@ -95,18 +86,13 @@ public class Securities {
 				securities.quantity         -= quantity;
 				securities.acquisionCostJPY  = (int)Math.round(unitCost * securities.quantity);
 				
-				// Remove securities if quantity is small enough
-				if (Math.abs(securities.quantity) < 0.0000001) {
-					securitiesMap.remove(symbol);
-					
-					// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-					logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-							date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
-				} else {
-					// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-					logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-							date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
-				}
+				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
+				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
+						date, symbol, quantity, sellAmountJPY, acquisionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
+			}
+			
+			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
+				securitiesMap.remove(symbol);
 			}
 		} else {
 			logger.error("Unknown symbol = {}", symbol);
@@ -165,14 +151,6 @@ public class Securities {
 			
 			logger.info("STOP");
 			System.exit(0);
-		}
-	}
-
-	
-	
-	public class Buy {
-		public Buy (String symbol, String name, String tradeDate, double quantity, double price, double commision, double usdjpy) {
-			
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package yokwe.finance.securities.book;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +23,9 @@ public class Securities {
 	double commission;
 	double usdjpy;
 	
-	int    count;
-	int    acquisitionCostJPY;
+	int          count;
+	int          acquisitionCostJPY;
+	List<Report> reportList;
 	
 	private Securities(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
 		this.dateBuyFirst  = date;
@@ -37,11 +39,14 @@ public class Securities {
 		
 		count              = 1;
 		acquisitionCostJPY = (int)Math.round((quantity * price + commission) * usdjpy);
+		reportList         = new ArrayList<>();
 	}
 	
 	private static Map<String, Securities> securitiesMap = new LinkedHashMap<>();
 	
-	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
+	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
+		int amountBuyJPY = (int)Math.round((quantity * price + commission) * usdjpy);
+
 		if (securitiesMap.containsKey(symbol)) {
 			Securities securities = securitiesMap.get(symbol);
 			
@@ -51,26 +56,34 @@ public class Securities {
 			securities.commission          = commission;
 			securities.usdjpy              = usdjpy;
 			securities.count++;
-			securities.acquisitionCostJPY += (int)Math.round((quantity * price + commission) * usdjpy);
+			securities.acquisitionCostJPY += amountBuyJPY;
 			
 			// Special case for TAL/TRTN(negative quantity for BUY)
 			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				securitiesMap.remove(symbol);
 			}
+			
+			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, amountBuyJPY, securities.quantity, securities.acquisitionCostJPY);
+			securities.reportList.add(report);
 		} else {
-			securitiesMap.put(symbol, new Securities(date, symbol, name, quantity, price, commission, usdjpy));
+			Securities securities = new Securities(date, symbol, name, quantity, price, commission, usdjpy);
+			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, amountBuyJPY, securities.quantity, securities.acquisitionCostJPY);
+			securities.reportList.add(report);
+			securitiesMap.put(symbol, securities);
 		}
 	}
 	
-	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
+	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
 		if (securitiesMap.containsKey(symbol)) {
-			int sellAmountJPY     = (int)Math.round(price * quantity * usdjpy);
+			double priceSell     = price * quantity;
+			int sellAmountJPY     = (int)Math.round(priceSell * usdjpy);
 			int sellCommisionJPY  = (int)Math.round(commission * usdjpy);
 
 			Securities securities = securitiesMap.get(symbol);
 			
+			int acquisitionCostJPY;
 			if (securities.count == 1) {
-				int acquisitionCostJPY = (int)Math.round(securities.acquisitionCostJPY * (quantity / securities.quantity));
+				acquisitionCostJPY = (int)Math.round(securities.acquisitionCostJPY * (quantity / securities.quantity));
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
@@ -81,7 +94,7 @@ public class Securities {
 				securities.acquisitionCostJPY -= acquisitionCostJPY;
 			} else {
 				double unitCost = Math.ceil(securities.acquisitionCostJPY / securities.quantity);
-				int acquisitionCostJPY = (int)Math.round(unitCost * quantity);
+				acquisitionCostJPY = (int)Math.round(unitCost * quantity);
 				
 				securities.quantity           -= quantity;
 				securities.acquisitionCostJPY  = (int)Math.round(unitCost * securities.quantity);
@@ -94,6 +107,26 @@ public class Securities {
 			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				securitiesMap.remove(symbol);
 			}
+			
+			if (securities.reportList.size() == 1) {
+				Report buy = securities.reportList.get(0);
+				Report sell = Report.getInstance(symbol, name, quantity, date, priceSell, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				
+				Report report = Report.getInstance(
+						symbol, name, quantity,
+						sell.dateSell, sell.priceSell, sell.commissionSell, sell.fxRateSell, sell.commissionSellJPY, sell.amountSellJPY, sell.acquisitionCostJPY, sell.dateBuyFirst, sell.dateBuyLast,
+						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, "", "");
+				reportList.add(report);
+			} else if (2 <= securities.reportList.size()) {
+				for(Report report: securities.reportList) {
+					reportList.add(report);
+				}
+				Report report = Report.getInstance(symbol, name, quantity, date, priceSell, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				reportList.add(report);
+			} else {
+				
+			}
+			securities.reportList.clear();
 		} else {
 			logger.error("Unknown symbol = {}", symbol);
 			throw new SecuritiesException("Unexpected");
@@ -106,6 +139,7 @@ public class Securities {
 		
 		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
+			List<Report> reportList = new ArrayList<>();
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
 			SymbolName.Map symbolNameMap = new SymbolName.Map(url);
@@ -115,11 +149,11 @@ public class Securities {
 				String symbolName = symbolNameMap.getName(transaction.symbol);
 				switch (transaction.transaction) {
 				case "BOUGHT": {
-					Securities.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy);
+					Securities.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 					break;
 				}
 				case "SOLD": {
-					Securities.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy);
+					Securities.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 					break;
 				}
 				default: {
@@ -148,6 +182,17 @@ public class Securities {
 					}
 				}
 			}
+			
+			{
+				String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
+				String urlSave = "file:///home/hasegawa/Dropbox/Trade/REPORT_OUTPUT.ods";
+				
+				try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
+					SheetData.saveSheet(docLoad, Report.class, reportList);
+					docLoad.store(urlSave);
+				}
+			}
+
 			
 			logger.info("STOP");
 			System.exit(0);

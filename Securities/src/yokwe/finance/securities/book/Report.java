@@ -15,7 +15,7 @@ public class Report  extends SheetData {
 	public final String priceSell;
 	@ColumnName("売手数料")
 	public final String commissionSell;
-	@ColumnName("売為替レート")
+	@ColumnName("売レート")
 	public final String fxRateSell;
 	@ColumnName("譲渡手数料")
 	public final String commissionSellJPY;
@@ -34,7 +34,7 @@ public class Report  extends SheetData {
 	public final String priceBuy;
 	@ColumnName("買手数料")
 	public final String commissionBuy;
-	@ColumnName("買為替レート")
+	@ColumnName("買レート")
 	public final String fxRateBuy;
 	@ColumnName("取得価格")
 	public final String amountBuyJPY;
@@ -122,7 +122,7 @@ public class Report  extends SheetData {
 
 		return new Report(
 			symbol, symbolName, quantity,
-			dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
+			dateSell, String.format("%.4f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 			String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
 			dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantity, totalAmountBuyJPY
 			);
@@ -144,7 +144,7 @@ public class Report  extends SheetData {
 		return new Report(
 			symbol, symbolName, quantity,
 			dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
-			dateBuy, String.format("%.5f",  priceBuy), String.format("%.2f", commissionBuy), String.format("%.2f", fxRateBuy),
+			dateBuy, String.format("%.4f",  priceBuy), String.format("%.2f", commissionBuy), String.format("%.2f", fxRateBuy),
 			String.format("%d", amountBuyJPY), String.format("%.5f", totalQuantity), String.format("%d", totalAmountBuyJPY)
 			);
 	}

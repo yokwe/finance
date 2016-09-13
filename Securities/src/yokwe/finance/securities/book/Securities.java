@@ -103,11 +103,7 @@ public class Securities {
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
 			}
-			
-			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
-				securitiesMap.remove(symbol);
-			}
-			
+						
 			// Special case: buy once and sell whole.
 			if (securities.count == 1 && securities.reportList.size() == 1 && Math.abs(securities.quantity) < ALMOST_ZERO) {
 				Report buy  = securities.reportList.get(0);
@@ -117,15 +113,20 @@ public class Securities {
 						symbol, name, quantity,
 						sell.dateSell, sell.priceSell, sell.commissionSell, sell.fxRateSell, sell.commissionSellJPY, sell.amountSellJPY, sell.acquisitionCostJPY, sell.dateBuyFirst, sell.dateBuyLast,
 						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, "", "");
-				reportList.add(report);
+				securities.reportList.clear();
+				securities.reportList.add(report);
 			} else {
+				Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				securities.reportList.add(report);
+			}
+			
+			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				for(Report report: securities.reportList) {
 					reportList.add(report);
 				}
-				Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
-				reportList.add(report);
+				securities.reportList.clear();
+				securitiesMap.remove(symbol);
 			}
-			securities.reportList.clear();
 		} else {
 			logger.error("Unknown symbol = {}", symbol);
 			throw new SecuritiesException("Unexpected");

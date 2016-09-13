@@ -45,7 +45,7 @@ public class Securities {
 	private static Map<String, Securities> securitiesMap = new LinkedHashMap<>();
 	
 	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
-		int amountBuyJPY = (int)Math.round((quantity * price + commission) * usdjpy);
+		int acquisitionCostJPY = (int)Math.round((quantity * price + commission) * usdjpy);
 
 		if (securitiesMap.containsKey(symbol)) {
 			Securities securities = securitiesMap.get(symbol);
@@ -56,18 +56,18 @@ public class Securities {
 			securities.commission          = commission;
 			securities.usdjpy              = usdjpy;
 			securities.count++;
-			securities.acquisitionCostJPY += amountBuyJPY;
+			securities.acquisitionCostJPY += acquisitionCostJPY;
 			
 			// Special case for TAL/TRTN(negative quantity for BUY)
 			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				securitiesMap.remove(symbol);
 			}
 			
-			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, amountBuyJPY, securities.quantity, securities.acquisitionCostJPY);
+			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
 			securities.reportList.add(report);
 		} else {
 			Securities securities = new Securities(date, symbol, name, quantity, price, commission, usdjpy);
-			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, amountBuyJPY, securities.quantity, securities.acquisitionCostJPY);
+			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
 			securities.reportList.add(report);
 			securitiesMap.put(symbol, securities);
 		}

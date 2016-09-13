@@ -104,8 +104,9 @@ public class Securities {
 						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
 			}
 						
-			// Special case: buy once and sell whole.
 			if (securities.count == 1 && securities.reportList.size() == 1 && Math.abs(securities.quantity) < ALMOST_ZERO) {
+				// Special case: buy once and sell whole.
+				//   Output one record for both buy and sell
 				Report buy  = securities.reportList.get(0);
 				Report sell = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				
@@ -120,6 +121,7 @@ public class Securities {
 				securities.reportList.add(report);
 			}
 			
+			// If quantity of securities become ZERO, output accumulated reportList and remove from securitiesMap
 			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
 				for(Report report: securities.reportList) {
 					reportList.add(report);

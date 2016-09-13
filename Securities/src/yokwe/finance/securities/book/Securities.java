@@ -75,9 +75,9 @@ public class Securities {
 	
 	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
 		if (securitiesMap.containsKey(symbol)) {
-			double priceSell     = price * quantity;
-			int sellAmountJPY     = (int)Math.round(priceSell * usdjpy);
-			int sellCommisionJPY  = (int)Math.round(commission * usdjpy);
+			double priceSell        = price * quantity;
+			int    sellAmountJPY    = (int)Math.round(priceSell * usdjpy);
+			int    sellCommisionJPY = (int)Math.round(commission * usdjpy);
 
 			Securities securities = securitiesMap.get(symbol);
 			
@@ -109,22 +109,20 @@ public class Securities {
 			}
 			
 			if (securities.reportList.size() == 1) {
-				Report buy = securities.reportList.get(0);
-				Report sell = Report.getInstance(symbol, name, quantity, date, priceSell, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				Report buy  = securities.reportList.get(0);
+				Report sell = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				
 				Report report = Report.getInstance(
 						symbol, name, quantity,
 						sell.dateSell, sell.priceSell, sell.commissionSell, sell.fxRateSell, sell.commissionSellJPY, sell.amountSellJPY, sell.acquisitionCostJPY, sell.dateBuyFirst, sell.dateBuyLast,
 						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, "", "");
 				reportList.add(report);
-			} else if (2 <= securities.reportList.size()) {
+			} else {
 				for(Report report: securities.reportList) {
 					reportList.add(report);
 				}
-				Report report = Report.getInstance(symbol, name, quantity, date, priceSell, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				reportList.add(report);
-			} else {
-				
 			}
 			securities.reportList.clear();
 		} else {
@@ -192,7 +190,6 @@ public class Securities {
 					docLoad.store(urlSave);
 				}
 			}
-
 			
 			logger.info("STOP");
 			System.exit(0);

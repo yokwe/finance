@@ -108,7 +108,8 @@ public class Securities {
 				securitiesMap.remove(symbol);
 			}
 			
-			if (securities.reportList.size() == 1) {
+			// Special case: buy once and sell whole.
+			if (securities.count == 1 && securities.reportList.size() == 1 && Math.abs(securities.quantity) < ALMOST_ZERO) {
 				Report buy  = securities.reportList.get(0);
 				Report sell = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				

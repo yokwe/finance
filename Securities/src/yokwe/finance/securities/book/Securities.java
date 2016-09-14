@@ -186,7 +186,7 @@ public class Securities {
 //				}
 //			}
 			
-			// Output remaining report of symbol in alphabetical order
+			// Output report of remaining securities in alphabetical order
 			{
 				List<String> symbolList = new ArrayList<>();
 				symbolList.addAll(securitiesMap.keySet());

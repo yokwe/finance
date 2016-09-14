@@ -1,6 +1,7 @@
 package yokwe.finance.securities.book;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,23 +166,34 @@ public class Securities {
 				}
 			}
 			
+//			{
+//				int n = 1;
+//				for(Map.Entry<String, Securities> entry: securitiesMap.entrySet()) {
+//					Securities securities = entry.getValue();
+//					
+//					if (securities.count == 1) {
+//						// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
+//						logger.info("BUY  {}", String.format("%10d %-8s %9.5f %7d %7d %7d %s %s",
+//								n++, securities.symbol, securities.quantity, 0, securities.acquisitionCostJPY, 0, securities.dateBuyFirst, securities.dateBuyLast));
+//					} else {
+//						double unitCost = Math.ceil(securities.acquisitionCostJPY / securities.quantity);
+//						int acquisitionCostJPY = (int)Math.round(unitCost * securities.quantity);
+//
+//						// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
+//						logger.info("BUY *{}", String.format("%10d %-8s %9.5f %7d %7d %7d %s %s",
+//								n++, securities.symbol, securities.quantity, 0, acquisitionCostJPY, 0, securities.dateBuyFirst, securities.dateBuyLast));
+//					}
+//				}
+//			}
+			
+			// Output remaining report of symbol in alphabetical order
 			{
-				int n = 1;
-				for(Map.Entry<String, Securities> entry: securitiesMap.entrySet()) {
-					Securities securities = entry.getValue();
-					
-					if (securities.count == 1) {
-						// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-						logger.info("BUY  {}", String.format("%10d %-8s %9.5f %7d %7d %7d %s %s",
-								n++, securities.symbol, securities.quantity, 0, securities.acquisitionCostJPY, 0, securities.dateBuyFirst, securities.dateBuyLast));
-					} else {
-						double unitCost = Math.ceil(securities.acquisitionCostJPY / securities.quantity);
-						int acquisitionCostJPY = (int)Math.round(unitCost * securities.quantity);
-
-						// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-						logger.info("BUY *{}", String.format("%10d %-8s %9.5f %7d %7d %7d %s %s",
-								n++, securities.symbol, securities.quantity, 0, acquisitionCostJPY, 0, securities.dateBuyFirst, securities.dateBuyLast));
-					}
+				List<String> symbolList = new ArrayList<>();
+				symbolList.addAll(securitiesMap.keySet());
+				Collections.sort(symbolList);
+				for(String symbol: symbolList) {
+					Securities securities = securitiesMap.get(symbol);
+					reportList.addAll(securities.reportList);
 				}
 			}
 			

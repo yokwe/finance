@@ -83,31 +83,6 @@ public class Report  extends SheetData {
 				);
 	}
 	
-	public static Report getInstance(String symbol, String symbolName, double quantity) {
-		String dateSell = "";
-		String priceSell = "";
-		String commissionSell = "";
-		String fxRateSell = "";
-		String commissionSellJPY = "";
-		String amountSellJPY = "";
-		String acquisitionCostJPY = "";
-		String dateBuyFirst = "";
-		String dateBuyLast = "";
-		String dateBuy = "";
-		String priceBuy = "";
-		String commissionBuy = "";
-		String fxRateBuy = "";
-		String amountBuyJPY = "";
-		String totalQuantity = "";
-		String totalAmountBuyJPY = "";
-
-		return new Report(
-			symbol, symbolName, quantity,
-			dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
-			dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantity, totalAmountBuyJPY
-			);
-	}
-	
 	public static Report getInstance(String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast) {

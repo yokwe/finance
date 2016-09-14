@@ -1,10 +1,5 @@
 package yokwe.finance.securities.book;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import yokwe.finance.securities.SecuritiesException;
-
 @SheetData.SheetName("Transaction-Buy-Sell")
 public class TransactionBuySell extends SheetData {	
 	@ColumnName("YYYY-MM")
@@ -52,38 +47,38 @@ public class TransactionBuySell extends SheetData {
 		return ret;
 	}
 	
-	public static void main(String[] args) {
-		logger.info("START");
-		Stock.Map stockMap = new Stock.Map();
-		
-		// See page below
-		//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
-		//   2001-09-01  Acquisition cost = 815 x 3,000 = 2,445,000
-		//   2002-07-01  Acquisition cost = 846 x 6,000 = 5,076,000
-		List<TransactionBuySell> transactionList = new ArrayList<>();
-		transactionList.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
-		transactionList.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
-		transactionList.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
-		transactionList.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
-		transactionList.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
-
-		for(TransactionBuySell transaction: transactionList) {
-			switch (transaction.transaction) {
-			case "BOUGHT": {
-				stockMap.buy(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
-				break;
-			}
-			case "SOLD": {
-				stockMap.sell(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
-				break;
-			}
-			default: {
-				logger.error("Unknown transaction = {}", transaction.transaction);
-				throw new SecuritiesException("Unexpected");
-			}
-			}
-		}
-		logger.info("STOP");
-		System.exit(0);
-	}
+//	public static void main(String[] args) {
+//		logger.info("START");
+//		Stock.Map stockMap = new Stock.Map();
+//		
+//		// See page below
+//		//   https://www.nta.go.jp/taxanswer/shotoku/1466.htm
+//		//   2001-09-01  Acquisition cost = 815 x 3,000 = 2,445,000
+//		//   2002-07-01  Acquisition cost = 846 x 6,000 = 5,076,000
+//		List<TransactionBuySell> transactionList = new ArrayList<>();
+//		transactionList.add(getTestInstance("BOUGHT", "2001-05-01", "AAA", 5000, 800, 0));
+//		transactionList.add(getTestInstance("BOUGHT", "2001-08-01", "AAA", 2000, 850, 0));
+//		transactionList.add(getTestInstance("SOLD",   "2001-09-01", "AAA", 3000, 900, 0));
+//		transactionList.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
+//		transactionList.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
+//
+//		for(TransactionBuySell transaction: transactionList) {
+//			switch (transaction.transaction) {
+//			case "BOUGHT": {
+//				stockMap.buy(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
+//				break;
+//			}
+//			case "SOLD": {
+//				stockMap.sell(transaction.symbol, "", transaction.quantity, transaction.tradeDate, transaction.price, transaction.commission, 1);
+//				break;
+//			}
+//			default: {
+//				logger.error("Unknown transaction = {}", transaction.transaction);
+//				throw new SecuritiesException("Unexpected");
+//			}
+//			}
+//		}
+//		logger.info("STOP");
+//		System.exit(0);
+//	}
 }

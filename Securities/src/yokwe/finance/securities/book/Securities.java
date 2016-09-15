@@ -140,8 +140,8 @@ public class Securities {
 		List<String> symbolList = new ArrayList<>();
 		symbolList.addAll(securitiesMap.keySet());
 		Collections.sort(symbolList);
-		for(String symbol: symbolList) {
-			Securities securities = securitiesMap.get(symbol);
+		for(Map.Entry<String, Securities> entry: securitiesMap.entrySet()) {
+			Securities securities = entry.getValue();
 			reportList.addAll(securities.reportList);
 		}
 	}

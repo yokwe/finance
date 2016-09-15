@@ -136,6 +136,16 @@ public class Securities {
 		}
 	}
 	
+	public static void addRemaining(List<Report> reportList) {
+		List<String> symbolList = new ArrayList<>();
+		symbolList.addAll(securitiesMap.keySet());
+		Collections.sort(symbolList);
+		for(String symbol: symbolList) {
+			Securities securities = securitiesMap.get(symbol);
+			reportList.addAll(securities.reportList);
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_2016.ods";
@@ -187,15 +197,7 @@ public class Securities {
 //			}
 			
 			// Output report of remaining securities in alphabetical order
-			{
-				List<String> symbolList = new ArrayList<>();
-				symbolList.addAll(securitiesMap.keySet());
-				Collections.sort(symbolList);
-				for(String symbol: symbolList) {
-					Securities securities = securitiesMap.get(symbol);
-					reportList.addAll(securities.reportList);
-				}
-			}
+			Securities.addRemaining(reportList);
 			
 			{
 				String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";

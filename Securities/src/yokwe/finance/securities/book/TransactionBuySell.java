@@ -86,6 +86,18 @@ public class TransactionBuySell extends SheetData {
 			}
 			}
 		}
+		
+		Securities.addRemaining(reportList);
+		
+		{
+			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
+			String urlSave = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEST.ods";
+			
+			try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
+				SheetData.saveSheet(docLoad, Report.class, reportList);
+				docLoad.store(urlSave);
+			}
+		}
 
 		logger.info("STOP");
 		System.exit(0);

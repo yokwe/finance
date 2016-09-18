@@ -11,6 +11,7 @@ import yokwe.finance.securities.SecuritiesException;
 public class Dividend {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Dividend.class);
 
+	String transaction;
 	String date;
 	String symbol;
 	String name;
@@ -19,31 +20,37 @@ public class Dividend {
 	double debit;
 	double usdjpy;
 	
-	private Dividend(String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
-		this.date     = date;
-		this.symbol   = symbol;
-		this.name     = name;
-		this.quantity = quantity;
-		this.credit   = credit;
-		this.debit    = debit;
-		this.usdjpy   = usdjpy;
+	private Dividend(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		this.transaction = transaction;
+		this.date        = date;
+		this.symbol      = symbol;
+		this.name        = name;
+		this.quantity    = quantity;
+		this.credit      = credit;
+		this.debit       = debit;
+		this.usdjpy      = usdjpy;
 	}
 	
 	private static Map<String, Dividend> dividendMap = new LinkedHashMap<>();
 
 	private static void transaction(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
-		String key = String.format("%s-%s-%s", date, symbol, transaction);
+		String key = String.format("%s-%s", date, symbol);
 		if (dividendMap.containsKey(key)) {
 			Dividend dividend = dividendMap.get(key);
-			
+			// Sanity check
+			if (!dividend.transaction.equals(transaction)) {
+				logger.error("Unexpected transaction {} => {}", dividend.transaction, transaction);
+				throw new SecuritiesException("Unexpected chagne");
+			}
 			if (dividend.quantity != quantity) {
 				logger.error("Unknown quantity {} => {}", String.format("%.6f", dividend.quantity), String.format("%.6f", quantity));
 				throw new SecuritiesException("Unexpected quantity");
 			}
+			
 			dividend.credit   += credit;
 			dividend.debit    += debit;
 		} else {
-			Dividend dividend = new Dividend(date, symbol, name, quantity, credit, debit, usdjpy);
+			Dividend dividend = new Dividend(transaction, date, symbol, name, quantity, credit, debit, usdjpy);
 			dividendMap.put(key, dividend);
 		}
 	}

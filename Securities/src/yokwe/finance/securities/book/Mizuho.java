@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 
 @SheetData.SheetName("mizuho-header")
+@SheetData.HeaderRow(0)
+@SheetData.DataRow(1)
 public class Mizuho extends SheetData implements Comparable<Mizuho> {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Mizuho.class);
 	

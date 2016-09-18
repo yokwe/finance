@@ -1,6 +1,7 @@
 package yokwe.finance.securities.book;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.LoggerFactory;
@@ -54,5 +55,17 @@ public class Dividend {
 	}
 	public static void nra(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
 		transaction("nra", date, symbol, name, quantity, credit, debit, usdjpy);
+	}
+	
+	public static void addRemaining(List<ReportDividend> reportList) {
+		for(Map.Entry<String, Dividend> entry: dividendMap.entrySet()) {
+			Dividend dividend = entry.getValue();
+			double dividendJPY = dividend.usdjpy * dividend.credit;
+			double taxWithholdingJPY = dividend.usdjpy * dividend.debit;
+			ReportDividend report = ReportDividend.getInstance(
+					dividend.date, dividend.symbol, dividend.name, dividend.quantity,
+					dividend.credit, dividend.debit, dividend.usdjpy, dividendJPY, taxWithholdingJPY);
+			reportList.add(report);
+		}
 	}
 }

@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class Securities {
-	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Securities.class);
+public class Transfer {
+	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transfer.class);
 	
 	private static final double ALMOST_ZERO = 0.000001;
 	
@@ -28,7 +28,7 @@ public class Securities {
 	int          acquisitionCostJPY;
 	List<ReportTransfer> reportList;
 	
-	private Securities(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
+	private Transfer(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
 		this.dateBuyFirst  = date;
 		this.dateBuyLast   = "";
 		this.symbol        = symbol;
@@ -43,92 +43,92 @@ public class Securities {
 		reportList         = new ArrayList<>();
 	}
 	
-	private static Map<String, Securities> securitiesMap = new LinkedHashMap<>();
+	private static Map<String, Transfer> transferMap = new LinkedHashMap<>();
 	
 	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<ReportTransfer> reportList) {
 		int acquisitionCostJPY = (int)Math.round((quantity * price + commission) * usdjpy);
 
-		if (securitiesMap.containsKey(symbol)) {
-			Securities securities = securitiesMap.get(symbol);
+		if (transferMap.containsKey(symbol)) {
+			Transfer transfer = transferMap.get(symbol);
 			
-			securities.dateBuyLast         = date;
-			securities.quantity           += quantity;
-			securities.price               = price;
-			securities.commission          = commission;
-			securities.usdjpy              = usdjpy;
-			securities.count++;
-			securities.acquisitionCostJPY += acquisitionCostJPY;
+			transfer.dateBuyLast         = date;
+			transfer.quantity           += quantity;
+			transfer.price               = price;
+			transfer.commission          = commission;
+			transfer.usdjpy              = usdjpy;
+			transfer.count++;
+			transfer.acquisitionCostJPY += acquisitionCostJPY;
 			
 			// Special case for TAL/TRTN(negative quantity for BUY)
-			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
-				securitiesMap.remove(symbol);
+			if (Math.abs(transfer.quantity) < ALMOST_ZERO) {
+				transferMap.remove(symbol);
 			}
 			
-			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
-			securities.reportList.add(report);
+			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, transfer.quantity, transfer.acquisitionCostJPY);
+			transfer.reportList.add(report);
 		} else {
-			Securities securities = new Securities(date, symbol, name, quantity, price, commission, usdjpy);
-			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
-			securities.reportList.add(report);
-			securitiesMap.put(symbol, securities);
+			Transfer transfer = new Transfer(date, symbol, name, quantity, price, commission, usdjpy);
+			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, transfer.quantity, transfer.acquisitionCostJPY);
+			transfer.reportList.add(report);
+			transferMap.put(symbol, transfer);
 		}
 	}
 	
 	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<ReportTransfer> reportList) {
-		if (securitiesMap.containsKey(symbol)) {
+		if (transferMap.containsKey(symbol)) {
 			double priceSell        = price * quantity;
 			int    sellAmountJPY    = (int)Math.round(priceSell * usdjpy);
 			int    sellCommisionJPY = (int)Math.round(commission * usdjpy);
 
-			Securities securities = securitiesMap.get(symbol);
+			Transfer transfer = transferMap.get(symbol);
 			
 			int acquisitionCostJPY;
-			if (securities.count == 1) {
-				acquisitionCostJPY = (int)Math.round(securities.acquisitionCostJPY * (quantity / securities.quantity));
+			if (transfer.count == 1) {
+				acquisitionCostJPY = (int)Math.round(transfer.acquisitionCostJPY * (quantity / transfer.quantity));
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
+						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, transfer.dateBuyFirst, transfer.dateBuyLast));
 				
 				// maintain securities
-				securities.quantity           -= quantity;
-				securities.acquisitionCostJPY -= acquisitionCostJPY;
+				transfer.quantity           -= quantity;
+				transfer.acquisitionCostJPY -= acquisitionCostJPY;
 			} else {
-				double unitCost = Math.ceil(securities.acquisitionCostJPY / securities.quantity);
+				double unitCost = Math.ceil(transfer.acquisitionCostJPY / transfer.quantity);
 				acquisitionCostJPY = (int)Math.round(unitCost * quantity);
 				
-				securities.quantity           -= quantity;
-				securities.acquisitionCostJPY  = (int)Math.round(unitCost * securities.quantity);
+				transfer.quantity           -= quantity;
+				transfer.acquisitionCostJPY  = (int)Math.round(unitCost * transfer.quantity);
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, securities.dateBuyFirst, securities.dateBuyLast));
+						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, transfer.dateBuyFirst, transfer.dateBuyLast));
 			}
 						
-			if (securities.count == 1 && securities.reportList.size() == 1 && Math.abs(securities.quantity) < ALMOST_ZERO) {
+			if (transfer.count == 1 && transfer.reportList.size() == 1 && Math.abs(transfer.quantity) < ALMOST_ZERO) {
 				// Special case: buy once and sell whole.
 				//   Output one record for both buy and sell
-				ReportTransfer buy  = securities.reportList.get(0);
-				ReportTransfer sell = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				ReportTransfer buy  = transfer.reportList.get(0);
+				ReportTransfer sell = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, transfer.dateBuyFirst, transfer.dateBuyLast);
 				
 				ReportTransfer report = ReportTransfer.getInstance(
 						symbol, name, quantity,
 						sell.dateSell, sell.priceSell, sell.commissionSell, sell.fxRateSell, sell.commissionSellJPY, sell.amountSellJPY, sell.acquisitionCostJPY, sell.dateBuyFirst, sell.dateBuyLast,
 						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, "", "");
-				securities.reportList.clear();
-				securities.reportList.add(report);
+				transfer.reportList.clear();
+				transfer.reportList.add(report);
 			} else {
-				ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
-				securities.reportList.add(report);
+				ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, transfer.dateBuyFirst, transfer.dateBuyLast);
+				transfer.reportList.add(report);
 			}
 			
 			// If quantity of securities become ZERO, output accumulated reportList and remove from securitiesMap
-			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
-				for(ReportTransfer report: securities.reportList) {
+			if (Math.abs(transfer.quantity) < ALMOST_ZERO) {
+				for(ReportTransfer report: transfer.reportList) {
 					reportList.add(report);
 				}
-				securities.reportList.clear();
-				securitiesMap.remove(symbol);
+				transfer.reportList.clear();
+				transferMap.remove(symbol);
 			}
 		} else {
 			logger.error("Unknown symbol = {}", symbol);
@@ -138,11 +138,11 @@ public class Securities {
 	
 	public static void addRemaining(List<ReportTransfer> reportList) {
 		List<String> symbolList = new ArrayList<>();
-		symbolList.addAll(securitiesMap.keySet());
+		symbolList.addAll(transferMap.keySet());
 		Collections.sort(symbolList);
-		for(Map.Entry<String, Securities> entry: securitiesMap.entrySet()) {
-			Securities securities = entry.getValue();
-			reportList.addAll(securities.reportList);
+		for(Map.Entry<String, Transfer> entry: transferMap.entrySet()) {
+			Transfer transfer = entry.getValue();
+			reportList.addAll(transfer.reportList);
 		}
 	}
 	
@@ -162,11 +162,11 @@ public class Securities {
 				String symbolName = symbolNameMap.getName(transaction.symbol);
 				switch (transaction.transaction) {
 				case "BOUGHT": {
-					Securities.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
+					Transfer.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 					break;
 				}
 				case "SOLD": {
-					Securities.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
+					Transfer.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 					break;
 				}
 				default: {
@@ -197,7 +197,7 @@ public class Securities {
 //			}
 			
 			// Output report of remaining securities in alphabetical order
-			Securities.addRemaining(reportList);
+			Transfer.addRemaining(reportList);
 			
 			{
 				String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";

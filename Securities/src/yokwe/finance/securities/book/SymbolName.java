@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 
 @SheetData.SheetName("symbol-name")
+@SheetData.HeaderRow(0)
+@SheetData.DataRow(1)
 public class SymbolName extends SheetData {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(SymbolName.class);
 

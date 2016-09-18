@@ -75,11 +75,11 @@ public class TransactionBuySell extends SheetData {
 			String symbolName = "";
 			switch (transaction.transaction) {
 			case "BOUGHT": {
-				Securities.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
+				Transfer.buy(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 				break;
 			}
 			case "SOLD": {
-				Securities.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
+				Transfer.sell(transaction.tradeDate, transaction.symbol, symbolName, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportList);
 				break;
 			}
 			default: {
@@ -89,7 +89,7 @@ public class TransactionBuySell extends SheetData {
 			}
 		}
 		
-		Securities.addRemaining(reportList);
+		Transfer.addRemaining(reportList);
 		
 		{
 			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";

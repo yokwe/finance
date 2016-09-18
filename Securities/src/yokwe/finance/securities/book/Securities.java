@@ -26,7 +26,7 @@ public class Securities {
 	
 	int          count;
 	int          acquisitionCostJPY;
-	List<Report> reportList;
+	List<ReportTransfer> reportList;
 	
 	private Securities(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy) {
 		this.dateBuyFirst  = date;
@@ -45,7 +45,7 @@ public class Securities {
 	
 	private static Map<String, Securities> securitiesMap = new LinkedHashMap<>();
 	
-	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
+	public static void buy(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<ReportTransfer> reportList) {
 		int acquisitionCostJPY = (int)Math.round((quantity * price + commission) * usdjpy);
 
 		if (securitiesMap.containsKey(symbol)) {
@@ -64,17 +64,17 @@ public class Securities {
 				securitiesMap.remove(symbol);
 			}
 			
-			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
+			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
 			securities.reportList.add(report);
 		} else {
 			Securities securities = new Securities(date, symbol, name, quantity, price, commission, usdjpy);
-			Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
+			ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, acquisitionCostJPY, securities.quantity, securities.acquisitionCostJPY);
 			securities.reportList.add(report);
 			securitiesMap.put(symbol, securities);
 		}
 	}
 	
-	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<Report> reportList) {
+	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<ReportTransfer> reportList) {
 		if (securitiesMap.containsKey(symbol)) {
 			double priceSell        = price * quantity;
 			int    sellAmountJPY    = (int)Math.round(priceSell * usdjpy);
@@ -108,23 +108,23 @@ public class Securities {
 			if (securities.count == 1 && securities.reportList.size() == 1 && Math.abs(securities.quantity) < ALMOST_ZERO) {
 				// Special case: buy once and sell whole.
 				//   Output one record for both buy and sell
-				Report buy  = securities.reportList.get(0);
-				Report sell = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				ReportTransfer buy  = securities.reportList.get(0);
+				ReportTransfer sell = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				
-				Report report = Report.getInstance(
+				ReportTransfer report = ReportTransfer.getInstance(
 						symbol, name, quantity,
 						sell.dateSell, sell.priceSell, sell.commissionSell, sell.fxRateSell, sell.commissionSellJPY, sell.amountSellJPY, sell.acquisitionCostJPY, sell.dateBuyFirst, sell.dateBuyLast,
 						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, "", "");
 				securities.reportList.clear();
 				securities.reportList.add(report);
 			} else {
-				Report report = Report.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
+				ReportTransfer report = ReportTransfer.getInstance(symbol, name, quantity, date, price, commission, usdjpy, sellCommisionJPY, sellAmountJPY, acquisitionCostJPY, securities.dateBuyFirst, securities.dateBuyLast);
 				securities.reportList.add(report);
 			}
 			
 			// If quantity of securities become ZERO, output accumulated reportList and remove from securitiesMap
 			if (Math.abs(securities.quantity) < ALMOST_ZERO) {
-				for(Report report: securities.reportList) {
+				for(ReportTransfer report: securities.reportList) {
 					reportList.add(report);
 				}
 				securities.reportList.clear();
@@ -136,7 +136,7 @@ public class Securities {
 		}
 	}
 	
-	public static void addRemaining(List<Report> reportList) {
+	public static void addRemaining(List<ReportTransfer> reportList) {
 		List<String> symbolList = new ArrayList<>();
 		symbolList.addAll(securitiesMap.keySet());
 		Collections.sort(symbolList);
@@ -152,7 +152,7 @@ public class Securities {
 		
 		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 			List<TransactionBuySell> transactionList = SheetData.getInstance(libreOffice, TransactionBuySell.class);
-			List<Report> reportList = new ArrayList<>();
+			List<ReportTransfer> reportList = new ArrayList<>();
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
 			SymbolName.Map symbolNameMap = new SymbolName.Map(url);
@@ -204,7 +204,7 @@ public class Securities {
 				String urlSave = "file:///home/hasegawa/Dropbox/Trade/REPORT_OUTPUT.ods";
 				
 				try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
-					SheetData.saveSheet(docLoad, Report.class, reportList);
+					SheetData.saveSheet(docLoad, ReportTransfer.class, reportList);
 					docLoad.store(urlSave);
 				}
 			}

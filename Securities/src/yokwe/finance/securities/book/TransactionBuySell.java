@@ -6,6 +6,8 @@ import java.util.List;
 import yokwe.finance.securities.SecuritiesException;
 
 @SheetData.SheetName("Transaction-Buy-Sell")
+@SheetData.HeaderRow(0)
+@SheetData.DataRow(1)
 public class TransactionBuySell extends SheetData {	
 	@ColumnName("YYYY-MM")
 	public String yyyyMM;
@@ -66,7 +68,7 @@ public class TransactionBuySell extends SheetData {
 		transactionList.add(getTestInstance("BOUGHT", "2002-03-01", "AAA", 5000, 870, 0));
 		transactionList.add(getTestInstance("SOLD",   "2002-07-01", "AAA", 6000, 950, 0));
 
-		List<Report> reportList = new ArrayList<>();
+		List<ReportTransfer> reportList = new ArrayList<>();
 		
 		for(TransactionBuySell transaction: transactionList) {
 			double usdjpy = 1.0;
@@ -94,7 +96,7 @@ public class TransactionBuySell extends SheetData {
 			String urlSave = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEST.ods";
 			
 			try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
-				SheetData.saveSheet(docLoad, Report.class, reportList);
+				SheetData.saveSheet(docLoad, ReportTransfer.class, reportList);
 				docLoad.store(urlSave);
 			}
 		}

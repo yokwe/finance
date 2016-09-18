@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
+
 public class Dividend {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Dividend.class);
 
@@ -28,16 +30,29 @@ public class Dividend {
 	
 	private static Map<String, Dividend> dividendMap = new LinkedHashMap<>();
 
-	public static void dividend(String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
-		String key = date + symbol;
+	private static void transaction(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		String key = String.format("%s-%s-%s", date, symbol, transaction);
 		if (dividendMap.containsKey(key)) {
 			Dividend dividend = dividendMap.get(key);
-			dividend.quantity += quantity; // TODO how to process multiple NRA for a securities of same date.
+			
+			if (dividend.quantity != quantity) {
+				logger.error("Unknown quantity {} => {}", String.format("%.6f", dividend.quantity), String.format("%.6f", quantity));
+				throw new SecuritiesException("Unexpected quantity");
+			}
 			dividend.credit   += credit;
 			dividend.debit    += debit;
 		} else {
 			Dividend dividend = new Dividend(date, symbol, name, quantity, credit, debit, usdjpy);
 			dividendMap.put(key, dividend);
 		}
+	}
+	public static void dividend(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		transaction("dividend", date, symbol, name, quantity, credit, debit, usdjpy);
+	}
+	public static void mlp(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		transaction("mlp", date, symbol, name, quantity, credit, debit, usdjpy);
+	}
+	public static void nra(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		transaction("nra", date, symbol, name, quantity, credit, debit, usdjpy);
 	}
 }

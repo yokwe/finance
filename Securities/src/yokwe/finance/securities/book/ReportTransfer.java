@@ -1,7 +1,9 @@
 package yokwe.finance.securities.book;
 
 @SheetData.SheetName("譲渡取引明細")
-public class Report  extends SheetData {
+@SheetData.HeaderRow(0)
+@SheetData.DataRow(1)
+public class ReportTransfer extends SheetData {
 	@ColumnName("銘柄コード")
 	public final String symbol;
 	@ColumnName("銘柄")
@@ -43,7 +45,7 @@ public class Report  extends SheetData {
 	@ColumnName("総取得価格")
 	public final String totalAmountBuyJPY;
 	
-	private Report(
+	private ReportTransfer(
 			String symbol, String symbolName, double quantity,
 			String dateSell, String priceSell, String commissionSell, String fxRateSell, String commissionSellJPY, String amountSellJPY, String acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
 			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY, String totalQuantity, String totalAmountBuyJPY
@@ -71,19 +73,19 @@ public class Report  extends SheetData {
 		this.totalAmountBuyJPY = totalAmountBuyJPY;
 	}
 	
-	public static Report getInstance(
+	public static ReportTransfer getInstance(
 			String symbol, String symbolName, double quantity,
 			String dateSell, String priceSell, String commissionSell, String fxRateSell, String commissionSellJPY, String amountSellJPY, String acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
 			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY, String totalQuantity, String totalAmountBuyJPY
 			) {
-		return new Report(
+		return new ReportTransfer(
 				symbol, symbolName, quantity,
 				dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
 				dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantity, totalAmountBuyJPY
 				);
 	}
 	
-	public static Report getInstance(String symbol, String symbolName, double quantity,
+	public static ReportTransfer getInstance(String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast) {
 
@@ -95,7 +97,7 @@ public class Report  extends SheetData {
 		String totalQuantity = "";
 		String totalAmountBuyJPY = "";
 
-		return new Report(
+		return new ReportTransfer(
 			symbol, symbolName, quantity,
 			dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 			String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
@@ -103,7 +105,7 @@ public class Report  extends SheetData {
 			);
 	}
 
-	public static Report getInstance(String symbol, String symbolName, double quantity,
+	public static ReportTransfer getInstance(String symbol, String symbolName, double quantity,
 			String dateBuy, double priceBuy, double commissionBuy, double fxRateBuy,
 			int amountBuyJPY, double totalQuantity, int totalAmountBuyJPY) {
 		String dateSell = "";
@@ -116,7 +118,7 @@ public class Report  extends SheetData {
 		String dateBuyFirst = "";
 		String dateBuyLast = "";
 		
-		return new Report(
+		return new ReportTransfer(
 			symbol, symbolName, quantity,
 			dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
 			dateBuy, String.format("%.5f",  priceBuy), String.format("%.2f", commissionBuy), String.format("%.2f", fxRateBuy),

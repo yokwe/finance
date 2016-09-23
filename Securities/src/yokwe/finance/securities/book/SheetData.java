@@ -159,6 +159,7 @@ public class SheetData {
 						} else if (fieldType.equals(Integer.TYPE)) {
 							// int
 							switch (cellTypeValue) {
+							case CellContentType.TEXT_value:
 							case CellContentType.VALUE_value:
 							case CellContentType.FORMULA_value: {
 								double value = cell.getValue();
@@ -186,6 +187,7 @@ public class SheetData {
 						} else if (fieldType.equals(Double.TYPE)) {
 							// double
 							switch (cellTypeValue) {
+							case CellContentType.TEXT_value:
 							case CellContentType.VALUE_value:
 							case CellContentType.FORMULA_value: {
 								double value = cell.getValue();

@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -121,13 +122,11 @@ public class SheetData {
 		
 		Field[]    fieldArray;
 		int[]      indexArray;
-		Object[][] dataArray;
-		final int  size = fieldMap.size();
+		final int  colSize = fieldMap.size();
 
 		{
-			fieldArray = new Field[size];
-			indexArray = new int[size];
-			dataArray  = new Object[size][];
+			fieldArray = new Field[colSize];
+			indexArray = new int[colSize];
 			int i = 0;
 			for(String columnName: fieldMap.keySet()) {
 				fieldArray[i] = fieldMap.get(columnName);
@@ -153,13 +152,15 @@ public class SheetData {
 				rowLast--;
 				int rowSize = rowLast - rowFirst + 1;
 				// cellRange is [rowFirst..rowLast)
-				logger.info("column {} - {} - {}", rowFirst, rowLast, rowSize);
+				logger.info("rowSize {}  colSize {}", rowSize, colSize);
 				
-				for(int i = 0; i < size; i++) {
-					int column = indexArray[i];
+				// Capture data in dataArray
+				Object[][] dataArray = new Object[rowSize][colSize];
+				for(int col = 0; col < colSize; col++) {
+					int column = indexArray[col];
 					
 					// left top right bottom
-					logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
+					//logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
 					XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, rowFirst, column, rowLast);
 					XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
 					Object data[][] = cellRangeData.getDataArray();
@@ -168,113 +169,92 @@ public class SheetData {
 						logger.info("Unexpected rowSize = {}  data.length = {}", rowSize, data.length);
 						throw new SecuritiesException("Unexpected");
 					}
-					for(int j = 0; j < 10; j++) {
-						logger.info("data {} = {} - {}", i, data[j][0].getClass().getName(), data[j][0]);
-					}
-					dataArray[i] = new Object[rowSize];
-					for(int j = 0; j < rowSize; j++) dataArray[i][j] = data[j][0];
-					
-					if (i != 0) throw new SecuritiesException("Expected");
+					for(int row = 0; row < rowSize; row++) dataArray[row][col] = data[row][0];
 				}
 				
-				for(int row = dataRow.value(); row < 65535; row++) {
-					final XCell firstCell = spreadsheet.getCellByPosition(0, row);
-					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
+				@SuppressWarnings("unchecked")
+				E[] instanceArray = (E[]) Array.newInstance(clazz, rowSize);
+				for(int row = 0; row < rowSize; row++) {
+					instanceArray[row] = clazz.newInstance();
+				}
+				
+				for(int col = 0; col < colSize; col++) {
+					Field field = fieldArray[col];
+					Class<?> fieldType = field.getType();
+					int fieldTypeHash = fieldType.hashCode();
 					
-					E instance = clazz.newInstance();
-//					for(String columnName: fieldMap.keySet()) {
-//						Field field = fieldMap.get(columnName);
-//						int index = columnMap.get(columnName);
-					for(int i = 0; i < size; i++) {
-						Field field = fieldArray[i];
-						int   index = indexArray[i];
-						
-						XCell cell = spreadsheet.getCellByPosition(index, row);
-						CellContentType cellType = cell.getType();
-						int cellTypeValue = cellType.getValue();
-						
-						final Class<?> fieldType = field.getType();
-						final int fieldTypeHash = fieldType.hashCode();
-						if (fieldTypeHash == stringHash) {
-							// String
-							switch (cellTypeValue) {
-							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value: {
-								field.set(instance, cell.getFormula());
-								break;
-							}
-							case CellContentType.FORMULA_value: {
-								XText text = UnoRuntime.queryInterface(XText.class, cell);
-								field.set(instance, text.getString());
-								break;
-							}
-							case CellContentType.EMPTY_value: {
-								field.set(instance, "");
-								break;
-							}
-							default: {
-								logger.error("cellType = {}", LibreOffice.toString(cellType));
-								logger.error("cell  {} {}  {}", index, row, UnoRuntime.queryInterface(XText.class, cell).getString());
+					if (fieldTypeHash == stringHash) {
+						for(int row = 0; row < rowSize; row++) {
+							E instance = instanceArray[row];
+							Object value = dataArray[row][col];
+//							logger.info("S {} {} - {}", row, col, value);
+							if (value instanceof String) {
+								field.set(instance, (String)value);
+							} else if (value instanceof Double) {
+								field.set(instance, value.toString());
+							} else {
+								logger.error("Unknow value type = {}", value.getClass().getName());
 								throw new SecuritiesException("Unexpected");
 							}
-							}
-						} else if (fieldTypeHash == doubleHash) {
-							// double
-							switch (cellTypeValue) {
-							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value:
-							case CellContentType.FORMULA_value: {
-								double value = cell.getValue();
-								field.set(instance, value);
-								break;
-							}
-							case CellContentType.EMPTY_value: {
-								field.set(instance, 0);
-								break;
-							}
-							default: {
-								logger.error("cellType = {}", LibreOffice.toString(cellType));
-								throw new SecuritiesException("Unexpected");
-							}
-							}
-						} else if (fieldTypeHash == integerHash) {
-							// int
-							switch (cellTypeValue) {
-							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value:
-							case CellContentType.FORMULA_value: {
-								double value = cell.getValue();
-								// Sanity check of value - fraction value
-								{
-									long iPart = (long)value;
-									double fPart = value - iPart;
-									if (0.00001 < fPart) {
-										logger.error("cell value have fraction value {}", value);
-										throw new SecuritiesException("Unexpected");
-									}
-								}
-								field.set(instance, (int)value);
-								break;
-							}
-							case CellContentType.EMPTY_value: {
-								field.set(instance, 0);
-								break;
-							}
-							default: {
-								logger.error("cellType = {}", LibreOffice.toString(cellType));
-								throw new SecuritiesException("Unexpected");
-							}
-							}
-						} else {
-							logger.error("Unknow field type = {}", fieldType.getName());
-							throw new SecuritiesException("Unexpected");
 						}
+					} else if (fieldTypeHash == doubleHash) {
+						for(int row = 0; row < rowSize; row++) {
+							E instance = instanceArray[row];
+							Object value = dataArray[row][col];
+//							logger.info("D {} {} - {}", row, col, value);
+							if (value instanceof Double) {
+								field.setDouble(instance, ((Double)value).doubleValue());
+							} else if (value instanceof String) {
+								String stringValue = (String)value;
+								if (stringValue.length() == 0) {
+									field.setDouble(instance, (double)0);
+								} else {
+									field.setDouble(instance, Double.parseDouble(stringValue));
+								}
+							} else {
+								logger.error("Unknow value type = {}", value.getClass().getName());
+								throw new SecuritiesException("Unexpected");
+							}
+						}						
+					} else if (fieldTypeHash == integerHash) {
+						for(int row = 0; row < rowSize; row++) {
+							E instance = instanceArray[row];
+							Object value = dataArray[row][col];
+//							logger.info("I {} {} - {}", row, col, value);
+							if (value instanceof Integer) {
+								field.setInt(instance, ((Integer)value).intValue());
+							} else if (value instanceof Double) {
+								field.setInt(instance, ((Double)value).intValue());
+							} else if (value instanceof String) {
+								String stringValue = (String)value;
+								if (stringValue.length() == 0) {
+									field.setInt(instance, 0);
+								} else {
+									field.setInt(instance, Integer.parseInt(stringValue));
+								}
+							} else {
+								logger.error("Unknow value type = {}", value.getClass().getName());
+								throw new SecuritiesException("Unexpected");
+							}
+						}						
+					} else {
+						logger.error("Unknow field type = {}", fieldType.getName());
+						throw new SecuritiesException("Unexpected");
 					}
-					
+				}
+
+				for(E instance: instanceArray) {
 					ret.add(instance);
 				}
+				
+//				for(int i = 0; i < 10; i++) {
+//					logger.info("instance {}", instanceArray[i].toString());
+//				}
+//				for(int i = rowSize - 10; i < rowSize; i++) {
+//					logger.info("instance {}", instanceArray[i].toString());
+//				}
 				return ret;
-			} catch (IndexOutOfBoundsException | InstantiationException | IllegalAccessException e) {
+			} catch (IndexOutOfBoundsException | IllegalAccessException | InstantiationException e) {
 				logger.info("Exception {}", e.toString());
 				throw new SecuritiesException("Unexpected");
 			}

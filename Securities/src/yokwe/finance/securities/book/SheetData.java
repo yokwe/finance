@@ -15,10 +15,11 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
-import com.sun.star.sheet.XSheetCellRange;
+import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
+import com.sun.star.table.XCellRange;
 import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
@@ -88,7 +89,6 @@ public class SheetData {
 		//
 		// Take information from SpreadSheet
 		//
-		XSheetCellRange cellRange = spreadsheet.getSpreadsheet();
 		// Build columnMap - column name to column index
 		Map<String, Integer> columnMap = new HashMap<>();
 		
@@ -98,7 +98,7 @@ public class SheetData {
 				int row = headerRow.value();
 				
 				for(int i = 0; i < 100; i++) {
-					final XCell cell = cellRange.getCellByPosition(i, row);
+					final XCell cell = spreadsheet.getCellByPosition(i, row);
 					final CellContentType type = cell.getType();
 					if (type.equals(CellContentType.EMPTY)) break;
 					
@@ -119,28 +119,90 @@ public class SheetData {
 			}
 		}
 		
+		Field[]    fieldArray;
+		int[]      indexArray;
+		Object[][] dataArray;
+		final int  size = fieldMap.size();
+
+		{
+			fieldArray = new Field[size];
+			indexArray = new int[size];
+			dataArray  = new Object[size][];
+			int i = 0;
+			for(String columnName: fieldMap.keySet()) {
+				fieldArray[i] = fieldMap.get(columnName);
+				indexArray[i] = columnMap.get(columnName);
+				i++;
+			}
+		}
+		final int stringHash  = String.class.hashCode();
+		final int integerHash = Integer.TYPE.hashCode();
+		final int doubleHash  = Double.TYPE.hashCode();
+		
 		// Build ret
 		List<E> ret = new ArrayList<>();
 		{
 			try {
+				int rowFirst = dataRow.value();
+				int rowLast = rowFirst;
+				for(;;) {
+					final XCell firstCell = spreadsheet.getCellByPosition(0, rowLast);
+					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
+					rowLast++;
+				}
+				rowLast--;
+				int rowSize = rowLast - rowFirst + 1;
+				// cellRange is [rowFirst..rowLast)
+				logger.info("column {} - {} - {}", rowFirst, rowLast, rowSize);
+				
+				for(int i = 0; i < size; i++) {
+					int column = indexArray[i];
+					
+					// left top right bottom
+					logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
+					XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, rowFirst, column, rowLast);
+					XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
+					Object data[][] = cellRangeData.getDataArray();
+					
+					if (data.length != rowSize) {
+						logger.info("Unexpected rowSize = {}  data.length = {}", rowSize, data.length);
+						throw new SecuritiesException("Unexpected");
+					}
+					for(int j = 0; j < 10; j++) {
+						logger.info("data {} = {} - {}", i, data[j][0].getClass().getName(), data[j][0]);
+					}
+					dataArray[i] = new Object[rowSize];
+					for(int j = 0; j < rowSize; j++) dataArray[i][j] = data[j][0];
+					
+					if (i != 0) throw new SecuritiesException("Expected");
+				}
+				
 				for(int row = dataRow.value(); row < 65535; row++) {
-					final XCell firstCell = cellRange.getCellByPosition(0, row);
+					final XCell firstCell = spreadsheet.getCellByPosition(0, row);
 					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
 					
 					E instance = clazz.newInstance();
-					for(String columnName: fieldMap.keySet()) {
-						Field field = fieldMap.get(columnName);
-						int index = columnMap.get(columnName);
-						XCell cell = cellRange.getCellByPosition(index, row);
+//					for(String columnName: fieldMap.keySet()) {
+//						Field field = fieldMap.get(columnName);
+//						int index = columnMap.get(columnName);
+					for(int i = 0; i < size; i++) {
+						Field field = fieldArray[i];
+						int   index = indexArray[i];
+						
+						XCell cell = spreadsheet.getCellByPosition(index, row);
 						CellContentType cellType = cell.getType();
 						int cellTypeValue = cellType.getValue();
 						
-						Class<?> fieldType = field.getType();
-						if (fieldType.equals(String.class)) {
+						final Class<?> fieldType = field.getType();
+						final int fieldTypeHash = fieldType.hashCode();
+						if (fieldTypeHash == stringHash) {
 							// String
 							switch (cellTypeValue) {
 							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value:
+							case CellContentType.VALUE_value: {
+								field.set(instance, cell.getFormula());
+								break;
+							}
 							case CellContentType.FORMULA_value: {
 								XText text = UnoRuntime.queryInterface(XText.class, cell);
 								field.set(instance, text.getString());
@@ -156,7 +218,26 @@ public class SheetData {
 								throw new SecuritiesException("Unexpected");
 							}
 							}
-						} else if (fieldType.equals(Integer.TYPE)) {
+						} else if (fieldTypeHash == doubleHash) {
+							// double
+							switch (cellTypeValue) {
+							case CellContentType.TEXT_value:
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
+								double value = cell.getValue();
+								field.set(instance, value);
+								break;
+							}
+							case CellContentType.EMPTY_value: {
+								field.set(instance, 0);
+								break;
+							}
+							default: {
+								logger.error("cellType = {}", LibreOffice.toString(cellType));
+								throw new SecuritiesException("Unexpected");
+							}
+							}
+						} else if (fieldTypeHash == integerHash) {
 							// int
 							switch (cellTypeValue) {
 							case CellContentType.TEXT_value:
@@ -173,25 +254,6 @@ public class SheetData {
 									}
 								}
 								field.set(instance, (int)value);
-								break;
-							}
-							case CellContentType.EMPTY_value: {
-								field.set(instance, 0);
-								break;
-							}
-							default: {
-								logger.error("cellType = {}", LibreOffice.toString(cellType));
-								throw new SecuritiesException("Unexpected");
-							}
-							}
-						} else if (fieldType.equals(Double.TYPE)) {
-							// double
-							switch (cellTypeValue) {
-							case CellContentType.TEXT_value:
-							case CellContentType.VALUE_value:
-							case CellContentType.FORMULA_value: {
-								double value = cell.getValue();
-								field.set(instance, value);
 								break;
 							}
 							case CellContentType.EMPTY_value: {

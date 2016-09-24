@@ -56,6 +56,171 @@ public class SheetData {
 		String value();
 	}
 	
+	public static <E extends SheetData> List<E> getInstanceOLD(LibreOffice libreOffice, Class<E> clazz) {
+		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
+		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
+		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
+		if (sheetName == null) {
+			logger.error("No SheetName annotation = {}", clazz.getName());
+			throw new SecuritiesException("No SheetName annotation");
+		}
+		if (headerRow == null) {
+			logger.error("No HeaderRow annotation = {}", clazz.getName());
+			throw new SecuritiesException("No HeaderRow annotation");
+		}
+		if (dataRow == null) {
+			logger.error("No DataRow annotation = {}", clazz.getName());
+			throw new SecuritiesException("No DataRow annotation");
+		}
+		logger.info("sheetName {}", sheetName.value());
+		logger.info("headerRow {}", headerRow.value());
+		logger.info("dataRow   {}", dataRow.value());
+		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName.value());
+		
+		Map<String, Field> fieldMap = new TreeMap<>();
+		for(Field field: clazz.getDeclaredFields()) {
+			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
+			if (columnName == null) continue;
+			fieldMap.put(columnName.value(), field);
+		}
+		if (fieldMap.size() == 0) {
+			logger.error("No ColumnName annotation = {}", clazz.getName());
+			throw new SecuritiesException("No ColumnName annotation");
+		}
+		
+		//
+		// Take information from SpreadSheet
+		//
+		XSheetCellRange cellRange = spreadsheet.getSpreadsheet();
+		// Build columnMap - column name to column index
+		Map<String, Integer> columnMap = new HashMap<>();
+		
+		{
+			try {
+				// Build header map
+				int row = headerRow.value();
+				
+				for(int i = 0; i < 100; i++) {
+					final XCell cell = cellRange.getCellByPosition(i, row);
+					final CellContentType type = cell.getType();
+					if (type.equals(CellContentType.EMPTY)) break;
+					
+					XText text = UnoRuntime.queryInterface(XText.class, cell);
+					String value = text.getString();
+					columnMap.put(value, i);
+//					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
+				}
+			} catch (IndexOutOfBoundsException e) {
+				logger.info("Exception {}", e.toString());
+			}
+			
+			// Sanity check
+			for(String name: fieldMap.keySet()) {
+				if (columnMap.containsKey(name)) continue;
+				logger.error("columnMap contains no field name = {}", name);
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+		
+		// Build ret
+		List<E> ret = new ArrayList<>();
+		{
+			try {
+				for(int row = dataRow.value(); row < 65535; row++) {
+					final XCell firstCell = cellRange.getCellByPosition(0, row);
+					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
+					
+					E instance = clazz.newInstance();
+					for(String columnName: fieldMap.keySet()) {
+						Field field = fieldMap.get(columnName);
+						int index = columnMap.get(columnName);
+						XCell cell = cellRange.getCellByPosition(index, row);
+						CellContentType cellType = cell.getType();
+						int cellTypeValue = cellType.getValue();
+						
+						Class<?> fieldType = field.getType();
+						if (fieldType.equals(String.class)) {
+							// String
+							switch (cellTypeValue) {
+							case CellContentType.TEXT_value:
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
+								XText text = UnoRuntime.queryInterface(XText.class, cell);
+								field.set(instance, text.getString());
+								break;
+							}
+							case CellContentType.EMPTY_value: {
+								field.set(instance, "");
+								break;
+							}
+							default: {
+								logger.error("cellType = {}", LibreOffice.toString(cellType));
+								logger.error("cell  {} {}  {}", index, row, UnoRuntime.queryInterface(XText.class, cell).getString());
+								throw new SecuritiesException("Unexpected");
+							}
+							}
+						} else if (fieldType.equals(Integer.TYPE)) {
+							// int
+							switch (cellTypeValue) {
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
+								double value = cell.getValue();
+								// Sanity check of value - fraction value
+								{
+									long iPart = (long)value;
+									double fPart = value - iPart;
+									if (0.00001 < fPart) {
+										logger.error("cell value have fraction value {}", value);
+										throw new SecuritiesException("Unexpected");
+									}
+								}
+								field.set(instance, (int)value);
+								break;
+							}
+							case CellContentType.EMPTY_value: {
+								field.set(instance, 0);
+								break;
+							}
+							default: {
+								logger.error("cellType = {}", LibreOffice.toString(cellType));
+								throw new SecuritiesException("Unexpected");
+							}
+							}
+						} else if (fieldType.equals(Double.TYPE)) {
+							// double
+							switch (cellTypeValue) {
+							case CellContentType.VALUE_value:
+							case CellContentType.FORMULA_value: {
+								double value = cell.getValue();
+								field.set(instance, value);
+								break;
+							}
+							case CellContentType.EMPTY_value: {
+								field.set(instance, 0);
+								break;
+							}
+							default: {
+								logger.error("cellType = {}", LibreOffice.toString(cellType));
+								throw new SecuritiesException("Unexpected");
+							}
+							}
+						} else {
+							logger.error("Unknow field type = {}", fieldType.getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+					
+					ret.add(instance);
+				}
+				return ret;
+			} catch (IndexOutOfBoundsException | InstantiationException | IllegalAccessException e) {
+				logger.info("Exception {}", e.toString());
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+	}
+
+	
 	public static <E extends SheetData> List<E> getInstance(LibreOffice libreOffice, Class<E> clazz) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);

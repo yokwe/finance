@@ -89,8 +89,8 @@ public class LibreOffice implements Closeable {
 			PropertyValue[] props = new PropertyValue[] {
 					// Set document as read only
 					new PropertyValue("ReadOnly", 0, readOnly, PropertyState.DIRECT_VALUE),
-					// Update linked reference
-					new PropertyValue("UpdateDocMode", 0, UpdateDocMode.QUIET_UPDATE, PropertyState.DIRECT_VALUE),
+					// Choose NO_UPDATE for faster operation
+					new PropertyValue("UpdateDocMode", 0, UpdateDocMode.NO_UPDATE, PropertyState.DIRECT_VALUE),
 			};
 
 			component = componentLoader.loadComponentFromURL(url, "_blank", 0, props);

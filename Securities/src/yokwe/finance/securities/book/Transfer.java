@@ -1,7 +1,6 @@
 package yokwe.finance.securities.book;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,9 +136,6 @@ public class Transfer {
 	}
 	
 	public static void addRemaining(List<ReportTransfer> reportList) {
-		List<String> symbolList = new ArrayList<>();
-		symbolList.addAll(transferMap.keySet());
-		Collections.sort(symbolList);
 		for(Map.Entry<String, Transfer> entry: transferMap.entrySet()) {
 			Transfer transfer = entry.getValue();
 			reportList.addAll(transfer.reportList);

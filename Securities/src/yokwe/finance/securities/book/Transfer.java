@@ -141,4 +141,21 @@ public class Transfer {
 			reportList.addAll(transfer.reportList);
 		}
 	}
+
+	public static void addRemaining(String date, double usdjpy, EquityStats.Map equityStatsMap, List<ReportTransfer> reportList) {
+		double commission = 7;
+		List<String> keys = new ArrayList<>();
+		for(Map.Entry<String, Transfer> entry: transferMap.entrySet()) keys.add(entry.getKey());
+			
+		for(String key: keys) {
+			Transfer transfer = transferMap.get(key);
+			String symbol = transfer.symbol;
+			String name   = transfer.name;
+			double price  = equityStatsMap.get(symbol).price;
+			
+			double quantity = transfer.reportList.stream().mapToDouble(o -> o.quantity).sum();
+			// invoke sell method to generate fake entry
+			sell(date, symbol, name, quantity, price, commission, usdjpy, reportList);
+		}
+	}
 }

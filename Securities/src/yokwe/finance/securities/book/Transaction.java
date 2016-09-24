@@ -129,6 +129,7 @@ public class Transaction extends SheetData {
 			List<ReportDividend> reportDividendList = new ArrayList<>();
 	
 			Mizuho.Map mizuhoMap = new Mizuho.Map(url);
+			EquityStats.Map equtiyStatsMap = new EquityStats.Map(url);
 
 			for(Transaction transaction: transactionList) {
 				switch (transaction.transaction) {
@@ -190,7 +191,13 @@ public class Transaction extends SheetData {
 //			}
 			
 			// Output report of remaining securities
-			Transfer.addRemaining(reportTransferList);
+			
+			{
+				String lastDate = mizuhoMap.getLastDate();
+				double usdjpy = mizuhoMap.get(lastDate).usd;
+				logger.info("Last Date {} {}", lastDate, usdjpy);
+				Transfer.addRemaining(lastDate, usdjpy, equtiyStatsMap, reportTransferList);
+			}
 			Dividend.addRemaining(reportDividendList);
 			logger.info("reportTransferList = {}", reportTransferList.size());
 			logger.info("reportDividendList = {}", reportDividendList.size());

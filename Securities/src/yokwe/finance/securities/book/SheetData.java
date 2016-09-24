@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XCellRangeData;
+import com.sun.star.sheet.XSheetCellRange;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
@@ -109,7 +110,8 @@ public class SheetData {
 //					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
 				}
 			} catch (IndexOutOfBoundsException e) {
-				logger.info("Exception {}", e.toString());
+				logger.error("Exception {}", e.toString());
+				throw new SecuritiesException("Unexpected");
 			}
 			
 			// Sanity check
@@ -138,126 +140,120 @@ public class SheetData {
 		final int integerHash = Integer.TYPE.hashCode();
 		final int doubleHash  = Double.TYPE.hashCode();
 		
-		// Build ret
-		List<E> ret = new ArrayList<>();
-		{
-			try {
-				int rowFirst = dataRow.value();
-				int rowLast = rowFirst;
-				for(;;) {
-					final XCell firstCell = spreadsheet.getCellByPosition(0, rowLast);
-					if (firstCell.getType().equals(CellContentType.EMPTY)) break;
-					rowLast++;
-				}
-				rowLast--;
-				int rowSize = rowLast - rowFirst + 1;
-				// cellRange is [rowFirst..rowLast)
-				logger.info("rowSize {}  colSize {}", rowSize, colSize);
-				
-				// Capture data in dataArray
-				Object[][] dataArray = new Object[rowSize][colSize];
-				for(int col = 0; col < colSize; col++) {
-					int column = indexArray[col];
-					
-					// left top right bottom
-					//logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
-					XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, rowFirst, column, rowLast);
-					XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
-					Object data[][] = cellRangeData.getDataArray();
-					
-					if (data.length != rowSize) {
-						logger.info("Unexpected rowSize = {}  data.length = {}", rowSize, data.length);
-						throw new SecuritiesException("Unexpected");
-					}
-					for(int row = 0; row < rowSize; row++) dataArray[row][col] = data[row][0];
-				}
-				
-				@SuppressWarnings("unchecked")
-				E[] instanceArray = (E[]) Array.newInstance(clazz, rowSize);
-				for(int row = 0; row < rowSize; row++) {
-					instanceArray[row] = clazz.newInstance();
-				}
-				
-				for(int col = 0; col < colSize; col++) {
-					Field field = fieldArray[col];
-					Class<?> fieldType = field.getType();
-					int fieldTypeHash = fieldType.hashCode();
-					
-					if (fieldTypeHash == stringHash) {
-						for(int row = 0; row < rowSize; row++) {
-							E instance = instanceArray[row];
-							Object value = dataArray[row][col];
-//							logger.info("S {} {} - {}", row, col, value);
-							if (value instanceof String) {
-								field.set(instance, (String)value);
-							} else if (value instanceof Double) {
-								field.set(instance, value.toString());
-							} else {
-								logger.error("Unknow value type = {}", value.getClass().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-						}
-					} else if (fieldTypeHash == doubleHash) {
-						for(int row = 0; row < rowSize; row++) {
-							E instance = instanceArray[row];
-							Object value = dataArray[row][col];
-//							logger.info("D {} {} - {}", row, col, value);
-							if (value instanceof Double) {
-								field.setDouble(instance, ((Double)value).doubleValue());
-							} else if (value instanceof String) {
-								String stringValue = (String)value;
-								if (stringValue.length() == 0) {
-									field.setDouble(instance, (double)0);
-								} else {
-									field.setDouble(instance, Double.parseDouble(stringValue));
-								}
-							} else {
-								logger.error("Unknow value type = {}", value.getClass().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-						}						
-					} else if (fieldTypeHash == integerHash) {
-						for(int row = 0; row < rowSize; row++) {
-							E instance = instanceArray[row];
-							Object value = dataArray[row][col];
-//							logger.info("I {} {} - {}", row, col, value);
-							if (value instanceof Integer) {
-								field.setInt(instance, ((Integer)value).intValue());
-							} else if (value instanceof Double) {
-								field.setInt(instance, ((Double)value).intValue());
-							} else if (value instanceof String) {
-								String stringValue = (String)value;
-								if (stringValue.length() == 0) {
-									field.setInt(instance, 0);
-								} else {
-									field.setInt(instance, Integer.parseInt(stringValue));
-								}
-							} else {
-								logger.error("Unknow value type = {}", value.getClass().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-						}						
-					} else {
-						logger.error("Unknow field type = {}", fieldType.getName());
-						throw new SecuritiesException("Unexpected");
-					}
-				}
+		try {
+			List<E> ret = new ArrayList<>();
 
-				for(E instance: instanceArray) {
-					ret.add(instance);
-				}
-				
-//				for(int i = 0; i < 10; i++) {
-//					logger.info("instance {}", instanceArray[i].toString());
-//				}
-//				for(int i = rowSize - 10; i < rowSize; i++) {
-//					logger.info("instance {}", instanceArray[i].toString());
-//				}
-				return ret;
-			} catch (IndexOutOfBoundsException | IllegalAccessException | InstantiationException e) {
-				logger.info("Exception {}", e.toString());
-				throw new SecuritiesException("Unexpected");
+			int rowFirst = dataRow.value();
+			int rowLast = LibreOffice.getLastDataRow(spreadsheet, 0, rowFirst, 65536);
+			logger.info("rowFirst {}  rowLast {}", rowFirst, rowLast);
+
+			int rowSize = rowLast - rowFirst + 1;
+			// cellRange is [rowFirst..rowLast)
+			logger.info("rowSize {}  colSize {}", rowSize, colSize);
+			
+			@SuppressWarnings("unchecked")
+			E[] instanceArray = (E[]) Array.newInstance(clazz, rowSize);
+			for(int row = 0; row < rowSize; row++) {
+				E instance = clazz.newInstance();
+				instanceArray[row] = instance;
+				ret.add(instance);
 			}
+			
+			// Capture data in dataArray for each column
+			Object[][] dataArray = new Object[rowSize][colSize];
+			for(int col = 0; col < colSize; col++) {
+				int column = indexArray[col];
+				
+				// left top right bottom
+				//logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
+				XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, rowFirst, column, rowLast);
+				XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
+				Object data[][] = cellRangeData.getDataArray();
+				
+				if (data.length != rowSize) {
+					logger.error("Unexpected rowSize = {}  data.length = {}", rowSize, data.length);
+					throw new SecuritiesException("Unexpected");
+				}
+				for(int row = 0; row < rowSize; row++) dataArray[row][col] = data[row][0];
+			}
+
+			// Assign value to field of each instance
+			for(int col = 0; col < colSize; col++) {
+				Field field = fieldArray[col];
+				Class<?> fieldType = field.getType();
+				int fieldTypeHash = fieldType.hashCode();
+				
+				if (fieldTypeHash == stringHash) {
+					for(int row = 0; row < rowSize; row++) {
+						E instance = instanceArray[row];
+						Object value = dataArray[row][col];
+//						logger.info("S {} {} - {}", row, col, value);
+						if (value instanceof String) {
+							field.set(instance, (String)value);
+						} else if (value instanceof Double) {
+							field.set(instance, value.toString());
+						} else {
+							logger.error("Unknow value type = {}", value.getClass().getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+				} else if (fieldTypeHash == doubleHash) {
+					for(int row = 0; row < rowSize; row++) {
+						E instance = instanceArray[row];
+						Object value = dataArray[row][col];
+//						logger.info("D {} {} - {}", row, col, value);
+						if (value instanceof Double) {
+							field.setDouble(instance, ((Double)value).doubleValue());
+						} else if (value instanceof Integer) {
+							field.setDouble(instance, ((Integer)value).intValue());
+						} else if (value instanceof String) {
+							String stringValue = (String)value;
+							if (stringValue.length() == 0) {
+								field.setDouble(instance, 0);
+							} else if (stringValue.equals("NaN")) {
+								field.setDouble(instance, 0);
+							} else {
+								logger.error("Unexpeced dobuleHash stringValue = {} - {} - {}", col, row, stringValue);
+								throw new SecuritiesException("Unexpected");
+							}
+						} else {
+							logger.error("Unknow value type = {}", value.getClass().getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}						
+				} else if (fieldTypeHash == integerHash) {
+					for(int row = 0; row < rowSize; row++) {
+						E instance = instanceArray[row];
+						Object value = dataArray[row][col];
+//						logger.info("I {} {} - {}", row, col, value);
+						if (value instanceof Integer) {
+							field.setInt(instance, ((Integer)value).intValue());
+						} else if (value instanceof Double) {
+							field.setInt(instance, ((Double)value).intValue());
+						} else if (value instanceof String) {
+							String stringValue = (String)value;
+							if (stringValue.length() == 0) {
+								field.setInt(instance, 0);
+							} else if (stringValue.equals("NaN")) {
+								field.setInt(instance, 0);
+							} else {
+								logger.error("Unexpeced integerHash stringValue = {} - {} - {}", col, row, stringValue);
+								throw new SecuritiesException("Unexpected");
+							}
+						} else {
+							logger.error("Unknow value type = {}", value.getClass().getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}						
+				} else {
+					logger.error("Unknow field type = {}", fieldType.getName());
+					throw new SecuritiesException("Unexpected");
+				}
+			}
+			return ret;
+		} catch (IndexOutOfBoundsException | IllegalAccessException | InstantiationException e) {
+			logger.error("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
 		}
 	}
 
@@ -351,7 +347,7 @@ public class SheetData {
 				}
 			}
 		} catch (IllegalArgumentException | IllegalAccessException | IndexOutOfBoundsException e) {
-			logger.info("Exception {}", e.toString());
+			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
 	}

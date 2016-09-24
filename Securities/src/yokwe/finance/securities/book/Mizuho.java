@@ -46,6 +46,14 @@ public class Mizuho extends SheetData implements Comparable<Mizuho> {
 		public Mizuho get(String date) {
 			return map.get(getDate(date));
 		}
+		
+		public String getFirstDate() {
+			return dateList.get(0);
+		}
+
+		public String getLastDate() {
+			return dateList.get(dateList.size() - 1);
+		}
 	}
 
 	

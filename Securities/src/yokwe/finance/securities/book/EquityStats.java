@@ -33,6 +33,12 @@ public class EquityStats extends SheetData {
 			if (map.containsKey(symbol)) {
 				return map.get(symbol);
 			}
+			if (symbol.contains(".PR.")) {
+				String newSymbol = symbol.replace(".PR.", "-");
+				if (map.containsKey(newSymbol)) {
+					return map.get(newSymbol);
+				}
+			}
 			logger.info("Unexpected symbol = {}", symbol);
 			throw new SecuritiesException("Unexpected");
 		}

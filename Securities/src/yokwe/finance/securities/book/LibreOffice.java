@@ -24,6 +24,8 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.table.CellContentType;
+import com.sun.star.table.XCellRange;
+import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
@@ -127,6 +129,26 @@ public class LibreOffice implements Closeable {
 			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, indexAccess.getByIndex(index));
 			return sheet;
 		} catch (IndexOutOfBoundsException | WrappedTargetException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
+	}
+	
+	// column, rowFirst and rowLast are zero based
+	public static int getLastDataRow(XSpreadsheet spreadsheet, int column, int rowFirst, int rowLast) {
+		try {
+			XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, 0, column, rowLast);
+			XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
+			Object data[][] = cellRangeData.getDataArray();
+			int ret = -1;
+			for(int i = rowFirst; i < data.length; i++) {
+				Object o = data[i][0];
+				// if o is empty string return ret
+				if (o instanceof String && ((String)o).length() == 0) return ret;
+				ret = i;
+			}
+			return ret;
+		} catch (IndexOutOfBoundsException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}

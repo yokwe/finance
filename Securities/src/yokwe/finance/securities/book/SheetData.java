@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -349,17 +351,39 @@ public class SheetData {
 				int fieldTypeHash = fieldType.hashCode();
 				
 				if (fieldTypeHash == stringHash) {
-					for(int row = 0; row < rowSize; row++) {
-						E instance = instanceArray[row];
-						Object value = dataArray[row][col];
-//						logger.info("S {} {} - {}", row, col, value);
-						if (value instanceof String) {
-							field.set(instance, (String)value);
-						} else if (value instanceof Double) {
-							field.set(instance, value.toString());
-						} else {
-							logger.error("Unknow value type = {}", value.getClass().getName());
-							throw new SecuritiesException("Unexpected");
+					// Convert double value to date string if necessary.
+					XCell   cell         = spreadsheet.getCellByPosition(indexArray[col], rowFirst);
+					String  formatString = libreOffice.getFormatString(cell);
+					boolean isYYYYMMDD   = formatString.equals("YYYY-MM-DD");
+					if (isYYYYMMDD) {
+						LocalDate epoch = LocalDate.of(1899, 12, 30);
+						for(int row = 0; row < rowSize; row++) {
+							E instance = instanceArray[row];
+							Object value = dataArray[row][col];
+//							logger.info("S {} {} - {}", row, col, value);
+							if (value instanceof String) {
+								field.set(instance, (String)value);
+							} else if (value instanceof Double) {
+								int daysSinceEpoch = ((Double) value).intValue();
+								field.set(instance, DateTimeFormatter.ISO_LOCAL_DATE.format(epoch.plusDays(daysSinceEpoch)));
+							} else {
+								logger.error("Unknow value type = {}", value.getClass().getName());
+								throw new SecuritiesException("Unexpected");
+							}
+						}
+					} else {
+						for(int row = 0; row < rowSize; row++) {
+							E instance = instanceArray[row];
+							Object value = dataArray[row][col];
+//							logger.info("S {} {} - {}", row, col, value);
+							if (value instanceof String) {
+								field.set(instance, (String)value);
+							} else if (value instanceof Double) {
+								field.set(instance, value.toString());
+							} else {
+								logger.error("Unknow value type = {}", value.getClass().getName());
+								throw new SecuritiesException("Unexpected");
+							}
 						}
 					}
 				} else if (fieldTypeHash == doubleHash) {

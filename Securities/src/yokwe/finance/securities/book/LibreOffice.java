@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.star.beans.PropertyState;
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.beans.UnknownPropertyException;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.comp.helper.Bootstrap;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.container.NoSuchElementException;
@@ -23,12 +25,14 @@ import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
-import com.sun.star.table.CellContentType;
-import com.sun.star.table.XCellRange;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.table.CellContentType;
+import com.sun.star.table.XCell;
+import com.sun.star.table.XCellRange;
+import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.CloseVetoException;
@@ -157,6 +161,20 @@ public class LibreOffice implements Closeable {
 	public XNumberFormats getNumberFormats() {
 		XNumberFormatsSupplier numberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
 		return numberFormatsSupplier.getNumberFormats();
+	}
+	
+	public String getFormatString(XCell cell) {
+		try {
+			XNumberFormats numberFormats     = getNumberFormats();
+			XPropertySet   cellProps         = UnoRuntime.queryInterface(XPropertySet.class, cell);
+			int            numberFormatIndex = AnyConverter.toInt(cellProps.getPropertyValue("NumberFormat"));
+			XPropertySet   numberFormatProps = numberFormats.getByKey(numberFormatIndex);
+			String         formatString      = AnyConverter.toString(numberFormatProps.getPropertyValue("FormatString"));
+			return formatString;
+		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
 	}
 	
 	public void close() {

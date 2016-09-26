@@ -1,5 +1,7 @@
 package yokwe.finance.securities.book;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -203,8 +205,11 @@ public class Transaction extends SheetData {
 			logger.info("reportDividendList = {}", reportDividendList.size());
 			
 			{
+				String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+				logger.info("timeStamp {}", timeStamp);
+				
 				String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
-				String urlSave = "file:///home/hasegawa/Dropbox/Trade/REPORT_OUTPUT.ods";
+				String urlSave = String.format("file:///home/hasegawa/Dropbox/Trade/REPORT_%s.ods", timeStamp);
 				
 				try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
 					SheetData.saveSheet(docLoad, ReportTransfer.class, reportTransferList);
@@ -217,5 +222,4 @@ public class Transaction extends SheetData {
 			System.exit(0);
 		}
 	}
-
 }

@@ -147,7 +147,8 @@ public class Transaction extends SheetData {
 					Transfer.sell(transaction.tradeDate, transaction.symbol, transaction.name, transaction.quantity, transaction.price, transaction.commission, usdjpy, reportTransferList);
 					break;
 				}
-				case "DIVIDEND": {
+				case "DIVIDEND":
+				case "ADR": {
 					double usdjpy = mizuhoMap.get(transaction.date).usd;
 					Dividend.dividend(
 						transaction.transaction, transaction.date, transaction.symbol, transaction.name, transaction.quantity, transaction.credit, transaction.debit, usdjpy);

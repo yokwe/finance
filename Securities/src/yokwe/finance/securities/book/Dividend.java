@@ -40,7 +40,7 @@ public class Dividend {
 			// Sanity check
 			if (!dividend.transaction.equals(transaction)) {
 				logger.error("Unexpected transaction {} => {}", dividend.transaction, transaction);
-				throw new SecuritiesException("Unexpected chagne");
+				throw new SecuritiesException("Unexpected change");
 			}
 			if (dividend.quantity != quantity) {
 				logger.error("Unknown quantity {} => {}", String.format("%.6f", dividend.quantity), String.format("%.6f", quantity));

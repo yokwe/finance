@@ -92,7 +92,8 @@ public class Transaction extends SheetData {
 			}
 			case "DIVIDEND":
 			case "MLP":
-			case "NRA": {
+			case "NRA":
+			case "CAP GAIN": {
 				Dividend.dividend(
 					transaction.transaction, transaction.date, transaction.symbol, symbolName, transaction.quantity, transaction.credit, transaction.debit, usdjpy);
 			}
@@ -163,6 +164,12 @@ public class Transaction extends SheetData {
 				case "NRA": {
 					double usdjpy = mizuhoMap.get(transaction.date).usd;
 					Dividend.nra(
+						transaction.transaction, transaction.date, transaction.symbol, transaction.name, transaction.quantity, transaction.credit, transaction.debit, usdjpy);
+					break;
+				}
+				case "CAP GAIN": {
+					double usdjpy = mizuhoMap.get(transaction.date).usd;
+					Dividend.capGain(
 						transaction.transaction, transaction.date, transaction.symbol, transaction.name, transaction.quantity, transaction.credit, transaction.debit, usdjpy);
 					break;
 				}

@@ -38,10 +38,11 @@ public class Dividend {
 		if (dividendMap.containsKey(key)) {
 			Dividend dividend = dividendMap.get(key);
 			// Sanity check
-			if (!dividend.transaction.equals(transaction)) {
-				logger.error("Unexpected transaction {} => {}", dividend.transaction, transaction);
-				throw new SecuritiesException("Unexpected change");
-			}
+//          There is are transaction of DMO at 2016-10-28 as DIVIDEND and CAP GAIN
+//			if (!dividend.transaction.equals(transaction)) {
+//				logger.error("Unexpected transaction {} => {}", dividend.transaction, transaction);
+//				throw new SecuritiesException("Unexpected change");
+//			}
 			if (dividend.quantity != quantity) {
 				logger.error("Unknown quantity {} => {}", String.format("%.6f", dividend.quantity), String.format("%.6f", quantity));
 				throw new SecuritiesException("Unexpected quantity");
@@ -62,6 +63,9 @@ public class Dividend {
 	}
 	public static void nra(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
 		transaction("nra", date, symbol, name, quantity, credit, debit, usdjpy);
+	}
+	public static void capGain(String transaction, String date, String symbol, String name, double quantity, double credit, double debit, double usdjpy) {
+		transaction("capGain", date, symbol, name, quantity, credit, debit, usdjpy);
 	}
 	
 	public static void addRemaining(List<ReportDividend> reportList) {

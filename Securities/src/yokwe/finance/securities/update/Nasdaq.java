@@ -50,6 +50,7 @@ public final class Nasdaq {
 	//  # X-A*  X preferred class A called      BIR-A*   BIR-PA.A  BIR-A.CL  BIR^A.CL
 	//  # X.A   X class A                       AKO.A    AKO-A     AKO.A     AKO.A
 	//  # X+A   X warrants class A              GM+A     GM-WTA    ???       GM.WS.A
+	//  # X-*   X preferred called              IRET-*   IRET-???  IRET-CL   IRET^.CL
 	
 	//  DRI$ became DRI
 	

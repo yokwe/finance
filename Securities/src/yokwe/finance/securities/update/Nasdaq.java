@@ -50,7 +50,7 @@ public final class Nasdaq {
 	//  # X-A*  X preferred class A called      BIR-A*   BIR-PA.A  BIR-A.CL  BIR^A.CL
 	//  # X.A   X class A                       AKO.A    AKO-A     AKO.A     AKO.A
 	//  # X+A   X warrants class A              GM+A     GM-WTA    ???       GM.WS.A
-	//  # X-*   X preferred called              IRET-*   IRET-???  IRET-CL   IRET^.CL
+	//  # X-*   X preferred called              IRET-*   IRET-P    IRET-CL   IRET^.CL
 	
 	//  DRI$ became DRI
 	
@@ -63,6 +63,7 @@ public final class Nasdaq {
 	private static String PAT_WHEN_ISSUED2      = "^([A-Z]+)\\$$";
 	private static String PAT_WHEN_ISSUED3      = "^([A-Z]+)\\^#$";
 	private static String PAT_WAR               = "^([A-Z]+)\\+$";
+	private static String PAT_PREF_CALLED       = "^([A-Z]+)-\\*$";
 	//
 	private static String PAT_PREF_CLASS        = "^([A-Z]+)-([A-Z])$";
 	private static String PAT_PREF_CLASS_CALLED = "^([A-Z]+)-([A-Z])\\*$";
@@ -87,6 +88,7 @@ public final class Nasdaq {
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s-WD");    // When Issued2
 		yahooConverter.addConverter1(PAT_WHEN_ISSUED3,      "%s-RWI");   // When Issued3
 		yahooConverter.addConverter1(PAT_WAR,               "%s-WT");    // Warrants
+		yahooConverter.addConverter1(PAT_PREF_CALLED,       "%s-P");     // Preferred Called
 		
 		yahooConverter.addConverter2(PAT_PREF_CLASS,        "%s-P%s");   // Preferred class A
 		yahooConverter.addConverter2(PAT_PREF_CLASS_CALLED, "%s-P%s.A"); // Preferred class A called
@@ -103,6 +105,7 @@ public final class Nasdaq {
 		googleConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		googleConverter.addConverter1(PAT_WHEN_ISSUED3,      "???");      // When Issued3
 		googleConverter.addConverter1(PAT_WAR,               "???");      // Warrants -- UNKNOWN
+		googleConverter.addConverter1(PAT_PREF_CALLED,       "%s.CL");    // Preferred Called
 		
 		googleConverter.addConverter2(PAT_PREF_CLASS,        "%s-%s");    // Preferred class A
 		googleConverter.addConverter2(PAT_PREF_CLASS_CALLED, "%s-%s.CL"); // Preferred class A called
@@ -119,6 +122,7 @@ public final class Nasdaq {
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED2,      "%s.WD");    // When Issued2
 		nasdaqConverter.addConverter1(PAT_WHEN_ISSUED3,      "%s~$");     // When Issued3
 		nasdaqConverter.addConverter1(PAT_WAR,               "%s.WS");    // Warrants
+		nasdaqConverter.addConverter1(PAT_PREF_CALLED,       "%s^.CL");   // Preferred Called
 		
 		nasdaqConverter.addConverter2(PAT_PREF_CLASS,        "%s^%s");    // Preferred class A
 		nasdaqConverter.addConverter2(PAT_PREF_CLASS_CALLED, "%s^%s.CL"); // Preferred class A called

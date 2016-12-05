@@ -173,6 +173,9 @@ public class Transaction extends SheetData {
 						transaction.transaction, transaction.date, transaction.symbol, transaction.name, transaction.quantity, transaction.credit, transaction.debit, usdjpy);
 					break;
 				}
+				case "INTEREST":
+					// Intentionally ignore 0.01% interest from Firstrade
+					break;
 				default: {
 					logger.error("Unknown transaction = {}", transaction.transaction);
 					throw new SecuritiesException("Unexpected");

@@ -15,11 +15,11 @@ import yokwe.finance.securities.util.FileUtil;
 public class Quandl {
 	private static final Logger logger = LoggerFactory.getLogger(Quandl.class);
 
-	// https://www.quandl.com/api/v3/databases.csv?page=1&apiKey=BFLucSVjv5FBWkrSwFsH
+	// https://www.quandl.com/api/v3/databases.csv?page=1&api_key=BFLucSVjv5FBWkrSwFsH
 	public static String URL_BASE = "https://www.quandl.com/api/v3/";
 	
 	public static String getURL(String name, String format, int page, String apiKey) {
-		return String.format("%s/%s.%s?page=%d&apiKey=%s", URL_BASE, name, format, page, apiKey);
+		return String.format("%s/%s.%s?page=%d&api_key=%s", URL_BASE, name, format, page, apiKey);
 	}
 
 	// id,name,database_code,description,datasets_count,downloads,premium,image,favorite,url_name

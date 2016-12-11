@@ -69,12 +69,12 @@ public class Fetch {
 			    		fileSize += len;
 		    		}
 		    	}
-				if (fileSize == 0) {
-					logger.debug("statusLine = {}", response.getStatusLine().toString());
-					logger.error("url {}", url);
-					logger.error("code {}", code);
-					throw new RuntimeException();
-				}
+//				if (fileSize == 0) {
+//					logger.debug("statusLine = {}", response.getStatusLine().toString());
+//					logger.error("url {}", url);
+//					logger.error("code {}", code);
+//					throw new RuntimeException();
+//				}
 		    }
 		} catch (UnsupportedOperationException e) {
 			logger.info("UnsupportedOperationException {}", e.toString());

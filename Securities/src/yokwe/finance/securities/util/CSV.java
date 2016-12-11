@@ -2,6 +2,7 @@ package yokwe.finance.securities.util;
 
 import java.io.IOException;
 import java.io.PushbackReader;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,8 +16,11 @@ public class CSV {
 	private static final Logger logger = LoggerFactory.getLogger(CSV.class);
 
 	public static List<List<String>> parse(String content) {
-		//logger.info("getTokens {}!", content);
-		try (PushbackReader pr = new PushbackReader(new StringReader(content))) {
+		return parse(new StringReader(content));
+	}
+	
+	public static List<List<String>> parse(Reader r) {
+		try (PushbackReader pr = new PushbackReader(r)) {
 			List<List<String>> ret = new ArrayList<>();
 			List<String> record = new ArrayList<>();
 			StringBuilder value = new StringBuilder();
@@ -105,7 +109,7 @@ public class CSV {
 		} catch (IOException e) {
 			logger.error("IOException {}", e.toString());
 			throw new SecuritiesException("IOException");
-		}		
+		}
 	}
 	
 	public static void main(String[] args) {

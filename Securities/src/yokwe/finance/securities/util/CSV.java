@@ -1,9 +1,13 @@
 package yokwe.finance.securities.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,6 +116,15 @@ public class CSV {
 		}
 	}
 	
+	
+	public static <E> List<E> getInstance(File file, Class<E> clazz) {
+		// create list of instance of E from file
+		// matching is based on field name of class and first record of csv file
+		List<E> ret = new ArrayList<>();
+		
+		return ret;
+	}
+
 	public static void main(String[] args) {
 		logger.info("{}", parse("a,b,c,d\n"));
 		logger.info("{}", parse("aa,bb,cc,dd\n"));

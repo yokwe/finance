@@ -1,10 +1,7 @@
 package yokwe.finance.securities.util;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -20,9 +17,7 @@ import yokwe.finance.securities.SecuritiesException;
 public class HttpUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
-	public static List<String> download(String url) {
-		List<String> ret = new ArrayList<>();
-		
+	public static String download(String url) {
 		HttpGet httpGet = new HttpGet(url);
 		httpGet.setHeader("User-Agent", "Mozilla");
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -47,22 +42,20 @@ public class HttpUtil {
 			
 		    HttpEntity entity = response.getEntity();
 		    if (entity != null) {
-		    	try (BufferedReader br = new BufferedReader(new InputStreamReader(entity.getContent(), "UTF-8"), 64 * 1024)) {
+				StringBuilder ret = new StringBuilder();
+		    	char[] cbuf = new char[1024 * 64];
+		    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
 		    		for(;;) {
-		    			String line = br.readLine();
-		    			if (line == null) break;
-		    			ret.add(line);
+		    			int len = isr.read(cbuf);
+		    			if (len == -1) break;
+		    			ret.append(cbuf, 0, len);
 		    		}
 		    	}
+		    	return ret.toString();
 		    } else {
-		    	//
+				logger.error("entity is null");
+				throw new SecuritiesException("entity is null");
 		    }
-			if (ret.size() == 0) {
-				logger.error("statusLine = {}", response.getStatusLine().toString());
-				logger.error("url {}", url);
-				logger.error("code {}", code);
-				throw new SecuritiesException();
-			}
 		} catch (UnsupportedOperationException e) {
 			logger.error("UnsupportedOperationException {}", e.toString());
 			throw new SecuritiesException("UnsupportedOperationException");
@@ -70,6 +63,5 @@ public class HttpUtil {
 			logger.error("IOException {}", e.toString());
 			throw new SecuritiesException("IOException");
 		}
-		return ret;
 	}
 }

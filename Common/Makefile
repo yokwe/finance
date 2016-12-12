@@ -18,9 +18,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3 fetch-gson
 
-update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3
+update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3 update-gson
 
 
 fetch-logback:
@@ -46,7 +46,11 @@ fetch-httpcomponents-client:
 fetch-commons-math3:
 	rm -f tmp/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 	cd tmp; wget http://ftp.riken.jp/net/apache//commons/math/binaries/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
-	
+
+fetch-gson:
+	rm -rf tmp/gson
+	cd tmp; git clone https://github.com/google/gson
+
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
 	rm -rf jar/logback-*
@@ -85,3 +89,13 @@ update-commons-math3:
 	rm -rf jar/commons-math3-*
 	cd tmp; unzip commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 	cd tmp/commons-math3-${COMMONS_MATH3_VERSION}; cp -p commons-math3-3.5.jar ../../jar
+
+update-gson:
+	cd tmp/gson; mvn package source:jar javadoc:jar
+	cd tmp/gson; \
+	  cp -p  \
+	    gson/target/gson-2.8.1-SNAPSHOT.jar \
+	    gson/target/gson-2.8.1-SNAPSHOT-javadoc.jar \
+	    gson/target/gson-2.8.1-SNAPSHOT-sources.jar \
+	    ../../jar
+

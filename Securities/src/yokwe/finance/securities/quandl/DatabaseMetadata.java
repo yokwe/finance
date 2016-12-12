@@ -94,6 +94,12 @@ public class DatabaseMetadata {
 		return Quandl.getURL(NAME, FORMAT, page);
 	}
 	
+	// Use URL below to get list of dataset in WIKI database
+	//   https://www.quandl.com/api/v3/databases/WIKI/codes
+	//   Above URL returns zip file that contains csv file named WIKI-datasets-codes.csv
+	//   Also above URL use rediect to another location.
+	//   Use curl -L "https://www.quandl.com/api/v3/databases/WIKI/codes" to handle redirect properly.
+	
 	public static List<Entry> getAll() {
 		Gson gson = new Gson();
 		

@@ -31,6 +31,25 @@ public class DatabaseMetadata {
 		public String toString() {
 			return String.format("{%d %s}", id, database_code);
 		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if (o instanceof Entry) {
+				Entry that = (Entry)o;
+				
+				return this.id == that.id &&
+						this.database_code == that.database_code &&
+						this.description == that.description &&
+						this.dataset_count == that.dataset_count &&
+						this.downloads == that.downloads &&
+						this.premium == that.premium &&
+						this.image == that.image &&
+						this.favorite == that.favorite &&
+						this.url_name == that.url_name;
+			} else {
+				return false;
+			}
+		}
 	}
 	public static class Meta {
 		public String query;
@@ -63,9 +82,8 @@ public class DatabaseMetadata {
 	public static String getURL(int page) {
 		return Quandl.getURL(NAME, FORMAT, page);
 	}
-
 	
-	public static void main(String[] args) {
+	public static List<Entry> getAll() {
 		Gson gson = new Gson();
 		
 		List<Entry> entries = new ArrayList<>();
@@ -74,7 +92,7 @@ public class DatabaseMetadata {
 		
 		{
 			String url = getURL(1);
-			logger.info("url = {}", url);
+//			logger.info("url = {}", url);
 			String json = HttpUtil.download(url);
 			//logger.info("json = {}", json);
 			DatabaseMetadata databases = gson.fromJson(json, DatabaseMetadata.class);
@@ -84,26 +102,39 @@ public class DatabaseMetadata {
 			logger.info("totalCount = {}", totalCount);
 			
 			entries.addAll(databases.databases);
-			logger.info("{} entries {}", 1, entries.size());
+//			logger.info("{} entries {}", 1, entries.size());
 		}
 		for(int i = 2; i <= totalPages; i++) {
 			String url = getURL(i);
-			logger.info("url = {}", url);
+//			logger.info("url = {}", url);
 			String json = HttpUtil.download(url);
-			logger.info("json = {}", json);
+//			logger.info("json = {}", json);
 			DatabaseMetadata databases = gson.fromJson(json, DatabaseMetadata.class);
 			entries.addAll(databases.databases);
-			logger.info("{} entries {}", i, entries.size());
+//			logger.info("{} entries {}", i, entries.size());
 		}
 		
-		Map<String, Entry> databaseMap = new TreeMap<>();
+		Map<String, Entry> map = new TreeMap<>();
 		for(Entry entry: entries) {
-			if (databaseMap.containsKey(entry.database_code)) {
+			String key = entry.database_code;
+			if (map.containsKey(key)) {
 //				logger.warn("duplicate  {}", entry.database_code);
+				Entry that = map.get(key);
+				if (!that.equals(entry)) {
+					logger.info("XXXX {}", key);
+				}
+				
 			} else {
-				databaseMap.put(entry.database_code, entry);
+				map.put(entry.database_code, entry);
 			}
 		}
-		logger.info("databaseMap {}", databaseMap.size());
+		logger.info("map {}", map.size());
+		
+		return new ArrayList<>(map.values());
+	}
+
+	
+	public static void main(String[] args) {
+		getAll();
 	}
 }

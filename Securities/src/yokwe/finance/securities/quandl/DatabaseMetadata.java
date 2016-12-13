@@ -35,17 +35,28 @@ public class DatabaseMetadata {
 		@Override
 		public boolean equals(Object o) {
 			if (o instanceof Entry) {
-				Entry that = (Entry)o;
+				final Entry that = (Entry)o;
+//				if (this.id != that.id) logger.info("id {} {}", this.id, that.id);
+//				if (!this.name.equals(that.name)) logger.info("name {} {}", this.name, that.name);
+//				if (!this.database_code.equals(that.database_code)) logger.info("database_code {} {}", this.database_code, that.database_code);
+//				if (!this.description.equals(that.description)) logger.info("description {} {}", this.description, that.description);
+//				if (this.dataset_count != that.dataset_count) logger.info("dataset_count {} {}", this.dataset_count, that.dataset_count);
+//				if (this.downloads != that.downloads) logger.info("downloads {} {}", this.downloads, that.downloads);
+//				if (this.premium != that.premium) logger.info("premium {} {}", this.premium, that.premium);
+//				if (!this.image.equals(that.image)) logger.info("image {} {}", this.image, that.image);
+//				if (this.favorite != that.favorite) logger.info("favorite {} {}", this.favorite, that.favorite);
+//				if (!this.url_name.equals(that.url_name)) logger.info("url_name {} {}", this.url_name, that.url_name);
 				
 				return this.id == that.id &&
-						this.database_code == that.database_code &&
-						this.description == that.description &&
+						this.name.equals(that.name) &&
+						this.database_code.equals(that.database_code) &&
+						this.description.equals(that.description) &&
 						this.dataset_count == that.dataset_count &&
 						this.downloads == that.downloads &&
 						this.premium == that.premium &&
-						this.image == that.image &&
+						this.image.equals(that.image) &&
 						this.favorite == that.favorite &&
-						this.url_name == that.url_name;
+						this.url_name.equals(that.url_name);
 			} else {
 				return false;
 			}
@@ -82,6 +93,12 @@ public class DatabaseMetadata {
 	public static String getURL(int page) {
 		return Quandl.getURL(NAME, FORMAT, page);
 	}
+	
+	// Use URL below to get list of dataset in WIKI database
+	//   https://www.quandl.com/api/v3/databases/WIKI/codes
+	//   Above URL returns zip file that contains csv file named WIKI-datasets-codes.csv
+	//   Also above URL use rediect to another location.
+	//   Use curl -L "https://www.quandl.com/api/v3/databases/WIKI/codes" to handle redirect properly.
 	
 	public static List<Entry> getAll() {
 		Gson gson = new Gson();

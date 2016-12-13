@@ -46,6 +46,7 @@ public class CSVUtil {
 		try (CSVParser csvParser = csvFormat.parse(new FileReader(file))) {
 			for(CSVRecord record: csvParser) {
 				if (record.size() != size) {
+					// Sanity check
 					logger.error("record.size != size  {} != {}", record.size(), size);
 					throw new SecuritiesException("record.size != size");
 				}

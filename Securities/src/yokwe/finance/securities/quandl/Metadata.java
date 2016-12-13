@@ -172,6 +172,8 @@ public class Metadata {
 			public String description;
 		}
 		
+		public static final String PATH_DIR = "tmp/fetch/quandl/metadata/datasets";
+		
 		public static String getURL(String database_code) {
 			return Quandl.getURL(database_code);
 		}
@@ -189,7 +191,7 @@ public class Metadata {
 //					logger.info("zipEntry {} {}", zipEntry.getName(), zipEntry.getSize());
 					
 					// save content to file
-					String outPath = String.format("tmp/fetch/quandl/metadata/%s", zipEntry.getName());
+					String outPath = String.format("%s/%s", PATH_DIR, zipEntry.getName());
 					logger.info("outPath {}", outPath);
 					File outFile = new File(outPath);
 					try (FileOutputStream fos = new FileOutputStream(outFile)) {
@@ -217,23 +219,30 @@ public class Metadata {
 				DatasetList.save(database.database_code);
 			}
 		}
-	}
-	
-	public static class Dataset {
-		public static class Entry {
-			public String key;
-			public String description;
-		}
 		
-		public static String getURL(String database_code) {
-			return Quandl.getURL(database_code);
+		public static List<Entry> loadAll() {
+			File[] files = new File(PATH_DIR).listFiles((dir, name) -> name.endsWith(".csv"));
+			logger.info("files {}", files.length);
+			
+			List<Entry> ret = new ArrayList<>();
+			int i = 0;
+			for(File file: files) {
+				logger.info("{}  {}", ++i, file.getName());
+				List<Entry> entries = CSVUtil.loadWithoutHeader(file.getPath(), Entry.class);
+				ret.addAll(entries);
+			}
+			
+			// data size is too large to load in memory
+			
+			logger.info("ret {}", ret.size());
+			return ret;
 		}
-
 	}
-	
 	
 	public static void main(String[] args) {
-		DatabaseList.saveAll();
-		DatabaseList.loadAll();
+		//DatabaseList.saveAll();
+		//DatabaseList.loadAll();
+		
+		//DatasetList.loadAll();
 	}
 }

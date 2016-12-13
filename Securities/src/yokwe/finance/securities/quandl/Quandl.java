@@ -16,4 +16,8 @@ public final class Quandl {
 	public static String getURL(String name, String format, int page) {
 		return String.format("%s/%s.%s?page=%d&api_key=%s", URL_BASE, name, format, page, API_KEY);
 	}
+	
+	public static String getURL(String database_code) {
+		return String.format("%s/databases/%s/codes?api_key=%s", URL_BASE, database_code, API_KEY);
+	}
 }

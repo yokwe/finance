@@ -1,5 +1,6 @@
 package yokwe.finance.securities.util;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,17 +22,15 @@ import yokwe.finance.securities.SecuritiesException;
 
 public class CSVUtil {
 	private static final Logger logger = LoggerFactory.getLogger(CSVUtil.class);
+	
+	// CSV file should not have header, because sqlite .import read header as data
+	
+	// Save List<E> data as CSV file.
+	// Load CSV file as List<E> data.
+	
+	private static int BUFFER_SIZE = 64 * 1024;
 
-	public static <E> List<E> loadWithoutHeader(String path, Class<E> clazz) {
-		return load(path, clazz, false);
-	}
-	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
-		return load(path, clazz, true);
-	}
-
-	public static <E> List<E> load(String path, Class<E> clazz, boolean withHeader) {
-		List<E> dataList = new ArrayList<>();
-		
+	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {		
 		Field[] fields = clazz.getDeclaredFields();
 		final int size = fields.length;
 		String[] names = new String[size];
@@ -40,10 +39,11 @@ public class CSVUtil {
 			names[i] = fields[i].getName();
 			types[i] = fields[i].getType().getName();
 		}
-		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
-		File file = new File(path);
 		
-		try (CSVParser csvParser = csvFormat.parse(new FileReader(file))) {
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
+		try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
+			List<E> dataList = new ArrayList<>();
+
 			for(CSVRecord record: csvParser) {
 				if (record.size() != size) {
 					// Sanity check
@@ -52,28 +52,85 @@ public class CSVUtil {
 				}
 				
 				if (record.getRecordNumber() == 1) {
-					if (withHeader) {
-						// Sanity check
-						int headerSize = record.size();
-						if (headerSize != size) {
-							logger.error("headerSize != size  {} != {}", headerSize, size);
-							throw new SecuritiesException("headerSize != size");
-						}
-						for(int i = 0; i < size; i++) {
-							String headerName = record.get(i);
-							if (!headerName.equals(names[i])) {
-								logger.error("headerName != name  {}  {} != {}", i, headerName, names[i]);
-								throw new SecuritiesException("headerName != name");
-							}
-						}
-						continue;
+					// Sanity check
+					int headerSize = record.size();
+					if (headerSize != size) {
+						logger.error("headerSize != size  {} != {}", headerSize, size);
+						throw new SecuritiesException("headerSize != size");
 					}
+					for(int i = 0; i < size; i++) {
+						String headerName = record.get(i);
+						if (!headerName.equals(names[i])) {
+							logger.error("headerName != name  {}  {} != {}", i, headerName, names[i]);
+							throw new SecuritiesException("headerName != name");
+						}
+					}
+					continue;
 				}
 				
 				E data = clazz.newInstance();
 				for(int i = 0; i < size; i++) {
 					String name = names[i];
 					String value = record.get(name);
+					switch(types[i]) {
+					case "int":
+						fields[i].setInt(data, Integer.valueOf(value));
+						break;
+					case "long":
+						fields[i].setLong(data, Long.valueOf(value));
+						break;
+					case "boolean":
+						fields[i].setBoolean(data, Boolean.valueOf(value));
+						break;
+					case "java.lang.String":
+						fields[i].set(data, value);
+						break;
+					default:
+						logger.error("Unexptected type {}", types[i]);
+						throw new SecuritiesException("Unexptected type");
+					}
+				}
+				dataList.add(data);
+			}
+			return dataList;
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e.toString());
+			throw new SecuritiesException("FileNotFoundException");
+		} catch (IOException e) {
+			logger.error("IOException {}", e.toString());
+			throw new SecuritiesException("IOException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new SecuritiesException("InstantiationException");
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new SecuritiesException("IllegalAccessException");
+		}
+	}
+
+	public static <E> List<E> load(String path, Class<E> clazz) {
+		Field[] fields = clazz.getDeclaredFields();
+		final int size = fields.length;
+		String[] names = new String[size];
+		String[] types = new String[size];
+		for(int i = 0; i < size; i++) {
+			names[i] = fields[i].getName();
+			types[i] = fields[i].getType().getName();
+		}
+		
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
+		try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
+			List<E> dataList = new ArrayList<>();
+			for(CSVRecord record: csvParser) {
+				// Sanity check
+				if (record.size() != size) {
+					logger.error("record.size != size  {} != {}", record.size(), size);
+					throw new SecuritiesException("record.size != size");
+				}
+				
+				E data = clazz.newInstance();
+				for(int i = 0; i < size; i++) {
+					String value = record.get(i);
 					switch(types[i]) {
 					case "int":
 						fields[i].setInt(data, Integer.valueOf(value));
@@ -118,9 +175,41 @@ public class CSVUtil {
 			names[i] = fields[i].getName();
 		}
 		Object[] values = new Object[fields.length];
-		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
 
-		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path)), csvFormat)) {
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
+		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {
+			for(E entry: dataList) {
+				for(int i = 0; i < fields.length; i++) {
+					values[i] = fields[i].get(entry).toString();
+				}
+				csvPrint.printRecord(values);
+			}
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e.toString());
+			throw new SecuritiesException("FileNotFoundException");
+		} catch (IOException e) {
+			logger.error("IOException {}", e.toString());
+			throw new SecuritiesException("IOException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new SecuritiesException("IllegalArgumentException");
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new SecuritiesException("IllegalAccessException");
+		}
+	}
+
+	public static <E> void save(List<E> dataList, String path) {
+		Object o = dataList.get(0);
+		Field[] fields = o.getClass().getDeclaredFields();
+		String[] names = new String[fields.length];
+		for(int i = 0; i < names.length; i++) {
+			names[i] = fields[i].getName();
+		}
+		Object[] values = new Object[fields.length];
+
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
+		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {
 			for(E entry: dataList) {
 				for(int i = 0; i < fields.length; i++) {
 					values[i] = fields[i].get(entry).toString();

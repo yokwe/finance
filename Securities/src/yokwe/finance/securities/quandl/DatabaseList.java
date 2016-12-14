@@ -171,7 +171,7 @@ public class DatabaseList {
 					logger.warn("same id but different values  id = {}", entry.id);
 				}
 			} else {
-				logger.info("add new entry {}", entry.id);
+				logger.info("add entry {} {}", entry.id, entry.database_code);
 				map.put(entry.id, entry);
 			}
 		}

@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -38,6 +40,10 @@ public class DatasetList {
 		String url = getURL(database_code);
 //		logger.info("url = {}", url);
 		byte[] zipData  = HttpUtil.downloadAsByteArray(url);
+		if (zipData == null) {
+//			logger.warn("Failed to load {}", database_code);
+			return;
+		}
 //		logger.info("zpiData {}", zipData.length);
 		
 		File dir = new File(PATH_DIR);
@@ -100,17 +106,42 @@ public class DatasetList {
 	public static void update() {
 		logger.info("START");
 		List<DatabaseList.Entry> databaseList = DatabaseList.load();
-		int size = databaseList.size();
-		int i = 0;
-		for(DatabaseList.Entry entry: databaseList) {
-			i++;
-			String database_code = entry.database_code;
-			String outPath = getPath(database_code);
-			File file = new File(outPath);
-			if (file.exists()) continue;
+		
+		{
+			int size = databaseList.size();
+			int i = 0;
+			for(DatabaseList.Entry entry: databaseList) {
+				i++;
+				String database_code = entry.database_code;
+				String outPath = getPath(database_code);
+				File file = new File(outPath);
+				if (file.exists()) continue;
+				
+				logger.info("{} / {}  save {}", i, size, outPath);
+				save(database_code);
+			}
+		}
+		
+		// find removed entry from databaseList
+		{
+			Set<String> set = new TreeSet<>();
+			for(DatabaseList.Entry entry: databaseList) {
+				set.add(entry.database_code);
+			}
 			
-			logger.info("{} / {}  save {}", i, size, outPath);
-			save(database_code);
+			File[] files = new File(PATH_DIR).listFiles();
+			for(File file: files) {
+				String fileName = file.getName();
+				if (fileName.endsWith(".csv")) {
+					String database_code = fileName.substring(0, fileName.length() - 4);
+					if (set.contains(database_code)) {
+						//
+					} else {
+						logger.info("No correspondence database_code. remove {}", fileName);
+						file.delete();
+					}
+				}
+			}
 		}
 		logger.info("STOP");
 	}

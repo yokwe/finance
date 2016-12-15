@@ -168,7 +168,7 @@ public class DatabaseList {
 			if (map.containsKey(entry.id)) {
 				Entry old = map.get(entry.id);
 				if (!entry.equals(old)) {
-					logger.warn("same id but different values  id = {}", entry.id);
+					logger.warn("same id but different values  {} {}", entry.id, entry.database_code);
 				}
 			} else {
 				logger.info("add entry {} {}", entry.id, entry.database_code);

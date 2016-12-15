@@ -1,8 +1,10 @@
 package yokwe.finance.securities.util;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -13,7 +15,7 @@ import yokwe.finance.securities.SecuritiesException;
 public class FileUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 
-	public static String getContents(File file) {
+	public static String read(File file) {
 		char[] buffer = new char[65536];
 		
 		StringBuilder ret = new StringBuilder();
@@ -31,5 +33,20 @@ public class FileUtil {
 			throw new SecuritiesException();
 		}
 		return ret.toString();
+	}
+	
+	public static void write(File file, String content) {
+		// Make parent directory if necessary.
+		file.getParentFile().mkdirs();
+		
+		char[] buffer = new char[65536];
+		
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file), buffer.length)) {
+			bw.append(content);
+		} catch (IOException e) {
+			logger.error(e.getClass().getName());
+			logger.error(e.getMessage());
+			throw new SecuritiesException();
+		}
 	}
 }

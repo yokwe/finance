@@ -92,7 +92,7 @@ public abstract class Scrape<E extends Enum<E>> {
 		Map<E, String> ret = new TreeMap<>();
 		
 		String fileName = file.getName();
-		String contents = FileUtil.getContents(file);
+		String contents = FileUtil.read(file);
 		
 		int count = 0;
 		for(E key: map.keySet()) {

@@ -26,10 +26,11 @@ public class DatasetList {
 		public String description;
 	}
 	
-	public static final String PATH_DIR = "tmp/fetch/quandl/metadata/datasets/codes";
+	public static final String PATH_DIR = Quandl.getPath("metadata/datasets/codes");
 	
 	public static String getURL(String database_code) {
-		return Quandl.getURL(database_code);
+		String path = String.format("databases/%s/codes", database_code);
+		return Quandl.getURL(path);
 	}
 	
 	public static String getPath(String database_code) {

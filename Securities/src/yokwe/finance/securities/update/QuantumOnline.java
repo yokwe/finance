@@ -132,7 +132,7 @@ public class QuantumOnline {
 					continue;
 				}
 				
-				String content = FileUtil.getContents(file);
+				String content = FileUtil.read(file);
 				if (content.contains("Not Found!")) {
 //					logger.warn("Skip not found {}", file.getName());
 					continue;

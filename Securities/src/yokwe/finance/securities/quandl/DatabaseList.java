@@ -16,12 +16,13 @@ import yokwe.finance.securities.util.HttpUtil;
 public class DatabaseList {
 	private static final Logger logger = LoggerFactory.getLogger(DatabaseList.class);
 	
-	public static final String NAME   = "databases";
-	public static final String FORMAT = "json";
-	public static final String PATH   = "tmp/fetch/quandl/metadata/databases.csv";
+	public static final String PATH = Quandl.getPath("metadata/databases.csv");
 	
 	public static String getURL(int page) {
-		return Quandl.getURL(NAME, FORMAT, page);
+		String path  = "databases.json";
+		String query = String.format("page=%d", page);
+		
+		return Quandl.getURL(path, query);
 	}
 
 	public static class Entry {

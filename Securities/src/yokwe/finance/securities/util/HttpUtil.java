@@ -22,48 +22,66 @@ public class HttpUtil {
 	public static String downloadAsString(String url) {
 		HttpGet httpGet = new HttpGet(url);
 		httpGet.setHeader("User-Agent", "Mozilla");
-		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-			CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			final int code = response.getStatusLine().getStatusCode();
-			final String reasonPhrase = response.getStatusLine().getReasonPhrase();
-			
-			if (code == HttpStatus.SC_NOT_FOUND) { // 404
-				logger.warn("{} {}  {}", code, reasonPhrase, url);
-				return null;
-			}
-			if (code == HttpStatus.SC_BAD_REQUEST) { // 400
-				logger.warn("{} {}  {}", code, reasonPhrase, url);
-				return null;
-			}
-			if (code != HttpStatus.SC_OK) { // 200
-				logger.error("statusLine = {}", response.getStatusLine().toString());
-				logger.error("url {}", url);
-				logger.error("code {}", code);
-				throw new SecuritiesException("download");
-			}
-			
-		    HttpEntity entity = response.getEntity();
-		    if (entity != null) {
-				StringBuilder ret = new StringBuilder();
-		    	char[] cbuf = new char[1024 * 64];
-		    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
-		    		for(;;) {
-		    			int len = isr.read(cbuf);
-		    			if (len == -1) break;
-		    			ret.append(cbuf, 0, len);
-		    		}
-		    	}
-		    	return ret.toString();
-		    } else {
-				logger.error("entity is null");
-				throw new SecuritiesException("entity is null");
-		    }
-		} catch (UnsupportedOperationException e) {
-			logger.error("UnsupportedOperationException {}", e.toString());
-			throw new SecuritiesException("UnsupportedOperationException");
-		} catch (IOException e) {
-			logger.error("IOException {}", e.toString());
-			throw new SecuritiesException("IOException");
+		
+		int retryCount = 0;
+		for(;;) {
+			try (CloseableHttpClient httpClient = HttpClients.createDefault();
+					CloseableHttpResponse response = httpClient.execute(httpGet)) {
+					final int code = response.getStatusLine().getStatusCode();
+					final String reasonPhrase = response.getStatusLine().getReasonPhrase();
+					
+					if (code == 429) { // 429 Too Many Requests
+						if (retryCount < 10) {
+							retryCount++;
+							logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
+							Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
+							continue;
+						}
+					}
+					retryCount = 0;
+					if (code == HttpStatus.SC_NOT_FOUND) { // 404
+						logger.warn("{} {}  {}", code, reasonPhrase, url);
+						return null;
+					}
+					if (code == HttpStatus.SC_BAD_REQUEST) { // 400
+						logger.warn("{} {}  {}", code, reasonPhrase, url);
+						return null;
+					}
+					if (code == HttpStatus.SC_OK) {
+					    HttpEntity entity = response.getEntity();
+					    if (entity != null) {
+							StringBuilder ret = new StringBuilder();
+					    	char[] cbuf = new char[1024 * 64];
+					    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
+					    		for(;;) {
+					    			int len = isr.read(cbuf);
+					    			if (len == -1) break;
+					    			ret.append(cbuf, 0, len);
+					    		}
+					    	}
+					    	return ret.toString();
+					    } else {
+							logger.error("entity is null");
+							throw new SecuritiesException("entity is null");
+					    }
+					}
+					
+					// Other code
+					logger.error("statusLine = {}", response.getStatusLine().toString());
+					logger.error("url {}", url);
+					logger.error("code {}", code);
+					throw new SecuritiesException("download");
+
+				} catch (UnsupportedOperationException e) {
+					logger.error("UnsupportedOperationException {}", e.toString());
+					throw new SecuritiesException("UnsupportedOperationException");
+				} catch (IOException e) {
+					logger.error("IOException {}", e.toString());
+					throw new SecuritiesException("IOException");
+				} catch (InterruptedException e) {
+					logger.error("InterruptedException {}", e.toString());
+					throw new SecuritiesException("InterruptedException");
+				}
 		}
 	}
 	

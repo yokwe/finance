@@ -182,7 +182,7 @@
 		</java>
 	</target>
 	
-       <target name="run-report">
+        <target name="run-report">
                 <java classname="yokwe.finance.securities.book.Report" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
@@ -190,5 +190,27 @@
                 </java>
         </target>
 
+	<!-- Quand -->
+        <target name="run-databaseList">
+                <java classname="yokwe.finance.securities.quandl.DatabaseList" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        <target name="run-datasetList">
+                <java classname="yokwe.finance.securities.quandl.DatasetList" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        <target name="run-dataset">
+                <java classname="yokwe.finance.securities.quandl.Dataset" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
 
 </project>

@@ -85,19 +85,23 @@ public class DatasetList {
 		}
 	}
 	
+	public static List<Entry> load(String database_code) {
+		String path = getPath(database_code);
+		List<Entry> entries = CSVUtil.load(path, Entry.class);
+		return entries;
+	}
+	
 	public static List<Entry> loadAll() {
-		File[] files = new File(PATH_DIR).listFiles((dir, name) -> name.endsWith(".csv"));
-		logger.info("files {}", files.length);
+		List<DatabaseList.Entry> databaseList = DatabaseList.getAll();
+		logger.info("databaseList {}", databaseList.size());
 		
 		List<Entry> ret = new ArrayList<>();
-		int i = 0;
-		for(File file: files) {
-			logger.info("{}  {}", ++i, file.getName());
-			List<Entry> entries = CSVUtil.load(file.getPath(), Entry.class);
+		int i = 1;
+		for(DatabaseList.Entry database: databaseList) {
+			logger.info("database {} / {}  {}", i++, databaseList.size(), database.database_code);
+			List<Entry> entries = load(database.database_code);
 			ret.addAll(entries);
 		}
-		
-		// data size is too large to load in memory
 		
 		logger.info("ret {}", ret.size());
 		return ret;
@@ -113,12 +117,18 @@ public class DatasetList {
 			for(DatabaseList.Entry entry: databaseList) {
 				i++;
 				String database_code = entry.database_code;
-				String outPath = getPath(database_code);
-				File file = new File(outPath);
-				if (file.exists()) continue;
-				
-				logger.info("{} / {}  save {}", i, size, outPath);
-				save(database_code);
+				String path = getPath(database_code);
+				File file = new File(path);
+				if (file.exists()) {
+					logger.info("{}  check {}", String.format("%4d / %4d", i, size), database_code);
+					// Sanity check
+					// Try load csv file and make sure it can readable
+					load(database_code);
+				} else {
+					logger.info("{}  save  {}", String.format("%4d / %4d", i, size), database_code);
+					save(database_code);
+					// save can failed. So don't do sanity check here.
+				}
 			}
 		}
 		
@@ -134,10 +144,8 @@ public class DatasetList {
 				String fileName = file.getName();
 				if (fileName.endsWith(".csv")) {
 					String database_code = fileName.substring(0, fileName.length() - 4);
-					if (set.contains(database_code)) {
-						//
-					} else {
-						logger.info("No correspondence database_code. remove {}", fileName);
+					if (!set.contains(database_code)) {
+						logger.info("This file is not in databaseList. remove {}", fileName);
 						file.delete();
 					}
 				}

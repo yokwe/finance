@@ -15,6 +15,12 @@ import yokwe.finance.securities.util.HttpUtil;
 public class Dataset {
 	private static final Logger logger = LoggerFactory.getLogger(Dataset.class);
 	
+	// TODO to get multiple result use URL below and iterate over like databaseList(100 rows at a time)
+	//    https://www.quandl.com/api/v3/datasets.json?database_code=ODA&page=1
+	//    result data can be very large. database ZFB contains 2633071 dataset.
+	//    So don't store result in memory but write output for each 100 rows.
+	//    Output format should use csv to store data in sql server
+	
 	public static String getURL(String database_code, String dataset_code) {
 		String path = String.format("datasets/%s/%s/metadata.json", database_code, dataset_code);
 		return Quandl.getURL(path);

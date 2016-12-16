@@ -72,25 +72,9 @@ public class DatabaseList {
 			}
 		}
 	}
-	public static class Meta {
-		public String query;
-		public int    per_page;
-		public int    current_page;
-		public int    prev_page;
-		public int    total_pages;
-		public int    total_count;
-		public int    next_page;
-		public int    current_first_item;
-		public int    current_last_item;
-		
-		@Override
-		public String toString() {
-			return String.format("{%d-%d-%d  %d-%d}", total_count, current_first_item, current_last_item, total_pages, current_page);
-		}
-	}
 	
 	public List<Entry> databases;
-	public Meta        meta;
+	public Quandl.Meta meta;
 	
 	@Override
 	public String toString() {

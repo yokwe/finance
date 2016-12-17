@@ -21,6 +21,8 @@ public class DatasetList {
 	
 	public static final String PATH_DIR = "metadata";
 	
+	private static final int PER_PAGE    = 1000;
+	
 	private static final int BUFFER_SIZE = 64 * 1024;
 	
 	private static final CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
@@ -35,7 +37,7 @@ public class DatasetList {
 	//https://www.quandl.com/api/v3/datasets.json?database_code=ODA&page=1
 	public static String getURL(String database_code, int page) {
 		String path  = "datasets.json";
-		String query = String.format("database_code=%s&page=%d", database_code, page);
+		String query = String.format("database_code=%s&per_page=%d&page=%d", database_code, PER_PAGE, page);
 		
 		return Quandl.getURL(path, query);
 	}
@@ -111,7 +113,7 @@ public class DatasetList {
 			totalCount = datasets.meta.total_count;
 //			logger.info("totalPages = {}", totalPages);
 			logger.info("totalCount = {}", totalCount);
-			logger.info("{} / {}", 1, totalPages);
+			logger.info("{}  {} / {}", database_code, 1, totalPages);
 			save(csvPrinter, datasets);
 		}
 		
@@ -121,7 +123,7 @@ public class DatasetList {
 			String json = HttpUtil.downloadAsString(url);
 //			logger.info("json = {}", json);
 			DatasetList datasets = gson.fromJson(json, DatasetList.class);
-			logger.info("{} / {}", i, totalPages);
+			logger.info("{}  {} / {}", database_code, i, totalPages);
 			save(csvPrinter, datasets);
 		}
 		

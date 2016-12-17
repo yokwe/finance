@@ -125,9 +125,12 @@ public class DatasetList {
 			totalPages = datasets.meta.total_pages;
 			totalCount = datasets.meta.total_count;
 //			logger.info("totalPages = {}", totalPages);
-			logger.info("{} totalCount = {}", database_code, totalCount);
+//			logger.info("{} totalCount = {}", database_code, totalCount);
 			
-			if (totalCount == idSet.size()) return;
+			if (totalCount == idSet.size()) {
+				logger.info("{} done   {}", database_code, totalCount);
+				return;
+			}
 			
 			logger.info("{}  {} / {}", database_code, 1, totalPages);
 			update(csvPrinter, datasets, idSet);
@@ -143,7 +146,11 @@ public class DatasetList {
 			update(csvPrinter, datasets, idSet);
 		}
 		
-		logger.info("{} new {} / {}", database_code, idSet.size(), totalCount);
+		if (idSet.size() == totalCount) {
+			logger.info("{} finish {}", database_code, totalCount);
+		} else {
+			logger.info("{} remain {} / {}", database_code, idSet.size(), totalCount);
+		}
 	}
 	
 	private static void update(String database_code) {
@@ -165,8 +172,7 @@ public class DatasetList {
 						idSet.add(id);
 					}
 				}
-//				logger.info("{} id {} existing", database_code, idSet.size());
-				logger.info("{} existing   = {}", database_code, idSet.size());
+//				logger.info("{} existing   = {}", database_code, idSet.size());
 			} catch (FileNotFoundException e) {
 				logger.error("FileNotFoundException {}", e.toString());
 				throw new SecuritiesException("FileNotFoundException");

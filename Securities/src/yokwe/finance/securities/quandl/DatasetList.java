@@ -126,7 +126,6 @@ public class DatasetList {
 			logger.info("{}  {} / {}", database_code, i, totalPages);
 			save(csvPrinter, datasets);
 		}
-		
 	}
 
 	public static void update() {
@@ -147,11 +146,17 @@ public class DatasetList {
 			
 			logger.info("database_code {}", database_code);
 
+			boolean deleteFile = true;
 			try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {
 				save(csvPrint, database_code);
+				// processing is completed.
+				deleteFile = false;
 			} catch (IOException e) {
 				logger.error("IOException {}", e.toString());
 				throw new SecuritiesException("IOException");
+			} finally {
+				// delete file when processing is not completed.
+				if (deleteFile) file.delete();
 			}
 		}
 		logger.info("STOP");

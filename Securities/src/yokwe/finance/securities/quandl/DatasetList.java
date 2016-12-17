@@ -81,7 +81,7 @@ public class DatasetList {
 	}
 	
 	public List<Entry> datasets;
-	public Quandl.Meta meta;	
+	public Quandl.Meta meta;
 	
 	private static void update(CSVPrinter csvPrinter, DatasetList datasets, Set<Integer> idSet) throws IOException {
 		for(Entry entry: datasets.datasets) {

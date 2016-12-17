@@ -19,7 +19,7 @@ import yokwe.finance.securities.util.HttpUtil;
 public class DatasetList {
 	private static final Logger logger = LoggerFactory.getLogger(DatasetList.class);
 	
-	public static final String PATH_DIR = "metadata/datasets";
+	public static final String PATH_DIR = "metadata";
 	
 	private static final int BUFFER_SIZE = 64 * 1024;
 	

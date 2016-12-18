@@ -119,7 +119,7 @@ public class DatasetList {
 			String json = HttpUtil.downloadAsString(url);
 //			logger.info("json = {}", json);
 			DatasetList datasets = gson.fromJson(json, DatasetList.class);
-			logger.info("{}  {} / {}", database_code, i, totalPages);
+			if ((i % 10) == 1) logger.info("{}  {} / {}", database_code, i, totalPages);
 			update(csvPrinter, datasets, idSet);
 		}
 		

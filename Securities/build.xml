@@ -205,12 +205,5 @@
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
                 </java>
         </target>
-        <target name="run-dataset">
-                <java classname="yokwe.finance.securities.quandl.Dataset" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                </java>
-        </target>
 
 </project>

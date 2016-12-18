@@ -1,5 +1,6 @@
 package yokwe.finance.securities.quandl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class DatabaseList {
 		public String  name;
 		public String  database_code;
 		public String  description;
-		public int     dataset_count;
+		public int     datasets_count;
 		public long    downloads; // need to be long
 		public boolean premium;
 		public String  image;
@@ -61,7 +62,7 @@ public class DatabaseList {
 						this.name.equals(that.name) &&
 						this.database_code.equals(that.database_code) &&
 						this.description.equals(that.description) &&
-						this.dataset_count == that.dataset_count &&
+						this.datasets_count == that.datasets_count &&
 						this.downloads == that.downloads &&
 						this.premium == that.premium &&
 						this.image.equals(that.image) &&
@@ -127,7 +128,10 @@ public class DatabaseList {
 		}
 		logger.info("all {}", map.size());
 		
-		return new ArrayList<>(map.values());
+		// sort ret with id
+		List<Entry> ret = new ArrayList<>(map.values());
+		ret.sort((o1, o2) -> o1.id - o2.id);
+		return ret;
 	}
 	
 	public static void save(List<Entry> data) {
@@ -161,7 +165,11 @@ public class DatabaseList {
 			}
 		}
 		logger.info("entry {}", map.size());
-		save(new ArrayList<>(map.values()));
+		
+		// sort ret with id
+		List<Entry> ret = new ArrayList<>(map.values());
+		ret.sort((o1, o2) -> o1.id - o2.id);
+		save(ret);
 		logger.info("STOP  update");
 	}
 	
@@ -189,6 +197,11 @@ public class DatabaseList {
 	}
 	
 	public static void main(String[] args) {
-		update();
+		File file = new File(PATH);
+		if (file.exists()) {
+			update();
+		} else {
+			save(getAll());
+		}
 	}
 }

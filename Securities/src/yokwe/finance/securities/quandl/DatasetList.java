@@ -106,33 +106,14 @@ public class DatasetList {
 		}
 	}
 	
-	private static void update(CSVPrinter csvPrinter, String database_code, Set<Integer> idSet) throws IOException {
+	private static void update(CSVPrinter csvPrinter, String database_code, int datasets_count, Set<Integer> idSet) throws IOException {
 		Gson gson = new Gson();
 
-		int totalPages;
-		int totalCount;
+		int totalPages = (datasets_count / Quandl.PER_PAGE) + 1;
 
-		{
-			String url = getURL(database_code, 1);
-//			logger.info("url = {}", url);
-			String json = HttpUtil.downloadAsString(url);
-//			logger.info("json = {}", json);
-			DatasetList datasets = gson.fromJson(json, DatasetList.class);
-			totalPages = datasets.meta.total_pages;
-			totalCount = datasets.meta.total_count;
-//			logger.info("totalPages = {}", totalPages);
-//			logger.info("{} totalCount = {}", database_code, totalCount);
+		for(int i = 1; i <= totalPages; i++) {
+			if (datasets_count == idSet.size()) break;
 			
-			if (totalCount == idSet.size()) {
-				logger.info("{} done   {}", database_code, totalCount);
-				return;
-			}
-			
-			logger.info("{}  {} / {}", database_code, 1, totalPages);
-			update(csvPrinter, datasets, idSet);
-		}
-		
-		for(int i = 2; i <= totalPages; i++) {
 			String url = getURL(database_code, i);
 //			logger.info("url = {}", url);
 			String json = HttpUtil.downloadAsString(url);
@@ -142,19 +123,22 @@ public class DatasetList {
 			update(csvPrinter, datasets, idSet);
 		}
 		
-		if (idSet.size() == totalCount) {
-			logger.info("{} finish {}", database_code, totalCount);
+		if (datasets_count == idSet.size()) {
+			logger.info("{} finish {}", database_code, datasets_count);
 		} else {
-			logger.info("{} remain {} / {}", database_code, idSet.size(), totalCount);
+			logger.info("{} remain {} / {}", database_code, idSet.size(), datasets_count);
 		}
 	}
 	
-	private static void update(String database_code) {
+	private static void update(String database_code, int datasets_count) {
+		logger.info("update {} {}", database_code, datasets_count);
 		String path = getPath(database_code);
 		File   file = new File(path);
 		
 		Set<Integer> idSet = new TreeSet<>();
+		// capture id from existing file
 		if (file.exists()) {
+//			logger.info("read existing database {}", database_code);
 			try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), Quandl.BUFFER_SIZE))) {
 				for(CSVRecord record: csvParser) {
 					String value = record.get(0);
@@ -178,17 +162,15 @@ public class DatasetList {
 			}
 		}
 		
-		boolean deleteFile = true;
 		try (CSVPrinter csvPrinter = new CSVPrinter(new BufferedWriter(new FileWriter(path, true), Quandl.BUFFER_SIZE), csvFormat)) {
-			update(csvPrinter, database_code, idSet);
-			// processing is completed.
-			deleteFile = false;
+			// try few times more to finish.
+			for(int i = 0; i < 5; i++) {
+				if (datasets_count == idSet.size()) break;
+				update(csvPrinter, database_code, datasets_count, idSet);
+			}
 		} catch (IOException e) {
 			logger.error("IOException {}", e.toString());
 			throw new SecuritiesException("IOException");
-		} finally {
-			// delete file when processing is not completed.
-			if (deleteFile) file.delete();
 		}
 	}
 
@@ -205,7 +187,7 @@ public class DatasetList {
 		for(DatabaseList.Entry database: databaseList) {
 			String database_code = database.database_code;
 //			if (!database_code.equals("SYSPEACE")) continue;
-			update(database_code);
+			update(database_code, database.datasets_count);
 		}
 		logger.info("STOP");
 	}

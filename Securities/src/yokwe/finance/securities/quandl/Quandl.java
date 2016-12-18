@@ -12,6 +12,10 @@ public final class Quandl {
 	
 	public static final String API_KEY      = FileUtil.read(new File(PATH_API_KEY));
 	
+	public static final int    PER_PAGE    = 100;
+	public static final int    BUFFER_SIZE = 64 * 1024;
+	
+
 	public static String getURL(String path) {
 		return String.format("%s/%s?api_key=%s", URL_BASE, path, API_KEY);
 	}

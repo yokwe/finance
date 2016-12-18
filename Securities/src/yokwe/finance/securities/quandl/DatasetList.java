@@ -28,10 +28,6 @@ public class DatasetList {
 	
 	public static final String PATH_DIR = "metadata";
 	
-	private static final int PER_PAGE    = 1000;
-	
-	private static final int BUFFER_SIZE = 64 * 1024;
-	
 	private static final CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
 
 	
@@ -44,7 +40,7 @@ public class DatasetList {
 	//https://www.quandl.com/api/v3/datasets.json?database_code=ODA&page=1
 	public static String getURL(String database_code, int page) {
 		String path  = "datasets.json";
-		String query = String.format("database_code=%s&per_page=%d&page=%d", database_code, PER_PAGE, page);
+		String query = String.format("database_code=%s&per_page=%d&page=%d", database_code, Quandl.PER_PAGE, page);
 		
 		return Quandl.getURL(path, query);
 	}
@@ -159,7 +155,7 @@ public class DatasetList {
 		
 		Set<Integer> idSet = new TreeSet<>();
 		if (file.exists()) {
-			try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
+			try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), Quandl.BUFFER_SIZE))) {
 				for(CSVRecord record: csvParser) {
 					String value = record.get(0);
 					Integer id = Integer.valueOf(value);
@@ -183,7 +179,7 @@ public class DatasetList {
 		}
 		
 		boolean deleteFile = true;
-		try (CSVPrinter csvPrinter = new CSVPrinter(new BufferedWriter(new FileWriter(path, true), BUFFER_SIZE), csvFormat)) {
+		try (CSVPrinter csvPrinter = new CSVPrinter(new BufferedWriter(new FileWriter(path, true), Quandl.BUFFER_SIZE), csvFormat)) {
 			update(csvPrinter, database_code, idSet);
 			// processing is completed.
 			deleteFile = false;

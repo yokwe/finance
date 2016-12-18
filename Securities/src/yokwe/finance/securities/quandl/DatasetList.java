@@ -162,15 +162,15 @@ public class DatasetList {
 			}
 		}
 		
-		try (CSVPrinter csvPrinter = new CSVPrinter(new BufferedWriter(new FileWriter(path, true), Quandl.BUFFER_SIZE), csvFormat)) {
-			// try few times more to finish.
-			for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < 5; i++) {
+			try (CSVPrinter csvPrinter = new CSVPrinter(new BufferedWriter(new FileWriter(path, true), Quandl.BUFFER_SIZE), csvFormat)) {
+				// try few more times to finish.
 				if (datasets_count == idSet.size()) break;
 				update(csvPrinter, database_code, datasets_count, idSet);
+			} catch (IOException e) {
+				logger.error("IOException {}", e.toString());
+				throw new SecuritiesException("IOException");
 			}
-		} catch (IOException e) {
-			logger.error("IOException {}", e.toString());
-			throw new SecuritiesException("IOException");
 		}
 	}
 

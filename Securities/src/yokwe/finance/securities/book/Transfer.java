@@ -153,8 +153,18 @@ public class Transfer {
 			String name   = transfer.name;
 			double price  = equityStatsMap.get(symbol).price;
 			
-			double quantity = transfer.reportList.stream().mapToDouble(o -> o.quantity).sum();
-			// invoke sell method to generate fake entry
+			// calculate quantity
+			double quantity = 0;
+			for(ReportTransfer reportTransfer: transfer.reportList) {
+				if (0 < reportTransfer.dateSell.length()) {
+					// sell
+					quantity -= reportTransfer.quantity;
+				} else {
+					// buy
+					quantity += reportTransfer.quantity;
+				}
+			}
+			// invoke sell method to generate fake sell entry
 			sell(date, symbol, name, quantity, price, commission, usdjpy, reportList);
 		}
 	}

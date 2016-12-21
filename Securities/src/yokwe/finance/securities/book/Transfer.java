@@ -73,6 +73,9 @@ public class Transfer {
 		}
 	}
 	
+	// TODO need to filter output by year
+	// TODO create report for tax office (only sell record) group by symbol
+	// TODO create report for transaction detail (buy and sell record)
 	public static void sell(String date, String symbol, String name, double quantity, double price, double commission, double usdjpy, List<ReportTransfer> reportList) {
 		if (transferMap.containsKey(symbol)) {
 			double priceSell        = price * quantity;
@@ -103,7 +106,7 @@ public class Transfer {
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, transfer.dateBuyFirst, transfer.dateBuyLast));
 			}
-						
+			
 			if (transfer.count == 1 && transfer.reportList.size() == 1 && Math.abs(transfer.quantity) < ALMOST_ZERO) {
 				// Special case: buy once and sell whole.
 				//   Output one record for both buy and sell
@@ -121,12 +124,14 @@ public class Transfer {
 				transfer.reportList.add(report);
 			}
 			
+			// add to reportList
+			for(ReportTransfer report: transfer.reportList) {
+				reportList.add(report);
+			}
+			transfer.reportList.clear();
+
 			// If quantity of securities become ZERO, output accumulated reportList and remove from securitiesMap
 			if (Math.abs(transfer.quantity) < ALMOST_ZERO) {
-				for(ReportTransfer report: transfer.reportList) {
-					reportList.add(report);
-				}
-				transfer.reportList.clear();
 				transferMap.remove(symbol);
 			}
 		} else {

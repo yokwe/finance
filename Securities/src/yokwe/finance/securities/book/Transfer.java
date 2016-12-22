@@ -23,7 +23,7 @@ public class Transfer {
 	double commission;
 	double usdjpy;
 	
-	int          count;
+	int          buyCount;
 	int          acquisitionCostJPY;
 	List<ReportTransfer> reportList;
 	
@@ -37,7 +37,7 @@ public class Transfer {
 		this.commission    = commission;
 		this.usdjpy        = usdjpy;
 		
-		count              = 1;
+		buyCount           = 1;
 		acquisitionCostJPY = (int)Math.round((quantity * price + commission) * usdjpy);
 		reportList         = new ArrayList<>();
 	}
@@ -51,11 +51,13 @@ public class Transfer {
 			Transfer transfer = transferMap.get(symbol);
 			
 			transfer.dateBuyLast         = date;
-			transfer.quantity           += quantity;
 			transfer.price               = price;
 			transfer.commission          = commission;
 			transfer.usdjpy              = usdjpy;
-			transfer.count++;
+			transfer.buyCount++;
+			
+			// maintain quantity and acquisitionCostJPY
+			transfer.quantity           += quantity;
 			transfer.acquisitionCostJPY += acquisitionCostJPY;
 			
 			// Special case for TAL/TRTN(negative quantity for BUY)
@@ -85,20 +87,21 @@ public class Transfer {
 			Transfer transfer = transferMap.get(symbol);
 			
 			int acquisitionCostJPY;
-			if (transfer.count == 1) {
+			if (transfer.buyCount == 1) {
 				acquisitionCostJPY = (int)Math.round(transfer.acquisitionCostJPY * (quantity / transfer.quantity));
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, transfer.dateBuyFirst, transfer.dateBuyLast));
 				
-				// maintain securities
+				// maintain quantity and acquisitionCostJPY
 				transfer.quantity           -= quantity;
 				transfer.acquisitionCostJPY -= acquisitionCostJPY;
 			} else {
 				double unitCost = Math.ceil(transfer.acquisitionCostJPY / transfer.quantity);
 				acquisitionCostJPY = (int)Math.round(unitCost * quantity);
 				
+				// maintain quantity and acquisitionCostJPY
 				transfer.quantity           -= quantity;
 				transfer.acquisitionCostJPY  = (int)Math.round(unitCost * transfer.quantity);
 				
@@ -107,7 +110,8 @@ public class Transfer {
 						date, symbol, quantity, sellAmountJPY, acquisitionCostJPY, sellCommisionJPY, transfer.dateBuyFirst, transfer.dateBuyLast));
 			}
 			
-			if (transfer.count == 1 && transfer.reportList.size() == 1 && Math.abs(transfer.quantity) < ALMOST_ZERO) {
+			// TODO How about buy 1 time and sell more than 1 time?
+			if (transfer.buyCount == 1 && transfer.reportList.size() == 1 && Math.abs(transfer.quantity) < ALMOST_ZERO) {
 				// Special case: buy once and sell whole.
 				//   Output one record for both buy and sell
 				ReportTransfer buy  = transfer.reportList.get(0);

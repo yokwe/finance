@@ -1,6 +1,6 @@
 package yokwe.finance.securities.book;
 
-@SheetData.SheetName("譲渡取引明細")
+@SheetData.SheetName("譲渡明細")
 @SheetData.HeaderRow(0)
 @SheetData.DataRow(1)
 public class ReportTransfer extends SheetData {
@@ -50,27 +50,27 @@ public class ReportTransfer extends SheetData {
 			String dateSell, String priceSell, String commissionSell, String fxRateSell, String commissionSellJPY, String amountSellJPY, String acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
 			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY, String totalQuantity, String totalAmountBuyJPY
 			) {
-		this.symbol = symbol;
-		this.symbolName = symbolName;
-		this.quantity = quantity;
+		this.symbol             = symbol;
+		this.symbolName         = symbolName;
+		this.quantity           = quantity;
 		
-		this.dateSell = dateSell;
-		this.priceSell = priceSell;
-		this.commissionSell = commissionSell;
-		this.fxRateSell = fxRateSell;
-		this.commissionSellJPY = commissionSellJPY;
-		this.amountSellJPY = amountSellJPY;
+		this.dateSell           = dateSell;
+		this.priceSell          = priceSell;
+		this.commissionSell     = commissionSell;
+		this.fxRateSell         = fxRateSell;
+		this.commissionSellJPY  = commissionSellJPY;
+		this.amountSellJPY      = amountSellJPY;
 		this.acquisitionCostJPY = acquisitionCostJPY;
-		this.dateBuyFirst = dateBuyFirst;
-		this.dateBuyLast = dateBuyLast;
+		this.dateBuyFirst       = dateBuyFirst;
+		this.dateBuyLast        = dateBuyLast;
 
-		this.dateBuy = dateBuy;
-		this.priceBuy = priceBuy;
-		this.commissionBuy = commissionBuy;
-		this.fxRateBuy = fxRateBuy;
-		this.amountBuyJPY = amountBuyJPY;
-		this.totalQuantity = totalQuantity;
-		this.totalAmountBuyJPY = totalAmountBuyJPY;
+		this.dateBuy            = dateBuy;
+		this.priceBuy           = priceBuy;
+		this.commissionBuy      = commissionBuy;
+		this.fxRateBuy          = fxRateBuy;
+		this.amountBuyJPY       = amountBuyJPY;
+		this.totalQuantity      = totalQuantity;
+		this.totalAmountBuyJPY  = totalAmountBuyJPY;
 	}
 	
 	public static ReportTransfer getInstance(
@@ -89,12 +89,12 @@ public class ReportTransfer extends SheetData {
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast) {
 
-		String dateBuy = "";
-		String priceBuy = "";
-		String commissionBuy = "";
-		String fxRateBuy = "";
-		String amountBuyJPY = "";
-		String totalQuantity = "";
+		String dateBuy           = "";
+		String priceBuy          = "";
+		String commissionBuy     = "";
+		String fxRateBuy         = "";
+		String amountBuyJPY      = "";
+		String totalQuantity     = "";
 		String totalAmountBuyJPY = "";
 
 		return new ReportTransfer(

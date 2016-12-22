@@ -1,6 +1,6 @@
 package yokwe.finance.securities.book;
 
-@SheetData.SheetName("配当・分配金明細書")
+@SheetData.SheetName("配当明細")
 @SheetData.HeaderRow(0)
 @SheetData.DataRow(1)
 public class ReportDividend extends SheetData{

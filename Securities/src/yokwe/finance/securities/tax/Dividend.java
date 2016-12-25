@@ -54,6 +54,6 @@ public class Dividend extends Sheet {
 	public static Dividend getInstance(
 			String date,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, "", "", "口座利子", dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
+		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
 	}
 }

@@ -1,16 +1,17 @@
 package yokwe.finance.securities.tax;
 
-import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
 
 @Sheet.SheetName("equityStats-header")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class Equity extends Sheet {
-	public static List<Equity> load(String url) {
-		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
-			return Sheet.getInstance(libreOffice, Equity.class);
-		}
-	}
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Equity.class);
 	
 	@ColumnName("symbol")
 	public String symbol;
@@ -56,4 +57,28 @@ public class Equity extends Sheet {
 	public double minpct;
 	@ColumnName("maxpct")
 	public double maxpct;
+	
+	private static final String URL_EQUITY = "file:///home/hasegawa/Dropbox/Trade/equityStats-header.csv";
+
+	// key is date
+	private static Map<String, Equity> map = new TreeMap<>();
+	
+	static {
+		logger.info("Start load {}", URL_EQUITY);
+		try (LibreOffice libreOffice = new LibreOffice(URL_EQUITY, true)) {
+			for(Equity equity: Sheet.getInstance(libreOffice, Equity.class)) {
+				map.put(equity.symbol, equity);
+			}
+		}
+		logger.info("map {}", map.size());
+	}
+	
+	public static Equity get(String symbol) {
+		Equity equity = map.get(symbol);
+		if (equity == null) {
+			logger.error("no symbol in map  {}", symbol);
+			throw new SecuritiesException("no symbol in mapEquity");
+		}
+		return equity;
+	}
 }

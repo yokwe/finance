@@ -17,7 +17,8 @@ public class Report {
 	
 	public static void main(String[] args) {
 		logger.info("START");
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_20161209-reduced.ods";
+		
+		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益.ods";
 		String targetYear = "2016";
 		
 		// key is "date-symbol"

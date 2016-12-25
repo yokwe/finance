@@ -29,7 +29,7 @@ import com.sun.star.uno.UnoRuntime;
 import yokwe.finance.securities.SecuritiesException;
 
 public class Sheet {
-	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);
 	
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)

@@ -1,5 +1,10 @@
 package yokwe.finance.securities.tax;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -12,14 +17,9 @@ public class Report {
 	
 	public static void main(String[] args) {
 		logger.info("START");
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算.ods";
+		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益計算_20161209-reduced.ods";
 		String targetYear = "2016";
 		
-		// key is date
-		Map<String, Double> usdMap    = new TreeMap<>();
-		// key is symbol
-		Map<String, Equity> equityMap = new TreeMap<>();
-
 		// key is "date-symbol"
 		Map<String, Dividend> dividendMap = new TreeMap<>();
 		// key is symbol
@@ -27,16 +27,9 @@ public class Report {
 		//TODO BuySell contains List<List<Transfer>>.  Is this correct?
 		
 		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
-
-			for(Mizuho mizuho: Sheet.getInstance(libreOffice, Mizuho.class)) {
-				usdMap.put(mizuho.date, mizuho.usd);
-			}
-			for(Equity equity: Sheet.getInstance(libreOffice, Equity.class)) {
-				equityMap.put(equity.symbol, equity);
-			}
-			
 			for(Activity activity: Sheet.getInstance(libreOffice, Activity.class)) {
-				double fxRate = usdMap.get(activity.date);
+				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
+				double fxRate = Mizuho.getUSD(activity.date);
 				
 				switch(activity.transaction) {
 				// Transfer
@@ -56,8 +49,7 @@ public class Report {
 				case "MLP":
 				case "NRA":
 				case "CAP GAIN": {
-					// 			String date, String symbol, String symbolName, double quantity,
-
+					// Add record to dividendMap that belong target year
 					if (activity.date.startsWith(targetYear)) {
 						// Create Dividend Record
 						String key = String.format("%s-%s", activity.date, activity.symbol);
@@ -73,14 +65,16 @@ public class Report {
 					break;
 				}
 				case "INTEREST": {
-					// Create Dividend Record
-					String key = String.format("%s-%s", activity.date, "____");
-					if (dividendMap.containsKey(key)) {
-						Dividend dividend = dividendMap.get(key);
-						dividend.update(activity.credit, activity.debit);
-					} else {
-						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
-						dividendMap.put(key, dividend);
+					// Add record to dividendMap that belong target year
+					if (activity.date.startsWith(targetYear)) {
+						String key = String.format("%s-%s", activity.date, "____");
+						if (dividendMap.containsKey(key)) {
+							Dividend dividend = dividendMap.get(key);
+							dividend.update(activity.credit, activity.debit);
+						} else {
+							Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
+							dividendMap.put(key, dividend);
+						}
 					}
 					break;
 				}
@@ -89,7 +83,35 @@ public class Report {
 					throw new SecuritiesException("Unknonw transaction");
 				}
 			}
-			
 		}
+		
+		{
+			String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+			logger.info("timeStamp {}", timeStamp);
+			
+			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
+			String urlSave = String.format("file:///home/hasegawa/Dropbox/Trade/REPORT_%s.ods", timeStamp);
+			
+			try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
+//				SheetData.saveSheet(docLoad, ReportTransfer.class, reportTransferList);
+				{
+					List<Dividend> dividendList = new ArrayList<>();
+					{
+						List<String> keyList = new ArrayList<>();
+						keyList.addAll(dividendMap.keySet());
+						Collections.sort(keyList);
+						for(String key: keyList) {
+							Dividend dividend = dividendMap.get(key);
+							dividendList.add(dividend);
+						}
+					}
+					Sheet.saveSheet(docLoad, Dividend.class, dividendList);
+				}
+				docLoad.store(urlSave);
+			}
+		}
+		
+		logger.info("STOP");
+		System.exit(0);
 	}
 }

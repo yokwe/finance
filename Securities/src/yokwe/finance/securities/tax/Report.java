@@ -91,7 +91,7 @@ public class Report {
 
 			int acJPY;
 			if (buyCount == 1) {
-				acJPY = (int)Math.round(this.acquisitionCostJPY * (activity.quantity / this.quantity));
+				acJPY = (int)Math.round(this.acquisitionCostJPY * (activity.quantity / quantity));
 				
 				// maintain quantity and acquisitionCostJPY
 				quantity           -= activity.quantity;
@@ -101,7 +101,7 @@ public class Report {
 						activity.tradeDate, symbol, quantity, amountSellJPY, acJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			} else {
 				double unitCost = Math.ceil(acquisitionCostJPY / quantity);
-				acJPY = (int)Math.round(unitCost * quantity);
+				acJPY = (int)Math.round(unitCost * activity.quantity);
 				
 				// maintain quantity and acquisitionCostJPY
 				quantity           -= activity.quantity;

@@ -91,7 +91,7 @@ public class Report {
 
 			int acJPY;
 			if (buyCount == 1) {
-				acJPY = (int)Math.round(this.acquisitionCostJPY * (activity.quantity / quantity));
+				acJPY = (int)Math.round(acquisitionCostJPY * (activity.quantity / quantity));
 				
 				// maintain quantity and acquisitionCostJPY
 				quantity           -= activity.quantity;

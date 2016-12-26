@@ -1,6 +1,6 @@
 package yokwe.finance.securities.tax;
 
-@Sheet.SheetName("譲渡明細")
+@Sheet.SheetName("譲渡計算明細書")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class Summary extends Sheet {

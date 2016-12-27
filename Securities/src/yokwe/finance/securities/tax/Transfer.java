@@ -91,21 +91,27 @@ public class Transfer extends Sheet {
 	public static Transfer getInstanceForSell(
 			String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
-			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast) {
+			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast, double totalQuantity, int totalAcquisitionCostJPY) {
 
 		String dateBuy           = "";
 		String priceBuy          = "";
 		String commissionBuy     = "";
 		String fxRateBuy         = "";
 		String amountBuyJPY      = "";
-		String totalQuantity     = "";
+		
+		String totalQuantitySTR  = "";
 		String totalAmountBuyJPY = "";
+		
+		if (0 < totalAcquisitionCostJPY) {
+			totalQuantitySTR  = String.format("%.5f", totalQuantity);
+			totalAmountBuyJPY = String.format("%d", totalAcquisitionCostJPY);
+		}
 
 		return new Transfer(
 			symbol, symbolName, quantity,
 			dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 			String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
-			dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantity, totalAmountBuyJPY
+			dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantitySTR, totalAmountBuyJPY
 			);
 	}
 

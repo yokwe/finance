@@ -124,7 +124,7 @@ public class Report {
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
-						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, totalQuantity, buy.amountBuyJPY
+						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY
 						);
 				current.add(transfer);
 				past.add(current);
@@ -262,21 +262,35 @@ public class Report {
 			try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
 				{
 					List<Transfer> transferList = new ArrayList<>();
+					// key is "dateSell-symbol"
 					List<Summary> summaryList   = new ArrayList<>();
 					{
-						List<String> keyList = new ArrayList<>();
-						keyList.addAll(buySellMap.keySet());
-						Collections.sort(keyList);
-						for(String key: keyList) {
-							BuySell buySell = buySellMap.get(key);
-							for(List<Transfer> pastTransferList: buySell.past) {
-								// I have interested in transfer record in transferList that sold date in targetYear
-								Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
-								if (lastTransfer.dateSell.startsWith(targetYear)) {
-									transferList.addAll(pastTransferList);
-									summaryList.add(Summary.getInstance(lastTransfer));
+						Map<String, List<Transfer>> targetTransferMap = new TreeMap<>();
+						{
+							List<String> keyList = new ArrayList<>();
+							keyList.addAll(buySellMap.keySet());
+							Collections.sort(keyList);
+							for(String key: keyList) {
+								BuySell buySell = buySellMap.get(key);
+								List<Transfer> targetList = new ArrayList<>();
+								String firstSell = null;
+								for(List<Transfer> pastTransferList: buySell.past) {
+									// I have interested in transfer record in transferList that sold date in targetYear
+									Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+									if (lastTransfer.dateSell.startsWith(targetYear)) {
+										if (firstSell == null) firstSell = lastTransfer.dateSell;
+										targetList.addAll(pastTransferList);
+										summaryList.add(Summary.getInstance(lastTransfer));
+									}
 								}
+								targetTransferMap.put(String.format("%s-%s", firstSell, key), targetList);
 							}
+						}
+						// sort summaryList wiht dateSell
+						Collections.sort(summaryList, (a, b) -> a.dateSell.compareTo(b.dateSell));
+						// build transferList from targetTransferMap
+						for(List<Transfer> e: targetTransferMap.values()) {
+							transferList.addAll(e);
 						}
 					}
 					Sheet.saveSheet(docLoad, Transfer.class, transferList);

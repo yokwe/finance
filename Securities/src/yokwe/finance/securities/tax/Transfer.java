@@ -19,12 +19,12 @@ public class Transfer extends Sheet {
 	public final String commissionSell;
 	@ColumnName("売レート")
 	public final String fxRateSell;
-	@ColumnName("譲渡手数料")
-	public final String commissionSellJPY;
-	@ColumnName("譲渡価格")
+	@ColumnName("譲渡金額")
 	public final String amountSellJPY;
 	@ColumnName("取得費")
 	public final String acquisitionCostJPY;
+	@ColumnName("譲渡手数料")
+	public final String commissionSellJPY;
 	@ColumnName("取得日最初")
 	public final String dateBuyFirst;
 	@ColumnName("取得日最後")
@@ -77,13 +77,13 @@ public class Transfer extends Sheet {
 			String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
-			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY, double totalQuantity, String totalAmountBuyJPY
+			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY
 			) {
 		return new Transfer(
 				symbol, symbolName, quantity,
 				dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 				String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
-				dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, String.format("%.5f", totalQuantity), totalAmountBuyJPY
+				dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, "", ""
 				);
 	}
 	

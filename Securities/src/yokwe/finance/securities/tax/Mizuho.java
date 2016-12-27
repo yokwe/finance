@@ -58,6 +58,12 @@ public class Mizuho extends Sheet implements Comparable<Mizuho> {
 		Collections.sort(dateList);
 	}
 	
+	private static boolean testMode = false;
+	public static void enableTestMode() {
+		testMode = true;
+		logger.info("enableTestMode {}", testMode);
+	}
+	
 	public static String getValidDate(String date) {
 		int index = Collections.binarySearch(dateList, date);
 		if (index < 0) {
@@ -77,6 +83,8 @@ public class Mizuho extends Sheet implements Comparable<Mizuho> {
 	}
 	
 	public static double getUSD(String date) {
+		if (testMode) return 1;
+		
 		Mizuho mizuho = get(date);
 		return mizuho.usd;
 	}

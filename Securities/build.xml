@@ -183,7 +183,7 @@
 	</target>
 	
         <target name="run-report">
-                <java classname="yokwe.finance.securities.book.Report" fork="true">
+                <java classname="yokwe.finance.securities.tax.Report" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>

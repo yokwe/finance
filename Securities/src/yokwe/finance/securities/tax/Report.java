@@ -133,7 +133,7 @@ public class Report {
 				Transfer transfer = Transfer.getInstanceForSell (
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
-						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast);
+						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalAcquisitionCostJPY);
 				current.add(transfer);
 				// TODO This is not correct. acquisitionCostJPY is not correct(acquisitionCostJPY has whole value). 
 				past.add(current);
@@ -151,11 +151,9 @@ public class Report {
 	
 
 	
-	public static void main(String[] args) {
-		logger.info("START");
-		
-		String url = "file:///home/hasegawa/Dropbox/Trade/投資損益.ods";
-		String targetYear = "2016";
+	public static void generateReport(String url, String targetYear) {
+		logger.info("url        {}", url);
+		logger.info("targetYear {}", targetYear);
 		
 		// key is "date-symbol"
 		Map<String, Dividend> dividendMap = new TreeMap<>();
@@ -312,6 +310,31 @@ public class Report {
 				docLoad.store(urlSave);
 			}
 		}
+	}
+	
+	public static void generateTestReport() {
+		// See page 50 of URL below about test case
+		//   https://www.nta.go.jp/tetsuzuki/shinkoku/shotoku/tebiki2016/kisairei/kabushiki/pdf/15.pdf
+		
+		String url        = "file:///home/hasegawa/Dropbox/Trade/投資損益_TEST.ods";
+		String targetYear = "2000";
+		
+		Mizuho.enableTestMode();
+		generateReport(url, targetYear);
+	}
+	
+	public static void generateReport() {
+		String url        = "file:///home/hasegawa/Dropbox/Trade/投資損益.ods";
+		String targetYear = "2016";
+		
+		generateReport(url, targetYear);
+	}
+	
+	public static void main(String[] args) {
+		logger.info("START");
+		
+		//generateTestReport();
+		generateReport();
 		
 		logger.info("STOP");
 		System.exit(0);

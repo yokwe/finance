@@ -25,8 +25,8 @@ public class Report {
 		String dateBuyFirst;
 		String dateBuyLast;
 
-		double quantity;
-		int    acquisitionCostJPY;
+		double totalQuantity;
+		int    totalAcquisitionCostJPY;
 		
 		List<Transfer>       current;
 		List<List<Transfer>> past;
@@ -39,8 +39,9 @@ public class Report {
 			dateBuyFirst       = "";
 			dateBuyLast        = "";
 			
-			quantity           = 0;
-			acquisitionCostJPY = 0;
+			totalQuantity           = 0;
+			totalAcquisitionCostJPY = 0;
+			
 			current            = new ArrayList<>();
 			past               = new ArrayList<>();
 		}
@@ -50,8 +51,8 @@ public class Report {
 			dateBuyFirst       = "";
 			dateBuyLast        = "";
 			
-			quantity           = 0;
-			acquisitionCostJPY = 0;
+			totalQuantity           = 0;
+			totalAcquisitionCostJPY = 0;
 			
 			// TODO Is this correct/
 //			if (0 < current.size()) {
@@ -68,9 +69,9 @@ public class Report {
 				dateBuyLast  = activity.tradeDate;
 			}
 			
-			int acjpy = (int)Math.round((activity.quantity * activity.price + activity.commission) * fxRate); // acjpy = acquisitionCostJPY
-			quantity           += activity.quantity;
-			acquisitionCostJPY += acjpy;
+			int acquisitionCostJPY = (int)Math.round((activity.quantity * activity.price + activity.commission) * fxRate); // acjpy = acquisitionCostJPY
+			totalQuantity           += activity.quantity;
+			totalAcquisitionCostJPY += acquisitionCostJPY;
 
 			// special case for negative buy -- for TAL name change
 			// TODO is this correct?
@@ -81,7 +82,7 @@ public class Report {
 			
 			Transfer transfer = Transfer.getInstanceForBuy (
 					activity.symbol, activity.name, activity.quantity, activity.tradeDate, activity.price, activity.commission, fxRate,
-					acjpy, quantity, acquisitionCostJPY);
+					acquisitionCostJPY, totalQuantity, totalAcquisitionCostJPY);
 			current.add(transfer);
 		}
 		void sell(Activity activity, double fxRate) {
@@ -89,27 +90,30 @@ public class Report {
 			int    amountSellJPY    = (int)Math.round(priceSell * fxRate);
 			int    commisionSellJPY = (int)Math.round(activity.commission * fxRate);
 
-			int acJPY;
+			int acquisitionCostJPY;
 			if (buyCount == 1) {
-				acJPY = (int)Math.round(acquisitionCostJPY * (activity.quantity / quantity));
+				acquisitionCostJPY = (int)Math.round(totalAcquisitionCostJPY * (activity.quantity / totalQuantity));
 				
 				// maintain quantity and acquisitionCostJPY
-				quantity           -= activity.quantity;
-				acquisitionCostJPY -= acJPY;
+				totalQuantity           -= activity.quantity;
+				totalAcquisitionCostJPY -= acquisitionCostJPY;
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-						activity.tradeDate, symbol, quantity, amountSellJPY, acJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
+						activity.tradeDate, symbol, totalQuantity, amountSellJPY, acquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			} else {
-				double unitCost = Math.ceil(acquisitionCostJPY / quantity);
-				acJPY = (int)Math.round(unitCost * activity.quantity);
+				double unitCost = Math.ceil(totalAcquisitionCostJPY / totalQuantity); // need to be round up
+				
+				// need to adjust totalAcquisitionCostJPY
+				totalAcquisitionCostJPY = (int)Math.round(unitCost * totalQuantity);
+				acquisitionCostJPY = (int)Math.round(unitCost * activity.quantity);
 				
 				// maintain quantity and acquisitionCostJPY
-				quantity           -= activity.quantity;
-				acquisitionCostJPY -= acJPY;
+				totalQuantity           -= activity.quantity;
+				totalAcquisitionCostJPY -= acquisitionCostJPY;
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-						activity.tradeDate, symbol, quantity, amountSellJPY, acquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
+						activity.tradeDate, symbol, totalQuantity, amountSellJPY, totalAcquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			}
 
 			// TODO How about buy 1 time and sell more than 1 time?
@@ -119,8 +123,8 @@ public class Report {
 				Transfer transfer = Transfer.getInstanceForSellSpecial(
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
-						amountSellJPY, acJPY, dateBuyFirst, dateBuyLast,
-						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, quantity, buy.amountBuyJPY
+						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
+						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY, totalQuantity, buy.amountBuyJPY
 						);
 				current.add(transfer);
 				past.add(current);
@@ -129,7 +133,7 @@ public class Report {
 				Transfer transfer = Transfer.getInstanceForSell (
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
-						amountSellJPY, acJPY, dateBuyFirst, dateBuyLast);
+						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast);
 				current.add(transfer);
 				// TODO This is not correct. acquisitionCostJPY is not correct(acquisitionCostJPY has whole value). 
 				past.add(current);
@@ -141,7 +145,7 @@ public class Report {
 			}
 		}
 		boolean isAlmostZero() {
-			return Math.abs(quantity) < ALMOST_ZERO;
+			return Math.abs(totalQuantity) < ALMOST_ZERO;
 		}
 	}
 	

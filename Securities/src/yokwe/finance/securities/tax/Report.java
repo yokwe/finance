@@ -271,27 +271,63 @@ public class Report {
 							for(String key: keyList) {
 								BuySell buySell = buySellMap.get(key);
 								List<Transfer> targetList = new ArrayList<>();
-								String firstSell = null;
+								String firstDateSell = null;
 								for(List<Transfer> pastTransferList: buySell.past) {
 									// I have interested in transfer record in transferList that sold date in targetYear
 									Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
 									if (lastTransfer.dateSell.startsWith(targetYear)) {
-										if (firstSell == null) firstSell = lastTransfer.dateSell;
+										if (firstDateSell == null) firstDateSell = lastTransfer.dateSell;
 										targetList.addAll(pastTransferList);
 										summaryList.add(Summary.getInstance(lastTransfer));
 									}
 								}
-								targetTransferMap.put(String.format("%s-%s", firstSell, key), targetList);
+								targetTransferMap.put(String.format("%s-%s", firstDateSell, key), targetList);
+							}
+							
+							// sort summaryList with dateSell
+							Collections.sort(summaryList, (a, b) -> a.dateSell.compareTo(b.dateSell));
+							// build transferList from targetTransferMap
+							for(List<Transfer> e: targetTransferMap.values()) {
+								transferList.addAll(e);
+							}
+							
+							// add remaining equity information
+							// TODO output to another sheet
+							{
+								String theDate = "9999-99-99";
+								double fxRate = Mizuho.getUSD(theDate);
+								
+								for(String key: keyList) {
+									BuySell buySell = buySellMap.get(key);
+									if (buySell.isAlmostZero()) continue;
+	
+									// add dummy sell record
+									Equity equity = Equity.get(key);
+									Activity activity = new Activity();
+									
+									activity.yyyyMM      = "9999-99";
+									activity.page        = "99";
+									activity.transaction = "SOLD";
+									activity.date        = theDate;
+									activity.tradeDate   = theDate;
+									activity.symbol      = buySell.symbol;
+									activity.name        = buySell.name;
+									activity.quantity    = buySell.totalQuantity;
+									activity.price       = equity.price;
+									activity.commission  = 7;
+									activity.debit       = 0;
+									activity.credit      = activity.quantity * activity.price;
+									
+									buySell.sell(activity, fxRate);
+									
+									transferList.addAll(buySell.past.get(buySell.past.size() - 1));
+								}
 							}
 						}
-						// sort summaryList wiht dateSell
-						Collections.sort(summaryList, (a, b) -> a.dateSell.compareTo(b.dateSell));
-						// build transferList from targetTransferMap
-						for(List<Transfer> e: targetTransferMap.values()) {
-							transferList.addAll(e);
-						}
 					}
+					// TODO sheet name should contains target year
 					Sheet.saveSheet(docLoad, Transfer.class, transferList);
+					// TODO sheet name should contains target year
 					Sheet.saveSheet(docLoad, Summary.class, summaryList);
 				}
 				{

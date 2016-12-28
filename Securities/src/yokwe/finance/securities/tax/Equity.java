@@ -74,9 +74,11 @@ public class Equity extends Sheet {
 	}
 	
 	public static Equity get(String symbol) {
-		Equity equity = map.get(symbol);
+		// special handling for preferred stock symbol
+		String newSymbol = symbol.replace(".PR.", "-");
+		Equity equity = map.get(newSymbol);
 		if (equity == null) {
-			logger.error("no symbol in map  {}", symbol);
+			logger.error("no symbol in map  {} - {}", symbol, newSymbol);
 			throw new SecuritiesException("no symbol in mapEquity");
 		}
 		return equity;

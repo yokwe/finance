@@ -26,6 +26,7 @@ public class Report {
 		String dateBuyLast;
 
 		double totalQuantity;
+		double totalAcquisitionCost;
 		int    totalAcquisitionCostJPY;
 		
 		List<Transfer>       current;
@@ -40,6 +41,7 @@ public class Report {
 			dateBuyLast        = "";
 			
 			totalQuantity           = 0;
+			totalAcquisitionCost    = 0;
 			totalAcquisitionCostJPY = 0;
 			
 			current            = new ArrayList<>();
@@ -52,6 +54,7 @@ public class Report {
 			dateBuyLast        = "";
 			
 			totalQuantity           = 0;
+			totalAcquisitionCost    = 0;
 			totalAcquisitionCostJPY = 0;
 			
 			// TODO Is this correct/
@@ -69,8 +72,11 @@ public class Report {
 				dateBuyLast  = activity.tradeDate;
 			}
 			
-			int acquisitionCostJPY = (int)Math.round((activity.quantity * activity.price + activity.commission) * fxRate); // acjpy = acquisitionCostJPY
+			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
+			double acquisitionCost = activity.quantity * activity.price + activity.commission;
+			int acquisitionCostJPY = (int)Math.round(acquisitionCost * fxRate);
 			totalQuantity           += activity.quantity;
+			totalAcquisitionCost    += acquisitionCost;
 			totalAcquisitionCostJPY += acquisitionCostJPY;
 
 			// special case for negative buy -- for TAL name change
@@ -90,25 +96,32 @@ public class Report {
 			int    amountSellJPY    = (int)Math.round(priceSell * fxRate);
 			int    commisionSellJPY = (int)Math.round(activity.commission * fxRate);
 
-			int acquisitionCostJPY;
+			double acquisitionCost;
+			int    acquisitionCostJPY;
 			if (buyCount == 1) {
-				acquisitionCostJPY = (int)Math.round(totalAcquisitionCostJPY * (activity.quantity / totalQuantity));
+				double sellRatio = activity.quantity / totalQuantity;
+				acquisitionCost    = totalAcquisitionCost * sellRatio;
+				acquisitionCostJPY = (int)Math.round(totalAcquisitionCostJPY * sellRatio);
 				
-				// maintain quantity and acquisitionCostJPY
+				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity           -= activity.quantity;
+				totalAcquisitionCost    -= acquisitionCost;
 				totalAcquisitionCostJPY -= acquisitionCostJPY;
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						activity.tradeDate, symbol, totalQuantity, amountSellJPY, acquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			} else {
-				double unitCost = Math.ceil(totalAcquisitionCostJPY / totalQuantity); // need to be round up
-				
+				double sellRatio = activity.quantity / totalQuantity;
+				acquisitionCost    = totalAcquisitionCost * sellRatio;
+
+				double unitCostJPY = Math.ceil(totalAcquisitionCostJPY / totalQuantity); // need to be round up
+				acquisitionCostJPY = (int)Math.round(unitCostJPY * activity.quantity);
 				// need to adjust totalAcquisitionCostJPY
-				totalAcquisitionCostJPY = (int)Math.round(unitCost * totalQuantity);
-				acquisitionCostJPY = (int)Math.round(unitCost * activity.quantity);
+				totalAcquisitionCostJPY = (int)Math.round(unitCostJPY * totalQuantity);
 				
-				// maintain quantity and acquisitionCostJPY
+				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity           -= activity.quantity;
+				totalAcquisitionCost    -= acquisitionCost;
 				totalAcquisitionCostJPY -= acquisitionCostJPY;
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
@@ -293,36 +306,36 @@ public class Report {
 							
 							// add remaining equity information
 							// TODO output to another sheet
-							{
-								String theDate = "9999-99-99";
-								double fxRate = Mizuho.getUSD(theDate);
-								
-								for(String key: keyList) {
-									BuySell buySell = buySellMap.get(key);
-									if (buySell.isAlmostZero()) continue;
-	
-									// add dummy sell record
-									Equity equity = Equity.get(key);
-									Activity activity = new Activity();
-									
-									activity.yyyyMM      = "9999-99";
-									activity.page        = "99";
-									activity.transaction = "SOLD";
-									activity.date        = theDate;
-									activity.tradeDate   = theDate;
-									activity.symbol      = buySell.symbol;
-									activity.name        = buySell.name;
-									activity.quantity    = buySell.totalQuantity;
-									activity.price       = equity.price;
-									activity.commission  = 7;
-									activity.debit       = 0;
-									activity.credit      = activity.quantity * activity.price;
-									
-									buySell.sell(activity, fxRate);
-									
-									transferList.addAll(buySell.past.get(buySell.past.size() - 1));
-								}
-							}
+//							{
+//								String theDate = "9999-99-99";
+//								double fxRate = Mizuho.getUSD(theDate);
+//								
+//								for(String key: keyList) {
+//									BuySell buySell = buySellMap.get(key);
+//									if (buySell.isAlmostZero()) continue;
+//	
+//									// add dummy sell record
+//									Equity equity = Equity.get(key);
+//									Activity activity = new Activity();
+//									
+//									activity.yyyyMM      = "9999-99";
+//									activity.page        = "99";
+//									activity.transaction = "SOLD";
+//									activity.date        = theDate;
+//									activity.tradeDate   = theDate;
+//									activity.symbol      = buySell.symbol;
+//									activity.name        = buySell.name;
+//									activity.quantity    = buySell.totalQuantity;
+//									activity.price       = equity.price;
+//									activity.commission  = 7;
+//									activity.debit       = 0;
+//									activity.credit      = activity.quantity * activity.price;
+//									
+//									buySell.sell(activity, fxRate);
+//									
+//									transferList.addAll(buySell.past.get(buySell.past.size() - 1));
+//								}
+//							}
 						}
 					}
 					// TODO sheet name should contains target year

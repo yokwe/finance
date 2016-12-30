@@ -148,7 +148,6 @@ public class Report {
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalAcquisitionCostJPY);
 				current.add(transfer);
-				// TODO This is not correct. acquisitionCostJPY is not correct(acquisitionCostJPY has whole value). 
 				past.add(current);
 				current = new ArrayList<>();
 			}
@@ -172,7 +171,6 @@ public class Report {
 		Map<String, Dividend> dividendMap = new TreeMap<>();
 		// key is symbol
 		Map<String, BuySell> buySellMap = new TreeMap<>();
-		//TODO BuySell contains List<List<Transfer>>.  Is this correct?
 		
 		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
 			for(Activity activity: Sheet.getInstance(libreOffice, Activity.class)) {

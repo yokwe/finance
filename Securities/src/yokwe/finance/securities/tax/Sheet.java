@@ -276,8 +276,18 @@ public class Sheet {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
+	
+	public static <E extends Sheet> String getSheetName(Class<E> clazz) {
+		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
+		if (sheetName == null) {
+			logger.error("No SheetName annotation = {}", clazz.getName());
+			throw new SecuritiesException("No SheetName annotation");
+		}
+		
+		return sheetName.value();
+	}
 
-	public static <E extends Sheet> void saveSheet(LibreOffice libreOffice, Class<E> clazz, List<E> dataList) {
+	public static <E extends Sheet> void saveSheet(XSpreadsheet spreadsheet, Class<E> clazz, List<E> dataList) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
@@ -294,7 +304,6 @@ public class Sheet {
 			throw new SecuritiesException("No DataRow annotation");
 		}
 		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
-		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName.value());
 		
 		// Insertion order is important, So we use LinkedHashMap instead of HashMap
 		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
@@ -368,5 +377,14 @@ public class Sheet {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
+	}
+	public static <E extends Sheet> void saveSheet(LibreOffice libreOffice, String sheetName, Class<E> clazz, List<E> dataList) {
+		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName);
+		saveSheet(spreadsheet, clazz, dataList);
+	}
+	public static <E extends Sheet> void saveSheet(LibreOffice libreOffice, Class<E> clazz, List<E> dataList) {
+		String sheetName = getSheetName(clazz);
+		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName);
+		saveSheet(spreadsheet, clazz, dataList);
 	}
 }

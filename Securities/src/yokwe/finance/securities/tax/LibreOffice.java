@@ -29,6 +29,7 @@ import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.sheet.XSpreadsheets2;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
@@ -85,14 +86,12 @@ public class LibreOffice implements Closeable {
 	}
 	
 	private final XComponent component;
-	
-	public static String NEW_SPREADSHEET_URL = "private:factory/scalc";
-	
+		
 	public LibreOffice(String url, boolean readOnly) {
 		try {
 			PropertyValue[] props = new PropertyValue[] {
 					// Set document as read only
-					new PropertyValue("ReadOnly", 0, readOnly, PropertyState.DIRECT_VALUE),
+					new PropertyValue("ReadOnly",      0, readOnly,                PropertyState.DIRECT_VALUE),
 					// Choose NO_UPDATE for faster operation
 					new PropertyValue("UpdateDocMode", 0, UpdateDocMode.NO_UPDATE, PropertyState.DIRECT_VALUE),
 			};
@@ -104,32 +103,97 @@ public class LibreOffice implements Closeable {
 		}
 	}
 	
-
+	public static String NEW_SPREADSHEET_URL = "private:factory/scalc";
+	public static LibreOffice getNewSpreadSheet() {
+		LibreOffice libreOffice = new LibreOffice(NEW_SPREADSHEET_URL, false);
+		return libreOffice;
+	}
+	
+	
 	public XComponent getComponent() {
 		return component;
 	}
-	public XSpreadsheets getSpreadSheets() {
-		XSpreadsheets spreadSheets = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component).getSheets();
+	public XSpreadsheetDocument getSpreadSheetDocument() {
+		XSpreadsheetDocument spreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component);
+		if (spreadsheetDocument == null) {
+			logger.info("component {}", component.toString());
+			throw new SecuritiesException("Unexpected component");
+		}
+		return spreadsheetDocument;
+	}
+	public XSpreadsheets2 getSpreadSheets() {
+		XSpreadsheetDocument spreadsheetDocument = getSpreadSheetDocument();
+		XSpreadsheets        spreadSheets        = spreadsheetDocument.getSheets();
+		XSpreadsheets2       spreadSheets2       = UnoRuntime.queryInterface(XSpreadsheets2.class, spreadSheets);
+		if (spreadSheets2 == null) {
+			logger.info("spreadSheets2 == null {}", component.toString());
+			throw new SecuritiesException("spreadSheets2 == null");
+		}
+		return spreadSheets2;
+	}
+	public void importSheet(XSpreadsheetDocument oldDoc, String oldName, int newSheetPosition) {
+		XSpreadsheets2 spreadSheets = getSpreadSheets();
 		if (spreadSheets == null) {
 			logger.info("component {}", component.toString());
 			throw new SecuritiesException("Unexpected component");
 		}
-		return spreadSheets;
+		try {
+			spreadSheets.importSheet(oldDoc, oldName, newSheetPosition);
+		} catch (IllegalArgumentException e) {
+			logger.info("IllegalArgumentException {}", e.toString());
+			throw new SecuritiesException("IllegalArgumentException");
+		} catch (IndexOutOfBoundsException e) {
+			logger.info("IndexOutOfBoundsException {}", e.toString());
+			throw new SecuritiesException("IndexOutOfBoundsException");
+		}
 	}
-	public void copyByName(String oldSheetName, String newSheetName, short newSheetPosition) {
-		XSpreadsheets spreadSheets = getSpreadSheets();
-		spreadSheets.copyByName(oldSheetName, newSheetName, newSheetPosition);
+	public void copyByName(String oldSheetName, String newSheetName, int newSheetPosition) {
+		XSpreadsheets2 spreadSheets = getSpreadSheets();
+		spreadSheets.copyByName(oldSheetName, newSheetName, (short)newSheetPosition);
+	}
+	public void moveByName(String sheetName, int sheetPosition) {
+		XSpreadsheets2 spreadSheets = getSpreadSheets();
+		spreadSheets.moveByName(sheetName, (short)sheetPosition);
+	}
+	public void removeByName(String sheetName) {
+		XSpreadsheets2 spreadSheets = getSpreadSheets();
+		try {
+			spreadSheets.removeByName(sheetName);
+		} catch (NoSuchElementException e) {
+			logger.info("NoSuchElementException {}", e.toString());
+			throw new SecuritiesException("NoSuchElementException");
+		} catch (WrappedTargetException e) {
+			logger.info("WrappedTargetException {}", e.toString());
+			throw new SecuritiesException("WrappedTargetException");
+		}
 	}
 	public XSpreadsheet getSpreadSheet(String name) {
 		try {
 			XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSpreadSheets());
 			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, nameAccess.getByName(name));
 			return sheet;
-		} catch (NoSuchElementException | WrappedTargetException e) {
-			logger.info("Exception {}", e.toString());
-			throw new SecuritiesException("Unexpected exception");
+		} catch (NoSuchElementException e) {
+			logger.info("NoSuchElementException {}", e.toString());
+			throw new SecuritiesException("NoSuchElementException");
+		} catch (WrappedTargetException e) {
+			logger.info("WrappedTargetException {}", e.toString());
+			throw new SecuritiesException("WrappedTargetException");
 		}
 	}
+	public int countSheet() {
+		XIndexAccess indexAccess = UnoRuntime.queryInterface(XIndexAccess.class, getSpreadSheets());
+		return indexAccess.getCount();
+	}
+	public String getSheetName(int index) {
+		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSpreadSheets());
+		String[] names = nameAccess.getElementNames();
+		if (0 <= index && index <= names.length) {
+			return names[index];
+		}
+		logger.info("Index out of range {}", index);
+		throw new SecuritiesException("Index out of range");
+	}
+	
 	
 	public XSpreadsheet getSpreadSheet(int index) {
 		try {
@@ -208,7 +272,7 @@ public class LibreOffice implements Closeable {
 			PropertyValue[] values = new PropertyValue[] {
 				new PropertyValue("Overwrite", 0, true, PropertyState.DIRECT_VALUE),
 			};
-			storable.storeToURL(urlStore, values);
+			storable.storeAsURL(urlStore, values);
 		} catch (IOException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");

@@ -10,6 +10,8 @@ import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
 import yokwe.finance.securities.SecuritiesException;
 
 public class Report {
@@ -162,18 +164,9 @@ public class Report {
 	}
 	
 
-	
-	public static void generateReport(String url, String targetYear) {
-		logger.info("url        {}", url);
-		logger.info("targetYear {}", targetYear);
-		
-		// key is "date-symbol"
-		Map<String, Dividend> dividendMap = new TreeMap<>();
-		// key is symbol
-		Map<String, BuySell> buySellMap = new TreeMap<>();
-		
-		try (LibreOffice libreOffice = new LibreOffice(url, true)) {
-			for(Activity activity: Sheet.getInstance(libreOffice, Activity.class)) {
+	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap) {
+		try (LibreOffice docActivity = new LibreOffice(url, true)) {
+			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
 				double fxRate = Mizuho.getUSD(activity.date);
 				
@@ -226,31 +219,27 @@ public class Report {
 				case "NRA":
 				case "CAP GAIN": {
 					// Add record to dividendMap that belong target year
-					if (activity.date.startsWith(targetYear)) {
-						// Create Dividend Record
-						String key = String.format("%s-%s", activity.date, activity.symbol);
-						if (dividendMap.containsKey(key)) {
-							Dividend dividend = dividendMap.get(key);
-							dividend.update(activity.credit, activity.debit);
-						} else {
-							Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
-									activity.credit, activity.debit, fxRate);
-							dividendMap.put(key, dividend);
-						}
+					// Create Dividend Record
+					String key = String.format("%s-%s", activity.date, activity.symbol);
+					if (dividendMap.containsKey(key)) {
+						Dividend dividend = dividendMap.get(key);
+						dividend.update(activity.credit, activity.debit);
+					} else {
+						Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
+								activity.credit, activity.debit, fxRate);
+						dividendMap.put(key, dividend);
 					}
 					break;
 				}
 				case "INTEREST": {
 					// Add record to dividendMap that belong target year
-					if (activity.date.startsWith(targetYear)) {
-						String key = String.format("%s-%s", activity.date, "____");
-						if (dividendMap.containsKey(key)) {
-							Dividend dividend = dividendMap.get(key);
-							dividend.update(activity.credit, activity.debit);
-						} else {
-							Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
-							dividendMap.put(key, dividend);
-						}
+					String key = String.format("%s-%s", activity.date, "____");
+					if (dividendMap.containsKey(key)) {
+						Dividend dividend = dividendMap.get(key);
+						dividend.update(activity.credit, activity.debit);
+					} else {
+						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
+						dividendMap.put(key, dividend);
 					}
 					break;
 				}
@@ -260,102 +249,118 @@ public class Report {
 				}
 			}
 		}
+	}
+	
+	private static void buildTransferSummaryList(String targetYear, Map<String, BuySell> buySellMap, List<Transfer> transferList, List<Summary> summaryList) {
+		Map<String, List<Transfer>> targetTransferMap = new TreeMap<>();
+
+		List<String> keyList = new ArrayList<>();
+		keyList.addAll(buySellMap.keySet());
+		Collections.sort(keyList);
+		for(String key: keyList) {
+			BuySell buySell = buySellMap.get(key);
+			List<Transfer> targetList = new ArrayList<>();
+			String firstDateSell = null;
+			for(List<Transfer> pastTransferList: buySell.past) {
+				// I have interested in transfer record in transferList that sold date in targetYear
+				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+				if (lastTransfer.dateSell.startsWith(targetYear)) {
+					if (firstDateSell == null) firstDateSell = lastTransfer.dateSell;
+					targetList.addAll(pastTransferList);
+					summaryList.add(Summary.getInstance(lastTransfer));
+				}
+			}
+			targetTransferMap.put(String.format("%s-%s", firstDateSell, key), targetList);
+		}
 		
+		// sort summaryList with dateSell
+		Collections.sort(summaryList, (a, b) -> a.dateSell.compareTo(b.dateSell));
+		// build transferList from targetTransferMap
+		for(List<Transfer> e: targetTransferMap.values()) {
+			transferList.addAll(e);
+		}
+
+		}
+	
+	private static void buildDividendList(String targetYear, Map<String, Dividend> dividendMap, List<Dividend> dividendList) {
+		List<String> keyList = new ArrayList<>();
+		keyList.addAll(dividendMap.keySet());
+		Collections.sort(keyList);
+		for(String key: keyList) {
+			Dividend dividend = dividendMap.get(key);
+			if (dividend.date.startsWith(targetYear)) {
+				dividendList.add(dividend);
+			}
+		}
+	}
+	
+	public static void generateReport(String url, String targetYear) {
+		logger.info("url        {}", url);
+		logger.info("targetYear {}", targetYear);
+
+		String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+		logger.info("timeStamp {}", timeStamp);
+		
+		// key is symbol
+		Map<String, BuySell>  buySellMap  = new TreeMap<>();
+		// key is "date-symbol"
+		Map<String, Dividend> dividendMap = new TreeMap<>();
+		
+		List<Transfer> transferList = new ArrayList<>();
+		List<Summary>  summaryList  = new ArrayList<>();
+		List<Dividend> dividendList = new ArrayList<>();
+
+		readActivity(url, buySellMap, dividendMap);
+		
+		buildTransferSummaryList(targetYear, buySellMap, transferList, summaryList);
+		buildDividendList(targetYear, dividendMap, dividendList);
+				
 		{
-			String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
-			logger.info("timeStamp {}", timeStamp);
-			
 			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
 			String urlSave = String.format("file:///home/hasegawa/Dropbox/Trade/REPORT_%s.ods", timeStamp);
 			
-			try (LibreOffice docLoad = new LibreOffice(urlLoad, true)) {
-				{
-					List<Transfer> transferList = new ArrayList<>();
-					// key is "dateSell-symbol"
-					List<Summary> summaryList   = new ArrayList<>();
-					{
-						Map<String, List<Transfer>> targetTransferMap = new TreeMap<>();
-						{
-							List<String> keyList = new ArrayList<>();
-							keyList.addAll(buySellMap.keySet());
-							Collections.sort(keyList);
-							for(String key: keyList) {
-								BuySell buySell = buySellMap.get(key);
-								List<Transfer> targetList = new ArrayList<>();
-								String firstDateSell = null;
-								for(List<Transfer> pastTransferList: buySell.past) {
-									// I have interested in transfer record in transferList that sold date in targetYear
-									Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
-									if (lastTransfer.dateSell.startsWith(targetYear)) {
-										if (firstDateSell == null) firstDateSell = lastTransfer.dateSell;
-										targetList.addAll(pastTransferList);
-										summaryList.add(Summary.getInstance(lastTransfer));
-									}
-								}
-								targetTransferMap.put(String.format("%s-%s", firstDateSell, key), targetList);
-							}
-							
-							// sort summaryList with dateSell
-							Collections.sort(summaryList, (a, b) -> a.dateSell.compareTo(b.dateSell));
-							// build transferList from targetTransferMap
-							for(List<Transfer> e: targetTransferMap.values()) {
-								transferList.addAll(e);
-							}
-							
-							// add remaining equity information
-							// TODO output to another sheet
-//							{
-//								String theDate = "9999-99-99";
-//								double fxRate = Mizuho.getUSD(theDate);
-//								
-//								for(String key: keyList) {
-//									BuySell buySell = buySellMap.get(key);
-//									if (buySell.isAlmostZero()) continue;
-//	
-//									// add dummy sell record
-//									Equity equity = Equity.get(key);
-//									Activity activity = new Activity();
-//									
-//									activity.yyyyMM      = "9999-99";
-//									activity.page        = "99";
-//									activity.transaction = "SOLD";
-//									activity.date        = theDate;
-//									activity.tradeDate   = theDate;
-//									activity.symbol      = buySell.symbol;
-//									activity.name        = buySell.name;
-//									activity.quantity    = buySell.totalQuantity;
-//									activity.price       = equity.price;
-//									activity.commission  = 7;
-//									activity.debit       = 0;
-//									activity.credit      = activity.quantity * activity.price;
-//									
-//									buySell.sell(activity, fxRate);
-//									
-//									transferList.addAll(buySell.past.get(buySell.past.size() - 1));
-//								}
-//							}
-						}
-					}
-					// TODO sheet name should contains target year
-					Sheet.saveSheet(docLoad, Transfer.class, transferList);
-					// TODO sheet name should contains target year
-					Sheet.saveSheet(docLoad, Summary.class, summaryList);
-				}
-				{
-					List<Dividend> dividendList = new ArrayList<>();
-					{
-						List<String> keyList = new ArrayList<>();
-						keyList.addAll(dividendMap.keySet());
-						Collections.sort(keyList);
-						for(String key: keyList) {
-							Dividend dividend = dividendMap.get(key);
-							dividendList.add(dividend);
-						}
-					}
-					Sheet.saveSheet(docLoad, Dividend.class, dividendList);
-				}
-				docLoad.store(urlSave);
+			LibreOffice docLoad = new LibreOffice(urlLoad, true);
+			LibreOffice docSave = LibreOffice.getNewSpreadSheet();
+			
+			{
+				String sheetName = Sheet.getSheetName(Transfer.class);
+				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
+				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
+				Sheet.saveSheet(docSave, Transfer.class, transferList);
+				
+				
+				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
+				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
+				docSave.removeByName(sheetName);
 			}
+			
+			{
+				String sheetName = Sheet.getSheetName(Summary.class);
+				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
+				docSave.importSheet(oldDoc, sheetName, docSave.countSheet());
+				Sheet.saveSheet(docSave, Summary.class, summaryList);
+				
+				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
+				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
+				docSave.removeByName(sheetName);
+			}
+			{
+				String sheetName = Sheet.getSheetName(Dividend.class);
+				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
+				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
+				Sheet.saveSheet(docSave, Dividend.class, dividendList);
+				
+				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
+				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
+				docSave.removeByName(sheetName);
+			}
+			
+			// remove first sheet
+			docSave.removeByName(docSave.getSheetName(0));
+
+			docSave.store(urlSave);
+			
+			docLoad.close();
 		}
 	}
 	
@@ -387,3 +392,36 @@ public class Report {
 		System.exit(0);
 	}
 }
+
+//add remaining equity information
+//TODO output to another sheet
+//		{
+//			String theDate = "9999-99-99";
+//			double fxRate = Mizuho.getUSD(theDate);
+//			
+//			for(String key: keyList) {
+//				BuySell buySell = buySellMap.get(key);
+//				if (buySell.isAlmostZero()) continue;
+//
+//				// add dummy sell record
+//				Equity equity = Equity.get(key);
+//				Activity activity = new Activity();
+//				
+//				activity.yyyyMM      = "9999-99";
+//				activity.page        = "99";
+//				activity.transaction = "SOLD";
+//				activity.date        = theDate;
+//				activity.tradeDate   = theDate;
+//				activity.symbol      = buySell.symbol;
+//				activity.name        = buySell.name;
+//				activity.quantity    = buySell.totalQuantity;
+//				activity.price       = equity.price;
+//				activity.commission  = 7;
+//				activity.debit       = 0;
+//				activity.credit      = activity.quantity * activity.price;
+//				
+//				buySell.sell(activity, fxRate);
+//				
+//				transferList.addAll(buySell.past.get(buySell.past.size() - 1));
+//			}
+//		}

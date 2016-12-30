@@ -53,10 +53,10 @@ public class LibreOffice implements Closeable {
 	
 	private static final Map<CellContentType, String> cellContentTypeMap = new HashMap<>();
 	static {
-		cellContentTypeMap.put(CellContentType.EMPTY, "EMPTY");
+		cellContentTypeMap.put(CellContentType.EMPTY,   "EMPTY");
 		cellContentTypeMap.put(CellContentType.FORMULA, "FORMULA");
-		cellContentTypeMap.put(CellContentType.TEXT, "TEXT");
-		cellContentTypeMap.put(CellContentType.VALUE, "VALUE");
+		cellContentTypeMap.put(CellContentType.TEXT,    "TEXT");
+		cellContentTypeMap.put(CellContentType.VALUE,   "VALUE");
 	}
 	public static String toString(CellContentType type) {
 		String ret = cellContentTypeMap.get(type);
@@ -115,6 +115,10 @@ public class LibreOffice implements Closeable {
 			throw new SecuritiesException("Unexpected component");
 		}
 		return spreadSheets;
+	}
+	public void copyByName(String oldSheetName, String newSheetName, short newSheetPosition) {
+		XSpreadsheets spreadSheets = getSpreadSheets();
+		spreadSheets.copyByName(oldSheetName, newSheetName, newSheetPosition);
 	}
 	public XSpreadsheet getSpreadSheet(String name) {
 		try {

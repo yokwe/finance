@@ -73,7 +73,7 @@ public class Report {
 			}
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			double acquisitionCost = activity.quantity * activity.price + activity.commission;
+			double acquisitionCost = (activity.quantity * activity.price) + activity.commission;
 			int acquisitionCostJPY = (int)Math.round(acquisitionCost * fxRate);
 			totalQuantity           += activity.quantity;
 			totalAcquisitionCost    += acquisitionCost;
@@ -98,22 +98,22 @@ public class Report {
 
 			double acquisitionCost;
 			int    acquisitionCostJPY;
+			
+			double sellRatio = activity.quantity / totalQuantity;
+			acquisitionCost    = totalAcquisitionCost * sellRatio;
+
 			if (buyCount == 1) {
-				double sellRatio = activity.quantity / totalQuantity;
-				acquisitionCost    = totalAcquisitionCost * sellRatio;
 				acquisitionCostJPY = (int)Math.round(totalAcquisitionCostJPY * sellRatio);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity           -= activity.quantity;
 				totalAcquisitionCost    -= acquisitionCost;
 				totalAcquisitionCostJPY -= acquisitionCostJPY;
+				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						activity.tradeDate, symbol, totalQuantity, amountSellJPY, acquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			} else {
-				double sellRatio = activity.quantity / totalQuantity;
-				acquisitionCost    = totalAcquisitionCost * sellRatio;
-
 				double unitCostJPY = Math.ceil(totalAcquisitionCostJPY / totalQuantity); // need to be round up
 				acquisitionCostJPY = (int)Math.round(unitCostJPY * activity.quantity);
 				// need to adjust totalAcquisitionCostJPY

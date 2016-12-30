@@ -328,7 +328,6 @@ public class Report {
 				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
 				Sheet.saveSheet(docSave, Transfer.class, transferList);
 				
-				
 				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
 				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
 				docSave.removeByName(sheetName);

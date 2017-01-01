@@ -147,6 +147,12 @@ public class LibreOffice implements Closeable {
 			throw new SecuritiesException("IndexOutOfBoundsException");
 		}
 	}
+	public void renameSheet(String oldSheetName, String newSheetName) {
+		int index = getSheetIndex(oldSheetName);
+		copyByName(oldSheetName, newSheetName, index);
+		removeByName(oldSheetName);
+	}
+
 	public void copyByName(String oldSheetName, String newSheetName, int newSheetPosition) {
 		XSpreadsheets2 spreadSheets = getSpreadSheets();
 		spreadSheets.copyByName(oldSheetName, newSheetName, (short)newSheetPosition);
@@ -180,9 +186,18 @@ public class LibreOffice implements Closeable {
 			throw new SecuritiesException("WrappedTargetException");
 		}
 	}
-	public int countSheet() {
+	public int getSheetCount() {
 		XIndexAccess indexAccess = UnoRuntime.queryInterface(XIndexAccess.class, getSpreadSheets());
 		return indexAccess.getCount();
+	}
+	public int getSheetIndex(String sheetName) {
+		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSpreadSheets());
+		String[] names = nameAccess.getElementNames();
+		for(int i = 0; i < names.length; i++) {
+			if (names[i].equals(sheetName)) return i;
+		}
+		logger.info("No sheet {}", sheetName);
+		throw new SecuritiesException("No sheet");
 	}
 	public String getSheetName(int index) {
 		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSpreadSheets());

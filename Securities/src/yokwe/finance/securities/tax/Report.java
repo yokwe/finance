@@ -328,20 +328,18 @@ public class Report {
 				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
 				Sheet.saveSheet(docSave, Transfer.class, transferList);
 				
-				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
-				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
-				docSave.removeByName(sheetName);
+				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+				docSave.renameSheet(sheetName, newSheetName);
 			}
 			
 			{
 				String sheetName = Sheet.getSheetName(Summary.class);
 				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
-				docSave.importSheet(oldDoc, sheetName, docSave.countSheet());
+				docSave.importSheet(oldDoc, sheetName, docSave.getSheetCount());
 				Sheet.saveSheet(docSave, Summary.class, summaryList);
 				
-				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
-				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
-				docSave.removeByName(sheetName);
+				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+				docSave.renameSheet(sheetName, newSheetName);
 			}
 			{
 				String sheetName = Sheet.getSheetName(Dividend.class);
@@ -349,9 +347,8 @@ public class Report {
 				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
 				Sheet.saveSheet(docSave, Dividend.class, dividendList);
 				
-				String newSheetName = String.format("%s-%s",  sheetName, targetYear);
-				docSave.copyByName(sheetName, newSheetName, docSave.countSheet());
-				docSave.removeByName(sheetName);
+				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+				docSave.renameSheet(sheetName, newSheetName);
 			}
 			
 			// remove first sheet

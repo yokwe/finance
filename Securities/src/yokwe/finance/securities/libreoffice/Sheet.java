@@ -1,4 +1,4 @@
-package yokwe.finance.securities.tax;
+package yokwe.finance.securities.libreoffice;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,7 +27,6 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 public class Sheet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);

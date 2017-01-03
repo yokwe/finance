@@ -1,5 +1,7 @@
 package yokwe.finance.securities.tax;
 
+import yokwe.finance.securities.libreoffice.Sheet;
+
 @Sheet.SheetName("譲渡明細")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)

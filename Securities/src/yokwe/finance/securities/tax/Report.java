@@ -11,9 +11,9 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.libreoffice.Mizuho;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.Mizuho;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);

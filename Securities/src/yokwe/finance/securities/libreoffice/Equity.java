@@ -1,4 +1,4 @@
-package yokwe.finance.securities.tax;
+package yokwe.finance.securities.libreoffice;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -6,8 +6,6 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.libreoffice.Sheet;
-import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("equityStats-header")
 @Sheet.HeaderRow(0)

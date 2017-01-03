@@ -6,6 +6,7 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("equityStats-header")
 @Sheet.HeaderRow(0)
@@ -65,8 +66,8 @@ public class Equity extends Sheet {
 	
 	static {
 		logger.info("Start load {}", URL_EQUITY);
-		try (LibreOffice libreOffice = new LibreOffice(URL_EQUITY, true)) {
-			for(Equity equity: Sheet.getInstance(libreOffice, Equity.class)) {
+		try (SpreadSheet spreadSheet = new SpreadSheet(URL_EQUITY, true)) {
+			for(Equity equity: Sheet.getInstance(spreadSheet, Equity.class)) {
 				map.put(equity.symbol, equity);
 			}
 		}

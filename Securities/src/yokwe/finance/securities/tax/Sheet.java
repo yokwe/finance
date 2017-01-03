@@ -27,6 +27,7 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 public class Sheet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);
@@ -57,7 +58,7 @@ public class Sheet {
 		String value();
 	}
 	
-	public static <E extends Sheet> List<E> getInstance(LibreOffice libreOffice, Class<E> clazz) {
+	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
@@ -74,7 +75,7 @@ public class Sheet {
 			throw new SecuritiesException("No DataRow annotation");
 		}
 		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
-		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName.value());
+		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName.value());
 		
 		Map<String, Field> fieldMap = new TreeMap<>();
 		for(Field field: clazz.getDeclaredFields()) {
@@ -145,7 +146,7 @@ public class Sheet {
 			List<E> ret = new ArrayList<>();
 
 			int rowFirst = dataRow.value();
-			int rowLast = LibreOffice.getLastDataRow(spreadsheet, 0, rowFirst, 65536);
+			int rowLast = SpreadSheet.getLastDataRow(spreadsheet, 0, rowFirst, 65536);
 			int rowSize = rowLast - rowFirst + 1;
 			// cellRange is [rowFirst..rowLast)
 			logger.info("rowSize [{} .. {}] = {}  colSize {}", rowFirst, rowLast, rowSize, colSize);
@@ -185,7 +186,7 @@ public class Sheet {
 				if (fieldTypeHash == stringHash) {
 					// Convert double value to date string if necessary.
 					XCell   cell         = spreadsheet.getCellByPosition(indexArray[col], rowFirst);
-					String  formatString = libreOffice.getFormatString(cell);
+					String  formatString = spreadSheet.getFormatString(cell);
 					boolean isYYYYMMDD   = formatString.equals("YYYY-MM-DD");
 					if (isYYYYMMDD) {
 						for(int row = 0; row < rowSize; row++) {
@@ -378,13 +379,13 @@ public class Sheet {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-	public static <E extends Sheet> void saveSheet(LibreOffice libreOffice, String sheetName, Class<E> clazz, List<E> dataList) {
-		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName);
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
+		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
 		saveSheet(spreadsheet, clazz, dataList);
 	}
-	public static <E extends Sheet> void saveSheet(LibreOffice libreOffice, Class<E> clazz, List<E> dataList) {
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList) {
 		String sheetName = getSheetName(clazz);
-		XSpreadsheet spreadsheet = libreOffice.getSpreadSheet(sheetName);
+		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
 		saveSheet(spreadsheet, clazz, dataList);
 	}
 }

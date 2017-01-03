@@ -10,9 +10,8 @@ import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
-import com.sun.star.sheet.XSpreadsheetDocument;
-
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -165,7 +164,7 @@ public class Report {
 	
 
 	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap) {
-		try (LibreOffice docActivity = new LibreOffice(url, true)) {
+		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
 				double fxRate = Mizuho.getUSD(activity.date);
@@ -279,8 +278,7 @@ public class Report {
 		for(List<Transfer> e: targetTransferMap.values()) {
 			transferList.addAll(e);
 		}
-
-		}
+	}
 	
 	private static void buildDividendList(String targetYear, Map<String, Dividend> dividendMap, List<Dividend> dividendList) {
 		List<String> keyList = new ArrayList<>();
@@ -319,13 +317,12 @@ public class Report {
 			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
 			String urlSave = String.format("file:///home/hasegawa/Dropbox/Trade/REPORT_%s.ods", timeStamp);
 			
-			LibreOffice docLoad = new LibreOffice(urlLoad, true);
-			LibreOffice docSave = LibreOffice.getNewSpreadSheet();
+			SpreadSheet docLoad = new SpreadSheet(urlLoad, true);
+			SpreadSheet docSave = new SpreadSheet();
 			
 			{
 				String sheetName = Sheet.getSheetName(Transfer.class);
-				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
-				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
+				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 				Sheet.saveSheet(docSave, Transfer.class, transferList);
 				
 				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
@@ -334,8 +331,7 @@ public class Report {
 			
 			{
 				String sheetName = Sheet.getSheetName(Summary.class);
-				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
-				docSave.importSheet(oldDoc, sheetName, docSave.getSheetCount());
+				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 				Sheet.saveSheet(docSave, Summary.class, summaryList);
 				
 				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
@@ -343,8 +339,7 @@ public class Report {
 			}
 			{
 				String sheetName = Sheet.getSheetName(Dividend.class);
-				XSpreadsheetDocument oldDoc = docLoad.getSpreadSheetDocument();
-				docSave.importSheet(oldDoc, sheetName, docSave.getSpreadSheets().getElementNames().length);
+				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 				Sheet.saveSheet(docSave, Dividend.class, dividendList);
 				
 				String newSheetName = String.format("%s-%s",  targetYear, sheetName);
@@ -352,7 +347,7 @@ public class Report {
 			}
 			
 			// remove first sheet
-			docSave.removeByName(docSave.getSheetName(0));
+			docSave.removeSheet(docSave.getSheetName(0));
 
 			docSave.store(urlSave);
 			

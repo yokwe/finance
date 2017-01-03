@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("mizuho-header")
 @Sheet.HeaderRow(0)
@@ -47,8 +48,8 @@ public class Mizuho extends Sheet implements Comparable<Mizuho> {
 	
 	static {
 		logger.info("Start load {}", URL_MIZUHO);
-		try (LibreOffice libreOffice = new LibreOffice(URL_MIZUHO, true)) {
-			for(Mizuho mizuho: Sheet.getInstance(libreOffice, Mizuho.class)) {
+		try (SpreadSheet spreadSheet = new SpreadSheet(URL_MIZUHO, true)) {
+			for(Mizuho mizuho: Sheet.getInstance(spreadSheet, Mizuho.class)) {
 				dateList.add(mizuho.date);
 				mizuhoMap.put(mizuho.date, mizuho);
 			}

@@ -58,7 +58,7 @@ public class SpreadSheet extends LibreOffice {
 	}
 
 	
-	public XSpreadsheetDocument getXSpreadsheetDocument() {
+	private XSpreadsheetDocument getXSpreadsheetDocument() {
 		XSpreadsheetDocument spreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, component);
 		if (spreadsheetDocument == null) {
 			logger.info("component {}", component.toString());

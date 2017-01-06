@@ -5,7 +5,7 @@ import yokwe.finance.securities.libreoffice.Sheet;
 @Sheet.SheetName("譲渡計算明細書")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
-public class Summary extends Sheet {
+public class SummaryJPY extends Sheet {
 	@ColumnName("売約定日")
 	public final String dateSell;
 
@@ -27,7 +27,7 @@ public class Summary extends Sheet {
 	@ColumnName("取得日最後")
 	public final String dateBuyLast;
 	
-	private Summary(Transfer transfer) {
+	private SummaryJPY(TransferJPY transfer) {
 		this.dateSell           = transfer.dateSell;
 		
 		this.symbol             = transfer.symbol;
@@ -41,7 +41,7 @@ public class Summary extends Sheet {
 		this.dateBuyLast        = transfer.dateBuyLast;
 	}
 	
-	public static Summary getInstance(Transfer transfer) {
-		return new Summary(transfer);
+	public static SummaryJPY getInstance(TransferJPY transfer) {
+		return new SummaryJPY(transfer);
 	}
 }

@@ -5,7 +5,7 @@ import yokwe.finance.securities.libreoffice.Sheet;
 @Sheet.SheetName("譲渡明細")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
-public class Transfer extends Sheet {
+public class TransferJPY extends Sheet {
 	@ColumnName("銘柄コード")
 	public final String symbol;
 	@ColumnName("銘柄")
@@ -47,7 +47,7 @@ public class Transfer extends Sheet {
 	@ColumnName("総取得価格")
 	public final String totalAmountBuyJPY;
 	
-	private Transfer(
+	private TransferJPY(
 			String symbol, String symbolName, double quantity,
 			String dateSell, String priceSell, String commissionSell, String fxRateSell, String commissionSellJPY, String amountSellJPY, String acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
 			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY, String totalQuantity, String totalAmountBuyJPY
@@ -75,13 +75,13 @@ public class Transfer extends Sheet {
 		this.totalAmountBuyJPY  = totalAmountBuyJPY;
 	}
 	
-	public static Transfer getInstanceForSellSpecial(
+	public static TransferJPY getInstanceForSellSpecial(
 			String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
 			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY
 			) {
-		return new Transfer(
+		return new TransferJPY(
 				symbol, symbolName, quantity,
 				dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 				String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
@@ -90,7 +90,7 @@ public class Transfer extends Sheet {
 	}
 	
 	// getIntance for sell
-	public static Transfer getInstanceForSell(
+	public static TransferJPY getInstanceForSell(
 			String symbol, String symbolName, double quantity,
 			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
 			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast, double totalQuantity, int totalAcquisitionCostJPY) {
@@ -109,7 +109,7 @@ public class Transfer extends Sheet {
 			totalAmountBuyJPY = String.format("%d", totalAcquisitionCostJPY);
 		}
 
-		return new Transfer(
+		return new TransferJPY(
 			symbol, symbolName, quantity,
 			dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
 			String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
@@ -117,7 +117,7 @@ public class Transfer extends Sheet {
 			);
 	}
 
-	public static Transfer getInstanceForBuy(
+	public static TransferJPY getInstanceForBuy(
 			String symbol, String symbolName, double quantity,
 			String dateBuy, double priceBuy, double commissionBuy, double fxRateBuy,
 			int amountBuyJPY, double totalQuantity, int totalAmountBuyJPY) {
@@ -131,7 +131,7 @@ public class Transfer extends Sheet {
 		String dateBuyFirst       = "";
 		String dateBuyLast        = "";
 		
-		return new Transfer(
+		return new TransferJPY(
 			symbol, symbolName, quantity,
 			dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
 			dateBuy, String.format("%.5f",  priceBuy), String.format("%.2f", commissionBuy), String.format("%.2f", fxRateBuy),

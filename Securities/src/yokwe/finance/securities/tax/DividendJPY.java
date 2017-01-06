@@ -5,7 +5,7 @@ import yokwe.finance.securities.libreoffice.Sheet;
 @Sheet.SheetName("配当明細")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
-public class Dividend extends Sheet {
+public class DividendJPY extends Sheet {
 	@ColumnName("配当年月日")
 	public String date;
 	@ColumnName("銘柄コード")
@@ -26,7 +26,7 @@ public class Dividend extends Sheet {
 	@ColumnName("邦貨外国源泉額")
 	public double taxWithholdingJPY;
 	
-	private Dividend(
+	private DividendJPY(
 			String date, String symbol, String symbolName, String quantity,
 			double dividend, double taxWithholding, double fxRate, double dividendJPY, double taxWithholdingJPY) {
 		this.date              = date;
@@ -48,14 +48,14 @@ public class Dividend extends Sheet {
 		taxWithholdingJPY    = fxRate * this.taxWithholding;
 	}
 
-	public static Dividend getInstance(
+	public static DividendJPY getInstance(
 			String date, String symbol, String symbolName, double quantity,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
+		return new DividendJPY(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
 	}
-	public static Dividend getInstance(
+	public static DividendJPY getInstance(
 			String date,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
+		return new DividendJPY(date, "", "口座利子", "", dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
 	}
 }

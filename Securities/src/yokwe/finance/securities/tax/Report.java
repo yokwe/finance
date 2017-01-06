@@ -33,8 +33,8 @@ public class Report {
 		double totalAcquisitionCost;
 		int    totalAcquisitionCostJPY;
 		
-		List<Transfer>       current;
-		List<List<Transfer>> past;
+		List<TransferJPY>       current;
+		List<List<TransferJPY>> past;
 		
 		public BuySell(String symbol, String name) {
 			this.symbol        = symbol;
@@ -90,7 +90,7 @@ public class Report {
 				return;
 			}
 			
-			Transfer transfer = Transfer.getInstanceForBuy (
+			TransferJPY transfer = TransferJPY.getInstanceForBuy (
 					activity.symbol, activity.name, activity.quantity, activity.tradeDate, activity.price, activity.commission, fxRate,
 					acquisitionCostJPY, totalQuantity, totalAcquisitionCostJPY);
 			current.add(transfer);
@@ -136,8 +136,8 @@ public class Report {
 			// TODO How about buy 1 time and sell more than 1 time?
 			if (buyCount == 1 && current.size() == 1 && isAlmostZero()) {
 				// Special case buy one time and sell whole
-				Transfer buy  = current.remove(0);
-				Transfer transfer = Transfer.getInstanceForSellSpecial(
+				TransferJPY buy  = current.remove(0);
+				TransferJPY transfer = TransferJPY.getInstanceForSellSpecial(
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
@@ -147,7 +147,7 @@ public class Report {
 				past.add(current);
 				current = new ArrayList<>();
 			} else {
-				Transfer transfer = Transfer.getInstanceForSell (
+				TransferJPY transfer = TransferJPY.getInstanceForSell (
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalAcquisitionCostJPY);
@@ -166,7 +166,7 @@ public class Report {
 	}
 	
 
-	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap) {
+	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, DividendJPY> dividendMap) {
 		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
@@ -224,10 +224,10 @@ public class Report {
 					// Create Dividend Record
 					String key = String.format("%s-%s", activity.date, activity.symbol);
 					if (dividendMap.containsKey(key)) {
-						Dividend dividend = dividendMap.get(key);
+						DividendJPY dividend = dividendMap.get(key);
 						dividend.update(activity.credit, activity.debit);
 					} else {
-						Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
+						DividendJPY dividend = DividendJPY.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
 								activity.credit, activity.debit, fxRate);
 						dividendMap.put(key, dividend);
 					}
@@ -237,10 +237,10 @@ public class Report {
 					// Add record to dividendMap that belong target year
 					String key = String.format("%s-%s", activity.date, "____");
 					if (dividendMap.containsKey(key)) {
-						Dividend dividend = dividendMap.get(key);
+						DividendJPY dividend = dividendMap.get(key);
 						dividend.update(activity.credit, activity.debit);
 					} else {
-						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
+						DividendJPY dividend = DividendJPY.getInstance(activity.date, activity.credit, activity.debit, fxRate);
 						dividendMap.put(key, dividend);
 					}
 					break;
@@ -253,18 +253,18 @@ public class Report {
 		}
 	}
 	
-	private static void buildTransferMapSummaryMap(Map<String, BuySell> buySellMap, Map<String, List<Transfer>> transferMap, Map<String, Summary> summaryMap) {
+	private static void buildTransferMapSummaryMap(Map<String, BuySell> buySellMap, Map<String, List<TransferJPY>> transferMap, Map<String, SummaryJPY> summaryMap) {
 		List<String> keyList = new ArrayList<>();
 		keyList.addAll(buySellMap.keySet());
 		Collections.sort(keyList);
 		for(BuySell buySell: buySellMap.values()) {
 			String symbol = buySell.symbol;
 			String firstDateSell = null;
-			for(List<Transfer> pastTransferList: buySell.past) {
-				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+			for(List<TransferJPY> pastTransferList: buySell.past) {
+				TransferJPY lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
 				if (firstDateSell == null) firstDateSell = lastTransfer.dateSell;
 				String key = String.format("%s-%s", lastTransfer.dateSell, symbol);
-				summaryMap.put(key, Summary.getInstance(lastTransfer));
+				summaryMap.put(key, SummaryJPY.getInstance(lastTransfer));
 				transferMap.put(key, pastTransferList);
 			}
 		}
@@ -307,9 +307,9 @@ public class Report {
 		// key is symbol
 		Map<String, BuySell>  buySellMap  = new TreeMap<>();
 		// key is "date-symbol"
-		Map<String, Dividend>       dividendMap = new TreeMap<>();
-		Map<String, List<Transfer>> transferMap = new TreeMap<>();
-		Map<String, Summary>        summaryMap  = new TreeMap<>();
+		Map<String, DividendJPY>       dividendMap = new TreeMap<>();
+		Map<String, List<TransferJPY>> transferMap = new TreeMap<>();
+		Map<String, SummaryJPY>        summaryMap  = new TreeMap<>();
 		
 		readActivity(url, buySellMap, dividendMap);
 		addDummySellActivity(buySellMap);
@@ -339,15 +339,15 @@ public class Report {
 			
 			for(String targetYear: yearList) {
 				{
-					List<Transfer> transferList = new ArrayList<>();
+					List<TransferJPY> transferList = new ArrayList<>();
 					for(String key: transferMap.keySet()) {
 						if (key.startsWith(targetYear)) transferList.addAll(transferMap.get(key));
 					}
 					
 					if (!transferList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Transfer.class);
+						String sheetName = Sheet.getSheetName(TransferJPY.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Transfer.class, transferList);
+						Sheet.saveSheet(docSave, TransferJPY.class, transferList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -356,15 +356,15 @@ public class Report {
 				}
 				
 				{
-					List<Summary> summaryList = new ArrayList<>();
+					List<SummaryJPY> summaryList = new ArrayList<>();
 					for(String key: summaryMap.keySet()) {
 						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
 					}
 
 					if (!summaryList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Summary.class);
+						String sheetName = Sheet.getSheetName(SummaryJPY.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Summary.class, summaryList);
+						Sheet.saveSheet(docSave, SummaryJPY.class, summaryList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -372,15 +372,15 @@ public class Report {
 					}
 				}
 				{
-					List<Dividend> dividendList = new ArrayList<>();
+					List<DividendJPY> dividendList = new ArrayList<>();
 					for(String key: dividendMap.keySet()) {
 						if (key.startsWith(targetYear)) dividendList.add(dividendMap.get(key));
 					}
 
 					if (!dividendList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Dividend.class);
+						String sheetName = Sheet.getSheetName(DividendJPY.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Dividend.class, dividendList);
+						Sheet.saveSheet(docSave, DividendJPY.class, dividendList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);

@@ -73,7 +73,7 @@ public class Sheet {
 			logger.error("No DataRow annotation = {}", clazz.getName());
 			throw new SecuritiesException("No DataRow annotation");
 		}
-		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
+//		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
 		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName.value());
 		
 		Map<String, Field> fieldMap = new TreeMap<>();
@@ -303,7 +303,7 @@ public class Sheet {
 			logger.error("No DataRow annotation = {}", clazz.getName());
 			throw new SecuritiesException("No DataRow annotation");
 		}
-		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
+		//logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
 		
 		// Insertion order is important, So we use LinkedHashMap instead of HashMap
 		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }

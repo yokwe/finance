@@ -15,6 +15,9 @@ import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.Mizuho;
 
+
+// TODO report profit loss of each year like evaluation sheet
+
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
 	

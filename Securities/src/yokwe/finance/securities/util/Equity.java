@@ -75,6 +75,11 @@ public class Equity extends Sheet {
 		logger.info("map {}", map.size());
 	}
 	
+	public static boolean contains(String symbol) {
+		String newSymbol = symbol.replace(".PR.", "-");
+		return map.containsKey(newSymbol);
+	}
+	
 	public static Equity get(String symbol) {
 		// special handling for preferred stock symbol
 		String newSymbol = symbol.replace(".PR.", "-");

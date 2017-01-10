@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
-import yokwe.finance.securities.util.Equity;
 import yokwe.finance.securities.util.Mizuho;
 
 public class Report {
@@ -293,15 +292,13 @@ public class Report {
 			if (buySell.isAlmostZero()) continue;
 			
 			// Get latest price of symbol
-			if (!Equity.contains(buySell.symbol)) {
-				logger.warn("No such symbol in equity  {}", buySell.symbol);
-				continue;
-			}
-			Equity equity = Equity.get(buySell.symbol);
+//			logger.info("symbol {}", buySell.symbol);
+			Price price = Price.getPrice(buySell.symbol);
+			logger.info("price {}", price);
 
 			// Add record to evaluationList
 			Evaluation evaluation = new Evaluation(buySell.symbol, buySell.name, buySell.totalQuantity, 
-					buySell.totalCost, equity.price * buySell.totalQuantity + 7, buySell.totalDividend);
+					buySell.totalCost, price.close * buySell.totalQuantity + 7, buySell.totalDividend);
 			
 			evalutationList.add(evaluation);
 
@@ -315,7 +312,7 @@ public class Report {
 			activity.symbol      = buySell.symbol;
 			activity.name        = buySell.name;
 			activity.quantity    = buySell.totalQuantity;
-			activity.price       = equity.price;
+			activity.price       = price.close;
 			activity.commission  = 7;
 			activity.debit       = 0;
 			activity.credit      = activity.quantity * activity.price;

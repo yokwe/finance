@@ -30,36 +30,32 @@ public class Report {
 		String dateBuyLast;
 
 		double totalQuantity;
-		double totalAcquisitionCost;
-		int    totalAcquisitionCostJPY;
+		double totalCost;
+		int    totalCostJPY;
+		double totalDividend;
 		
 		List<Transfer>       current;
 		List<List<Transfer>> past;
 		
 		public BuySell(String symbol, String name) {
-			this.symbol        = symbol;
-			this.name          = name;
-			
-			buyCount           = 0;
-			dateBuyFirst       = "";
-			dateBuyLast        = "";
-			
-			totalQuantity           = 0;
-			totalAcquisitionCost    = 0;
-			totalAcquisitionCostJPY = 0;
-			
-			current            = new ArrayList<>();
-			past               = new ArrayList<>();
+			this.symbol = symbol;
+			this.name   = name;
+
+			current     = new ArrayList<>();
+			past        = new ArrayList<>();
+
+			reset();
 		}
 		
 		void reset() {
-			buyCount           = 0;
-			dateBuyFirst       = "";
-			dateBuyLast        = "";
+			buyCount      = 0;
+			dateBuyFirst  = "";
+			dateBuyLast   = "";
 			
-			totalQuantity           = 0;
-			totalAcquisitionCost    = 0;
-			totalAcquisitionCostJPY = 0;
+			totalQuantity = 0;
+			totalCost     = 0;
+			totalCostJPY  = 0;
+			totalDividend = 0;
 			
 			// TODO Is this correct/
 //			if (0 < current.size()) {
@@ -80,8 +76,8 @@ public class Report {
 			double acquisitionCost = (activity.quantity * activity.price) + activity.commission;
 			int acquisitionCostJPY = (int)Math.round(acquisitionCost * fxRate);
 			totalQuantity           += activity.quantity;
-			totalAcquisitionCost    += acquisitionCost;
-			totalAcquisitionCostJPY += acquisitionCostJPY;
+			totalCost    += acquisitionCost;
+			totalCostJPY += acquisitionCostJPY;
 
 			// special case for negative buy -- for TAL name change
 			// TODO is this correct?
@@ -92,7 +88,7 @@ public class Report {
 			
 			Transfer transfer = Transfer.getInstanceForBuy (
 					activity.symbol, activity.name, activity.quantity, activity.tradeDate, activity.price, activity.commission, fxRate,
-					acquisitionCostJPY, totalQuantity, totalAcquisitionCostJPY);
+					acquisitionCostJPY, totalQuantity, totalCostJPY);
 			current.add(transfer);
 		}
 		void sell(Activity activity, double fxRate) {
@@ -104,33 +100,33 @@ public class Report {
 			int    acquisitionCostJPY;
 			
 			double sellRatio = activity.quantity / totalQuantity;
-			acquisitionCost    = totalAcquisitionCost * sellRatio;
+			acquisitionCost    = totalCost * sellRatio;
 
 			if (buyCount == 1) {
-				acquisitionCostJPY = (int)Math.round(totalAcquisitionCostJPY * sellRatio);
+				acquisitionCostJPY = (int)Math.round(totalCostJPY * sellRatio);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity           -= activity.quantity;
-				totalAcquisitionCost    -= acquisitionCost;
-				totalAcquisitionCostJPY -= acquisitionCostJPY;
+				totalCost    -= acquisitionCost;
+				totalCostJPY -= acquisitionCostJPY;
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						activity.tradeDate, symbol, totalQuantity, amountSellJPY, acquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			} else {
-				double unitCostJPY = Math.ceil(totalAcquisitionCostJPY / totalQuantity); // need to be round up
+				double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up
 				acquisitionCostJPY = (int)Math.round(unitCostJPY * activity.quantity);
 				// need to adjust totalAcquisitionCostJPY
-				totalAcquisitionCostJPY = (int)Math.round(unitCostJPY * totalQuantity);
+				totalCostJPY = (int)Math.round(unitCostJPY * totalQuantity);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity           -= activity.quantity;
-				totalAcquisitionCost    -= acquisitionCost;
-				totalAcquisitionCostJPY -= acquisitionCostJPY;
+				totalCost    -= acquisitionCost;
+				totalCostJPY -= acquisitionCostJPY;
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
-						activity.tradeDate, symbol, totalQuantity, amountSellJPY, totalAcquisitionCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
+						activity.tradeDate, symbol, totalQuantity, amountSellJPY, totalCostJPY, commisionSellJPY, dateBuyFirst, dateBuyLast));
 			}
 
 			// TODO How about buy 1 time and sell more than 1 time?
@@ -150,7 +146,7 @@ public class Report {
 				Transfer transfer = Transfer.getInstanceForSell (
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
-						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalAcquisitionCostJPY);
+						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalCostJPY);
 				current.add(transfer);
 				past.add(current);
 				current = new ArrayList<>();
@@ -159,6 +155,9 @@ public class Report {
 			if (isAlmostZero()) {
 				reset();
 			}
+		}
+		void dividend(Activity activity) {
+			this.totalDividend += activity.credit - activity.debit;
 		}
 		boolean isAlmostZero() {
 			return Math.abs(totalQuantity) < ALMOST_ZERO;
@@ -222,15 +221,31 @@ public class Report {
 				case "CAP GAIN": {
 					// Add record to dividendMap that belong target year
 					// Create Dividend Record
-					String key = String.format("%s-%s", activity.date, activity.symbol);
-					if (dividendMap.containsKey(key)) {
-						Dividend dividend = dividendMap.get(key);
-						dividend.update(activity.credit, activity.debit);
-					} else {
-						Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
-								activity.credit, activity.debit, fxRate);
-						dividendMap.put(key, dividend);
+					{
+						String key = String.format("%s-%s", activity.date, activity.symbol);
+						if (dividendMap.containsKey(key)) {
+							Dividend dividend = dividendMap.get(key);
+							dividend.update(activity.credit, activity.debit);
+						} else {
+							Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
+									activity.credit, activity.debit, fxRate);
+							dividendMap.put(key, dividend);
+						}
 					}
+					
+					// Add dividend for the symbol
+					{
+						String key = activity.symbol;
+						BuySell buySell;
+						if (buySellMap.containsKey(key)) {
+							buySell = buySellMap.get(key);
+						} else {
+							buySell = new BuySell(activity.symbol, activity.name);
+							buySellMap.put(key, buySell);
+						}
+						buySell.dividend(activity);
+					}
+
 					break;
 				}
 				case "INTEREST": {
@@ -270,17 +285,28 @@ public class Report {
 		}
 	}
 	
-	private static void addDummySellActivity(Map<String, BuySell> buySellMap) {
+	private static void addDummySellActivity(Map<String, BuySell> buySellMap, List<Evaluation> evalutationList) {
 		String theDate = "9999-99-99";
 		double fxRate = Mizuho.getUSD(theDate);
 		
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;
 			
-			// add dummy sell record
+			// Get latest price of symbol
+			if (!Equity.contains(buySell.symbol)) {
+				logger.warn("No such symbol in equity  {}", buySell.symbol);
+				continue;
+			}
 			Equity equity = Equity.get(buySell.symbol);
-			Activity activity = new Activity();
+
+			// Add record to evaluationList
+			Evaluation evaluation = new Evaluation(buySell.symbol, buySell.name, buySell.totalQuantity, 
+					buySell.totalCost, equity.price * buySell.totalQuantity + 7, buySell.totalDividend);
 			
+			evalutationList.add(evaluation);
+
+			// Add dummy sell record
+			Activity activity = new Activity();
 			activity.yyyyMM      = "9999-99";
 			activity.page        = "99";
 			activity.transaction = "SOLD";
@@ -293,7 +319,7 @@ public class Report {
 			activity.commission  = 7;
 			activity.debit       = 0;
 			activity.credit      = activity.quantity * activity.price;
-			
+						
 			buySell.sell(activity, fxRate);
 		}
 	}
@@ -310,9 +336,10 @@ public class Report {
 		Map<String, Dividend>       dividendMap = new TreeMap<>();
 		Map<String, List<Transfer>> transferMap = new TreeMap<>();
 		Map<String, Summary>        summaryMap  = new TreeMap<>();
+		List<Evaluation>			evaluationList = new ArrayList<>();
 		
 		readActivity(url, buySellMap, dividendMap);
-		addDummySellActivity(buySellMap);
+		addDummySellActivity(buySellMap, evaluationList);
 		
 		buildTransferMapSummaryMap(buySellMap, transferMap, summaryMap);
 		
@@ -387,7 +414,18 @@ public class Report {
 						docSave.renameSheet(sheetName, newSheetName);
 					}
 				}
-
+			}
+			
+			{
+				if (!evaluationList.isEmpty()) {
+					String sheetName = Sheet.getSheetName(Evaluation.class);
+					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+					Sheet.saveSheet(docSave, Evaluation.class, evaluationList);
+					
+					String newSheetName = String.format("%s-%s",  "9999", sheetName);
+					logger.info("sheet {}", newSheetName);
+					docSave.renameSheet(sheetName, newSheetName);
+				}
 			}
 						
 			// remove first sheet
@@ -425,36 +463,3 @@ public class Report {
 		System.exit(0);
 	}
 }
-
-//add remaining equity information
-//TODO output to another sheet
-//		{
-//			String theDate = "9999-99-99";
-//			double fxRate = Mizuho.getUSD(theDate);
-//			
-//			for(String key: keyList) {
-//				BuySell buySell = buySellMap.get(key);
-//				if (buySell.isAlmostZero()) continue;
-//
-//				// add dummy sell record
-//				Equity equity = Equity.get(key);
-//				Activity activity = new Activity();
-//				
-//				activity.yyyyMM      = "9999-99";
-//				activity.page        = "99";
-//				activity.transaction = "SOLD";
-//				activity.date        = theDate;
-//				activity.tradeDate   = theDate;
-//				activity.symbol      = buySell.symbol;
-//				activity.name        = buySell.name;
-//				activity.quantity    = buySell.totalQuantity;
-//				activity.price       = equity.price;
-//				activity.commission  = 7;
-//				activity.debit       = 0;
-//				activity.credit      = activity.quantity * activity.price;
-//				
-//				buySell.sell(activity, fxRate);
-//				
-//				transferList.addAll(buySell.past.get(buySell.past.size() - 1));
-//			}
-//		}

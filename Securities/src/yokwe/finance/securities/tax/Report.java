@@ -339,6 +339,9 @@ public class Report {
 						
 			buySell.sell(activity, fxRate);
 		}
+		
+		// Save cache for later use
+		Price.saveCache();
 	}
 
 	public static void generateReport(String url) {

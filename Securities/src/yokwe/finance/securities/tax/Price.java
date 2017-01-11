@@ -89,9 +89,15 @@ public class Price {
 			validatePriceCache(DATE_TARGET.toString());		
 			
 			if (priceCache.isEmpty()) {
-				List<Price> priceList = getPriceList(SYMBOL_LIST, DATE_TARGET.minusDays(5), DATE_TARGET);
+				// Build priceList from SYMBOL_LIST
+				List<Price> priceList = new ArrayList<>();
+				for(String symbol: SYMBOL_LIST) {
+					Price price = getLastPrice(symbol, DATE_TARGET.minusDays(5), DATE_TARGET);
+					priceList.add(price);
+				}
 				String date = priceList.get(0).date;
 				
+				// Sanity check
 				for(Price price: priceList) {
 					if (!price.date.equals(date)) {
 						logger.error("Inconsistent date");
@@ -105,6 +111,7 @@ public class Price {
 				}
 				LAST_TRADING_DATE = LocalDate.parse(date);
 				
+				needSave = true;
 				savePriceCache();
 			} else {
 				LAST_TRADING_DATE = DATE_TARGET;
@@ -112,7 +119,7 @@ public class Price {
 			logger.info("LAST_TRADING_DATE {}", LAST_TRADING_DATE);
 		}
 		
-		private static Price getPrice(String symbol, LocalDate startDate, LocalDate endDate) {
+		private static Price getLastPrice(String symbol, LocalDate startDate, LocalDate endDate) {
 			String dateFrom = startDate.format(DATE_FORMAT_URL).replace(" ", "%20");
 			String dateTo   = endDate.format(DATE_FORMAT_URL).replace(" ", "%20");
 
@@ -177,22 +184,12 @@ public class Price {
 			return ret;
 		}
 
-		// Uncached version
-		private static List<Price> getPriceList(List<String> symbolList, LocalDate startDate, LocalDate endDate) {
-			List<Price> priceList = new ArrayList<>();
-			for(String symbol: symbolList) {
-				Price price = getPrice(symbol, startDate, endDate);
-				priceList.add(price);
-			}
-			return priceList;
-		}
-		
 		public static Price getLastPrice(String symbol) {
 			Price price;
 			if (priceCache.containsKey(symbol)) {
 				price = priceCache.get(symbol);
 			} else {
-				price = getPrice(symbol, DATE_TARGET.minusDays(5), DATE_TARGET);
+				price = getLastPrice(symbol, DATE_TARGET.minusDays(5), DATE_TARGET);
 				
 				if (!price.date.equals(LAST_TRADING_DATE.toString())) {
 					logger.error("Inconsistent date");
@@ -201,18 +198,8 @@ public class Price {
 				}
 				priceCache.put(symbol, price);
 				needSave = true;
-				logger.info("add {}", price);
 			}
 			return price;
-		}
-		
-		public static List<Price> getLastPriceList(List<String> symbolList) {
-			List<Price> priceList = new ArrayList<>();
-			for(String symbol: symbolList) {
-				Price price = getLastPrice(symbol);
-				priceList.add(price);
-			}
-			return priceList;
 		}
 	}
 	
@@ -224,7 +211,12 @@ public class Price {
 		return Cache.getLastPrice(symbol);
 	}
 	public static List<Price> getLastPriceList(List<String> symbolList) {
-		return Cache.getLastPriceList(symbolList);
+		List<Price> priceList = new ArrayList<>();
+		for(String symbol: symbolList) {
+			Price price = Cache.getLastPrice(symbol);
+			priceList.add(price);
+		}
+		return priceList;
 	}
 	
 	public String symbol;

@@ -296,7 +296,7 @@ public class Report {
 			
 			// Get latest price of symbol
 //			logger.info("symbol {}", buySell.symbol);
-			Price price = Price.getPrice(buySell.symbol);
+			Price price = Price.getLastPrice(buySell.symbol);
 			logger.info("price {}", price);
 
 			// Add record to evaluationList

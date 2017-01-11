@@ -167,7 +167,7 @@ public class Report {
 	}
 	
 
-	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap) {
+	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap, Map<String, Evaluation> evaluationMap) {
 		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
@@ -212,6 +212,20 @@ public class Report {
 						buySell = new BuySell(activity.symbol, activity.name);
 						buySellMap.put(key, buySell);
 					}
+					
+					
+					// Add record to evaluationList
+					{
+						double sellRatio = activity.quantity / buySell.totalQuantity;
+						double cost      = buySell.totalCost * sellRatio;
+						
+						Evaluation evaluation = new Evaluation(buySell.symbol, buySell.name, activity.quantity, 
+								cost, activity.credit, buySell.totalDividend);
+						
+						String k = String.format("%s-%s", activity.date, buySell.symbol);
+						evaluationMap.put(k, evaluation);
+					}
+
 					buySell.sell(activity, fxRate);
 					break;
 				}
@@ -287,7 +301,7 @@ public class Report {
 		}
 	}
 	
-	private static void addDummySellActivity(Map<String, BuySell> buySellMap, List<Evaluation> evalutationList) {
+	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, Evaluation> evalutationList) {
 		String theDate = "9999-99-99";
 		double fxRate = Mizuho.getUSD(theDate);
 		
@@ -300,10 +314,13 @@ public class Report {
 			logger.info("price {}", price);
 
 			// Add record to evaluationList
-			Evaluation evaluation = new Evaluation(buySell.symbol, buySell.name, buySell.totalQuantity, 
-					buySell.totalCost, price.close * buySell.totalQuantity + 7, buySell.totalDividend);
-			
-			evalutationList.add(evaluation);
+			{
+				Evaluation evaluation = new Evaluation(buySell.symbol, buySell.name, buySell.totalQuantity, 
+						buySell.totalCost, price.close * buySell.totalQuantity + 7, buySell.totalDividend);
+				
+				String key = String.format("%s-%s", theDate, buySell.symbol);
+				evalutationList.put(key, evaluation);
+			}
 
 			// Add dummy sell record
 			Activity activity = new Activity();
@@ -333,13 +350,13 @@ public class Report {
 		// key is symbol
 		Map<String, BuySell>  buySellMap  = new TreeMap<>();
 		// key is "date-symbol"
-		Map<String, Dividend>       dividendMap = new TreeMap<>();
-		Map<String, List<Transfer>> transferMap = new TreeMap<>();
-		Map<String, Summary>        summaryMap  = new TreeMap<>();
-		List<Evaluation>			evaluationList = new ArrayList<>();
+		Map<String, Dividend>       dividendMap   = new TreeMap<>();
+		Map<String, List<Transfer>> transferMap   = new TreeMap<>();
+		Map<String, Summary>        summaryMap    = new TreeMap<>();
+		Map<String, Evaluation>	    evaluationMap = new TreeMap<>();
 		
-		readActivity(url, buySellMap, dividendMap);
-		addDummySellActivity(buySellMap, evaluationList);
+		readActivity(url, buySellMap, dividendMap, evaluationMap);
+		addDummySellActivity(buySellMap, evaluationMap);
 		
 		buildTransferMapSummaryMap(buySellMap, transferMap, summaryMap);
 		
@@ -414,17 +431,22 @@ public class Report {
 						docSave.renameSheet(sheetName, newSheetName);
 					}
 				}
-			}
-			
-			{
-				if (!evaluationList.isEmpty()) {
-					String sheetName = Sheet.getSheetName(Evaluation.class);
-					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-					Sheet.saveSheet(docSave, Evaluation.class, evaluationList);
-					
-					String newSheetName = String.format("%s-%s",  "9999", sheetName);
-					logger.info("sheet {}", newSheetName);
-					docSave.renameSheet(sheetName, newSheetName);
+				
+				{
+					List<Evaluation> evaluationList = new ArrayList<>();
+					for(String key: evaluationMap.keySet()) {
+						if (key.startsWith(targetYear)) evaluationList.add(evaluationMap.get(key));
+					}
+
+					if (!evaluationList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(Evaluation.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.saveSheet(docSave, Evaluation.class, evaluationList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
 				}
 			}
 						

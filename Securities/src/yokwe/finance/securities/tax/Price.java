@@ -19,34 +19,47 @@ import yokwe.finance.securities.util.NasdaqUtil;
 
 public class Price {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Price.class);
+	
+	private static final List<String> SYMBOL_LIST = Arrays.asList("BT", "CSCO", "INTC");
+	
+	private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
+	private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
+	private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	
+	private static final LocalDate TODAY = LocalDate.now(ZoneId.of("America/New_York"));
+	
+	private static final Map<String, Price>       priceCache = new TreeMap<>();
+	private static final Map<String, NasdaqTable> nasdaqMap  = NasdaqUtil.getMap();
 
-	private static final ZoneId ZONEID_NEW_YORK = ZoneId.of("America/New_York");
+	private static final LocalDate LAST_TRADING_DATE;
+	static {
+		List<Price> priceList = getPriceList(SYMBOL_LIST, TODAY.minusDays(5), TODAY);
+		String date = priceList.get(0).date;
+		
+		for(Price price: priceList) {
+			if (!price.date.equals(date)) {
+				logger.error("Inconsistent date");
+				for(Price e: priceList) {
+					logger.error("{} {}", e.symbol, e.date);
+				}
+				throw new SecuritiesException("Inconsistent date");
+			}
+			// Fill cache for later use
+			priceCache.put(price.symbol, price);
+		}
+		LAST_TRADING_DATE = LocalDate.parse(date);
+		logger.info("LAST_TRADING_DATE {}", LAST_TRADING_DATE);
+	}
 	
-	private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
-
-	private static final Map<String, NasdaqTable> nasdaqMap = NasdaqUtil.getMap();
-	
-	private static final int THIS_YEAR = LocalDate.now().getYear();
-	private static final DateTimeFormatter PARSE_DATE  = DateTimeFormatter.ofPattern("d-MMM-yy");
-	private static final DateTimeFormatter FORMAT_DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	
-	private static final LocalDate DATE_TO   = LocalDate.now(ZONEID_NEW_YORK);
-	private static final LocalDate DATE_FROM = DATE_TO.minusDays(5);
-	
-	private static final String START_DATE = DATE_FROM.format(dateFormatter).replace(" ", "%20");
-	private static final String END_DATE   = DATE_TO.format(dateFormatter).replace(" ", "%20");
-	
-	private static final Map<String, Price> priceMap = new TreeMap<>();
-
-
-	private static Price getPrice(String symbol, String startdate, String enddate) {
+	private static Price getPrice(String symbol, LocalDate startDate, LocalDate endDate) {
 		// Convert to '-' style naming from '.PR.' for preferred stock
 		if (symbol.contains(".PR.")) symbol = symbol.replace(".PR.", "-");
 
-		if (priceMap.containsKey(symbol)) return priceMap.get(symbol);
+		String dateFrom = startDate.format(DATE_FORMAT_URL).replace(" ", "%20");
+		String dateTo   = endDate.format(DATE_FORMAT_URL).replace(" ", "%20");
 
 		NasdaqTable nasdaq = nasdaqMap.get(symbol);
-		String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, startdate, enddate);
+		String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
 //		logger.info("url {}", url);
 		
 		String content = HttpUtil.downloadAsString(url);
@@ -73,9 +86,9 @@ public class Price {
 		// Fix format of date  02-Jan-14 => 2014-01-02
 		// Fix year of date    02-Jan-80 => 1980-01-02
 		{
-			LocalDate localDate = LocalDate.from(PARSE_DATE.parse(values[0]));
-			if (THIS_YEAR < localDate.getYear()) localDate = localDate.minusYears(100);
-			values[0] = FORMAT_DATE.format(localDate);
+			LocalDate localDate = LocalDate.from(DATE_FORMAT_PARSE.parse(values[0]));
+			if (TODAY.getYear() < localDate.getYear()) localDate = localDate.minusYears(100);
+			values[0] = DATE_FORMAT_FORMAT.format(localDate);
 		}
 		
 		// Special when field (open, high and low) contains dash
@@ -102,35 +115,43 @@ public class Price {
 		long   volume = Long.valueOf(values[5]);
 		
 		Price ret = new Price(symbol, date, open, high, low, close, volume);
-		priceMap.put(symbol, ret);
 		return ret;
 	}
-	
-	public static Price getPrice(String symbol) {
-		return getPrice(symbol, START_DATE, END_DATE);
-	}
-	
-	private static List<Price> getPriceList(List<String> symbolList, String startdate, String enddate) {
+
+	// Uncached version
+	private static List<Price> getPriceList(List<String> symbolList, LocalDate startDate, LocalDate endDate) {
 		List<Price> priceList = new ArrayList<>();
 		for(String symbol: symbolList) {
-			Price price = getPrice(symbol, startdate, enddate);
+			Price price = getPrice(symbol, startDate, endDate);
 			priceList.add(price);
 		}
-		
-		// Sanity check
-		String date = priceList.get(0).date;
-		for(Price price: priceList) {
-			if (!price.date.equals(date)) {
-				logger.error("Unexpected date {}  {}", date, price.toString());
-				throw new SecuritiesException("Unexpected date");
-			}
-		}
-		
 		return priceList;
 	}
 	
-	public static List<Price> getPriceList(List<String> symbolList) {
-		return getPriceList(symbolList, START_DATE, END_DATE);
+	public static Price getLastPrice(String symbol) {
+		Price price;
+		if (priceCache.containsKey(symbol)) {
+			price = priceCache.get(symbol);
+		} else {
+			price = getPrice(symbol, TODAY.minusDays(5), TODAY);
+			
+			if (!price.date.equals(LAST_TRADING_DATE.toString())) {
+				logger.error("Inconsistent date");
+				logger.error("{} {}", price.symbol, price.date);
+				throw new SecuritiesException("Inconsistent date");
+			}
+			priceCache.put(symbol, price);
+		}
+		return price;
+	}
+	
+	public static List<Price> getLastPriceList(List<String> symbolList) {
+		List<Price> priceList = new ArrayList<>();
+		for(String symbol: symbolList) {
+			Price price = getLastPrice(symbol);
+			priceList.add(price);
+		}
+		return priceList;
 	}
 	
 	
@@ -163,7 +184,7 @@ public class Price {
 		
 		List<String> symbolList = Arrays.asList("IBM", "NYT", "PEP");
 		
-		List<Price> priceList = getPriceList(symbolList);
+		List<Price> priceList = getLastPriceList(symbolList);
 		for(Price price: priceList) {
 			logger.info("price  {}", price.toString());
 		}

@@ -27,7 +27,7 @@ public class Summary extends Sheet {
 	@ColumnName("取得日最後")
 	public final String dateBuyLast;
 	
-	private Summary(Transfer transfer) {
+	private Summary(TransferDetail transfer) {
 		this.dateSell           = transfer.dateSell;
 		
 		this.symbol             = transfer.symbol;
@@ -41,7 +41,7 @@ public class Summary extends Sheet {
 		this.dateBuyLast        = transfer.dateBuyLast;
 	}
 	
-	public static Summary getInstance(Transfer transfer) {
+	public static Summary getInstance(TransferDetail transfer) {
 		return new Summary(transfer);
 	}
 }

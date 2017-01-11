@@ -36,8 +36,8 @@ public class Report {
 		int    totalCostJPY;
 		double totalDividend;
 		
-		List<Transfer>       current;
-		List<List<Transfer>> past;
+		List<TransferDetail>       current;
+		List<List<TransferDetail>> past;
 		
 		public BuySell(String symbol, String name) {
 			this.symbol = symbol;
@@ -88,7 +88,7 @@ public class Report {
 				return;
 			}
 			
-			Transfer transfer = Transfer.getInstanceForBuy (
+			TransferDetail transfer = TransferDetail.getInstanceForBuy (
 					activity.symbol, activity.name, activity.quantity, activity.tradeDate, activity.price, activity.commission, fxRate,
 					acquisitionCostJPY, totalQuantity, totalCostJPY);
 			current.add(transfer);
@@ -134,8 +134,8 @@ public class Report {
 			// TODO How about buy 1 time and sell more than 1 time?
 			if (buyCount == 1 && current.size() == 1 && isAlmostZero()) {
 				// Special case buy one time and sell whole
-				Transfer buy  = current.remove(0);
-				Transfer transfer = Transfer.getInstanceForSellSpecial(
+				TransferDetail buy  = current.remove(0);
+				TransferDetail transfer = TransferDetail.getInstanceForSellSpecial(
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
@@ -145,7 +145,7 @@ public class Report {
 				past.add(current);
 				current = new ArrayList<>();
 			} else {
-				Transfer transfer = Transfer.getInstanceForSell (
+				TransferDetail transfer = TransferDetail.getInstanceForSell (
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast, totalQuantity, totalCostJPY);
@@ -284,15 +284,15 @@ public class Report {
 		}
 	}
 	
-	private static void buildTransferMapSummaryMap(Map<String, BuySell> buySellMap, Map<String, List<Transfer>> transferMap, Map<String, Summary> summaryMap) {
+	private static void buildTransferMapSummaryMap(Map<String, BuySell> buySellMap, Map<String, List<TransferDetail>> transferMap, Map<String, Summary> summaryMap) {
 		List<String> keyList = new ArrayList<>();
 		keyList.addAll(buySellMap.keySet());
 		Collections.sort(keyList);
 		for(BuySell buySell: buySellMap.values()) {
 			String symbol = buySell.symbol;
 			String firstDateSell = null;
-			for(List<Transfer> pastTransferList: buySell.past) {
-				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+			for(List<TransferDetail> pastTransferList: buySell.past) {
+				TransferDetail lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
 				if (firstDateSell == null) firstDateSell = lastTransfer.dateSell;
 				String key = String.format("%s-%s", lastTransfer.dateSell, symbol);
 				summaryMap.put(key, Summary.getInstance(lastTransfer));
@@ -354,7 +354,7 @@ public class Report {
 		Map<String, BuySell>  buySellMap  = new TreeMap<>();
 		// key is "date-symbol"
 		Map<String, Dividend>       dividendMap   = new TreeMap<>();
-		Map<String, List<Transfer>> transferMap   = new TreeMap<>();
+		Map<String, List<TransferDetail>> transferMap   = new TreeMap<>();
 		Map<String, Summary>        summaryMap    = new TreeMap<>();
 		Map<String, Evaluation>	    evaluationMap = new TreeMap<>();
 		
@@ -386,15 +386,15 @@ public class Report {
 			
 			for(String targetYear: yearList) {
 				{
-					List<Transfer> transferList = new ArrayList<>();
+					List<TransferDetail> transferList = new ArrayList<>();
 					for(String key: transferMap.keySet()) {
 						if (key.startsWith(targetYear)) transferList.addAll(transferMap.get(key));
 					}
 					
 					if (!transferList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Transfer.class);
+						String sheetName = Sheet.getSheetName(TransferDetail.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Transfer.class, transferList);
+						Sheet.saveSheet(docSave, TransferDetail.class, transferList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);

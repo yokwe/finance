@@ -78,6 +78,9 @@ public class CSVUtil {
 					case "long":
 						fields[i].setLong(data, Long.valueOf(value));
 						break;
+					case "double":
+						fields[i].setDouble(data, Double.valueOf(value));
+						break;
 					case "boolean":
 						fields[i].setBoolean(data, Boolean.valueOf(value));
 						break;
@@ -136,6 +139,9 @@ public class CSVUtil {
 						break;
 					case "long":
 						fields[i].setLong(data, Long.valueOf(value));
+						break;
+					case "double":
+						fields[i].setDouble(data, Double.valueOf(value));
 						break;
 					case "boolean":
 						fields[i].setBoolean(data, Boolean.valueOf(value));

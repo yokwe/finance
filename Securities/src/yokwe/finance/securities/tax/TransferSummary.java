@@ -1,43 +1,63 @@
 package yokwe.finance.securities.tax;
 
 import yokwe.finance.securities.libreoffice.Sheet;
-import yokwe.finance.securities.libreoffice.Sheet.ColumnName;
 
 @Sheet.SheetName("譲渡サマリー")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
-public class TransferSummary {
+public class TransferSummary extends Sheet {
 	@ColumnName("売約定日")
-	public String dateSell;
+	public final String dateSell;
 
 	@ColumnName("銘柄コード")
-	public String symbol;
+	public final String symbol;
 	@ColumnName("銘柄")
-	public String symbolName;
+	public final String name;
 	@ColumnName("数量")
-	public double quantity;
+	public final double quantity;
 
 	@ColumnName("譲渡金額")
-	public double sellJPY;
+	public final double sellJPY;
 	@ColumnName("取得費")
-	public double buyJPY;
+	public final double costJPY;
 	@ColumnName("譲渡手数料")
-	public double feeJPY;
+	public final double feeJPY;
 	@ColumnName("利益")
-	public double profitJPY;
+	public final double profitJPY;
 	@ColumnName("取得日最初")
-	public String dateBuyFirst;
+	public final String dateBuyFirst;
 	@ColumnName("取得日最後")
-	public String dateBuyLast;
+	public final String dateBuyLast;
 
 	@ColumnName("Buy")
-	public double buy;
+	public final double buy;
 	@ColumnName("Sell")
-	public double sell;
+	public final double sell;
 	@ColumnName("Profit")
-	public double profit;
+	public final double profit;
 	@ColumnName("Dividend")
-	public double dividend;
+	public final double dividend;
 	@ColumnName("Total Profit")
-	public double totalProfit;
+	public final double totalProfit;
+	
+	public TransferSummary(Transfer.Sell sell) {
+		this.dateSell     = sell.date;
+		
+		this.symbol       = sell.symbol;
+		this.name         = sell.name;
+		this.quantity     = sell.quantity;
+		
+		this.sellJPY      = sell.sellJPY;
+		this.costJPY      = sell.costJPY;
+		this.feeJPY       = sell.feeJPY;
+		this.profitJPY    = sell.sellJPY - sell.costJPY - sell.feeJPY;
+		this.dateBuyFirst = sell.dateFirst;
+		this.dateBuyLast  = sell.dateLast;
+		
+		this.buy          = sell.cost;
+		this.sell         = sell.sell;
+		this.profit       = sell.sell - sell.cost - sell.fee;
+		this.dividend     = sell.dividend;
+		this.totalProfit  = sell.sell - sell.cost + sell.dividend;
+	}
 }

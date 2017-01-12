@@ -28,7 +28,8 @@ public class Price {
 		private static final String PATH_CACHE       = "tmp/fetch/priceCache.csv";
 		private static final File   FILE_PRICE_CACHE = new File(PATH_CACHE);
 		
-		private static final List<String> SYMBOL_LIST = Arrays.asList("BT", "CSCO", "INTC");
+		//private static final List<String> SYMBOL_LIST = Arrays.asList("BT", "CSCO", "INTC");
+		private static final List<String> SYMBOL_LIST = Arrays.asList("IBM", "NYT", "PEP");
 		
 		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
@@ -70,7 +71,7 @@ public class Price {
 				break;
 			}
 			if (needClear) {
-				nasdaqMap.clear();
+				priceCache.clear();
 				needSave = true;
 			}
 		}
@@ -125,6 +126,10 @@ public class Price {
 
 			// Convert from '.PR.' to  '-' in symbol of preferred stock for nasdaqMap
 			NasdaqTable nasdaq = nasdaqMap.get(symbol.replace(".PR.", "-"));
+			if (nasdaq == null) {
+				logger.error("No symbol in nasdaqMap {}", symbol);
+				throw new SecuritiesException("No symbol in nasdaqMap");
+			}
 			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
 //			logger.info("url {}", url);
 			
@@ -192,9 +197,7 @@ public class Price {
 				price = getLastPrice(symbol, DATE_TARGET.minusDays(5), DATE_TARGET);
 				
 				if (!price.date.equals(LAST_TRADING_DATE.toString())) {
-					logger.error("Inconsistent date");
-					logger.error("{} {}", price.symbol, price.date);
-					throw new SecuritiesException("Inconsistent date");
+					logger.warn("Inconsistent date {} {}", price.symbol, price.date);
 				}
 				priceCache.put(symbol, price);
 				needSave = true;

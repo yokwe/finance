@@ -28,7 +28,6 @@ public class Price {
 		private static final String PATH_CACHE       = "tmp/fetch/priceCache.csv";
 		private static final File   FILE_PRICE_CACHE = new File(PATH_CACHE);
 		
-		//private static final List<String> SYMBOL_LIST = Arrays.asList("BT", "CSCO", "INTC");
 		private static final List<String> SYMBOL_LIST = Arrays.asList("IBM", "NYT", "PEP");
 		
 		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);

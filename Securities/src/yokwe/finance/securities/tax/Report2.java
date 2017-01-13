@@ -96,12 +96,10 @@ public class Report2 {
 			int    sellJPY = (int)Math.round(sell * fxRate);
 			int    feeJPY  = (int)Math.round(activity.commission * fxRate);
 
-			double cost;
+			double sellRatio = activity.quantity / totalQuantity;
+			double cost      = totalCost * sellRatio;
 			int    costJPY;
 			
-			double sellRatio = activity.quantity / totalQuantity;
-			cost    = totalCost * sellRatio;
-
 			if (buyCount == 1) {
 				costJPY = (int)Math.round(totalCostJPY * sellRatio);
 				
@@ -120,9 +118,9 @@ public class Report2 {
 				totalCostJPY = (int)Math.round(unitCostJPY * totalQuantity);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-				totalQuantity           -= activity.quantity;
-				totalCost    -= cost;
-				totalCostJPY -= costJPY;
+				totalQuantity -= activity.quantity;
+				totalCost     -= cost;
+				totalCostJPY  -= costJPY;
 				
 				// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 				logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
@@ -132,11 +130,7 @@ public class Report2 {
 			// TODO How about buy 1 time and sell more than 1 time?
 			if (buyCount == 1 && current.size() == 1 && isAlmostZero()) {
 				// Special case buy one time and sell whole
-				Transfer.Buy transferBuy;
-				{
-					Transfer transfer  = current.remove(0);
-					transferBuy = transfer.buy;
-				}
+				Transfer.Buy transferBuy = current.remove(0).buy;
 				Transfer.Sell transferSell = new Transfer.Sell(
 					activity.tradeDate, activity.symbol, activity.name,
 					activity.quantity, activity.price, activity.commission, fxRate,
@@ -308,7 +302,7 @@ public class Report2 {
 			logger.info("price {}", price);
 
 			// Add dummy sell record
-			Activity activity = new Activity();
+			Activity activity    = new Activity();
 			activity.yyyyMM      = "9999-99";
 			activity.page        = "99";
 			activity.transaction = "SOLD";

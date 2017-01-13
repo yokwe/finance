@@ -3,6 +3,7 @@ package yokwe.finance.securities.tax;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -283,7 +284,11 @@ public class Report2 {
 				}
 				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
 				
-				//detailMap.put(key, pastTransferList);
+				List<TransferDetail> detailList = new ArrayList<>();
+				for(Transfer transfer: pastTransferList) {
+					detailList.add(TransferDetail.getInstance(transfer));
+				}
+				detailMap.put(key, detailList);
 				summaryMap.put(key, new TransferSummary(lastTransfer.sell));
 			}
 		}
@@ -364,9 +369,37 @@ public class Report2 {
 			
 			for(String targetYear: yearList) {
 				{
-					List<TransferDetail> transferList = new ArrayList<>();
+					Map<String, List<TransferDetail>> targetMap = new TreeMap<>();
 					for(String key: detailMap.keySet()) {
-						if (key.startsWith(targetYear)) transferList.addAll(detailMap.get(key));
+						if (key.startsWith(targetYear)) targetMap.put(key, detailMap.get(key));
+					}
+					// symbol -> first key map
+					Map<String, String> keyMap = new TreeMap<>();
+					for(String key: targetMap.keySet()) {
+						String[] token = key.split("-");
+						//String date = token[0];
+						String symbol = token[1];
+						if (keyMap.containsKey(symbol)) continue;
+						keyMap.put(symbol, key);
+					}
+					
+					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
+					for(String key: detailMap.keySet()) {
+						if (!key.startsWith(targetYear)) continue;
+						
+						List<TransferDetail> aList = detailMap.get(key);
+						if (aList.isEmpty()) continue;
+						
+						String symbol = aList.get(0).symbol;
+						if (!workMap.containsKey(symbol)) {
+							workMap.put(symbol, new ArrayList<>());
+						}
+						workMap.get(symbol).addAll(aList);
+					}
+					
+					List<TransferDetail> transferList = new ArrayList<>();
+					for(String key: workMap.keySet()) {
+						transferList.addAll(workMap.get(key));
 					}
 					
 					if (!transferList.isEmpty()) {

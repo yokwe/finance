@@ -139,7 +139,7 @@ public class Report {
 						activity.symbol, activity.name, activity.quantity,
 						activity.tradeDate, activity.price, activity.commission, fxRate, commisionSellJPY,
 						amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
-						buy.dateBuy, buy.priceBuy, buy.commissionBuy, buy.fxRateBuy, buy.amountBuyJPY
+						buy.dateBuy, buy.priceBuy, buy.feeBuy, buy.fxRateBuy, buy.buyJPY
 						);
 				current.add(transfer);
 				past.add(current);

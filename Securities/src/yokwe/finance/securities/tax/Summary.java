@@ -34,9 +34,9 @@ public class Summary extends Sheet {
 		this.symbolName         = transfer.symbolName;
 		this.quantity           = transfer.quantity;
 		
-		this.amountSellJPY      = transfer.amountSellJPY;
-		this.acquisitionCostJPY = transfer.acquisitionCostJPY;
-		this.commissionSellJPY  = transfer.commissionSellJPY;
+		this.amountSellJPY      = transfer.sellJPY;
+		this.acquisitionCostJPY = transfer.costJPY;
+		this.commissionSellJPY  = transfer.feeSellJPY;
 		this.dateBuyFirst       = transfer.dateBuyFirst;
 		this.dateBuyLast        = transfer.dateBuyLast;
 	}

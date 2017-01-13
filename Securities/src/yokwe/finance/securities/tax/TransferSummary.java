@@ -58,6 +58,6 @@ public class TransferSummary extends Sheet {
 		this.sell         = sell.sell;
 		this.profit       = sell.sell - sell.cost - sell.fee;
 		this.dividend     = sell.dividend;
-		this.totalProfit  = sell.sell - sell.cost + sell.dividend;
+		this.totalProfit  = sell.sell - sell.cost - sell.fee + sell.dividend;
 	}
 }

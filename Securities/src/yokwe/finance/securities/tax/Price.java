@@ -184,7 +184,7 @@ public class Price {
 			double close  = Double.valueOf(values[4]);
 			long   volume = Long.valueOf(values[5]);
 			
-			Price ret = new Price(symbol, date, open, high, low, close, volume);
+			Price ret = new Price(date, symbol, open, high, low, close, volume);
 			return ret;
 		}
 
@@ -221,8 +221,8 @@ public class Price {
 		return priceList;
 	}
 	
-	public String symbol;
 	public String date;
+	public String symbol;
 	public double open;
 	public double high;
 	public double low;
@@ -233,9 +233,9 @@ public class Price {
 		this("", "", 0, 0, 0, 0, 0);
 	}
 	
-	public Price(String symbol, String date, double open, double high, double low, double close, long volume) {
-		this.symbol = symbol;
+	public Price(String date, String symbol, double open, double high, double low, double close, long volume) {
 		this.date   = date;
+		this.symbol = symbol;
 		this.open   = open;
 		this.high   = high;
 		this.low    = low;
@@ -246,6 +246,14 @@ public class Price {
 	@Override
 	public String toString() {
 //		return String.format("[%s  %6.2f %6.2f %6.2f %6.2f %d]", date, open, high, low, close, volume);
-		return String.format("[%-8s %s %6.2f]", symbol, date, close);
+		return String.format("[%-9s %s %6.2f]", symbol, date, close);
+	}
+	
+	public static void main(String[] args) {
+		Cache.logger.info("START");
+		Cache.logger.info("{}", Cache.getLastPrice("CLNS-A"));
+		Cache.logger.info("{}", Cache.getLastPrice("CLNS.PR.A"));
+		Cache.savePriceCache();
+		Cache.logger.info("STOP");
 	}
 }

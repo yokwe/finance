@@ -16,10 +16,8 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.HttpUtil;
-import yokwe.finance.securities.util.NasdaqUtil;
 
 public class Price {
 	public static class Cache {
@@ -48,7 +46,6 @@ public class Price {
 			logger.info("DATE_TARGET       {}", DATE_TARGET);
 		}
 		
-		private static final Map<String, NasdaqTable> nasdaqMap  = NasdaqUtil.getMap();
 		private static final Map<String, Price>       priceCache = new TreeMap<>();
 		private static boolean                        needSave   = false;
 
@@ -123,13 +120,9 @@ public class Price {
 			String dateFrom = startDate.format(DATE_FORMAT_URL).replace(" ", "%20");
 			String dateTo   = endDate.format(DATE_FORMAT_URL).replace(" ", "%20");
 
-			// Convert from '.PR.' to  '-' in symbol of preferred stock for nasdaqMap
-			NasdaqTable nasdaq = nasdaqMap.get(symbol.replace(".PR.", "-"));
-			if (nasdaq == null) {
-				logger.error("No symbol in nasdaqMap {}", symbol);
-				throw new SecuritiesException("No symbol in nasdaqMap");
-			}
-			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
+			// Convert from '.PR.' to  '-' in symbol for google
+			String googleSymbol = symbol.replace(".PR.", "-");
+			String url = String.format("https://www.google.com/finance/historical?q=%s&startdate=%s&enddate=%s&output=csv", googleSymbol, dateFrom, dateTo);
 //			logger.info("url {}", url);
 			
 			String content = HttpUtil.downloadAsString(url);

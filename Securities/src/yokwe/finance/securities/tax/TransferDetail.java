@@ -148,7 +148,7 @@ public class TransferDetail extends Sheet {
 		this.dateBuyLast   = sell.dateLast;
 
 		this.dateBuy       = buy.date;
-		this.priceBuy      = String.format("%.2f", buy.price);
+		this.priceBuy      = String.format("%.5f", buy.price);
 		this.feeBuy        = String.format("%.2f", buy.fee);
 		this.fxRateBuy     = String.format("%.2f", buy.fxRate);
 		this.buyJPY        = String.format("%d",   buy.buyJPY + buy.feeJPY);

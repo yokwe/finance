@@ -9,7 +9,7 @@ import yokwe.finance.securities.libreoffice.Sheet;
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class TransferDetail extends Sheet {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report2.class);
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
 	
 	@ColumnName("銘柄コード")
 	public final String symbol;
@@ -176,72 +176,5 @@ public class TransferDetail extends Sheet {
 			logger.error("Unexpected");
 			throw new SecuritiesException("Unexpected");
 		}
-	}
-	
-	//
-	// Methods below are for original Report
-	//
-	public static TransferDetail getInstanceForSellSpecial(
-			String symbol, String symbolName, double quantity,
-			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
-			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast,
-			String dateBuy, String priceBuy, String commissionBuy, String fxRateBuy, String amountBuyJPY
-			) {
-		return new TransferDetail(
-				symbol, symbolName, quantity,
-				dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
-				String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
-				dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, "", ""
-				);
-	}
-	
-	// getIntance for sell
-	public static TransferDetail getInstanceForSell(
-			String symbol, String symbolName, double quantity,
-			String dateSell, double priceSell, double commissionSell, double fxRateSell, int commissionSellJPY,
-			int amountSellJPY, int acquisitionCostJPY, String dateBuyFirst, String dateBuyLast, double totalQuantity, int totalAcquisitionCostJPY) {
-
-		String dateBuy           = "";
-		String priceBuy          = "";
-		String commissionBuy     = "";
-		String fxRateBuy         = "";
-		String amountBuyJPY      = "";
-		
-		String totalQuantitySTR  = "";
-		String totalAmountBuyJPY = "";
-		
-		if (0 < totalAcquisitionCostJPY) {
-			totalQuantitySTR  = String.format("%.5f", totalQuantity);
-			totalAmountBuyJPY = String.format("%d", totalAcquisitionCostJPY);
-		}
-
-		return new TransferDetail(
-			symbol, symbolName, quantity,
-			dateSell, String.format("%.5f", priceSell), String.format("%.2f", commissionSell), String.format("%.2f", fxRateSell), String.format("%d", commissionSellJPY),
-			String.format("%d", amountSellJPY), String.format("%d", acquisitionCostJPY), dateBuyFirst, dateBuyLast,
-			dateBuy, priceBuy, commissionBuy, fxRateBuy, amountBuyJPY, totalQuantitySTR, totalAmountBuyJPY
-			);
-	}
-
-	public static TransferDetail getInstanceForBuy(
-			String symbol, String symbolName, double quantity,
-			String dateBuy, double priceBuy, double commissionBuy, double fxRateBuy,
-			int amountBuyJPY, double totalQuantity, int totalAmountBuyJPY) {
-		String dateSell           = "";
-		String priceSell          = "";
-		String commissionSell     = "";
-		String fxRateSell         = "";
-		String commissionSellJPY  = "";
-		String amountSellJPY      = "";
-		String acquisitionCostJPY = "";
-		String dateBuyFirst       = "";
-		String dateBuyLast        = "";
-		
-		return new TransferDetail(
-			symbol, symbolName, quantity,
-			dateSell, priceSell, commissionSell, fxRateSell, commissionSellJPY, amountSellJPY, acquisitionCostJPY, dateBuyFirst, dateBuyLast,
-			dateBuy, String.format("%.5f",  priceBuy), String.format("%.2f", commissionBuy), String.format("%.2f", fxRateBuy),
-			String.format("%d", amountBuyJPY), String.format("%.5f", totalQuantity), String.format("%d", totalAmountBuyJPY)
-			);
 	}
 }

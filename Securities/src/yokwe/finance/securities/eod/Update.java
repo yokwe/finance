@@ -75,12 +75,14 @@ public class Update {
 		return !date.equals(dateLast.toString());
 	}
 	
-	private static void updateFile(File file, LocalDate dateFirst, LocalDate dateLast) {
-		String symbol   = file.getName().replace(".csv", "");
+	private static void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		String path = String.format("%s/%s.csv", PATH_DIR, symbol);
+		File file = new File(path);
+		
 		String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
 		String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
 		
-		NasdaqTable nasdaq = NasdaqUtil.get(symbol.replaceAll(".PR.", "-"));
+		NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
 
 		// Convert from '.PR.' to  '-' in symbol for google
 		String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
@@ -167,7 +169,7 @@ public class Update {
 		int total = NasdaqUtil.getAll().size();
 		int count = 0;
 		for(NasdaqTable nasdaq: NasdaqUtil.getAll()) {
-//			String exch  = nasdaq.exchange;
+			String exch   = nasdaq.exchange;
 			String symbol = nasdaq.symbol;
 
 			count++;
@@ -176,13 +178,13 @@ public class Update {
 			if (file.exists()) {
 				if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
 					logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
-					updateFile(file, DATE_FIRST, DATE_LAST);
+					updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 				} else {
 //					logger.info("{}  skip  {}", String.format("%4d / %4d",  count, total), symbol);
 				}
 			} else {
 				logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-				updateFile(file, DATE_FIRST, DATE_LAST);
+				updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 			}
 		}
 		logger.info("STOP");

@@ -52,34 +52,6 @@ public class TransferDetail extends Sheet {
 	@ColumnName("総取得価格")
 	public final String totalCostJPY;
 	
-	private TransferDetail(
-			String symbol, String symbolName, double quantity,
-			String dateSell, String priceSell, String feeSell, String fxRateSell, String feeSellJPY, String sellJPY, String costJPY, String dateBuyFirst, String dateBuyLast,
-			String dateBuy, String priceBuy, String feeBuy, String fxRateBuy, String buyJPY, String totalQuantity, String totalCostJPY
-			) {
-		this.symbol        = symbol;
-		this.symbolName    = symbolName;
-		this.quantity      = quantity;
-		
-		this.dateSell      = dateSell;
-		this.priceSell     = priceSell;
-		this.feeSell       = feeSell;
-		this.fxRateSell    = fxRateSell;
-		this.feeSellJPY    = feeSellJPY;
-		this.sellJPY       = sellJPY;
-		this.costJPY       = costJPY;
-		this.dateBuyFirst  = dateBuyFirst;
-		this.dateBuyLast   = dateBuyLast;
-
-		this.dateBuy       = dateBuy;
-		this.priceBuy      = priceBuy;
-		this.feeBuy        = feeBuy;
-		this.fxRateBuy     = fxRateBuy;
-		this.buyJPY        = buyJPY;
-		this.totalQuantity = totalQuantity;
-		this.totalCostJPY  = totalCostJPY;
-	}
-	
 	public TransferDetail(Transfer.Buy buy) {
 		this.symbol        = buy.symbol;
 		this.symbolName    = buy.name;

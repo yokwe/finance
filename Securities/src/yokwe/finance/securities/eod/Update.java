@@ -166,24 +166,55 @@ public class Update {
 			throw new SecuritiesException("Not directory");
 		}
 		
+		{
+			File[] fileList = new File(PATH_DIR).listFiles();
+			for(File file: fileList) {
+				String name = file.getName();
+				boolean shouldDelete = false;
+				if (name.endsWith(".csv")) {
+					String symbol = name.replace(".csv", "");
+					if (!NasdaqUtil.contains(symbol)) {
+						shouldDelete = true;
+					}
+				} else {
+					shouldDelete = true;
+				}
+				
+				if (shouldDelete) {
+					logger.info("delete unknown file {}", name);
+					file.delete();
+				}
+			}
+		}
+		
 		int total = NasdaqUtil.getAll().size();
 		int count = 0;
+		
+		int outputFrequncy = 100;
+		int lastOutputCount = -1;
 		for(NasdaqTable nasdaq: NasdaqUtil.getAll()) {
 			String exch   = nasdaq.exchange;
 			String symbol = nasdaq.symbol;
 
 			count++;
+			
+			boolean showOutput = false;
+			int outputCount = count / outputFrequncy;
+			if (outputCount != lastOutputCount) {
+				showOutput = true;
+				lastOutputCount = outputCount;
+			}
 
 			File file = new File(String.format("%s/%s.csv", PATH_DIR, symbol));
 			if (file.exists()) {
 				if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-					logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+					if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 					updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 				} else {
-//					logger.info("{}  skip  {}", String.format("%4d / %4d",  count, total), symbol);
+					if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 				}
 			} else {
-				logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+				if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 				updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 			}
 		}

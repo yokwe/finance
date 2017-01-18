@@ -2,7 +2,7 @@ package yokwe.finance.securities.tax;
 
 import yokwe.finance.securities.libreoffice.Sheet;
 
-@Sheet.SheetName("譲渡サマリー")
+@Sheet.SheetName("譲渡概要")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class TransferSummary extends Sheet {

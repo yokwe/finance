@@ -450,7 +450,7 @@ public class Report {
 			docSave.removeSheet(docSave.getSheetName(0));
 
 			docSave.store(urlSave);
-			
+			logger.info("output {}", urlSave);
 			docLoad.close();
 		}
 	}

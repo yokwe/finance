@@ -14,6 +14,9 @@
     </encoder>
   </appender>
   
+  <!-- ignore HttpUtil warn message -->
+  <logger name="yokwe.finance.securities.util.HttpUtil" level="ERROR" />
+  
   <root level="debug">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />

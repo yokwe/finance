@@ -368,20 +368,6 @@ public class Report {
 			
 			for(String targetYear: yearList) {
 				{
-					Map<String, List<TransferDetail>> targetMap = new TreeMap<>();
-					for(String key: detailMap.keySet()) {
-						if (key.startsWith(targetYear)) targetMap.put(key, detailMap.get(key));
-					}
-					// symbol -> first key map
-					Map<String, String> keyMap = new TreeMap<>();
-					for(String key: targetMap.keySet()) {
-						String[] token = key.split("-");
-						//String date = token[0];
-						String symbol = token[1];
-						if (keyMap.containsKey(symbol)) continue;
-						keyMap.put(symbol, key);
-					}
-					
 					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
 					for(String key: detailMap.keySet()) {
 						if (!key.startsWith(targetYear)) continue;

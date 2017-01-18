@@ -25,6 +25,10 @@ public class NasdaqUtil {
 		}
 	}
 	
+	public static boolean contains(String symbol) {
+		return map.containsKey(symbol);
+	}
+	
 	public static NasdaqTable get(String symbol) {
 		if (!map.containsKey(symbol)) {
 			logger.error("symbol = {}", symbol);

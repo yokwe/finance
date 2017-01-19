@@ -25,6 +25,9 @@ public class Update {
 	
 	private static final String PATH_DIR = "tmp/eod/price";
 	
+	private static final int HOUR_CLOSE_MARKET = 16; // market close at 1600
+	private static final int DURTION_YEAR      =  1; // we need one year data
+	
 	private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 	private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 	private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -33,7 +36,7 @@ public class Update {
 	private static final LocalDate DATE_FIRST;
 	static {
 		LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));
-		if (today.getHour() < 16) today = today.minusDays(1); // Move to yesterday if it is before market close
+		if (today.getHour() < HOUR_CLOSE_MARKET) today = today.minusDays(1); // Move to yesterday if it is before market close
 		
 		// Adjust for weekends
 		DayOfWeek dayOfWeek = today.getDayOfWeek();
@@ -41,7 +44,7 @@ public class Update {
 		if (dayOfWeek == DayOfWeek.SATURDAY) today = today.minusDays(-1); // Move to previous Friday
 		
 		DATE_LAST  = today.toLocalDate();
-		DATE_FIRST = DATE_LAST.plusYears(-1);
+		DATE_FIRST = DATE_LAST.plusYears(-DURTION_YEAR);
 		logger.info("DATE {} - {}", DATE_FIRST, DATE_LAST);
 	}
 	

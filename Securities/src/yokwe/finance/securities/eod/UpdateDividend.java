@@ -22,8 +22,7 @@ import yokwe.finance.securities.util.NasdaqUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
-	private static final String PATH_DIR = "tmp/eod/dividend";
-	
+		
 	private static final int HOUR_CLOSE_MARKET = 16; // market close at 1600
 	private static final int DURTION_YEAR      =  1; // we need one year data
 	
@@ -51,13 +50,27 @@ public class UpdateDividend {
 	    return bd.doubleValue();
 	}
 	
-	public interface UpdateFile {
-		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
+	public interface UpdateProvider {
+		public static final String PATH_DIR = "tmp/eod/dividend";
+
+		public String getName();
+		public File   getFile(String symbol);
+		public void   updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
 	}
 	
-	public static class UpdateFileYahoo implements UpdateFile {
-		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+	public static class UpdateProviderYahoo implements UpdateProvider {
+		private static final String PROVIDER_NAME = "yahoo";
+		public String getName() {
+			return PROVIDER_NAME;
+		}
+		
+		public File getFile(String symbol) {
+			String path = String.format("%s-%s/%s.csv", PATH_DIR, getName(), symbol);
+			File file = new File(path);
+			return file;
+		}
 
+		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
@@ -114,12 +127,6 @@ public class UpdateDividend {
 		}
 	}
 	
-	private static File getFile(String symbol) {
-		String path = String.format("%s/%s.csv", PATH_DIR, symbol);
-		File file = new File(path);
-		return file;
-	}
-
 	private static boolean needUpdate(File file, LocalDate dateFirst, LocalDate dateLast) {
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
@@ -157,10 +164,11 @@ public class UpdateDividend {
 		logger.info("START");
 		
 //		UpdateFile updateFile = new UpdateFileGoogle();
-		UpdateFile updateFile = new UpdateFileYahoo();
-		
+		UpdateProvider updateProvider = new UpdateProviderYahoo();
+		logger.info("UpdateProvider {}", updateProvider.getName());
+
 		{
-			File dir = new File(PATH_DIR);
+			File dir = updateProvider.getFile("DUMMY").getParentFile();
 			if (!dir.exists()) {
 				dir.mkdirs();
 			} else {
@@ -211,17 +219,17 @@ public class UpdateDividend {
 
 				count++;
 				
-				File file = getFile(symbol);
+				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
 						if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
-						updateFile.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+						updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 					} else {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				} else {
 					if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-					updateFile.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+					updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 				}
 			}
 		}

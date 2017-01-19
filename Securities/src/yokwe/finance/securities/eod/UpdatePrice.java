@@ -20,8 +20,8 @@ import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
 
-public class Update {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Update.class);
+public class UpdatePrice {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
 	private static final String PATH_DIR = "tmp/eod/price";
 	
@@ -234,5 +234,4 @@ public class Update {
 		}
 		logger.info("STOP");
 	}
-
 }

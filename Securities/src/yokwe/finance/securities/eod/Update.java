@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -22,7 +23,7 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class Update {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Update.class);
 	
-	private static final String PATH_DIR = "tmp/eod";
+	private static final String PATH_DIR = "tmp/eod/price";
 	
 	private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 	private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
@@ -42,6 +43,12 @@ public class Update {
 		DATE_LAST  = today.toLocalDate();
 		DATE_FIRST = DATE_LAST.plusYears(-1);
 		logger.info("DATE {} - {}", DATE_FIRST, DATE_LAST);
+	}
+	
+	private static File getFile(String symbol) {
+		String path = String.format("%s/%s.csv", PATH_DIR, symbol);
+		File file = new File(path);
+		return file;
 	}
 
 	private static boolean needUpdate(File file, LocalDate dateFirst, LocalDate dateLast) {
@@ -76,8 +83,7 @@ public class Update {
 	}
 	
 	private static void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
-		String path = String.format("%s/%s.csv", PATH_DIR, symbol);
-		File file = new File(path);
+		File file = getFile(symbol);
 		
 		String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
 		String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
@@ -160,62 +166,67 @@ public class Update {
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");
-		File dir = new File(PATH_DIR);
-		if (!dir.isDirectory()) {
-			logger.info("Not directory {}", dir.getAbsolutePath());
-			throw new SecuritiesException("Not directory");
+		
+		{
+			File dir = new File(PATH_DIR);
+			if (!dir.exists()) {
+				dir.mkdirs();
+			} else {
+				if (!dir.isDirectory()) {
+					logger.info("Not directory {}", dir.getAbsolutePath());
+					throw new SecuritiesException("Not directory");
+				}
+			}
+			
+			// Remove unknown file
+			File[] fileList = dir.listFiles();
+			for(File file: fileList) {
+				String name = file.getName();
+				if (name.endsWith(".csv")) {
+					String symbol = name.replace(".csv", "");
+					if (NasdaqUtil.contains(symbol)) continue;
+				}
+				
+				logger.info("delete unknown file {}", name);
+				file.delete();
+			}
 		}
 		
 		{
-			File[] fileList = new File(PATH_DIR).listFiles();
-			for(File file: fileList) {
-				String name = file.getName();
-				boolean shouldDelete = false;
-				if (name.endsWith(".csv")) {
-					String symbol = name.replace(".csv", "");
-					if (!NasdaqUtil.contains(symbol)) {
-						shouldDelete = true;
+			Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
+			
+			int total = nasdaqCollection.size();
+			int count = 0;
+			
+			int showInterval = 100;
+			boolean showOutput;
+			int lastOutputCount = -1;
+			for(NasdaqTable nasdaq: nasdaqCollection) {
+				String exch   = nasdaq.exchange;
+				String symbol = nasdaq.symbol;
+
+				int outputCount = count / showInterval;
+				if (outputCount != lastOutputCount) {
+					showOutput = true;
+					lastOutputCount = outputCount;
+				} else {
+					showOutput = false;
+				}
+
+				count++;
+				
+				File file = getFile(symbol);
+				if (file.exists()) {
+					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
+						if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+						updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+					} else {
+						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				} else {
-					shouldDelete = true;
-				}
-				
-				if (shouldDelete) {
-					logger.info("delete unknown file {}", name);
-					file.delete();
-				}
-			}
-		}
-		
-		int total = NasdaqUtil.getAll().size();
-		int count = 0;
-		
-		int outputFrequncy = 100;
-		int lastOutputCount = -1;
-		for(NasdaqTable nasdaq: NasdaqUtil.getAll()) {
-			String exch   = nasdaq.exchange;
-			String symbol = nasdaq.symbol;
-
-			count++;
-			
-			boolean showOutput = false;
-			int outputCount = count / outputFrequncy;
-			if (outputCount != lastOutputCount) {
-				showOutput = true;
-				lastOutputCount = outputCount;
-			}
-
-			File file = new File(String.format("%s/%s.csv", PATH_DIR, symbol));
-			if (file.exists()) {
-				if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-					if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+					if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 					updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
-				} else {
-					if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 				}
-			} else {
-				if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-				updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
 			}
 		}
 		logger.info("STOP");

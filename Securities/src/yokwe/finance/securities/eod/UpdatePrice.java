@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -240,13 +242,18 @@ public class UpdatePrice {
 		return !date.equals(dateLast.toString());
 	}
 	
+	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
+	static {
+		updateProviderMap.put("google", new UpdateProviderGoogle());
+		updateProviderMap.put("yahoo",  new UpdateProviderYahoo());
+	}
 	
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");
 		
-//		UpdateProvider updateProvider = new UpdateProviderGoogle();
-		UpdateProvider updateProvider = new UpdateProviderYahoo();
+		String providerName = args[0];
+		UpdateProvider updateProvider = updateProviderMap.get(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());
 		
 		{

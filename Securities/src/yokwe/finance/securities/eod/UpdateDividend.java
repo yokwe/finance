@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -133,12 +135,17 @@ public class UpdateDividend {
 	}
 	
 	
+	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
+	static {
+		updateProviderMap.put("yahoo", new UpdateProviderYahoo());
+	}
+	
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");
 		
-//		UpdateFile updateFile = new UpdateFileGoogle();
-		UpdateProvider updateProvider = new UpdateProviderYahoo();
+		String providerName = args[0];
+		UpdateProvider updateProvider = updateProviderMap.get(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());
 
 		{

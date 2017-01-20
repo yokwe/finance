@@ -26,9 +26,9 @@ public class UpdateDividend {
 	public interface UpdateProvider {
 		public static final String PATH_DIR = "tmp/eod/dividend";
 
-		public String getName();
-		public File   getFile(String symbol);
-		public void   updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
+		public String  getName();
+		public File    getFile(String symbol);
+		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
 	}
 	
 	public static class UpdateProviderYahoo implements UpdateProvider {
@@ -43,7 +43,7 @@ public class UpdateDividend {
 			return file;
 		}
 
-		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
@@ -61,7 +61,7 @@ public class UpdateDividend {
 			if (content == null) {
 				// cannot get content
 				file.delete();
-				return;
+				return false;
 			}
 			
 			String[] lines = content.split("\n");
@@ -69,7 +69,7 @@ public class UpdateDividend {
 			if (lines.length <= 1) {
 				// only header
 				file.delete();
-				return;
+				return false;
 			}
 			
 			// Sanity check
@@ -97,6 +97,7 @@ public class UpdateDividend {
 				dividendList.add(new Dividend(date, symbol, dividend));
 			}
 			CSVUtil.saveWithHeader(dividendList, file.getAbsolutePath());
+			return true;
 		}
 	}
 	
@@ -201,8 +202,9 @@ public class UpdateDividend {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				} else {
-					if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-					updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+					}
 				}
 			}
 		}

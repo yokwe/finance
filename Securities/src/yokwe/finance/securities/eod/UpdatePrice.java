@@ -28,9 +28,9 @@ public class UpdatePrice {
 	public interface UpdateProvider {
 		public static final String PATH_DIR = "tmp/eod/price";
 		
-		public String getName();
-		public File   getFile(String symbol);
-		public void   updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
+		public String  getName();
+		public File    getFile(String symbol);
+		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
 	}
 	
 	public static final class UpdateProviderGoogle implements UpdateProvider {
@@ -49,7 +49,7 @@ public class UpdatePrice {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
@@ -64,7 +64,7 @@ public class UpdatePrice {
 			if (content == null) {
 				// cannot get content
 				file.delete();
-				return;
+				return false;
 			}
 			
 			String[] lines = content.split("\n");
@@ -72,7 +72,7 @@ public class UpdatePrice {
 			if (lines.length <= 1) {
 				// only header
 				file.delete();
-				return;
+				return false;
 			}
 			
 			// Sanity check
@@ -128,6 +128,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+			return true;
 		}
 	}
 	
@@ -143,7 +144,7 @@ public class UpdatePrice {
 			return file;
 		}
 
-		public void updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
@@ -164,7 +165,7 @@ public class UpdatePrice {
 			if (content == null) {
 				// cannot get content
 				file.delete();
-				return;
+				return false;
 			}
 			
 			String[] lines = content.split("\n");
@@ -172,7 +173,7 @@ public class UpdatePrice {
 			if (lines.length <= 1) {
 				// only header
 				file.delete();
-				return;
+				return false;
 			}
 			
 			// Sanity check
@@ -204,6 +205,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+			return true;
 		}
 	}
 	
@@ -309,8 +311,9 @@ public class UpdatePrice {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				} else {
-					if (showOutput) logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-					updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+					}
 				}
 			}
 		}

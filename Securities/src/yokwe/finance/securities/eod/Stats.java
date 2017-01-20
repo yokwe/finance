@@ -1,14 +1,22 @@
 package yokwe.finance.securities.eod;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.RSI;
+import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleStreamUtil;
 import yokwe.finance.securities.util.DoubleUtil;
+import yokwe.finance.securities.util.NasdaqUtil;
 
 public class Stats {
 	public String exchange;
@@ -51,7 +59,7 @@ public class Stats {
 		this.name     = nasdaq.name;
 		
 		{
-			Price lastPrice = priceList.get(priceList.size() - 1);
+			Price lastPrice = priceList.get(0);
 			this.sample   = lastPrice.date;
 			this.price    = lastPrice.close;
 			this.vol      = lastPrice.volume;
@@ -61,9 +69,12 @@ public class Stats {
 			double[] priceArray = priceList.stream().mapToDouble(o -> o.close).toArray();
 			this.priceCount = priceArray.length;
 			
-			DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
-			Arrays.stream(priceArray).forEach(stats);
-			this.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
+			{
+				double logReturn[] = DoubleArray.logReturn(priceArray);
+				DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
+				Arrays.stream(logReturn).forEach(stats);
+				this.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
+			}
 			
 			HV hv = new HV();
 			Arrays.stream(priceArray).forEach(hv);
@@ -73,6 +84,8 @@ public class Stats {
 			Arrays.stream(priceArray).forEach(rsi);
 			this.rsi = DoubleUtil.round(rsi.getValue(), 1);
 			
+			DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
+			Arrays.stream(priceArray).forEach(stats);
 			this.min = DoubleUtil.round(stats.getMin(), 2);
 			this.max = DoubleUtil.round(stats.getMax(), 2);
 			this.minPercent = DoubleUtil.round((this.price - this.min) / this.price, 3);
@@ -114,5 +127,82 @@ public class Stats {
 			Arrays.stream(volArray).forEach(vol30);
 			this.vol30 = (long)vol30.getValue();
 		}
+	}
+	
+	public static void main(String[] args) {
+		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
+		logger.info("START");
+				
+		final String PATH_STATS   = "tmp/eod/stats.csv";
+		final String PATH_PRICE   = "tmp/eod/price-yahoo";
+		final String PATH_DIVIDED = "tmp/eod/dividend-yahoo";
+		
+		File dirPrice    = new File(PATH_PRICE);
+		File dirDividend = new File(PATH_DIVIDED);
+		
+		File[] priceFiles = dirPrice.listFiles(o -> o.getName().endsWith(".csv"));
+		Arrays.sort(priceFiles);
+		
+		List<Stats> statsList = new ArrayList<>();
+		int total = priceFiles.length;
+		int count = 0;
+		
+		int showInterval = 100;
+		boolean showOutput;
+		int lastOutputCount = -1;
+		for(File priceFile: priceFiles) {
+			int outputCount = count / showInterval;
+			if (outputCount != lastOutputCount) {
+				showOutput = true;
+				lastOutputCount = outputCount;
+			} else {
+				showOutput = false;
+			}
+
+			count++;
+			
+			String symbol = priceFile.getName().replace(".csv", "");
+
+			if (!NasdaqUtil.contains(symbol)) {
+				logger.error("Unknown symbol {}", symbol);
+				throw new SecuritiesException("Unknown symbol");
+			}
+			NasdaqTable nasdaq = NasdaqUtil.get(symbol);
+			
+			List<Price> priceList = CSVUtil.loadWithHeader(priceFile.getPath(), Price.class);
+			
+			{
+				boolean penyyStock = false;
+				for(Price price: priceList) {
+					if (price.close < 1.0) {
+						penyyStock = true;
+						break;
+					}
+				}
+				if (penyyStock) {
+//					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s PENNY STOCK", symbol));
+					continue;
+				}
+			}
+			
+			if (priceList.size() < RSI.DEFAULT_PERIDO) {
+				logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
+				continue;
+			}
+			
+			if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+			
+			List<Dividend> dividendList;
+			File fileDividend = new File(dirDividend, priceFile.getName());
+			if (fileDividend.exists()) {
+				dividendList = CSVUtil.loadWithHeader(fileDividend.getPath(), Dividend.class);
+			} else {
+				dividendList = new ArrayList<>();
+			}
+			
+			statsList.add(new Stats(nasdaq, priceList, dividendList));
+		}
+		CSVUtil.saveWithHeader(statsList, PATH_STATS);
+		logger.info("STOP");
 	}
 }

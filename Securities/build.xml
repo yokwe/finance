@@ -190,19 +190,30 @@
                 </java>
         </target>
 
-        <target name="run-eod-update-price">
+        <target name="run-eod-update-price-google">
                 <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                	<arg value="google"/>
                 </java>
         </target>
 
-        <target name="run-eod-update-dividend">
+        <target name="run-eod-update-price-yahoo">
+                <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                	<arg value="yahoo"/>
+                </java>
+        </target>
+
+        <target name="run-eod-update-dividend-yahoo">
                 <java classname="yokwe.finance.securities.eod.UpdateDividend" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                	<arg value="yahoo"/>
                 </java>
         </target>
 

@@ -1,12 +1,7 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.util.CSVUtil;
+import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
@@ -23,32 +19,9 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
 		
-	private static final int HOUR_CLOSE_MARKET = 16; // market close at 1600
-	private static final int DURTION_YEAR      =  1; // we need one year data
-	
-	private static final LocalDate DATE_LAST;
-	private static final LocalDate DATE_FIRST;
-	static {
-		LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));
-		if (today.getHour() < HOUR_CLOSE_MARKET) today = today.minusDays(1); // Move to yesterday if it is before market close
-		
-		// Adjust for weekends
-		DayOfWeek dayOfWeek = today.getDayOfWeek();
-		if (dayOfWeek == DayOfWeek.SUNDAY)   today = today.minusDays(-2); // Move to previous Friday
-		if (dayOfWeek == DayOfWeek.SATURDAY) today = today.minusDays(-1); // Move to previous Friday
-		
-		DATE_LAST  = today.toLocalDate();
-		DATE_FIRST = DATE_LAST.plusYears(-DURTION_YEAR);
-		logger.info("DATE {} - {}", DATE_FIRST, DATE_LAST);
-	}
-	
-	public static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
-
-	    BigDecimal bd = new BigDecimal(value);
-	    bd = bd.setScale(places, RoundingMode.HALF_UP);
-	    return bd.doubleValue();
-	}
+	private static final int       DURTION_YEAR  =  1; // we need one year data
+	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
+	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
 	
 	public interface UpdateProvider {
 		public static final String PATH_DIR = "tmp/eod/dividend";
@@ -119,7 +92,7 @@ public class UpdateDividend {
 				}
 				
 				String date     = values[0];
-				double dividend = round(Double.valueOf(values[1]), 4);
+				double dividend = DoubleUtil.round(Double.valueOf(values[1]), 4);
 				
 				dividendList.add(new Dividend(date, symbol, dividend));
 			}

@@ -1,12 +1,7 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.util.CSVUtil;
+import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
@@ -25,36 +21,13 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
-	private static final String PATH_DIR = "tmp/eod/price";
-	
-	private static final int HOUR_CLOSE_MARKET = 16; // market close at 1600
-	private static final int DURTION_YEAR      =  1; // we need one year data
-	
-	private static final LocalDate DATE_LAST;
-	private static final LocalDate DATE_FIRST;
-	static {
-		LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));
-		if (today.getHour() < HOUR_CLOSE_MARKET) today = today.minusDays(1); // Move to yesterday if it is before market close
-		
-		// Adjust for weekends
-		DayOfWeek dayOfWeek = today.getDayOfWeek();
-		if (dayOfWeek == DayOfWeek.SUNDAY)   today = today.minusDays(-2); // Move to previous Friday
-		if (dayOfWeek == DayOfWeek.SATURDAY) today = today.minusDays(-1); // Move to previous Friday
-		
-		DATE_LAST  = today.toLocalDate();
-		DATE_FIRST = DATE_LAST.plusYears(-DURTION_YEAR);
-		logger.info("DATE {} - {}", DATE_FIRST, DATE_LAST);
-	}
-	
-	public static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
-
-	    BigDecimal bd = new BigDecimal(value);
-	    bd = bd.setScale(places, RoundingMode.HALF_UP);
-	    return bd.doubleValue();
-	}
+	private static final int       DURTION_YEAR  =  1; // we need one year data
+	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
+	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
 	
 	public interface UpdateProvider {
+		public static final String PATH_DIR = "tmp/eod/price";
+		
 		public String getName();
 		public File   getFile(String symbol);
 		public void   updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
@@ -146,10 +119,10 @@ public class UpdatePrice {
 				}
 
 				String date   = values[0];
-				double open   = round(Double.valueOf(values[1]), 2);
-				double high   = round(Double.valueOf(values[2]), 2);
-				double low    = round(Double.valueOf(values[3]), 2);
-				double close  = round(Double.valueOf(values[4]), 2);
+				double open   = DoubleUtil.round(Double.valueOf(values[1]), 2);
+				double high   = DoubleUtil.round(Double.valueOf(values[2]), 2);
+				double low    = DoubleUtil.round(Double.valueOf(values[3]), 2);
+				double close  = DoubleUtil.round(Double.valueOf(values[4]), 2);
 				long   volume = Long.valueOf(values[5]);
 				
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
@@ -222,10 +195,10 @@ public class UpdatePrice {
 				}
 				
 				String date   = values[0];
-				double open   = round(Double.valueOf(values[1]), 2);
-				double high   = round(Double.valueOf(values[2]), 2);
-				double low    = round(Double.valueOf(values[3]), 2);
-				double close  = round(Double.valueOf(values[4]), 2);
+				double open   = DoubleUtil.round(Double.valueOf(values[1]), 2);
+				double high   = DoubleUtil.round(Double.valueOf(values[2]), 2);
+				double low    = DoubleUtil.round(Double.valueOf(values[3]), 2);
+				double close  = DoubleUtil.round(Double.valueOf(values[4]), 2);
 				long   volume = Long.valueOf(values[5]);
 				
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));

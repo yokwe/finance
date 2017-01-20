@@ -1,5 +1,7 @@
 package yokwe.finance.securities.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleFunction;
@@ -16,6 +18,13 @@ import yokwe.finance.securities.SecuritiesException;
 public final class DoubleUtil {
 	private static final Logger logger = LoggerFactory.getLogger(DoubleUtil.class);
 	
+	public static double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
+	}
+
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;
 

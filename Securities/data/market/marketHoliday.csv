@@ -1,12 +1,12 @@
 date,event,status
-2 January 2017,New Years Day (Observed),Closed
-16 January 2017,"Marthin Luther King, Jr. Day",Closed
-20 February 2017,President's Day,Closed
-14 April 2017,Good Friday,Close
-29 May 2017,Memorial Day,Closed
-3 July 2017,Early Market Close,1:00 PM EST
-4 July 2017,Independence Day (Observed),Closed
-4 September 2017,Labor Day,Closed
-23 November 2017,Thanksgiving Day,Close
-24 November 2017,Early Market Close,1:00 p.m. EST
-25 December 2017,Christmas Day (Observed),Closed
+2017-01-02,New Years Day (Observed),Closed
+2017-01-16,"Martin Luther King Jr. Day",Closed
+2017-02-20,President's Day,Closed
+2017-04-14,Good Friday,Close
+2017-05-29,Memorial Day,Closed
+2017-07-03,Early Market Close,1:00 PM EST
+2017-07-04,Independence Day (Observed),Closed
+2017-09-04,Labor Day,Closed
+2017-11-23,Thanksgiving Day,Close
+2017-11-24,Early Market Close,1:00 p.m. EST
+2017-12-25,Christmas Day (Observed),Closed

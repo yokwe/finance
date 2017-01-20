@@ -8,6 +8,7 @@ import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.RSI;
 import yokwe.finance.securities.util.DoubleStreamUtil;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class Stats {
 	public String exchange;
@@ -62,43 +63,56 @@ public class Stats {
 			
 			DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
 			Arrays.stream(priceArray).forEach(stats);
-			this.sd = stats.getStandardDeviation();
+			this.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
 			
 			HV hv = new HV();
 			Arrays.stream(priceArray).forEach(hv);
-			this.hv = hv.getValue();
+			this.hv = DoubleUtil.round(hv.getValue(), 4);
 			
 			RSI rsi = new RSI();
 			Arrays.stream(priceArray).forEach(rsi);
-			this.rsi = rsi.getValue();
+			this.rsi = DoubleUtil.round(rsi.getValue(), 1);
 			
-			this.min = stats.getMin();
-			this.max = stats.getMax();
-			this.minPercent = (this.price - this.min) / this.price;
-			this.maxPercent = (this.max - this.price) / this.price;
+			this.min = DoubleUtil.round(stats.getMin(), 2);
+			this.max = DoubleUtil.round(stats.getMax(), 2);
+			this.minPercent = DoubleUtil.round((this.price - this.min) / this.price, 3);
+			this.maxPercent = DoubleUtil.round((this.max - this.price) / this.price, 3);
 			
 			MA price20 = MA.sma(20);
 			Arrays.stream(priceArray).forEach(price20);
-			this.sma20 = price20.getValue();
+			this.sma20 = DoubleUtil.round(price20.getValue(), 2);
 			
 			MA price50 = MA.sma(50);
 			Arrays.stream(priceArray).forEach(price50);
-			this.sma50 = price50.getValue();
+			this.sma50 = DoubleUtil.round(price50.getValue(), 2);
 			
 			MA price200 = MA.sma(200);
 			Arrays.stream(priceArray).forEach(price200);
-			this.sma200 = price200.getValue();
+			this.sma200 = DoubleUtil.round(price200.getValue(), 2);
 		}
 		
 		// dividend
-		//public double div;
-		//public int    divCount;
-		//public double divYield;
+		{
+			double[] divArray = dividendList.stream().mapToDouble(o -> o.dividend).toArray();
+			
+			Arrays.stream(divArray).sum();
+
+			this.div      = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
+			this.divCount = divArray.length;
+			this.divYield = DoubleUtil.round(this.div / this.price, 3);
+		}
 		
 		// volume
-		//public long   vol5;
-		//public long   vol30;
+		{
+			double[] volArray = priceList.stream().mapToDouble(o -> o.volume).toArray();
 
-		
+			MA vol5 = MA.sma(5);
+			Arrays.stream(volArray).forEach(vol5);
+			this.vol5 = (long)vol5.getValue();
+
+			MA vol30 = MA.sma(30);
+			Arrays.stream(volArray).forEach(vol30);
+			this.vol30 = (long)vol30.getValue();
+		}
 	}
 }

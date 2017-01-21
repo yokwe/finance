@@ -190,6 +190,23 @@
                 </java>
         </target>
 
+	<!-- Quand -->
+        <target name="run-databaseList">
+                <java classname="yokwe.finance.securities.quandl.DatabaseList" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        <target name="run-datasetList">
+                <java classname="yokwe.finance.securities.quandl.DatasetList" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+	<!-- eod -->
         <target name="run-eod-update-price-google">
                 <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
                         <classpath location="${jar.yokwe}" />
@@ -217,16 +234,8 @@
                 </java>
         </target>
 
-	<!-- Quand -->
-        <target name="run-databaseList">
-                <java classname="yokwe.finance.securities.quandl.DatabaseList" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                </java>
-        </target>
-        <target name="run-datasetList">
-                <java classname="yokwe.finance.securities.quandl.DatasetList" fork="true">
+        <target name="run-eod-stats">
+                <java classname="yokwe.finance.securities.eod.Stats" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>

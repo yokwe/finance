@@ -3,11 +3,11 @@ package yokwe.finance.securities.eod;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
-import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
@@ -132,25 +132,36 @@ public class Stats {
 	public static void main(String[] args) {
 		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
 		logger.info("START");
-				
-		final String PATH_STATS   = "tmp/eod/stats.csv";
-		final String PATH_PRICE   = "tmp/eod/price-yahoo";
-		final String PATH_DIVIDED = "tmp/eod/dividend-yahoo";
 		
-		File dirPrice    = new File(PATH_PRICE);
-		File dirDividend = new File(PATH_DIVIDED);
+		final String lastTradingDate = Market.getLastTradingDate().toString();
+
+		final String PATH_STATS          = "tmp/eod/stats.csv";
+		final String PATH_PRICE_GOOGLE   = "tmp/eod/price-google";
+		final String PATH_PRICE_YAHOO    = "tmp/eod/price-yahoo";
+		final String PATH_DIVIDEND_YAHOO = "tmp/eod/dividend-yahoo";
 		
-		File[] priceFiles = dirPrice.listFiles(o -> o.getName().endsWith(".csv"));
-		Arrays.sort(priceFiles);
+		File dirPriceGoogle   = new File(PATH_PRICE_GOOGLE);
+		File dirPriceYahoo    = new File(PATH_PRICE_YAHOO);
+		File dirDividendYahoo = new File(PATH_DIVIDEND_YAHOO);
 		
 		List<Stats> statsList = new ArrayList<>();
-		int total = priceFiles.length;
+		
+		Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
+		
+//		Collection<NasdaqTable> nasdaqCollection = new ArrayList<>();
+//		nasdaqCollection.add(NasdaqUtil.get("IBM"));
+//		nasdaqCollection.add(NasdaqUtil.get("NYT"));
+//		nasdaqCollection.add(NasdaqUtil.get("PEP"));
+		
+		int total = nasdaqCollection.size();
 		int count = 0;
 		
-		int showInterval = 100;
+		int showInterval = 10000;
 		boolean showOutput;
 		int lastOutputCount = -1;
-		for(File priceFile: priceFiles) {
+		for(NasdaqTable nasdaq: nasdaqCollection) {
+			String symbol = nasdaq.symbol;
+
 			int outputCount = count / showInterval;
 			if (outputCount != lastOutputCount) {
 				showOutput = true;
@@ -161,16 +172,74 @@ public class Stats {
 
 			count++;
 			
-			String symbol = priceFile.getName().replace(".csv", "");
-
-			if (!NasdaqUtil.contains(symbol)) {
-				logger.error("Unknown symbol {}", symbol);
-				throw new SecuritiesException("Unknown symbol");
+			final List<Price> priceList;
+			final File dividendFile;
+			{
+				String fileName = String.format("%s.csv", nasdaq.symbol);
+				
+				File priceGoogle   = new File(dirPriceGoogle, fileName);
+				File priceYahoo    = new File(dirPriceYahoo, fileName);
+				File dividendYahoo = new File(dirDividendYahoo, fileName);
+								
+				if (priceGoogle.exists() && priceYahoo.exists()) {
+					// both
+					List<Price> priceListGoogle = CSVUtil.loadWithHeader(priceGoogle.getPath(), Price.class);
+					List<Price> priceListYahoo  = CSVUtil.loadWithHeader(priceYahoo.getPath(), Price.class);
+					
+					String dateGoogle = priceListGoogle.get(0).date;
+					String dateYahoo  = priceListYahoo.get(0).date;
+					
+					if (dateGoogle.equals(lastTradingDate) && dateYahoo.equals(lastTradingDate)) {
+						// both
+						int priceGoogleSize = priceListGoogle.size();
+						int priceYahooSize  = priceListYahoo.size();
+						
+						if (priceGoogleSize < priceYahooSize) {
+							priceList = priceListYahoo;
+						} else {
+							priceList = priceListGoogle;
+						}
+					} else if (dateGoogle.equals(lastTradingDate)) {
+						// google
+						priceList = priceListGoogle;
+					} else if (dateYahoo.equals(lastTradingDate)) {
+						// yahoo
+						priceList = priceListYahoo;
+					} else {
+						// none -- could be happen for discontinued stock
+						int priceGoogleSize = priceListGoogle.size();
+						int priceYahooSize  = priceListYahoo.size();
+						
+						if (priceGoogleSize < priceYahooSize) {
+							priceList = priceListYahoo;
+						} else {
+							priceList = priceListGoogle;
+						}
+					}
+				} else if (priceGoogle.exists()) {
+					// only google
+					priceList = CSVUtil.loadWithHeader(priceGoogle.getPath(), Price.class);
+				} else if (priceYahoo.exists()) {
+					// only yahoo
+					priceList = CSVUtil.loadWithHeader(priceYahoo.getPath(), Price.class);
+				} else {
+					// none
+//					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s NO PRICE DATA", symbol));
+					continue;
+				}
+				
+				dividendFile = dividendYahoo;
 			}
-			NasdaqTable nasdaq = NasdaqUtil.get(symbol);
 			
-			List<Price> priceList = CSVUtil.loadWithHeader(priceFile.getPath(), Price.class);
-			
+			// date is not last trading date
+			{
+				String date = priceList.get(0).date;
+				if (!date.equals(lastTradingDate)) {
+					logger.warn("{}  old    {}", String.format("%4d / %4d",  count, total), String.format("%-8s %s", symbol, date));
+				}
+			}
+						
+			// Ignore penny stock
 			{
 				boolean penyyStock = false;
 				for(Price price: priceList) {
@@ -185,17 +254,17 @@ public class Stats {
 				}
 			}
 			
-			if (priceList.size() < RSI.DEFAULT_PERIDO) {
-				logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
+			// Ignore too small sample stock to prevent error from RSI class.
+			if (priceList.size() <= RSI.DEFAULT_PERIDO) {
+				logger.warn("{}  small  {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
 				continue;
 			}
 			
 			if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 			
 			List<Dividend> dividendList;
-			File fileDividend = new File(dirDividend, priceFile.getName());
-			if (fileDividend.exists()) {
-				dividendList = CSVUtil.loadWithHeader(fileDividend.getPath(), Dividend.class);
+			if (dividendFile.exists()) {
+				dividendList = CSVUtil.loadWithHeader(dividendFile.getPath(), Dividend.class);
 			} else {
 				dividendList = new ArrayList<>();
 			}

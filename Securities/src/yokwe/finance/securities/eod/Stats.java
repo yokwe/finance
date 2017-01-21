@@ -19,17 +19,16 @@ import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
 
 public class Stats {
-	public String exchange;
+//	public String exchange;
 	public String symbol;
 	public String name;
 	
-	// sampled values
-	public String sample;
+	// last values
+	public String date;
 	public double price;
-	public long   vol;
 	
 	// price
-	public int    priceCount;
+	public int    pricec;
 	
 	public double sd;
 	public double hv;
@@ -37,8 +36,8 @@ public class Stats {
 
 	public double min;
 	public double max;
-	public double minPercent;
-	public double maxPercent;
+	public double minpct;
+	public double maxpct;
 
 	public double sma20;
 	public double sma50;
@@ -46,28 +45,33 @@ public class Stats {
 	
 	// dividend
 	public double div;
-	public int    divCount;
-	public double divYield;
+	public int    divc;
+	public double yield;
 	
 	// volume
+	public long   vol;
 	public long   vol5;
 	public long   vol30;
 	
 	public Stats(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
-		this.exchange = nasdaq.exchange;
+		// Order of data is important
+		priceList.sort((a, b) -> a.date.compareTo(b.date));
+		dividendList.sort((a, b) -> a.date.compareTo(b.date));
+
+//		this.exchange = nasdaq.exchange;
 		this.symbol   = nasdaq.symbol;
 		this.name     = nasdaq.name;
 		
 		{
-			Price lastPrice = priceList.get(0);
-			this.sample   = lastPrice.date;
-			this.price    = lastPrice.close;
-			this.vol      = lastPrice.volume;
+			Price lastPrice = priceList.get(priceList.size() - 1);
+			this.date  = lastPrice.date;
+			this.price = DoubleUtil.round(lastPrice.close, 2);
+			this.vol   = lastPrice.volume;
 		}
 		
 		{
 			double[] priceArray = priceList.stream().mapToDouble(o -> o.close).toArray();
-			this.priceCount = priceArray.length;
+			this.pricec = priceArray.length;
 			
 			{
 				double logReturn[] = DoubleArray.logReturn(priceArray);
@@ -80,16 +84,26 @@ public class Stats {
 			Arrays.stream(priceArray).forEach(hv);
 			this.hv = DoubleUtil.round(hv.getValue(), 4);
 			
-			RSI rsi = new RSI();
-			Arrays.stream(priceArray).forEach(rsi);
-			this.rsi = DoubleUtil.round(rsi.getValue(), 1);
+			if (RSI.DEFAULT_PERIDO < priceArray.length) {
+				RSI rsi = new RSI();
+				Arrays.stream(priceArray).forEach(rsi);
+				this.rsi = DoubleUtil.round(rsi.getValue(), 1);
+			} else {
+				this.rsi = -1;
+			}
 			
-			DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
-			Arrays.stream(priceArray).forEach(stats);
-			this.min = DoubleUtil.round(stats.getMin(), 2);
-			this.max = DoubleUtil.round(stats.getMax(), 2);
-			this.minPercent = DoubleUtil.round((this.price - this.min) / this.price, 3);
-			this.maxPercent = DoubleUtil.round((this.max - this.price) / this.price, 3);
+			{
+				double min = priceList.get(0).low;
+				double max = priceList.get(0).high;
+				for(Price price: priceList) {
+					if (price.low < min)  min = price.low;
+					if (max < price.high) max = price.high;
+				}
+				this.min    = DoubleUtil.round(min, 2);
+				this.max    = DoubleUtil.round(max, 2);
+				this.minpct = DoubleUtil.round((this.price - this.min) / this.price, 3);
+				this.maxpct = DoubleUtil.round((this.max - this.price) / this.price, 3);
+			}
 			
 			MA price20 = MA.sma(20);
 			Arrays.stream(priceArray).forEach(price20);
@@ -110,9 +124,9 @@ public class Stats {
 			
 			Arrays.stream(divArray).sum();
 
-			this.div      = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
-			this.divCount = divArray.length;
-			this.divYield = DoubleUtil.round(this.div / this.price, 3);
+			this.div   = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
+			this.divc  = divArray.length;
+			this.yield = DoubleUtil.round(this.div / this.price, 3);
 		}
 		
 		// volume
@@ -257,7 +271,7 @@ public class Stats {
 			// Ignore too small sample stock to prevent error from RSI class.
 			if (priceList.size() <= RSI.DEFAULT_PERIDO) {
 				logger.warn("{}  small  {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
-				continue;
+//				continue;
 			}
 			
 			if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);

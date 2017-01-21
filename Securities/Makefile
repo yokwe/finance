@@ -189,4 +189,12 @@ update-equityStats:
 	ant run-equityStats
 	tail -n +2 ${DIR_DATABASE}/equityStats-header.csv >${DIR_DATABASE}/equityStats.csv
 	cp ${DIR_DATABASE}/equityStats-header.csv ~/Dropbox/Trade
-	
+
+#
+# eod
+#
+eod-stats:
+	ant run-eod-stats
+	cp tmp/eod/stats.csv ${DIR_DATABASE}/stats.csv
+	cp ${DIR_DATABASE}/stats.csv ~/Dropbox/Trade
+

@@ -1,5 +1,6 @@
 package yokwe.finance.securities.stats;
 
+import java.util.Arrays;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -23,7 +24,10 @@ public class HV implements DoubleUnaryOperator, DoubleConsumer {
 	public HV() {
 		this(DEFAULT_ALPHA);
 	}
-	
+	public HV(double[] values) {
+		this();
+		Arrays.stream(values).forEach(this);
+	}
 	public double getValue() {
 		return Math.sqrt(ema.getValue());
 	}

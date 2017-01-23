@@ -87,6 +87,11 @@ public abstract class MA implements DoubleUnaryOperator, DoubleConsumer {
 	public static SMA sma(int dataSize) {
 		return new SMA(dataSize);
 	}
+	public static SMA sma(int dataSize, double[] values) {
+		SMA sma = new SMA(dataSize);
+		Arrays.stream(values).forEach(sma);
+		return sma;
+	}
 
 	public static final class EMA_NR extends MA {
 		public  final int    size;

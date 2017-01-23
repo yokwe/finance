@@ -1,5 +1,6 @@
 package yokwe.finance.securities.stats;
 
+import java.util.Arrays;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleUnaryOperator;
 
@@ -26,6 +27,10 @@ public final class RSI implements DoubleUnaryOperator, DoubleConsumer {
 	
 	public RSI() {
 		this(DEFAULT_PERIDO);
+	}
+	public RSI(double[] values) {
+		this();
+		Arrays.stream(values).forEach(this);
 	}
 	
 	public RSI(int period) {

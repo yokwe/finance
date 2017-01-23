@@ -75,13 +75,11 @@ public class Stats {
 			
 			{
 				double logReturn[] = DoubleArray.logReturn(priceArray);
-				DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats();
-				Arrays.stream(logReturn).forEach(stats);
+				DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats(logReturn);
 				this.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
 			}
 			
-			HV hv = new HV();
-			Arrays.stream(priceArray).forEach(hv);
+			HV hv = new HV(priceArray);
 			this.hv = DoubleUtil.round(hv.getValue(), 4);
 			
 			if (RSI.DEFAULT_PERIDO < priceArray.length) {
@@ -105,16 +103,13 @@ public class Stats {
 				this.maxpct = DoubleUtil.round((this.max - this.price) / this.price, 3);
 			}
 			
-			MA price20 = MA.sma(20);
-			Arrays.stream(priceArray).forEach(price20);
+			MA price20 = MA.sma(20, priceArray);
 			this.sma20 = DoubleUtil.round(price20.getValue(), 2);
 			
-			MA price50 = MA.sma(50);
-			Arrays.stream(priceArray).forEach(price50);
+			MA price50 = MA.sma(50, priceArray);
 			this.sma50 = DoubleUtil.round(price50.getValue(), 2);
 			
-			MA price200 = MA.sma(200);
-			Arrays.stream(priceArray).forEach(price200);
+			MA price200 = MA.sma(200, priceArray);
 			this.sma200 = DoubleUtil.round(price200.getValue(), 2);
 		}
 		
@@ -122,8 +117,6 @@ public class Stats {
 		{
 			double[] divArray = dividendList.stream().mapToDouble(o -> o.dividend).toArray();
 			
-			Arrays.stream(divArray).sum();
-
 			this.div   = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
 			this.divc  = divArray.length;
 			this.yield = DoubleUtil.round(this.div / this.price, 3);
@@ -133,12 +126,10 @@ public class Stats {
 		{
 			double[] volArray = priceList.stream().mapToDouble(o -> o.volume).toArray();
 
-			MA vol5 = MA.sma(5);
-			Arrays.stream(volArray).forEach(vol5);
+			MA vol5 = MA.sma(5, volArray);
 			this.vol5 = (long)vol5.getValue();
 
-			MA vol30 = MA.sma(30);
-			Arrays.stream(volArray).forEach(vol30);
+			MA vol30 = MA.sma(30, volArray);
 			this.vol30 = (long)vol30.getValue();
 		}
 	}

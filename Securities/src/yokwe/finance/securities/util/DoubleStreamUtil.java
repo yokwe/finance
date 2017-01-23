@@ -26,6 +26,13 @@ public class DoubleStreamUtil {
 			stats.addValue(value);
 		}
 		
+		public Stats() {}
+		
+		public Stats(double[] values) {
+			this();
+			Arrays.stream(values).forEach(this);
+		}
+		
 		public double getMin() {
 			return stats.getMin();
 		}

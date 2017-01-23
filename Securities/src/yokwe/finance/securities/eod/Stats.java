@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
@@ -54,6 +55,8 @@ public class Stats {
 	public long   vol30;
 	
 	public Stats(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
+		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
+
 		// Order of data is important
 		priceList.sort((a, b) -> a.date.compareTo(b.date));
 		dividendList.sort((a, b) -> a.date.compareTo(b.date));
@@ -76,6 +79,17 @@ public class Stats {
 			{
 				double logReturn[] = DoubleArray.logReturn(priceArray);
 				DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats(logReturn);
+				
+				double sd = stats.getStandardDeviation();
+				if (Double.isInfinite(sd)) {
+					logger.error("sd is infinite  {}", symbol);
+					throw new SecuritiesException("sd is infinite");
+				}
+				if (Double.isNaN(sd)) {
+					logger.error("sd is Nan  {}", symbol);
+					throw new SecuritiesException("sd is NaN");
+				}
+				
 				this.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
 			}
 			
@@ -259,10 +273,10 @@ public class Stats {
 				}
 			}
 			
-			// Ignore too small sample stock to prevent error from RSI class.
-			if (priceList.size() <= RSI.DEFAULT_PERIDO) {
+			// Ignore too small sample stock to prevent error and prevent get abnormal statistics value
+			if (priceList.size() <= 5) {
 				logger.warn("{}  small  {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
-//				continue;
+				continue;
 			}
 			
 			if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);

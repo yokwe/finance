@@ -203,8 +203,11 @@ public class UpdateDividend {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-						if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
-						updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST);
+						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+						} else {
+							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, total), symbol);
+						}
 					} else {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
 					}

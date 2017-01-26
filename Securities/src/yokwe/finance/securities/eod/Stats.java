@@ -40,10 +40,6 @@ public class Stats {
 	public double minpct;
 	public double maxpct;
 
-	public double sma20;
-	public double sma50;
-	public double sma200;
-	
 	// dividend
 	public double div;
 	public int    divc;
@@ -53,6 +49,18 @@ public class Stats {
 	public long   vol;
 	public long   vol5;
 	public long   vol30;
+	
+	// price change detection
+	public double sma5;
+	public double sma20;
+	public double sma50;
+	public double sma200;
+	
+	public double sma5pct;
+	public double sma20pct;
+	public double sma50pct;
+	public double sma200pct;
+
 	
 	public Stats(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
 		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
@@ -117,14 +125,17 @@ public class Stats {
 				this.maxpct = DoubleUtil.round((this.max - this.price) / this.price, 3);
 			}
 			
-			MA price20 = MA.sma(20, priceArray);
-			this.sma20 = DoubleUtil.round(price20.getValue(), 2);
 			
-			MA price50 = MA.sma(50, priceArray);
-			this.sma50 = DoubleUtil.round(price50.getValue(), 2);
+			// price change detection
+			this.sma5   = DoubleUtil.round(MA.sma(  5, priceArray).getValue(), 2);
+			this.sma20  = DoubleUtil.round(MA.sma( 20, priceArray).getValue(), 2);
+			this.sma50  = DoubleUtil.round(MA.sma( 50, priceArray).getValue(), 2);
+			this.sma200 = DoubleUtil.round(MA.sma(200, priceArray).getValue(), 2);
 			
-			MA price200 = MA.sma(200, priceArray);
-			this.sma200 = DoubleUtil.round(price200.getValue(), 2);
+			this.sma5pct   = DoubleUtil.round((this.price - this.sma5)   / this.price, 3);
+			this.sma20pct  = DoubleUtil.round((this.price - this.sma20)  / this.price, 3);
+			this.sma50pct  = DoubleUtil.round((this.price - this.sma50)  / this.price, 3);
+			this.sma200pct = DoubleUtil.round((this.price - this.sma200) / this.price, 3);
 		}
 		
 		// dividend
@@ -146,6 +157,7 @@ public class Stats {
 			MA vol30 = MA.sma(30, volArray);
 			this.vol30 = (long)vol30.getValue();
 		}
+		
 	}
 	
 	public static void main(String[] args) {

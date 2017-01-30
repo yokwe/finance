@@ -82,6 +82,8 @@ public class UpdateDividend {
 				throw new SecuritiesException("Unexpected header");
 			}
 
+			String         targetDate   = dateLast.toString();
+			boolean        targetFound  = false;
 			List<Dividend> dividendList = new ArrayList<>();
 			
 			for(String line: lines) {
@@ -96,10 +98,18 @@ public class UpdateDividend {
 				String date     = values[0];
 				double dividend = DoubleUtil.round(Double.valueOf(values[1]), 4);
 				
+				if (date.equals(targetDate)) targetFound = true;
+
 				dividendList.add(new Dividend(date, symbol, dividend));
 			}
-			CSVUtil.saveWithHeader(dividendList, file.getAbsolutePath());
-			return true;
+			if (targetFound) {
+				CSVUtil.saveWithHeader(dividendList, file.getAbsolutePath());
+				return true;
+			} else {
+				// no target date data
+				// file.delete(); // keep old file
+				return false;
+			}
 		}
 	}
 	
@@ -214,6 +224,8 @@ public class UpdateDividend {
 				} else {
 					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+					} else {
+//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				}
 			}

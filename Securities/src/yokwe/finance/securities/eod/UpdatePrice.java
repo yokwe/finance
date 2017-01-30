@@ -85,7 +85,9 @@ public class UpdatePrice {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			List<Price> priceList = new ArrayList<>();
+			String      targetDate  = dateLast.toString();
+			boolean     targetFound = false;
+			List<Price> priceList   = new ArrayList<>();
 			
 			for(String line: lines) {
 				if (line.startsWith("\uFEFFDate,Open,High,Low,Close,Volume")) continue;
@@ -127,10 +129,19 @@ public class UpdatePrice {
 				double close  = DoubleUtil.round(Double.valueOf(values[4]), 2);
 				long   volume = Long.valueOf(values[5]);
 				
+				if (date.equals(targetDate)) targetFound = true;
+				
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
-			CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
-			return true;
+			
+			if (targetFound) {
+				CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+				return true;
+			} else {
+				// no target date data
+				// file.delete(); // keep old file
+				return false;
+			}
 		}
 	}
 	
@@ -186,7 +197,9 @@ public class UpdatePrice {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			List<Price> priceList = new ArrayList<>();
+			String      targetDate  = dateLast.toString();
+			boolean     targetFound = false;
+			List<Price> priceList   = new ArrayList<>();
 			
 			for(String line: lines) {
 				if (line.startsWith(YAHOO_PRICE_HEADER)) continue;
@@ -204,10 +217,20 @@ public class UpdatePrice {
 				double close  = DoubleUtil.round(Double.valueOf(values[4]), 2);
 				long   volume = Long.valueOf(values[5]);
 				
+				if (date.equals(targetDate)) targetFound = true;
+				
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
-			CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
-			return true;
+
+			
+			if (targetFound) {
+				CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+				return true;
+			} else {
+				// no target date data
+				// file.delete(); // keep old file
+				return false;
+			}
 		}
 	}
 	
@@ -323,6 +346,8 @@ public class UpdatePrice {
 				} else {
 					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+					} else {
+//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
 					}
 				}
 			}

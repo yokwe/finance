@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.Mizuho;
 
 public class Report {
@@ -71,7 +72,7 @@ public class Report {
 			}
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			double cost = (activity.quantity * activity.price) + activity.commission;
+			double cost = DoubleUtil.round((activity.quantity * activity.price) + activity.commission, 2);
 			int costJPY = (int)Math.round(cost * fxRate);
 			totalQuantity += activity.quantity;
 			totalCost     += cost;
@@ -92,12 +93,12 @@ public class Report {
 			current.add(new Transfer(buy));
 		}
 		void sell(Activity activity, double fxRate) {
-			double sell    = activity.price * activity.quantity;
+			double sell    = DoubleUtil.round(activity.price * activity.quantity, 2);
 			int    sellJPY = (int)Math.round(sell * fxRate);
 			int    feeJPY  = (int)Math.round(activity.commission * fxRate);
 
 			double sellRatio = activity.quantity / totalQuantity;
-			double cost      = totalCost * sellRatio;
+			double cost      = DoubleUtil.round(totalCost * sellRatio, 2);
 			int    costJPY;
 			
 			if (buyCount == 1) {

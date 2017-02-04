@@ -1,5 +1,7 @@
 package yokwe.finance.securities.tax;
 
+import yokwe.finance.securities.util.DoubleUtil;
+
 public class Transfer {
 	// Provide class that contains enough information to spread sheet 譲渡明細 and 譲渡計算明細書
 	public static class Buy {
@@ -30,7 +32,7 @@ public class Transfer {
 			this.price         = price;
 			this.fee           = fee;
 			this.fxRate        = fxRate;
-			this.buy           = this.price * this.quantity;
+			this.buy           = DoubleUtil.round(this.price * this.quantity, 2);
 			this.buyJPY        = (int)Math.round(this.buy * this.fxRate);
 			this.feeJPY        = (int)Math.round(this.fee * this.fxRate);
 			this.totalQuantity = totalQuantity;
@@ -79,7 +81,7 @@ public class Transfer {
 			this.fee           = fee;
 			this.fxRate        = fxRate;
 			
-			this.sell          = this.price * this.quantity;
+			this.sell          = DoubleUtil.round(this.price * this.quantity, 2);
 			this.sellJPY       = (int)Math.round(this.sell * this.fxRate);
 			this.feeJPY        = (int)Math.round(this.fee * this.fxRate);
 			

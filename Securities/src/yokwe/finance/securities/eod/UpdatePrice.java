@@ -150,7 +150,7 @@ public class UpdatePrice {
 		public String getName() {
 			return PROVIDER_NAME;
 		}
-
+		
 		public File getFile(String symbol) {
 			String path = String.format("%s-%s/%s.csv", PATH_DIR, getName(), symbol);
 			File file = new File(path);
@@ -162,13 +162,10 @@ public class UpdatePrice {
 			
 			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
 
-			// Convert from '.PR.' to  '-' in symbol for google
-			//String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
-			
 			// first
 			int a = dateFirst.getMonthValue(); // mm
 			int b = dateFirst.getDayOfMonth(); // dd
-			int c = dateFirst.getYear();      // yyyy
+			int c = dateFirst.getYear();       // yyyy
 			// last
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
@@ -221,7 +218,6 @@ public class UpdatePrice {
 				
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
-
 			
 			if (targetFound) {
 				CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
@@ -315,6 +311,12 @@ public class UpdatePrice {
 			int total = nasdaqCollection.size();
 			int count = 0;
 			
+			int countUpdate = 0;
+			int countOld    = 0;
+			int countSkip   = 0;
+			int countNew    = 0;
+			int countNone   = 0;
+			
 			int showInterval = 100;
 			boolean showOutput;
 			int lastOutputCount = -1;
@@ -337,20 +339,31 @@ public class UpdatePrice {
 					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
 						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+							countUpdate++;
 						} else {
 							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, total), symbol);
+							countOld++;
 						}
 					} else {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
+						countSkip++;
 					}
 				} else {
 					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+						countNew++;
 					} else {
 //						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
+						countNone++;
 					}
 				}
 			}
+			logger.info("update {}", String.format("%4d", countUpdate));
+			logger.info("old    {}", String.format("%4d", countOld));
+			logger.info("skip   {}", String.format("%4d", countSkip));
+			logger.info("new    {}", String.format("%4d", countNew));
+			logger.info("none   {}", String.format("%4d", countNone));
+			logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
 		}
 		logger.info("STOP");
 	}

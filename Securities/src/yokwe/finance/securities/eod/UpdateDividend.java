@@ -20,14 +20,14 @@ import yokwe.finance.securities.util.NasdaqUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
-		
+	
 	private static final int       DURTION_YEAR  =  1; // we need one year data
 	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
 	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
 	
 	public interface UpdateProvider {
 		public static final String PATH_DIR = "tmp/eod/dividend";
-
+		
 		public String  getName();
 		public File    getFile(String symbol);
 		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
@@ -99,9 +99,10 @@ public class UpdateDividend {
 				double dividend = DoubleUtil.round(Double.valueOf(values[1]), 4);
 				
 				if (date.equals(targetDate)) targetFound = true;
-
+				
 				dividendList.add(new Dividend(date, symbol, dividend));
 			}
+			
 			if (targetFound) {
 				CSVUtil.saveWithHeader(dividendList, file.getAbsolutePath());
 				return true;
@@ -144,7 +145,6 @@ public class UpdateDividend {
 		return !date.equals(dateLast.toString());
 	}
 	
-	
 	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
 	static {
 		updateProviderMap.put("yahoo", new UpdateProviderYahoo());
@@ -157,7 +157,7 @@ public class UpdateDividend {
 		String providerName = args[0];
 		UpdateProvider updateProvider = updateProviderMap.get(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());
-
+		
 		{
 			File dir = updateProvider.getFile("DUMMY").getParentFile();
 			if (!dir.exists()) {
@@ -185,6 +185,7 @@ public class UpdateDividend {
 		
 		{
 			Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
+			
 //			Collection<NasdaqTable> nasdaqCollection = new ArrayList<>();
 //			nasdaqCollection.add(NasdaqUtil.get("IBM"));
 //			nasdaqCollection.add(NasdaqUtil.get("NYT"));
@@ -192,6 +193,12 @@ public class UpdateDividend {
 			
 			int total = nasdaqCollection.size();
 			int count = 0;
+			
+			int countUpdate = 0;
+			int countOld    = 0;
+			int countSkip   = 0;
+			int countNew    = 0;
+			int countNone   = 0;
 			
 			int showInterval = 100;
 			boolean showOutput;
@@ -215,20 +222,32 @@ public class UpdateDividend {
 					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
 						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
+							countUpdate++;
 						} else {
 							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, total), symbol);
+							countOld++;
 						}
 					} else {
 						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
+						countSkip++;
 					}
 				} else {
 					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
+						countNew++;
 					} else {
 //						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
+						countNone++;
 					}
 				}
 			}
+			logger.info("update {}", String.format("%4d", countUpdate));
+			logger.info("old    {}", String.format("%4d", countOld));
+			logger.info("skip   {}", String.format("%4d", countSkip));
+			logger.info("new    {}", String.format("%4d", countNew));
+			logger.info("none   {}", String.format("%4d", countNone));
+			logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
 		}
 		logger.info("STOP");
-	}}
+	}
+}

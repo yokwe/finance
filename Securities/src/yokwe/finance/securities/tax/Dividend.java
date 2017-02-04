@@ -22,13 +22,13 @@ public class Dividend extends Sheet {
 	@ColumnName("為替レート")
 	public double fxRate;
 	@ColumnName("邦貨配当金額")
-	public double dividendJPY;
+	public int dividendJPY;
 	@ColumnName("邦貨外国源泉額")
-	public double taxWithholdingJPY;
+	public int taxWithholdingJPY;
 	
 	private Dividend(
 			String date, String symbol, String symbolName, String quantity,
-			double dividend, double taxWithholding, double fxRate, double dividendJPY, double taxWithholdingJPY) {
+			double dividend, double taxWithholding, double fxRate, int dividendJPY, int taxWithholdingJPY) {
 		this.date              = date;
 		this.symbol            = symbol;
 		this.symbolName        = symbolName;
@@ -44,18 +44,18 @@ public class Dividend extends Sheet {
 	public void update(double dividend, double taxWithholding) {
 		this.dividend       += dividend;
 		this.taxWithholding += taxWithholding;
-		dividendJPY          = fxRate * this.dividend;
-		taxWithholdingJPY    = fxRate * this.taxWithholding;
+		dividendJPY          = (int)Math.round(fxRate * this.dividend);
+		taxWithholdingJPY    = (int)Math.round(fxRate * this.taxWithholding);
 	}
 
 	public static Dividend getInstance(
 			String date, String symbol, String symbolName, double quantity,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
+		return new Dividend(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, (int)Math.round(fxRate * dividend), (int)Math.round(fxRate * taxWithholding));
 	}
 	public static Dividend getInstance(
 			String date,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, fxRate * dividend, fxRate * taxWithholding);
+		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, (int)Math.round(fxRate * dividend), (int)Math.round(fxRate * taxWithholding));
 	}
 }

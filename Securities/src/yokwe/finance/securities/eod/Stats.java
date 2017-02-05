@@ -225,7 +225,7 @@ public class Stats {
 						int priceGoogleSize = priceListGoogle.size();
 						int priceYahooSize  = priceListYahoo.size();
 						
-						if (priceGoogleSize < priceYahooSize) {
+						if (priceGoogleSize <= priceYahooSize) { // prefer yahoo over google
 							priceList = priceListYahoo;
 						} else {
 							priceList = priceListGoogle;
@@ -303,6 +303,7 @@ public class Stats {
 			statsList.add(new Stats(nasdaq, priceList, dividendList));
 		}
 		CSVUtil.saveWithHeader(statsList, PATH_STATS);
+		logger.info("stats  {}", String.format("%4d", statsList.size()));
 		logger.info("STOP");
 	}
 }

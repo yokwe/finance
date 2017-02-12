@@ -33,8 +33,8 @@ public class Transfer {
 			this.fee           = fee;
 			this.fxRate        = fxRate;
 			this.buy           = DoubleUtil.round(this.price * this.quantity, 2);
-			this.buyJPY        = (int)Math.round(this.buy * this.fxRate);
-			this.feeJPY        = (int)Math.round(this.fee * this.fxRate);
+			this.buyJPY        = (int)Math.floor(this.buy * this.fxRate);
+			this.feeJPY        = (int)Math.floor(this.fee * this.fxRate);
 			this.totalQuantity = totalQuantity;
 			this.totalCost     = totalCost;
 			this.totalCostJPY  = totalCostJPY;
@@ -82,8 +82,8 @@ public class Transfer {
 			this.fxRate        = fxRate;
 			
 			this.sell          = DoubleUtil.round(this.price * this.quantity, 2);
-			this.sellJPY       = (int)Math.round(this.sell * this.fxRate);
-			this.feeJPY        = (int)Math.round(this.fee * this.fxRate);
+			this.sellJPY       = (int)Math.floor(this.sell * this.fxRate);
+			this.feeJPY        = (int)Math.floor(this.fee * this.fxRate);
 			
 			this.cost          = cost;
 			this.costJPY       = costJPY;

@@ -26,12 +26,20 @@ public class Dividend extends Sheet {
 	@ColumnName("邦貨外国源泉額")
 	public int taxWithholdingJPY;
 	
+	@ColumnName("収入金額")
+	public int profitJPY;
+	@ColumnName("源泉徴収税額")
+	public int incomeTaxJPY;
+	@ColumnName("住民税額")
+	public int residentTaxJPY;
+
+	
 	private Dividend(
 			String date, String symbol, String symbolName, String quantity,
 			double dividend, double taxWithholding, double fxRate, int dividendJPY, int taxWithholdingJPY) {
 		this.date              = date;
 		this.symbol            = symbol;
-		this.symbolName        = symbolName;
+		this.symbolName        = symbol + " - " + symbolName;
 		this.quantity          = quantity;
 		
 		this.dividend          = dividend;
@@ -39,23 +47,31 @@ public class Dividend extends Sheet {
 		this.fxRate            = fxRate;
 		this.dividendJPY       = dividendJPY;
 		this.taxWithholdingJPY = taxWithholdingJPY;
+		
+		this.profitJPY         = dividendJPY - taxWithholdingJPY;
+		this.incomeTaxJPY      = (int)Math.floor(profitJPY * Tax.INCOME_TAX_RATE);
+		this.residentTaxJPY    = (int)Math.floor(profitJPY * Tax.RESIDENT_TAX_RATE);
 	}
 	
 	public void update(double dividend, double taxWithholding) {
 		this.dividend       += dividend;
 		this.taxWithholding += taxWithholding;
-		dividendJPY          = (int)Math.round(fxRate * this.dividend);
-		taxWithholdingJPY    = (int)Math.round(fxRate * this.taxWithholding);
+		dividendJPY          = (int)Math.floor(fxRate * this.dividend);
+		taxWithholdingJPY    = (int)Math.floor(fxRate * this.taxWithholding);
+		
+		this.profitJPY       = dividendJPY - taxWithholdingJPY;
+		this.incomeTaxJPY    = (int)Math.floor(profitJPY * Tax.INCOME_TAX_RATE);
+		this.residentTaxJPY  = (int)Math.floor(profitJPY * Tax.RESIDENT_TAX_RATE);
 	}
 
 	public static Dividend getInstance(
 			String date, String symbol, String symbolName, double quantity,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, (int)Math.round(fxRate * dividend), (int)Math.round(fxRate * taxWithholding));
+		return new Dividend(date, symbol, symbolName, String.format("%.5f", quantity), dividend, taxWithholding, fxRate, (int)Math.floor(fxRate * dividend), (int)Math.floor(fxRate * taxWithholding));
 	}
 	public static Dividend getInstance(
 			String date,
 			double dividend, double taxWithholding, double fxRate) {
-		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, (int)Math.round(fxRate * dividend), (int)Math.round(fxRate * taxWithholding));
+		return new Dividend(date, "", "口座利子", "", dividend, taxWithholding, fxRate, (int)Math.floor(fxRate * dividend), (int)Math.floor(fxRate * taxWithholding));
 	}
 }

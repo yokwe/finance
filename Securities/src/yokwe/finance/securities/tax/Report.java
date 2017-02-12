@@ -168,7 +168,7 @@ public class Report {
 	}
 	
 
-	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap) {
+	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap, Map<String, Interest> interestMap) {
 		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
@@ -254,14 +254,14 @@ public class Report {
 				}
 				case "INTEREST": {
 					// Add record to dividendMap that belong target year
-//					String key = String.format("%s-%s", activity.date, "____");
-//					if (dividendMap.containsKey(key)) {
-//						Dividend dividend = dividendMap.get(key);
-//						dividend.update(activity.credit, activity.debit);
-//					} else {
-//						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
-//						dividendMap.put(key, dividend);
-//					}
+					String key = activity.date;
+					if (interestMap.containsKey(key)) {
+						logger.error("duplicated date {}", key);
+						throw new SecuritiesException("duplicated date");
+					} else {
+						Interest interest = new Interest(activity.date, activity.credit, fxRate);
+						interestMap.put(key, interest);
+					}
 					break;
 				}
 				default:
@@ -340,8 +340,10 @@ public class Report {
 		Map<String, Dividend>             dividendMap = new TreeMap<>();
 		Map<String, List<TransferDetail>> detailMap   = new TreeMap<>();
 		Map<String, TransferSummary>      summaryMap  = new TreeMap<>();
+		// key is date
+		Map<String, Interest>             interestMap = new TreeMap<>();
 		
-		readActivity(url, buySellMap, dividendMap);
+		readActivity(url, buySellMap, dividendMap, interestMap);
 		addDummySellActivity(buySellMap);
 		
 		buildTransferMapSummaryMap(buySellMap, detailMap, summaryMap);
@@ -425,6 +427,22 @@ public class Report {
 						String sheetName = Sheet.getSheetName(Dividend.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 						Sheet.saveSheet(docSave, Dividend.class, dividendList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
+				{
+					List<Interest> interestList = new ArrayList<>();
+					for(String key: interestMap.keySet()) {
+						if (key.startsWith(targetYear)) interestList.add(interestMap.get(key));
+					}
+
+					if (!interestList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(Interest.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.saveSheet(docSave, Interest.class, interestList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);

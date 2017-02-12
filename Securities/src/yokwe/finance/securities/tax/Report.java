@@ -73,7 +73,7 @@ public class Report {
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 			double cost = DoubleUtil.round((activity.quantity * activity.price) + activity.commission, 2);
-			int costJPY = (int)Math.round(cost * fxRate);
+			int costJPY = (int)Math.floor(cost * fxRate);
 			totalQuantity += activity.quantity;
 			totalCost     += cost;
 			totalCostJPY  += costJPY;
@@ -94,15 +94,15 @@ public class Report {
 		}
 		void sell(Activity activity, double fxRate) {
 			double sell    = DoubleUtil.round(activity.price * activity.quantity, 2);
-			int    sellJPY = (int)Math.round(sell * fxRate);
-			int    feeJPY  = (int)Math.round(activity.commission * fxRate);
+			int    sellJPY = (int)Math.floor(sell * fxRate);
+			int    feeJPY  = (int)Math.floor(activity.commission * fxRate);
 
 			double sellRatio = activity.quantity / totalQuantity;
 			double cost      = DoubleUtil.round(totalCost * sellRatio, 2);
 			int    costJPY;
 			
 			if (buyCount == 1) {
-				costJPY = (int)Math.round(totalCostJPY * sellRatio);
+				costJPY = (int)Math.floor(totalCostJPY * sellRatio);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity -= activity.quantity;
@@ -114,9 +114,9 @@ public class Report {
 						activity.tradeDate, symbol, totalQuantity, sellJPY, costJPY, feeJPY, dateBuyFirst, dateBuyLast));
 			} else {
 				double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up
-				costJPY = (int)Math.round(unitCostJPY * activity.quantity);
+				costJPY = (int)Math.floor(unitCostJPY * activity.quantity);
 				// need to adjust totalAcquisitionCostJPY
-				totalCostJPY = (int)Math.round(unitCostJPY * totalQuantity);
+				totalCostJPY = (int)Math.floor(unitCostJPY * totalQuantity);
 				
 				// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 				totalQuantity -= activity.quantity;
@@ -254,14 +254,14 @@ public class Report {
 				}
 				case "INTEREST": {
 					// Add record to dividendMap that belong target year
-					String key = String.format("%s-%s", activity.date, "____");
-					if (dividendMap.containsKey(key)) {
-						Dividend dividend = dividendMap.get(key);
-						dividend.update(activity.credit, activity.debit);
-					} else {
-						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
-						dividendMap.put(key, dividend);
-					}
+//					String key = String.format("%s-%s", activity.date, "____");
+//					if (dividendMap.containsKey(key)) {
+//						Dividend dividend = dividendMap.get(key);
+//						dividend.update(activity.credit, activity.debit);
+//					} else {
+//						Dividend dividend = Dividend.getInstance(activity.date, activity.credit, activity.debit, fxRate);
+//						dividendMap.put(key, dividend);
+//					}
 					break;
 				}
 				default:

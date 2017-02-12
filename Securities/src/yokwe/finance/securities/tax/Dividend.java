@@ -27,11 +27,7 @@ public class Dividend extends Sheet {
 	public int taxWithholdingJPY;
 	
 	@ColumnName("収入金額")
-	public int profitJPY;
-	@ColumnName("源泉徴収税額")
-	public int incomeTaxJPY;
-	@ColumnName("住民税額")
-	public int residentTaxJPY;
+	public int incomeJPY;
 
 	
 	private Dividend(
@@ -48,9 +44,7 @@ public class Dividend extends Sheet {
 		this.dividendJPY       = dividendJPY;
 		this.taxWithholdingJPY = taxWithholdingJPY;
 		
-		this.profitJPY         = dividendJPY - taxWithholdingJPY;
-		this.incomeTaxJPY      = (int)Math.floor(profitJPY * Tax.INCOME_TAX_RATE);
-		this.residentTaxJPY    = (int)Math.floor(profitJPY * Tax.RESIDENT_TAX_RATE);
+		this.incomeJPY         = dividendJPY - taxWithholdingJPY;
 	}
 	
 	public void update(double dividend, double taxWithholding) {
@@ -59,9 +53,7 @@ public class Dividend extends Sheet {
 		dividendJPY          = (int)Math.floor(fxRate * this.dividend);
 		taxWithholdingJPY    = (int)Math.floor(fxRate * this.taxWithholding);
 		
-		this.profitJPY       = dividendJPY - taxWithholdingJPY;
-		this.incomeTaxJPY    = (int)Math.floor(profitJPY * Tax.INCOME_TAX_RATE);
-		this.residentTaxJPY  = (int)Math.floor(profitJPY * Tax.RESIDENT_TAX_RATE);
+		this.incomeJPY       = dividendJPY - taxWithholdingJPY;
 	}
 
 	public static Dividend getInstance(

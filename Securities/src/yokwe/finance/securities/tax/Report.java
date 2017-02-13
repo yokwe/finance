@@ -72,8 +72,15 @@ public class Report {
 			}
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			double cost = DoubleUtil.round((activity.quantity * activity.price) + activity.commission, 2);
-			int costJPY = (int)Math.floor(cost * fxRate);
+			//double cost = DoubleUtil.round((activity.quantity * activity.price) + activity.commission, 2);
+			double costPrice = DoubleUtil.round(activity.quantity * activity.price, 2);
+			double costFee   = activity.commission;
+			int costPriceJPY = (int)Math.floor(costPrice * fxRate);
+			int costFeeJPY   = (int)Math.floor(costFee * fxRate);
+			
+			double cost    = costPrice + costFee;
+			int    costJPY = costPriceJPY + costFeeJPY;
+			
 			totalQuantity += activity.quantity;
 			totalCost     += cost;
 			totalCostJPY  += costJPY;
@@ -406,7 +413,8 @@ public class Report {
 					for(String key: summaryMap.keySet()) {
 						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
 					}
-
+					// Sort with symbol name and dateSell
+					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
 					if (!summaryList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(TransferSummary.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());

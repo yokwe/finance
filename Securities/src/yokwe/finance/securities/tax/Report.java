@@ -120,7 +120,7 @@ public class Report {
 				logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
 						activity.tradeDate, symbol, totalQuantity, sellJPY, costJPY, feeJPY, dateBuyFirst, dateBuyLast));
 			} else {
-				double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up
+				double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up. See https://www.nta.go.jp/taxanswer/shotoku/1466.htm
 				costJPY = (int)Math.floor(unitCostJPY * activity.quantity);
 				// need to adjust totalAcquisitionCostJPY
 				totalCostJPY = (int)Math.floor(unitCostJPY * totalQuantity);

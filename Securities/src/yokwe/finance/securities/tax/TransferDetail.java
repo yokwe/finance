@@ -15,11 +15,11 @@ public class TransferDetail extends Sheet {
 	public final String symbol;
 	@ColumnName("銘柄")
 	public final String symbolName;
-	@ColumnName("数量")
-	public final double quantity;
 
 	@ColumnName("売約定日")
 	public final String dateSell;
+	@ColumnName("売数量")
+	public final String quantitySell;
 	@ColumnName("売値")
 	public final String priceSell;
 	@ColumnName("売手数料")
@@ -39,6 +39,8 @@ public class TransferDetail extends Sheet {
 		
 	@ColumnName("買約定日")
 	public final String dateBuy;
+	@ColumnName("買数量")
+	public final String quantityBuy;
 	@ColumnName("買値")
 	public final String priceBuy;
 	@ColumnName("買手数料")
@@ -55,9 +57,9 @@ public class TransferDetail extends Sheet {
 	public TransferDetail(Transfer.Buy buy) {
 		this.symbol        = buy.symbol;
 		this.symbolName    = buy.name;
-		this.quantity      = buy.quantity;
 		
 		this.dateSell      = "";
+		this.quantitySell  = "";
 		this.priceSell     = "";
 		this.feeSell       = "";
 		this.fxRateSell    = "";
@@ -68,6 +70,7 @@ public class TransferDetail extends Sheet {
 		this.dateBuyLast   = "";
 
 		this.dateBuy       = buy.date;
+		this.quantityBuy   = String.format("%.5f", buy.quantity);
 		this.priceBuy      = String.format("%.5f", buy.price);
 		this.feeBuy        = String.format("%.2f", buy.fee);
 		this.fxRateBuy     = String.format("%.2f", buy.fxRate);
@@ -78,9 +81,9 @@ public class TransferDetail extends Sheet {
 	public TransferDetail(Transfer.Sell sell) {
 		this.symbol        = sell.symbol;
 		this.symbolName    = sell.name;
-		this.quantity      = sell.quantity;
 		
 		this.dateSell      = sell.date;
+		this.quantitySell  = String.format("%.5f", sell.quantity);
 		this.priceSell     = String.format("%.5f", sell.price);
 		this.feeSell       = String.format("%.2f", sell.fee);
 		this.fxRateSell    = String.format("%.2f", sell.fxRate);
@@ -91,6 +94,7 @@ public class TransferDetail extends Sheet {
 		this.dateBuyLast   = sell.dateLast;
 
 		this.dateBuy       = "";
+		this.quantityBuy   = "";
 		this.priceBuy      = "";
 		this.feeBuy        = "";
 		this.fxRateBuy     = "";
@@ -107,9 +111,9 @@ public class TransferDetail extends Sheet {
 	public TransferDetail(Transfer.Buy  buy, Transfer.Sell  sell) {
 		this.symbol        = sell.symbol;
 		this.symbolName    = sell.name;
-		this.quantity      = sell.quantity;
 		
 		this.dateSell      = sell.date;
+		this.quantitySell  = String.format("%.5f", sell.quantity);
 		this.priceSell     = String.format("%.5f", sell.price);
 		this.feeSell       = String.format("%.2f", sell.fee);
 		this.fxRateSell    = String.format("%.2f", sell.fxRate);
@@ -120,6 +124,7 @@ public class TransferDetail extends Sheet {
 		this.dateBuyLast   = sell.dateLast;
 
 		this.dateBuy       = buy.date;
+		this.quantityBuy   = String.format("%.5f", buy.quantity);
 		this.priceBuy      = String.format("%.5f", buy.price);
 		this.feeBuy        = String.format("%.2f", buy.fee);
 		this.fxRateBuy     = String.format("%.2f", buy.fxRate);

@@ -472,14 +472,14 @@ public class Report {
 		// See page 50 of URL below about test case
 		//   https://www.nta.go.jp/tetsuzuki/shinkoku/shotoku/tebiki2016/kisairei/kabushiki/pdf/15.pdf
 		
-		String url        = "file:///home/hasegawa/Dropbox/Trade/投資損益_TEST.ods";
+		String url        = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
 		
 		Mizuho.enableTestMode();
 		generateReport(url);
 	}
 	
 	public static void generateReport() {
-		String url        = "file:///home/hasegawa/Dropbox/Trade/投資損益.ods";
+		String url        = "file:///home/hasegawa/Dropbox/Trade/投資活動.ods";
 		
 		generateReport(url);
 	}

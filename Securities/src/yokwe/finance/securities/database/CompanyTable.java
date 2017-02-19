@@ -18,25 +18,28 @@ public final class CompanyTable {
 	}
 
 	public String symbol;
+	public long   marketCap;
 	public String country;
 	public String sector;
 	public String industry;
 	
 	public CompanyTable() {
-		symbol   = "";
-		country  = "";
-		sector   = "";
-		industry = "";
+		symbol    = "";
+		marketCap = 0;
+		country   = "";
+		sector    = "";
+		industry  = "";
 	}
-	public CompanyTable(String symbol, String country, String sector, String industry) {
-		this.symbol   = symbol;
-		this.country  = country;
-		this.sector   = sector;
-		this.industry = industry;
+	public CompanyTable(String symbol, long marketCap, String country, String sector, String industry) {
+		this.symbol    = symbol;
+		this.marketCap = marketCap;
+		this.country   = country;
+		this.sector    = sector;
+		this.industry  = industry;
 	}
 	@Override
 	public String toString() {
-		return String.format("{%s  %s  %s  %s}", symbol, country, sector, industry);
+		return String.format("{%s  %d  %s  %s  %s}", symbol, marketCap, country, sector, industry);
 	}
 	
 	private static String quote(String string) {
@@ -48,6 +51,6 @@ public final class CompanyTable {
 	}
 	
 	public String toCSV() {
-		return String.format("%s,%s,%s,%s", symbol, quote(country), quote(sector), quote(industry));
+		return String.format("%s,%d,%s,%s,%s", symbol, marketCap,quote(country), quote(sector), quote(industry));
 	}
 }

@@ -52,7 +52,7 @@ public final class NasdaqCompany {
 			String nasdaq     = fields[0].substring(1).trim();
 			String name       = fields[1].substring(1).trim();
 //			double lastSale   = Double.valueOf(fields[2].substring(1).trim());
-//			String marketCap  = fields[3].substring(1).trim();
+			String marketCap  = fields[3].substring(1).trim();
 //			String adrTSO     = fields[4].substring(1).trim();
 			String country    = fields[5].substring(1).trim();
 //			String ip0Year    = fields[6].substring(1).trim();
@@ -90,7 +90,7 @@ public final class NasdaqCompany {
 				country = "*NA*";
 			}
 			
-			return new CompanyTable(nasdaqSymbol, country, sector, industry);
+			return new CompanyTable(nasdaqSymbol, Math.round(Double.valueOf(marketCap)), country, sector, industry);
 		}
 		public static String toCSV(String line) {
 			final CompanyTable table = toCompanyTable(line);
@@ -153,7 +153,8 @@ public final class NasdaqCompany {
 					company = companyMap.get(symbol);
 				} else {
 					NasdaqTable nasdaq = nasdaqMap.get(symbol);
-					final String country = "*NA*";
+					final String country   = "*NA*";
+					final long   marketCap = -1;
 					final String sector;
 					final String industry;
 					if (nasdaq.etf.equals("Y")) {
@@ -163,7 +164,7 @@ public final class NasdaqCompany {
 						sector   = "*NA*";
 						industry = "*NA*";
 					}
-					company = new CompanyTable(symbol, country, sector, industry);
+					company = new CompanyTable(symbol, marketCap, country, sector, industry);
 				}
 				bw.append(company.toCSV()).append(NEWLINE);
 			}

@@ -29,28 +29,48 @@ public class CSVUtil {
 	
 	private static int BUFFER_SIZE = 64 * 1024;
 
-	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {		
+	public static <E> List<E> loadWithHeader(String path, Class<E> clazz, String header) {
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(header.split(",")).withRecordSeparator("\n");
+		return load(path, clazz, csvFormat);
+	}
+
+	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
 		Field[] fields = clazz.getDeclaredFields();
 		final int size = fields.length;
 		String[] names = new String[size];
-		String[] types = new String[size];
 		for(int i = 0; i < size; i++) {
 			names[i] = fields[i].getName();
-			types[i] = fields[i].getType().getName();
 		}
 		
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
+		return load(path, clazz, csvFormat);
+	}
+
+	public static <E> List<E> load(String path, Class<E> clazz) {
+		CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
+		return load(path, clazz, csvFormat);
+	}
+	
+	public static <E> List<E> load(String path, Class<E> clazz, CSVFormat csvFormat) {
+		Field[] fields = clazz.getDeclaredFields();
+		final int size = fields.length;
+		String[] types = new String[size];
+		for(int i = 0; i < size; i++) {
+			types[i] = fields[i].getType().getName();
+		}
+		
+		String[] names = csvFormat.getHeader();
+		
 		try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
 			List<E> dataList = new ArrayList<>();
-
 			for(CSVRecord record: csvParser) {
+				// Sanity check
 				if (record.size() != size) {
-					// Sanity check
 					logger.error("record.size != size  {} != {}", record.size(), size);
 					throw new SecuritiesException("record.size != size");
 				}
 				
-				if (record.getRecordNumber() == 1) {
+				if (names != null && record.getRecordNumber() == 1) {
 					// Sanity check
 					int headerSize = record.size();
 					if (headerSize != size) {
@@ -67,68 +87,7 @@ public class CSVUtil {
 					continue;
 				}
 				
-				E data = clazz.newInstance();
-				for(int i = 0; i < size; i++) {
-					String name = names[i];
-					String value = record.get(name);
-					switch(types[i]) {
-					case "int":
-						fields[i].setInt(data, Integer.valueOf(value));
-						break;
-					case "long":
-						fields[i].setLong(data, Long.valueOf(value));
-						break;
-					case "double":
-						fields[i].setDouble(data, Double.valueOf(value));
-						break;
-					case "boolean":
-						fields[i].setBoolean(data, Boolean.valueOf(value));
-						break;
-					case "java.lang.String":
-						fields[i].set(data, value);
-						break;
-					default:
-						logger.error("Unexptected type {}", types[i]);
-						throw new SecuritiesException("Unexptected type");
-					}
-				}
-				dataList.add(data);
-			}
-			return dataList;
-		} catch (FileNotFoundException e) {
-			logger.error("FileNotFoundException {}", e.toString());
-			throw new SecuritiesException("FileNotFoundException");
-		} catch (IOException e) {
-			logger.error("IOException {}", e.toString());
-			throw new SecuritiesException("IOException");
-		} catch (InstantiationException e) {
-			logger.error("InstantiationException {}", e.toString());
-			throw new SecuritiesException("InstantiationException");
-		} catch (IllegalAccessException e) {
-			logger.error("IllegalAccessException {}", e.toString());
-			throw new SecuritiesException("IllegalAccessException");
-		}
-	}
 
-	public static <E> List<E> load(String path, Class<E> clazz) {
-		Field[] fields = clazz.getDeclaredFields();
-		final int size = fields.length;
-		String[] names = new String[size];
-		String[] types = new String[size];
-		for(int i = 0; i < size; i++) {
-			names[i] = fields[i].getName();
-			types[i] = fields[i].getType().getName();
-		}
-		
-		CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
-		try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
-			List<E> dataList = new ArrayList<>();
-			for(CSVRecord record: csvParser) {
-				// Sanity check
-				if (record.size() != size) {
-					logger.error("record.size != size  {} != {}", record.size(), size);
-					throw new SecuritiesException("record.size != size");
-				}
 				
 				E data = clazz.newInstance();
 				for(int i = 0; i < size; i++) {

@@ -271,19 +271,19 @@ public class Stats {
 			}
 						
 			// Ignore penny stock
-			{
-				boolean penyyStock = false;
-				for(Price price: priceList) {
-					if (price.close < 1.0) {
-						penyyStock = true;
-						break;
-					}
-				}
-				if (penyyStock) {
-//					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s PENNY STOCK", symbol));
-					continue;
-				}
-			}
+//			{
+//				boolean penyyStock = false;
+//				for(Price price: priceList) {
+//					if (price.close < 1.0) {
+//						penyyStock = true;
+//						break;
+//					}
+//				}
+//				if (penyyStock) {
+////					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s PENNY STOCK", symbol));
+//					continue;
+//				}
+//			}
 			
 			// Ignore too small sample stock to prevent error and prevent get abnormal statistics value
 			if (priceList.size() <= 5) {

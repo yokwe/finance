@@ -23,6 +23,7 @@ CREATE TABLE nasdaq (
 
 CREATE TABLE company (
   symbol           TEXT     NOT NULL, -- ticker symbol
+  marketCap        INTEGER  NOT NULL, -- market capacity
   country          TEXT     NOT NULL, -- country of securities
   sector           TEXT     NOT NULL, -- sector of securities
   industry         TEXT     NOT NULL -- industry of securities

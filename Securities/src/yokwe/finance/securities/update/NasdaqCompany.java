@@ -63,7 +63,7 @@ public final class NasdaqCompany {
 			// Translate nasdaq web symbol to symbol
 			NasdaqTable nasdaqTable = nasdaqWebSymbolMap.get(nasdaq);
 			if (nasdaqTable == null) {
-				logger.warn("Unknown = {}|{}|{}|{}", nasdaq, sector, industry, name);
+				logger.warn("Unknown = {}|{}|{}|{}|{}", nasdaq, marketCap, sector, industry, name);
 				return null;
 			}
 			String nasdaqSymbol = nasdaqTable.symbol;

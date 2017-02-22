@@ -4,11 +4,12 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,9 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
-	private static final int       DURTION_YEAR  =  1; // we need one year data
+	private static final int       DURTION_YEAR  = 1; // we need one year data
+	private static final int       MAX_RETRY     = 3;  // try 3 times
+	
 	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
 	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
 	
@@ -267,6 +270,101 @@ public class UpdatePrice {
 		updateProviderMap.put("yahoo",  new UpdateProviderYahoo());
 	}
 	
+	private static void updateFile(UpdateProvider updateProvider) {
+		Map<String, NasdaqTable> nasdaqMap = new TreeMap<>();
+		NasdaqUtil.getAll().stream().forEach(e -> nasdaqMap.put(e.symbol, e));
+		Set<String> symbolSet = new TreeSet<>(nasdaqMap.keySet());
+		logger.info("symbolSet {}", symbolSet.size());
+		
+		int total = nasdaqMap.size();
+		int countUpdate = 0;
+		int countOld    = 0;
+		int countSkip   = 0;
+		int countNew    = 0;
+		int countNone   = 0;
+		
+		int retryCount  = 0;
+		boolean needSleep = false;
+
+		for(;;) {
+			retryCount++;
+			if (MAX_RETRY < retryCount) break;
+			logger.info("retry  {}", String.format("%4d", retryCount));
+			
+			if (needSleep) {
+				try {
+					logger.info("sleep");
+					Thread.sleep(1 * 60 * 1000); // 1 minute
+				} catch (InterruptedException e1) {
+					logger.info("InterruptedException");
+				}
+			}
+			
+			int count = 0;
+			int lastOutputCount = -1;
+			Set<String> nextSymbolSet = new TreeSet<>();
+			int lastCountOld = countOld;
+			countOld = 0;
+
+			int symbolSetSize = symbolSet.size();
+			for(String symbol: symbolSet) {
+				NasdaqTable nasdaq = nasdaqMap.get(symbol);
+				String      exch   = nasdaq.exchange;
+
+				int showInterval = (symbolSet.size() < 100) ? 1 : 100;
+				int outputCount = count / showInterval;
+				boolean showOutput;
+				if (outputCount != lastOutputCount) {
+					showOutput = true;
+					lastOutputCount = outputCount;
+				} else {
+					showOutput = false;
+				}
+
+				count++;
+				
+				File file = updateProvider.getFile(symbol);
+				if (file.exists()) {
+					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
+						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
+							countUpdate++;
+						} else {
+							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
+							countOld++;
+							nextSymbolSet.add(symbol);
+						}
+					} else {
+						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
+						countSkip++;
+					}
+				} else {
+					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
+						countNew++;
+					} else {
+//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
+						countNone++;
+					}
+				}
+			}
+			logger.info("old    {}", String.format("%4d", countOld));
+			if (countOld != lastCountOld) {
+				retryCount = 0; // reset retry count
+			}
+			needSleep = true;
+			symbolSet = nextSymbolSet;
+		}
+		logger.info("===========");
+		logger.info("update {}", String.format("%4d", countUpdate));
+		logger.info("old    {}", String.format("%4d", countOld));
+		logger.info("skip   {}", String.format("%4d", countSkip));
+		logger.info("new    {}", String.format("%4d", countNew));
+		logger.info("none   {}", String.format("%4d", countNone));
+		logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
+		logger.info("total  {}", String.format("%4d", total));
+	}
+	
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");
@@ -300,71 +398,7 @@ public class UpdatePrice {
 			}
 		}
 		
-		{
-			Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
-			
-//			Collection<NasdaqTable> nasdaqCollection = new ArrayList<>();
-//			nasdaqCollection.add(NasdaqUtil.get("IBM"));
-//			nasdaqCollection.add(NasdaqUtil.get("NYT"));
-//			nasdaqCollection.add(NasdaqUtil.get("PEP"));
-			
-			int total = nasdaqCollection.size();
-			int count = 0;
-			
-			int countUpdate = 0;
-			int countOld    = 0;
-			int countSkip   = 0;
-			int countNew    = 0;
-			int countNone   = 0;
-			
-			int showInterval = 100;
-			boolean showOutput;
-			int lastOutputCount = -1;
-			for(NasdaqTable nasdaq: nasdaqCollection) {
-				String exch   = nasdaq.exchange;
-				String symbol = nasdaq.symbol;
-
-				int outputCount = count / showInterval;
-				if (outputCount != lastOutputCount) {
-					showOutput = true;
-					lastOutputCount = outputCount;
-				} else {
-					showOutput = false;
-				}
-
-				count++;
-				
-				File file = updateProvider.getFile(symbol);
-				if (file.exists()) {
-					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
-							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
-							countUpdate++;
-						} else {
-							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, total), symbol);
-							countOld++;
-						}
-					} else {
-						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, total), symbol);
-						countSkip++;
-					}
-				} else {
-					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
-						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
-						countNew++;
-					} else {
-//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
-						countNone++;
-					}
-				}
-			}
-			logger.info("update {}", String.format("%4d", countUpdate));
-			logger.info("old    {}", String.format("%4d", countOld));
-			logger.info("skip   {}", String.format("%4d", countSkip));
-			logger.info("new    {}", String.format("%4d", countNew));
-			logger.info("none   {}", String.format("%4d", countNone));
-			logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
-		}
+		updateFile(updateProvider);
 		logger.info("STOP");
 	}
 }

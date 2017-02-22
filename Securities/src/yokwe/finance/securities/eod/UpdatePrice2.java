@@ -279,16 +279,13 @@ public class UpdatePrice2 {
 		Set<String> symbolSet = new TreeSet<>(nasdaqMap.keySet());
 		
 		int total = nasdaqMap.size();
-		
 		int countUpdate = 0;
 		int countOld    = 0;
 		int countSkip   = 0;
 		int countNew    = 0;
 		int countNone   = 0;
 		
-		int showInterval = 100;
 		LocalTime timeStop  = LocalTime.now().plusMinutes(MAX_ELAPSED_TIME_IN_MINUTES);
-		
 		logger.info("timeStop {}", timeStop.toString());
 
 		for(;;) {
@@ -297,18 +294,18 @@ public class UpdatePrice2 {
 			Set<String> nextSymbolSet = new TreeSet<>();
 			int lastCountOld = countOld;
 			countOld = 0;
+			int retryCount  = 0;
 
 			for(String symbol: symbolSet) {
 				if (LocalTime.now().isAfter(timeStop)) break;
 				
+				retryCount++;
+				logger.info("retry  {}", String.format("%4d", retryCount));
+				
 				NasdaqTable nasdaq = nasdaqMap.get(symbol);
-				String exch   = nasdaq.exchange;
+				String      exch   = nasdaq.exchange;
 
-				if (symbolSet.size() < 100) {
-					showInterval = 1;
-				} else {
-					showInterval = 100;
-				}
+				int showInterval = (symbolSet.size() < 100) ? 1 : 100;
 				int outputCount = count / showInterval;
 				boolean showOutput;
 				if (outputCount != lastOutputCount) {
@@ -345,11 +342,13 @@ public class UpdatePrice2 {
 					}
 				}
 			}
+			logger.info("old    {}", String.format("%4d", countOld));
 			if (countOld <= OLD_COUNT_ALLOWED) break;
 			if (LocalTime.now().isAfter(timeStop)) break;
 			if (countOld == lastCountOld) {
 				try {
 					if (LocalTime.now().plusMinutes(WAIT_TIME_IN_MINUTES).isAfter(timeStop)) break;
+					logger.info("sleep");
 					Thread.sleep(WAIT_TIME_IN_MINUTES * 60 * 1000);
 				} catch (InterruptedException e1) {
 					logger.info("InterruptedException");
@@ -357,12 +356,17 @@ public class UpdatePrice2 {
 			}
 			symbolSet = nextSymbolSet;
 		}
+		logger.info("===========");
+		if (LocalTime.now().isAfter(timeStop)) {
+			logger.info("timeout");			
+		};
 		logger.info("update {}", String.format("%4d", countUpdate));
 		logger.info("old    {}", String.format("%4d", countOld));
 		logger.info("skip   {}", String.format("%4d", countSkip));
 		logger.info("new    {}", String.format("%4d", countNew));
 		logger.info("none   {}", String.format("%4d", countNone));
 		logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
+		logger.info("total  {}", String.format("%4d", total));
 	}
 	
 	// This methods update end of day csv in tmp/eod directory.

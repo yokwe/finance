@@ -61,6 +61,9 @@ public class Stats {
 	public double sma50pct;
 	public double sma200pct;
 
+	public double last;
+	public double lastpct;
+
 	
 	public Stats(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
 		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
@@ -127,11 +130,13 @@ public class Stats {
 			
 			
 			// price change detection
+			this.last   = priceArray[priceArray.length - 2];
 			this.sma5   = DoubleUtil.round(MA.sma(  5, priceArray).getValue(), 2);
 			this.sma20  = DoubleUtil.round(MA.sma( 20, priceArray).getValue(), 2);
 			this.sma50  = DoubleUtil.round(MA.sma( 50, priceArray).getValue(), 2);
 			this.sma200 = DoubleUtil.round(MA.sma(200, priceArray).getValue(), 2);
 			
+			this.lastpct   = DoubleUtil.round((this.price - this.last)   / this.price, 3);
 			this.sma5pct   = DoubleUtil.round((this.price - this.sma5)   / this.price, 3);
 			this.sma20pct  = DoubleUtil.round((this.price - this.sma20)  / this.price, 3);
 			this.sma50pct  = DoubleUtil.round((this.price - this.sma50)  / this.price, 3);

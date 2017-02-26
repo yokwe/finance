@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +53,15 @@ public class CSVUtil {
 	}
 	
 	public static <E> List<E> load(String path, Class<E> clazz, CSVFormat csvFormat) {
+		try {
+			return load(new BufferedReader(new FileReader(path), BUFFER_SIZE), clazz, csvFormat);
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e.toString());
+			throw new SecuritiesException("FileNotFoundException");
+		}
+	}
+
+	public static <E> List<E> load(Reader reader, Class<E> clazz, CSVFormat csvFormat) {
 		Field[] fields = clazz.getDeclaredFields();
 		final int size = fields.length;
 		String[] types = new String[size];
@@ -61,12 +71,13 @@ public class CSVUtil {
 		
 		String[] names = csvFormat.getHeader();
 		
-		try (CSVParser csvParser = csvFormat.parse(new BufferedReader(new FileReader(path), BUFFER_SIZE))) {
+		try (CSVParser csvParser = csvFormat.parse(reader)) {
 			List<E> dataList = new ArrayList<>();
 			for(CSVRecord record: csvParser) {
 				// Sanity check
 				if (record.size() != size) {
 					logger.error("record.size != size  {} != {}", record.size(), size);
+					logger.error("record = {}", record);
 					throw new SecuritiesException("record.size != size");
 				}
 				
@@ -86,8 +97,6 @@ public class CSVUtil {
 					}
 					continue;
 				}
-				
-
 				
 				E data = clazz.newInstance();
 				for(int i = 0; i < size; i++) {
@@ -116,9 +125,6 @@ public class CSVUtil {
 				dataList.add(data);
 			}
 			return dataList;
-		} catch (FileNotFoundException e) {
-			logger.error("FileNotFoundException {}", e.toString());
-			throw new SecuritiesException("FileNotFoundException");
 		} catch (IOException e) {
 			logger.error("IOException {}", e.toString());
 			throw new SecuritiesException("IOException");

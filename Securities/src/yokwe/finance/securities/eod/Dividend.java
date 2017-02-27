@@ -1,5 +1,10 @@
 package yokwe.finance.securities.eod;
 
+import java.io.File;
+import java.util.List;
+
+import yokwe.finance.securities.util.CSVUtil;
+
 public class Dividend {
 	public String date;
 	public String symbol;
@@ -18,5 +23,9 @@ public class Dividend {
 	@Override
 	public String toString() {
 		return String.format("[%-9s %s %8.4f]", symbol, date, dividend);
+	}
+	
+	public static List<Dividend> load(File file) {
+		return CSVUtil.loadWithHeader(file.getPath(), Dividend.class);
 	}
 }

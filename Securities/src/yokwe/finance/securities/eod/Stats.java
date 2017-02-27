@@ -1,5 +1,9 @@
 package yokwe.finance.securities.eod;
 
+import java.util.List;
+
+import yokwe.finance.securities.util.CSVUtil;
+
 public class Stats {
 //	public String exchange;
 	public String symbol;
@@ -44,4 +48,8 @@ public class Stats {
 
 	public double last;
 	public double lastpct;
+	
+	public static void save(List<Stats> statsList) {
+		CSVUtil.saveWithHeader(statsList, UpdateStats.PATH_STATS);
+	}
 }

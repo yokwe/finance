@@ -30,16 +30,12 @@ public class UpdatePrice {
 	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
 	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
 	
-	public interface UpdateProvider {
-		public static final String PATH_DIR = "tmp/eod/price";
-		
-		public String  getName();
-		public File    getFile(String symbol);
-		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast);
-	}
-	
 	public static final class UpdateProviderGoogle implements UpdateProvider {
+		private static final String PATH_DIR      = "tmp/eod/price";
 		private static final String PROVIDER_NAME = "google";
+		public String getRootPath() {
+			return PATH_DIR;
+		}
 		public String getName() {
 			return PROVIDER_NAME;
 		}
@@ -148,7 +144,8 @@ public class UpdatePrice {
 		}
 	}
 	
-	public static class UpdateProviderYahoo implements UpdateProvider {
+	public static final class UpdateProviderYahoo implements UpdateProvider {
+		private static final String PATH_DIR      = "tmp/eod/price";
 		private static final String PROVIDER_NAME = "yahoo";
 		public String getName() {
 			return PROVIDER_NAME;
@@ -233,6 +230,20 @@ public class UpdatePrice {
 		}
 	}
 	
+	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
+	static {
+		updateProviderMap.put(UpdateProvider.GOOGLE, new UpdateProviderGoogle());
+		updateProviderMap.put(UpdateProvider.YAHOO,  new UpdateProviderYahoo());
+	}
+	public static UpdateProvider getProvider(String provider) {
+		if (updateProviderMap.containsKey(provider)) {
+			return updateProviderMap.get(provider);
+		} else {
+			logger.error("Unknonw provider = {}", provider);
+			throw new SecuritiesException("Unknonw provider");
+		}
+	}
+
 	private static boolean needUpdate(File file, LocalDate dateFirst, LocalDate dateLast) {
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
@@ -262,12 +273,6 @@ public class UpdatePrice {
 		String date = values[0];
 		
 		return !date.equals(dateLast.toString());
-	}
-	
-	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
-	static {
-		updateProviderMap.put("google", new UpdateProviderGoogle());
-		updateProviderMap.put("yahoo",  new UpdateProviderYahoo());
 	}
 	
 	private static void updateFile(UpdateProvider updateProvider) {
@@ -370,7 +375,7 @@ public class UpdatePrice {
 		logger.info("START");
 		
 		String providerName = args[0];
-		UpdateProvider updateProvider = updateProviderMap.get(providerName);
+		UpdateProvider updateProvider = getProvider(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());
 		
 		{

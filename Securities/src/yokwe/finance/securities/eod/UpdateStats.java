@@ -22,14 +22,9 @@ import yokwe.finance.securities.util.NasdaqUtil;
 public class UpdateStats {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStats.class);
 	
-	private static final String lastTradingDate = Market.getLastTradingDate().toString();
+	private static final String lastTradingDate  = Market.getLastTradingDate().toString();
 
-	private static final String PATH_STATS          = "tmp/eod/stats.csv";
-	private static final String PATH_PRICE_GOOGLE   = "tmp/eod/price-google";
-	private static final String PATH_PRICE_YAHOO    = "tmp/eod/price-yahoo";
-	private static final String PATH_DIVIDEND_YAHOO = "tmp/eod/dividend-yahoo";
-	
-
+	public static final String PATH_STATS        = "tmp/eod/stats.csv";
 
 	private static Stats getInstance(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
 		// Order of data is important
@@ -135,9 +130,9 @@ public class UpdateStats {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		File dirPriceGoogle   = new File(PATH_PRICE_GOOGLE);
-		File dirPriceYahoo    = new File(PATH_PRICE_YAHOO);
-		File dirDividendYahoo = new File(PATH_DIVIDEND_YAHOO);
+		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
+		UpdateProvider priceYahooProvider    = UpdatePrice.getProvider(UpdateProvider.YAHOO);
+		UpdateProvider dividendYahooProvider = UpdateDividend.getProvider(UpdateProvider.YAHOO);
 		
 		List<Stats> statsList = new ArrayList<>();
 		
@@ -170,16 +165,14 @@ public class UpdateStats {
 			final List<Price> priceList;
 			final File dividendFile;
 			{
-				String fileName = String.format("%s.csv", nasdaq.symbol);
-				
-				File priceGoogle   = new File(dirPriceGoogle, fileName);
-				File priceYahoo    = new File(dirPriceYahoo, fileName);
-				File dividendYahoo = new File(dirDividendYahoo, fileName);
+				File priceGoogle   = priceGoogleProvider.getFile(nasdaq.symbol);
+				File priceYahoo    = priceYahooProvider.getFile(nasdaq.symbol);
+				File dividendYahoo = dividendYahooProvider.getFile(nasdaq.symbol);
 								
 				if (priceGoogle.exists() && priceYahoo.exists()) {
 					// both
-					List<Price> priceListGoogle = CSVUtil.loadWithHeader(priceGoogle.getPath(), Price.class);
-					List<Price> priceListYahoo  = CSVUtil.loadWithHeader(priceYahoo.getPath(), Price.class);
+					List<Price> priceListGoogle = Price.load(priceGoogle);
+					List<Price> priceListYahoo  = Price.load(priceYahoo);
 					
 					String dateGoogle = priceListGoogle.get(0).date;
 					String dateYahoo  = priceListYahoo.get(0).date;
@@ -213,10 +206,10 @@ public class UpdateStats {
 					}
 				} else if (priceGoogle.exists()) {
 					// only google
-					priceList = CSVUtil.loadWithHeader(priceGoogle.getPath(), Price.class);
+					priceList = Price.load(priceGoogle);
 				} else if (priceYahoo.exists()) {
 					// only yahoo
-					priceList = CSVUtil.loadWithHeader(priceYahoo.getPath(), Price.class);
+					priceList = Price.load(priceYahoo);
 				} else {
 					// none
 //					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s NO PRICE DATA", symbol));
@@ -259,7 +252,7 @@ public class UpdateStats {
 			
 			List<Dividend> dividendList;
 			if (dividendFile.exists()) {
-				dividendList = CSVUtil.loadWithHeader(dividendFile.getPath(), Dividend.class);
+				dividendList = Dividend.load(dividendFile);
 			} else {
 				dividendList = new ArrayList<>();
 			}

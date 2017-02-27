@@ -234,11 +234,19 @@
                 </java>
         </target>
 
-        <target name="run-eod-stats">
-                <java classname="yokwe.finance.securities.eod.Stats" fork="true">
+        <target name="run-eod-update-stats">
+                <java classname="yokwe.finance.securities.eod.UpdateStats" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
-                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-eod-update-stock">
+                <java classname="yokwe.finance.securities.eod.UpdateStock" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
                 </java>
         </target>
 

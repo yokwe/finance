@@ -354,6 +354,7 @@ public class UpdateStock {
 			
 			stock.symbol       = e.symbol;
 			stock.symbolGoogle = googleConverter.convert(e.symbol);
+			stock.symbolNasdaq = nasdaqConverter.convert(e.symbol);
 			stock.symbolYahoo  = yahooConverter.convert(e.symbol);
 			stock.exchange     = exchNameMap.get(e.exch);
 			stock.etf          = e.etf;

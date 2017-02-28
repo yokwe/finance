@@ -9,7 +9,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.eod.Stock;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
@@ -17,7 +17,7 @@ import yokwe.finance.securities.stats.RSI;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleStreamUtil;
 import yokwe.finance.securities.util.DoubleUtil;
-import yokwe.finance.securities.util.NasdaqUtil;
+import yokwe.finance.securities.util.StockUtil;
 
 public class UpdateStats {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStats.class);
@@ -26,16 +26,16 @@ public class UpdateStats {
 
 	public static final String PATH_STATS        = "tmp/eod/stats.csv";
 
-	private static Stats getInstance(NasdaqTable nasdaq, List<Price> priceList, List<Dividend> dividendList) {
+	private static Stats getInstance(Stock stock, List<Price> priceList, List<Dividend> dividendList) {
 		// Order of data is important
 		priceList.sort((a, b) -> a.date.compareTo(b.date));
 		dividendList.sort((a, b) -> a.date.compareTo(b.date));
 
 		Stats ret = new Stats();
 		
-//		this.exchange = nasdaq.exchange;
-		ret.symbol   = nasdaq.symbol;
-		ret.name     = nasdaq.name;
+//		this.exchange = stock.exchange;
+		ret.symbol   = stock.symbol;
+		ret.name     = stock.name;
 		
 		{
 			Price lastPrice = priceList.get(priceList.size() - 1);
@@ -136,21 +136,21 @@ public class UpdateStats {
 		
 		List<Stats> statsList = new ArrayList<>();
 		
-		Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
+		Collection<Stock> stockCollection = StockUtil.getAll();
 		
-//		Collection<NasdaqTable> nasdaqCollection = new ArrayList<>();
-//		nasdaqCollection.add(NasdaqUtil.get("IBM"));
-//		nasdaqCollection.add(NasdaqUtil.get("NYT"));
-//		nasdaqCollection.add(NasdaqUtil.get("PEP"));
+//		Collection<Stock> stockCollection = new ArrayList<>();
+//		stockCollection.add(StockUtil.get("IBM"));
+//		stockCollection.add(StockUtil.get("NYT"));
+//		stockCollection.add(StockUtil.get("PEP"));
 		
-		int total = nasdaqCollection.size();
+		int total = stockCollection.size();
 		int count = 0;
 		
 		int showInterval = 10000;
 		boolean showOutput;
 		int lastOutputCount = -1;
-		for(NasdaqTable nasdaq: nasdaqCollection) {
-			String symbol = nasdaq.symbol;
+		for(Stock stock: stockCollection) {
+			String symbol = stock.symbol;
 
 			int outputCount = count / showInterval;
 			if (outputCount != lastOutputCount) {
@@ -165,9 +165,9 @@ public class UpdateStats {
 			final List<Price> priceList;
 			final File dividendFile;
 			{
-				File priceGoogle   = priceGoogleProvider.getFile(nasdaq.symbol);
-				File priceYahoo    = priceYahooProvider.getFile(nasdaq.symbol);
-				File dividendYahoo = dividendYahooProvider.getFile(nasdaq.symbol);
+				File priceGoogle   = priceGoogleProvider.getFile(stock.symbol);
+				File priceYahoo    = priceYahooProvider.getFile(stock.symbol);
+				File dividendYahoo = dividendYahooProvider.getFile(stock.symbol);
 								
 				if (priceGoogle.exists() && priceYahoo.exists()) {
 					// both
@@ -257,7 +257,7 @@ public class UpdateStats {
 				dividendList = new ArrayList<>();
 			}
 			
-			statsList.add(getInstance(nasdaq, priceList, dividendList));
+			statsList.add(getInstance(stock, priceList, dividendList));
 		}
 		CSVUtil.saveWithHeader(statsList, PATH_STATS);
 		logger.info("stats  {}", String.format("%4d", statsList.size()));

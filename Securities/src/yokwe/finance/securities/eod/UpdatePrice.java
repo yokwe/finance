@@ -14,12 +14,12 @@ import java.util.TreeSet;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.eod.Stock;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
-import yokwe.finance.securities.util.NasdaqUtil;
+import yokwe.finance.securities.util.StockUtil;
 
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
@@ -55,10 +55,10 @@ public class UpdatePrice {
 			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
 			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
 			
-			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// Convert from '.PR.' to  '-' in symbol for google
-			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", nasdaq.exchange, nasdaq.google, dateFrom, dateTo);
+			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbol, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -158,7 +158,7 @@ public class UpdatePrice {
 		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
 			int a = dateFirst.getMonthValue(); // mm
@@ -168,7 +168,7 @@ public class UpdatePrice {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", nasdaq.yahoo, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
@@ -274,12 +274,12 @@ public class UpdatePrice {
 	}
 	
 	private static void updateFile(UpdateProvider updateProvider) {
-		Map<String, NasdaqTable> nasdaqMap = new TreeMap<>();
-		NasdaqUtil.getAll().stream().forEach(e -> nasdaqMap.put(e.symbol, e));
-		Set<String> symbolSet = new TreeSet<>(nasdaqMap.keySet());
+		Map<String, Stock> stockMap = new TreeMap<>();
+		StockUtil.getAll().stream().forEach(e -> stockMap.put(e.symbol, e));
+		Set<String> symbolSet = new TreeSet<>(stockMap.keySet());
 		logger.info("symbolSet {}", symbolSet.size());
 		
-		int total = nasdaqMap.size();
+		int total = stockMap.size();
 		int countUpdate = 0;
 		int countOld    = 0;
 		int countSkip   = 0;
@@ -311,8 +311,8 @@ public class UpdatePrice {
 
 			int symbolSetSize = symbolSet.size();
 			for(String symbol: symbolSet) {
-				NasdaqTable nasdaq = nasdaqMap.get(symbol);
-				String      exch   = nasdaq.exchange;
+				Stock  stock = stockMap.get(symbol);
+				String exch  = stock.exchange;
 
 				int showInterval = (symbolSet.size() < 100) ? 1 : 100;
 				int outputCount = count / showInterval;
@@ -393,7 +393,7 @@ public class UpdatePrice {
 				String name = file.getName();
 				if (name.endsWith(".csv")) {
 					String symbol = name.replace(".csv", "");
-					if (NasdaqUtil.contains(symbol)) continue;
+					if (StockUtil.contains(symbol)) continue;
 				}
 				
 				logger.info("delete unknown file {}", name);

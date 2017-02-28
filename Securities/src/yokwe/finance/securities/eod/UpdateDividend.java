@@ -11,12 +11,12 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.database.NasdaqTable;
+import yokwe.finance.securities.eod.Stock;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
-import yokwe.finance.securities.util.NasdaqUtil;
+import yokwe.finance.securities.util.StockUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
@@ -40,7 +40,7 @@ public class UpdateDividend {
 		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			NasdaqTable nasdaq = NasdaqUtil.get(symbol.replace(".PR.", "-"));
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
 			int a = dateFirst.getMonthValue(); // mm
@@ -50,7 +50,7 @@ public class UpdateDividend {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", nasdaq.yahoo, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
@@ -175,7 +175,7 @@ public class UpdateDividend {
 				String name = file.getName();
 				if (name.endsWith(".csv")) {
 					String symbol = name.replace(".csv", "");
-					if (NasdaqUtil.contains(symbol)) continue;
+					if (StockUtil.contains(symbol)) continue;
 				}
 				
 				logger.info("delete unknown file {}", name);
@@ -184,14 +184,14 @@ public class UpdateDividend {
 		}
 		
 		{
-			Collection<NasdaqTable> nasdaqCollection = NasdaqUtil.getAll();
+			Collection<Stock> stockCollection = StockUtil.getAll();
 			
-//			Collection<NasdaqTable> nasdaqCollection = new ArrayList<>();
-//			nasdaqCollection.add(NasdaqUtil.get("IBM"));
-//			nasdaqCollection.add(NasdaqUtil.get("NYT"));
-//			nasdaqCollection.add(NasdaqUtil.get("PEP"));
+//			Collection<Stock> stockCollection = new ArrayList<>();
+//			stockCollection.add(StockUtil.get("IBM"));
+//			stockCollection.add(StockUtil.get("NYT"));
+//			stockCollection.add(StockUtil.get("PEP"));
 			
-			int total = nasdaqCollection.size();
+			int total = stockCollection.size();
 			int count = 0;
 			
 			int countUpdate = 0;
@@ -203,9 +203,9 @@ public class UpdateDividend {
 			int showInterval = 100;
 			boolean showOutput;
 			int lastOutputCount = -1;
-			for(NasdaqTable nasdaq: nasdaqCollection) {
-				String exch   = nasdaq.exchange;
-				String symbol = nasdaq.symbol;
+			for(Stock stock: stockCollection) {
+				String exch   = stock.exchange;
+				String symbol = stock.symbol;
 
 				int outputCount = count / showInterval;
 				if (outputCount != lastOutputCount) {

@@ -32,12 +32,11 @@ public class UpdatePrice {
 	
 	public static final class UpdateProviderGoogle implements UpdateProvider {
 		private static final String PATH_DIR      = "tmp/eod/price";
-		private static final String PROVIDER_NAME = "google";
 		public String getRootPath() {
 			return PATH_DIR;
 		}
 		public String getName() {
-			return PROVIDER_NAME;
+			return GOOGLE;
 		}
 		
 		public File getFile(String symbol) {
@@ -146,9 +145,8 @@ public class UpdatePrice {
 	
 	public static final class UpdateProviderYahoo implements UpdateProvider {
 		private static final String PATH_DIR      = "tmp/eod/price";
-		private static final String PROVIDER_NAME = "yahoo";
 		public String getName() {
-			return PROVIDER_NAME;
+			return YAHOO;
 		}
 		
 		public File getFile(String symbol) {

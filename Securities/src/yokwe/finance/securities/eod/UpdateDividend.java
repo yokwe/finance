@@ -27,9 +27,8 @@ public class UpdateDividend {
 		
 	public static class UpdateProviderYahoo implements UpdateProvider {
 		private static final String PATH_DIR      = "tmp/eod/dividend";
-		private static final String PROVIDER_NAME = "yahoo";
 		public String getName() {
-			return PROVIDER_NAME;
+			return YAHOO;
 		}
 		
 		public File getFile(String symbol) {

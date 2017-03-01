@@ -239,7 +239,7 @@ public class Report {
 					
 					buySell.sell(activity, fxRate);
 
-					stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
+//					stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
 					break;
 				}
 				// Dividend
@@ -371,7 +371,7 @@ public class Report {
 						
 			buySell.sell(activity, fxRate);
 			
-			stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
+//			stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
 		}
 		
 		// Save cache for later use
@@ -399,7 +399,7 @@ public class Report {
 		// key is date
 		Map<String, Interest>             interestMap = new TreeMap<>();
 		// key is date
-		Map<String, MonthlyStats>                statsMap     = new TreeMap<>();
+		Map<String, MonthlyStats>         statsMap    = new TreeMap<>();
 		
 		readActivity(url, buySellMap, dividendMap, interestMap, statsMap);
 		addDummySellActivity(buySellMap, statsMap);
@@ -505,19 +505,30 @@ public class Report {
 			}
 			
 			{
+				for(TransferSummary e: summaryMap.values()) {
+					String month = toMonth(e.dateSell);
+					MonthlyStats stats = statsMap.get(month);
+					if (stats == null) {
+						logger.error("stats is null  month = {}", month);
+						throw new SecuritiesException("stats is null");
+					}
+					stats.sell     += e.sell;
+					stats.sellCost += e.buy;
+				}
+
 				List<MonthlyStats> statsList = new ArrayList<>();
 				double fund = 0;
 				double cash = 0;
 				double stock = 0;
 				for(MonthlyStats stats: statsMap.values()) {
-					fund += stats.wire + stats.ach;
-					cash += stats.wire + stats.ach + stats.interest + stats.dividend - stats.buy + stats.sell;
-					stock += stats.buy - stats.sell;
+					fund  += stats.wire + stats.ach;
+					cash  += stats.wire + stats.ach + stats.interest + stats.dividend - stats.buy + stats.sell;
+					stock += stats.buy  - stats.sellCost;
 					
 					stats.fund  = fund;
 					stats.cash  = cash;
 					stats.stock = stock;
-					stats.gain  = cash + stock - fund;
+					stats.gain  = stats.cash + stats.stock - stats.fund;
 					
 					statsList.add(stats);
 					logger.info("stats {}", stats.toString());

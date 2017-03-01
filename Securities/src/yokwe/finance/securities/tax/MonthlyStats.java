@@ -36,10 +36,12 @@ public class MonthlyStats extends Sheet {
 	public double buy;      // buy for this month
 	@ColumnName("sell")
 	public double sell;     // sell for this month
+	@ColumnName("sell cost")
+	public double sellCost;     // sell for this month
 	
 	@Override
 	public String toString() {
-		return String.format("%s %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f %8.2f", 
-			date, fund, cash, stock, gain, wire, ach, interest, dividend, buy, sell);
+		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", 
+			date, fund, cash, stock, gain, wire, ach, interest, dividend, buy, sell, sellCost);
 	}
 }

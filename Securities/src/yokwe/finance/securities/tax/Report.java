@@ -5,7 +5,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
@@ -175,12 +178,23 @@ public class Report {
 	}
 	
 
-	private static void readActivity(String url, Map<String, BuySell> buySellMap, Map<String, Dividend> dividendMap, Map<String, Interest> interestMap) {
-		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
+	private static void readActivity(String url, Map<String, BuySell> buySellMap,
+			Map<String, Dividend> dividendMap, Map<String, Interest> interestMap, Map<String, MonthlyStats> statsMap) {
+		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {			
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
 				double fxRate = Mizuho.getUSD(activity.date);
 				
+				String month = toMonth(activity.date);
+				MonthlyStats stats;
+				if (statsMap.containsKey(month)) {
+					stats = statsMap.get(month);
+				} else {
+					stats = new MonthlyStats();
+					stats.date = month;
+					statsMap.put(month, stats);
+				}
+					
 				switch(activity.transaction) {
 				// Transfer
 				case "BOUGHT":
@@ -203,6 +217,8 @@ public class Report {
 					if (buySell.isAlmostZero()) {
 						buySellMap.remove(key);
 					}
+					
+					stats.buy += DoubleUtil.round(activity.debit - activity.credit, 2);
 					break;
 				}
 				case "SOLD":
@@ -222,6 +238,8 @@ public class Report {
 					}
 					
 					buySell.sell(activity, fxRate);
+
+					stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
 					break;
 				}
 				// Dividend
@@ -257,6 +275,7 @@ public class Report {
 						buySell.dividend(activity);
 					}
 
+					stats.dividend += DoubleUtil.round(activity.credit - activity.debit, 2);
 					break;
 				}
 				case "INTEREST": {
@@ -268,6 +287,23 @@ public class Report {
 					} else {
 						Interest interest = new Interest(activity.date, activity.credit, fxRate);
 						interestMap.put(key, interest);
+					}
+					
+					stats.interest += DoubleUtil.round(activity.credit - activity.debit, 2);
+					break;
+				}
+				case "ACH":
+				case "WIRE": {
+					switch (activity.transaction) {
+					case "ACH":
+						stats.ach += DoubleUtil.round(activity.credit - activity.debit, 2);
+						break;
+					case "WIRE":
+						stats.wire += DoubleUtil.round(activity.credit - activity.debit, 2);
+						break;
+					default:
+						logger.error("Unknonw transaction {}", activity.transaction);
+						throw new SecuritiesException("Unknonw transaction");
 					}
 					break;
 				}
@@ -301,10 +337,15 @@ public class Report {
 		}
 	}
 	
-	private static void addDummySellActivity(Map<String, BuySell> buySellMap) {
+	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, MonthlyStats> statsMap) {
 		String theDate = "9999-99-99";
 		double fxRate = Mizuho.getUSD(theDate);
 		
+		String month = toMonth(theDate);
+		MonthlyStats stats = new MonthlyStats();
+		stats.date = month;
+		statsMap.put(month, stats);
+
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;
 			
@@ -329,12 +370,20 @@ public class Report {
 			activity.credit      = activity.quantity * activity.price;
 						
 			buySell.sell(activity, fxRate);
+			
+			stats.sell += DoubleUtil.round(activity.credit - activity.debit, 2);
 		}
 		
 		// Save cache for later use
 		Price.saveCache();
 	}
 
+	private static final String toYear(String date) {
+		return date.substring(0, 4);
+	}
+	private static final String toMonth(String date) {
+		return date.substring(0, 7);
+	}
 	public static void generateReport(String url) {
 		logger.info("url        {}", url);
 
@@ -349,25 +398,21 @@ public class Report {
 		Map<String, TransferSummary>      summaryMap  = new TreeMap<>();
 		// key is date
 		Map<String, Interest>             interestMap = new TreeMap<>();
+		// key is date
+		Map<String, MonthlyStats>                statsMap     = new TreeMap<>();
 		
-		readActivity(url, buySellMap, dividendMap, interestMap);
-		addDummySellActivity(buySellMap);
+		readActivity(url, buySellMap, dividendMap, interestMap, statsMap);
+		addDummySellActivity(buySellMap, statsMap);
 		
 		buildTransferMapSummaryMap(buySellMap, detailMap, summaryMap);
 		
-		List<String> yearList = new ArrayList<>();
-		for(String key: dividendMap.keySet()) {
-			String year = key.substring(0,  4);
-			if (yearList.contains(year)) continue;
-			yearList.add(year);
-		}
-		for(String key: summaryMap.keySet()) {
-			String year = key.substring(0,  4);
-			if (yearList.contains(year)) continue;
-			yearList.add(year);
-		}
-		yearList.sort((a, b) -> a.compareTo(b));
-		logger.info("year {}", yearList);
+		SortedSet<String> yearSet = new TreeSet<>();
+
+		yearSet.addAll(detailMap.keySet().stream().map(Report::toYear).collect(Collectors.toSet()));
+		yearSet.addAll(dividendMap.keySet().stream().map(Report::toYear).collect(Collectors.toSet()));
+		yearSet.addAll(interestMap.keySet().stream().map(Report::toYear).collect(Collectors.toSet()));
+		
+		logger.info("year {}", yearSet);
 		
 		{
 			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
@@ -376,7 +421,7 @@ public class Report {
 			SpreadSheet docLoad = new SpreadSheet(urlLoad, true);
 			SpreadSheet docSave = new SpreadSheet();
 			
-			for(String targetYear: yearList) {
+			for(String targetYear: yearSet) {
 				{
 					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
 					for(String key: detailMap.keySet()) {
@@ -458,7 +503,35 @@ public class Report {
 					}
 				}
 			}
-						
+			
+			{
+				List<MonthlyStats> statsList = new ArrayList<>();
+				double fund = 0;
+				double cash = 0;
+				double stock = 0;
+				for(MonthlyStats stats: statsMap.values()) {
+					fund += stats.wire + stats.ach;
+					cash += stats.wire + stats.ach + stats.interest + stats.dividend - stats.buy + stats.sell;
+					stock += stats.buy - stats.sell;
+					
+					stats.fund  = fund;
+					stats.cash  = cash;
+					stats.stock = stock;
+					stats.gain  = cash + stock - fund;
+					
+					statsList.add(stats);
+					logger.info("stats {}", stats.toString());
+				}
+				
+				String sheetName = Sheet.getSheetName(MonthlyStats.class);
+				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+				Sheet.saveSheet(docSave, MonthlyStats.class, statsList);
+				
+				String newSheetName = String.format("%s-%s",  "XXXX", sheetName);
+				logger.info("sheet {}", newSheetName);
+				docSave.renameSheet(sheetName, newSheetName);
+			}
+			
 			// remove first sheet
 			docSave.removeSheet(docSave.getSheetName(0));
 

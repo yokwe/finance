@@ -218,7 +218,7 @@ public class Report {
 						buySellMap.remove(key);
 					}
 					
-					perf.buy += DoubleUtil.round(activity.debit - activity.credit, 2);
+					perf.buy = DoubleUtil.round(perf.buy + activity.debit - activity.credit, 2);
 					break;
 				}
 				case "SOLD":
@@ -273,7 +273,7 @@ public class Report {
 						buySell.dividend(activity);
 					}
 
-					perf.dividend += DoubleUtil.round(activity.credit - activity.debit, 2);
+					perf.dividend = DoubleUtil.round(perf.dividend + activity.credit - activity.debit, 2);
 					break;
 				}
 				case "INTEREST": {
@@ -287,17 +287,17 @@ public class Report {
 						interestMap.put(key, interest);
 					}
 					
-					perf.interest += DoubleUtil.round(activity.credit - activity.debit, 2);
+					perf.interest = DoubleUtil.round(perf.interest + activity.credit - activity.debit, 2);
 					break;
 				}
 				case "ACH":
 				case "WIRE": {
 					switch (activity.transaction) {
 					case "ACH":
-						perf.ach += DoubleUtil.round(activity.credit - activity.debit, 2);
+						perf.ach = DoubleUtil.round(perf.ach + activity.credit - activity.debit, 2);
 						break;
 					case "WIRE":
-						perf.wire += DoubleUtil.round(activity.credit - activity.debit, 2);
+						perf.wire = DoubleUtil.round(perf.wire + activity.credit - activity.debit, 2);
 						break;
 					default:
 						logger.error("Unknonw transaction {}", activity.transaction);
@@ -509,8 +509,8 @@ public class Report {
 						logger.error("perf is null  month = {}", month);
 						throw new SecuritiesException("perf is null");
 					}
-					perf.sell     += e.sell;
-					perf.sellCost += e.buy;
+					perf.sell     = DoubleUtil.round(perf.sell     + e.sell, 2);
+					perf.sellCost = DoubleUtil.round(perf.sellCost + e.buy, 2);
 				}
 
 				List<Perf> perfList = new ArrayList<>();
@@ -518,14 +518,14 @@ public class Report {
 				double cash = 0;
 				double stock = 0;
 				for(Perf perf: perfMap.values()) {
-					fund  += perf.wire + perf.ach;
-					cash  += perf.wire + perf.ach + perf.interest + perf.dividend - perf.buy + perf.sell;
-					stock += perf.buy  - perf.sellCost;
+					fund  = DoubleUtil.round(fund  + perf.wire + perf.ach, 2);
+					cash  = DoubleUtil.round(cash  + perf.wire + perf.ach + perf.interest + perf.dividend - perf.buy + perf.sell, 2);
+					stock = DoubleUtil.round(stock + perf.buy  - perf.sellCost, 2);
 					
 					perf.fund  = fund;
 					perf.cash  = cash;
 					perf.stock = stock;
-					perf.gain  = perf.cash + perf.stock - perf.fund;
+					perf.gain  = DoubleUtil.round(perf.cash + perf.stock - perf.fund, 2);
 					
 					perfList.add(perf);
 					logger.info("perf {}", perf.toString());

@@ -514,21 +514,21 @@ public class Report {
 				}
 
 				List<Perf> perfList = new ArrayList<>();
-				double fund = 0;
-				double cash = 0;
-				double stock = 0;
+				double fundTotal = 0;
+				double cashTotal = 0;
+				double stockTotal = 0;
 				for(Perf perf: perfMap.values()) {
-					fund  = DoubleUtil.round(fund  + perf.wire + perf.ach, 2);
-					cash  = DoubleUtil.round(cash  + perf.wire + perf.ach + perf.interest + perf.dividend - perf.buy + perf.sell, 2);
-					stock = DoubleUtil.round(stock + perf.buy  - perf.sellCost, 2);
+					fundTotal  = DoubleUtil.round(fundTotal  + perf.wire + perf.ach, 2);
+					cashTotal  = DoubleUtil.round(cashTotal  + perf.wire + perf.ach + perf.interest + perf.dividend - perf.buy + perf.sell, 2);
+					stockTotal = DoubleUtil.round(stockTotal + perf.buy  - perf.sellCost, 2);
 					
-					perf.fund  = fund;
-					perf.cash  = cash;
-					perf.stock = stock;
-					perf.gain  = DoubleUtil.round(perf.cash + perf.stock - perf.fund, 2);
+					perf.fundTotal  = fundTotal;
+					perf.cashTotal  = cashTotal;
+					perf.stockTotal = stockTotal;
+					perf.gainTotal  = DoubleUtil.round(perf.cashTotal + perf.stockTotal - perf.fundTotal, 2);
 					
 					perfList.add(perf);
-					logger.info("perf {}", perf.toString());
+//					logger.info("perf {}", perf.toString());
 				}
 				
 				String sheetName = Sheet.getSheetName(Perf.class);

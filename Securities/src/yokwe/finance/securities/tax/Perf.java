@@ -10,14 +10,14 @@ public class Perf extends Sheet {
 	public String date;     // YYYY-MM
 	
 	// summary
-	@ColumnName("資金")
-	public double fund;     // total wire or ach money in this account
-	@ColumnName("現金")
-	public double cash;     // cash available
-	@ColumnName("株式")
-	public double stock;    // unrealized gain or loss
-	@ColumnName("損益")
-	public double gain;     // cash + stock - fund
+	@ColumnName("資金累計")
+	public double fundTotal;     // total wire or ach money in this account
+	@ColumnName("現金累計")
+	public double cashTotal;     // cash available
+	@ColumnName("株式累計")
+	public double stockTotal;    // unrealized gain or loss
+	@ColumnName("損益累計")
+	public double gainTotal;     // cash + stock - fund
 	
 	// detail of fund
 	@ColumnName("送金")
@@ -42,6 +42,6 @@ public class Perf extends Sheet {
 	@Override
 	public String toString() {
 		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", 
-			date, fund, cash, stock, gain, wire, ach, interest, dividend, buy, sell, sellCost);
+			date, fundTotal, cashTotal, stockTotal, gainTotal, wire, ach, interest, dividend, buy, sell, sellCost);
 	}
 }

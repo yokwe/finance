@@ -179,20 +179,20 @@ public class Report {
 	
 
 	private static void readActivity(String url, Map<String, BuySell> buySellMap,
-			Map<String, Dividend> dividendMap, Map<String, Interest> interestMap, Map<String, Perf> perfMap) {
+			Map<String, Dividend> dividendMap, Map<String, Interest> interestMap, Map<String, Account> accountMap) {
 		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {			
 			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
 				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
 				double fxRate = Mizuho.getUSD(activity.date);
 				
 				String month = toMonth(activity.date);
-				Perf perf;
-				if (perfMap.containsKey(month)) {
-					perf = perfMap.get(month);
+				Account account;
+				if (accountMap.containsKey(month)) {
+					account = accountMap.get(month);
 				} else {
-					perf = new Perf();
-					perf.date = month;
-					perfMap.put(month, perf);
+					account = new Account();
+					account.date = month;
+					accountMap.put(month, account);
 				}
 					
 				switch(activity.transaction) {
@@ -218,7 +218,7 @@ public class Report {
 						buySellMap.remove(key);
 					}
 					
-					perf.buy = DoubleUtil.round(perf.buy + activity.debit - activity.credit, 2);
+					account.buy = DoubleUtil.round(account.buy + activity.debit - activity.credit, 2);
 					break;
 				}
 				case "SOLD":
@@ -273,7 +273,7 @@ public class Report {
 						buySell.dividend(activity);
 					}
 
-					perf.dividend = DoubleUtil.round(perf.dividend + activity.credit - activity.debit, 2);
+					account.dividend = DoubleUtil.round(account.dividend + activity.credit - activity.debit, 2);
 					break;
 				}
 				case "INTEREST": {
@@ -287,17 +287,31 @@ public class Report {
 						interestMap.put(key, interest);
 					}
 					
-					perf.interest = DoubleUtil.round(perf.interest + activity.credit - activity.debit, 2);
+					account.interest = DoubleUtil.round(account.interest + activity.credit - activity.debit, 2);
 					break;
 				}
 				case "ACH":
 				case "WIRE": {
 					switch (activity.transaction) {
 					case "ACH":
-						perf.ach = DoubleUtil.round(perf.ach + activity.credit - activity.debit, 2);
+						if (0 < activity.credit) {
+							account.achIn = DoubleUtil.round(account.achIn + activity.credit, 2);
+						} else if (0 < activity.debit) {
+							account.achOut = DoubleUtil.round(account.achOut + activity.debit, 2);
+						} else {
+							logger.error("Unexpected ach  {}  {}", activity.credit, activity.debit);
+							throw new SecuritiesException("Unexpected ach");
+						}
 						break;
 					case "WIRE":
-						perf.wire = DoubleUtil.round(perf.wire + activity.credit - activity.debit, 2);
+						if (0 < activity.credit) {
+							account.wireIn = DoubleUtil.round(account.wireIn + activity.credit, 2);
+						} else if (0 < activity.debit) {
+							account.wireOut = DoubleUtil.round(account.wireOut + activity.debit, 2);
+						} else {
+							logger.error("wire  {}  {}", activity.credit, activity.debit);
+							throw new SecuritiesException("Unexpected wire");
+						}
 						break;
 					default:
 						logger.error("Unknonw transaction {}", activity.transaction);
@@ -335,7 +349,7 @@ public class Report {
 		}
 	}
 	
-	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, Perf> perfMap) {
+	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, Account> accountMap) {
 		String theDate = "9999-99-99";
 		double fxRate = Mizuho.getUSD(theDate);
 		
@@ -367,9 +381,9 @@ public class Report {
 		
 		// add dummy placeholder
 		String month = toMonth(theDate);
-		Perf perf = new Perf();
-		perf.date = month;
-		perfMap.put(month, perf);
+		Account account = new Account();
+		account.date = month;
+		accountMap.put(month, account);
 		
 		// Save cache for later use
 		Price.saveCache();
@@ -396,10 +410,10 @@ public class Report {
 		// key is date
 		Map<String, Interest>             interestMap = new TreeMap<>();
 		// key is date
-		Map<String, Perf>                 perfMap     = new TreeMap<>();
+		Map<String, Account>                 accountMap     = new TreeMap<>();
 		
-		readActivity(url, buySellMap, dividendMap, interestMap, perfMap);
-		addDummySellActivity(buySellMap, perfMap);
+		readActivity(url, buySellMap, dividendMap, interestMap, accountMap);
+		addDummySellActivity(buySellMap, accountMap);
 		
 		buildTransferMapSummaryMap(buySellMap, detailMap, summaryMap);
 		
@@ -504,36 +518,38 @@ public class Report {
 			{
 				for(TransferSummary e: summaryMap.values()) {
 					String month = toMonth(e.dateSell);
-					Perf perf = perfMap.get(month);
-					if (perf == null) {
-						logger.error("perf is null  month = {}", month);
-						throw new SecuritiesException("perf is null");
+					Account account = accountMap.get(month);
+					if (account == null) {
+						logger.error("account is null  month = {}", month);
+						throw new SecuritiesException("account is null");
 					}
-					perf.sell     = DoubleUtil.round(perf.sell     + e.sell, 2);
-					perf.sellCost = DoubleUtil.round(perf.sellCost + e.buy, 2);
+					account.sell     = DoubleUtil.round(account.sell     + e.sell, 2);
+					account.sellCost = DoubleUtil.round(account.sellCost + e.buy, 2);
+					account.sellGain = DoubleUtil.round(account.sell     - account.sellCost, 2);
 				}
 
-				List<Perf> perfList = new ArrayList<>();
+				List<Account> accountList = new ArrayList<>();
 				double fundTotal = 0;
 				double cashTotal = 0;
 				double stockTotal = 0;
-				for(Perf perf: perfMap.values()) {
-					fundTotal  = DoubleUtil.round(fundTotal  + perf.wire + perf.ach, 2);
-					cashTotal  = DoubleUtil.round(cashTotal  + perf.wire + perf.ach + perf.interest + perf.dividend - perf.buy + perf.sell, 2);
-					stockTotal = DoubleUtil.round(stockTotal + perf.buy  - perf.sellCost, 2);
+				for(Account account: accountMap.values()) {
+					double fund = account.wireIn - account.wireOut + account.achIn - account.achOut;
+					fundTotal  = DoubleUtil.round(fundTotal  + fund, 2);
+					cashTotal  = DoubleUtil.round(cashTotal  + fund + account.interest + account.dividend - account.buy + account.sell, 2);
+					stockTotal = DoubleUtil.round(stockTotal + account.buy  - account.sellCost, 2);
 					
-					perf.fundTotal  = fundTotal;
-					perf.cashTotal  = cashTotal;
-					perf.stockTotal = stockTotal;
-					perf.gainTotal  = DoubleUtil.round(perf.cashTotal + perf.stockTotal - perf.fundTotal, 2);
+					account.fundTotal  = fundTotal;
+					account.cashTotal  = cashTotal;
+					account.stockTotal = stockTotal;
+					account.gainTotal  = DoubleUtil.round(account.cashTotal + account.stockTotal - account.fundTotal, 2);
 					
-					perfList.add(perf);
-//					logger.info("perf {}", perf.toString());
+					accountList.add(account);
+//					logger.info("account {}", account.toString());
 				}
 				
-				String sheetName = Sheet.getSheetName(Perf.class);
+				String sheetName = Sheet.getSheetName(Account.class);
 				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-				Sheet.saveSheet(docSave, Perf.class, perfList);
+				Sheet.saveSheet(docSave, Account.class, accountList);
 				
 				String newSheetName = String.format("%s-%s",  "9999", sheetName);
 				logger.info("sheet {}", newSheetName);

@@ -21,6 +21,13 @@ import yokwe.finance.securities.util.Mizuho;
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
 	
+	public static final String TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+
+	public static final String URL_ACTIVITY      = "file:///home/hasegawa/Dropbox/Trade/投資活動.ods";
+	public static final String URL_ACTIVITY_TEST = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
+	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/TAX_REPORT_TEMPLATE.ods";
+	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/TAX_REPORT_%s.ods", TIMESTAMP);
+
 	static class BuySell {
 		private static final double ALMOST_ZERO = 0.000001;
 
@@ -398,9 +405,6 @@ public class Report {
 	public static void generateReport(String url) {
 		logger.info("url        {}", url);
 
-		String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
-		logger.info("timeStamp {}", timeStamp);
-		
 		// key is symbol
 		Map<String, BuySell>  buySellMap  = new TreeMap<>();
 		// key is "date-symbol"
@@ -426,10 +430,7 @@ public class Report {
 		logger.info("year {}", yearSet);
 		
 		{
-			String urlLoad = "file:///home/hasegawa/Dropbox/Trade/REPORT_TEMPLATE.ods";
-			String urlSave = String.format("file:///home/hasegawa/Dropbox/Trade/REPORT_%s.ods", timeStamp);
-			
-			SpreadSheet docLoad = new SpreadSheet(urlLoad, true);
+			SpreadSheet docLoad = new SpreadSheet(URL_TEMPLATE, true);
 			SpreadSheet docSave = new SpreadSheet();
 			
 			for(String targetYear: yearSet) {
@@ -559,33 +560,17 @@ public class Report {
 			// remove first sheet
 			docSave.removeSheet(docSave.getSheetName(0));
 
-			docSave.store(urlSave);
-			logger.info("output {}", urlSave);
+			docSave.store(URL_REPORT);
+			logger.info("output {}", URL_REPORT);
 			docLoad.close();
 		}
-	}
-	
-	public static void generateTestReport() {
-		// See page 50 of URL below about test case
-		//   https://www.nta.go.jp/tetsuzuki/shinkoku/shotoku/tebiki2016/kisairei/kabushiki/pdf/15.pdf
-		
-		String url        = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
-		
-		Mizuho.enableTestMode();
-		generateReport(url);
-	}
-	
-	public static void generateReport() {
-		String url        = "file:///home/hasegawa/Dropbox/Trade/投資活動.ods";
-		
-		generateReport(url);
 	}
 	
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		//generateTestReport();
-		generateReport();
+//		generateReport(URL_ACTIVITY_TEST);
+		generateReport(URL_ACTIVITY);
 		
 		logger.info("STOP");
 		System.exit(0);

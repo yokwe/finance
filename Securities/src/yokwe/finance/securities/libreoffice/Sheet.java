@@ -58,12 +58,15 @@ public class Sheet {
 	}
 	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
-		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
+		String sheetName = getSheetName(clazz);
+		return getInstance(spreadSheet, clazz, sheetName);
+	}
+	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz, String sheetName) {
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
 		if (sheetName == null) {
-			logger.error("No SheetName annotation = {}", clazz.getName());
-			throw new SecuritiesException("No SheetName annotation");
+			logger.error("sheetName == null");
+			throw new SecuritiesException("sheetName == null");
 		}
 		if (headerRow == null) {
 			logger.error("No HeaderRow annotation = {}", clazz.getName());
@@ -74,7 +77,7 @@ public class Sheet {
 			throw new SecuritiesException("No DataRow annotation");
 		}
 //		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
-		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName.value());
+		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
 		
 		Map<String, Field> fieldMap = new TreeMap<>();
 		for(Field field: clazz.getDeclaredFields()) {

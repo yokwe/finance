@@ -187,88 +187,37 @@ public class Report {
 
 	private static void readActivity(String url, Map<String, BuySell> buySellMap,
 			Map<String, Dividend> dividendMap, Map<String, Interest> interestMap, Map<String, Account> accountMap) {
-		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {			
-			for(Activity activity: Sheet.getInstance(docActivity, Activity.class)) {
-				logger.info("activity {} {} {}", activity.date, activity.transaction, activity.symbol);
-				double fxRate = Mizuho.getUSD(activity.date);
-				
-				String month = toMonth(activity.date);
-				Account account;
-				if (accountMap.containsKey(month)) {
-					account = accountMap.get(month);
-				} else {
-					account = new Account();
-					account.date = month;
-					accountMap.put(month, account);
+		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
+			List<String> sheetNameList = docActivity.getSheetNameList();
+			sheetNameList.sort((a, b) -> a.compareTo(b));
+			for(String sheetName: sheetNameList) {
+				if (!sheetName.matches("^20[0-9][0-9]$")) {
+					logger.info("Skip sheet {}", sheetName);
+					continue;
 				}
+				for(Activity activity: Sheet.getInstance(docActivity, Activity.class, sheetName)) {
+					logger.info("activity {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol);
+					double fxRate = Mizuho.getUSD(activity.date);
 					
-				switch(activity.transaction) {
-				// Transfer
-				case "BOUGHT":
-				case "NAME CHG": {
-					// Use tradeDate
-					if (activity.tradeDate.length() == 0) {
-						logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
-						throw new SecuritiesException("tradeDate is empty");
-					}
-					String key = activity.symbol;
-					BuySell buySell;
-					if (buySellMap.containsKey(key)) {
-						buySell = buySellMap.get(key);
+					String month = toMonth(activity.date);
+					Account account;
+					if (accountMap.containsKey(month)) {
+						account = accountMap.get(month);
 					} else {
-						buySell = new BuySell(activity.symbol, activity.name);
-						buySellMap.put(key, buySell);
+						account = new Account();
+						account.date = month;
+						accountMap.put(month, account);
 					}
-					buySell.buy(activity, fxRate);
-					// Special case for TAL/TRTN(negative quantity for BUY)
-					if (buySell.isAlmostZero()) {
-						buySellMap.remove(key);
-					}
-					
-					account.buy = DoubleUtil.round(account.buy + activity.debit - activity.credit, 2);
-					break;
-				}
-				case "SOLD":
-				case "REDEEMED": {
-					// Use tradeDate
-					if (activity.tradeDate.length() == 0) {
-						logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
-						throw new SecuritiesException("tradeDate is empty");
-					}
-					String key = activity.symbol;
-					BuySell buySell;
-					if (buySellMap.containsKey(key)) {
-						buySell = buySellMap.get(key);
-					} else {
-						buySell = new BuySell(activity.symbol, activity.name);
-						buySellMap.put(key, buySell);
-					}
-					
-					buySell.sell(activity, fxRate);
-					break;
-				}
-				// Dividend
-				case "DIVIDEND":
-				case "ADR":
-				case "MLP":
-				case "NRA":
-				case "CAP GAIN": {
-					// Add record to dividendMap that belong target year
-					// Create Dividend Record
-					{
-						String key = String.format("%s-%s", activity.date, activity.symbol);
-						if (dividendMap.containsKey(key)) {
-							Dividend dividend = dividendMap.get(key);
-							dividend.update(activity.credit, activity.debit);
-						} else {
-							Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
-									activity.credit, activity.debit, fxRate);
-							dividendMap.put(key, dividend);
+						
+					switch(activity.transaction) {
+					// Transfer
+					case "BOUGHT":
+					case "NAME CHG": {
+						// Use tradeDate
+						if (activity.tradeDate.length() == 0) {
+							logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
+							throw new SecuritiesException("tradeDate is empty");
 						}
-					}
-					
-					// Add dividend for the symbol
-					{
 						String key = activity.symbol;
 						BuySell buySell;
 						if (buySellMap.containsKey(key)) {
@@ -277,59 +226,119 @@ public class Report {
 							buySell = new BuySell(activity.symbol, activity.name);
 							buySellMap.put(key, buySell);
 						}
-						buySell.dividend(activity);
+						buySell.buy(activity, fxRate);
+						// Special case for TAL/TRTN(negative quantity for BUY)
+						if (buySell.isAlmostZero()) {
+							buySellMap.remove(key);
+						}
+						
+						account.buy = DoubleUtil.round(account.buy + activity.debit - activity.credit, 2);
+						break;
 					}
+					case "SOLD":
+					case "REDEEMED": {
+						// Use tradeDate
+						if (activity.tradeDate.length() == 0) {
+							logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
+							throw new SecuritiesException("tradeDate is empty");
+						}
+						String key = activity.symbol;
+						BuySell buySell;
+						if (buySellMap.containsKey(key)) {
+							buySell = buySellMap.get(key);
+						} else {
+							buySell = new BuySell(activity.symbol, activity.name);
+							buySellMap.put(key, buySell);
+						}
+						
+						buySell.sell(activity, fxRate);
+						break;
+					}
+					// Dividend
+					case "DIVIDEND":
+					case "ADR":
+					case "MLP":
+					case "NRA":
+					case "CAP GAIN": {
+						// Add record to dividendMap that belong target year
+						// Create Dividend Record
+						{
+							String key = String.format("%s-%s", activity.date, activity.symbol);
+							if (dividendMap.containsKey(key)) {
+								Dividend dividend = dividendMap.get(key);
+								dividend.update(activity.credit, activity.debit);
+							} else {
+								Dividend dividend = Dividend.getInstance(activity.date, activity.symbol, activity.name, activity.quantity,
+										activity.credit, activity.debit, fxRate);
+								dividendMap.put(key, dividend);
+							}
+						}
+						
+						// Add dividend for the symbol
+						{
+							String key = activity.symbol;
+							BuySell buySell;
+							if (buySellMap.containsKey(key)) {
+								buySell = buySellMap.get(key);
+							} else {
+								buySell = new BuySell(activity.symbol, activity.name);
+								buySellMap.put(key, buySell);
+							}
+							buySell.dividend(activity);
+						}
 
-					account.dividend = DoubleUtil.round(account.dividend + activity.credit - activity.debit, 2);
-					break;
-				}
-				case "INTEREST": {
-					// Add record to dividendMap that belong target year
-					String key = activity.date;
-					if (interestMap.containsKey(key)) {
-						logger.error("duplicated date {}", key);
-						throw new SecuritiesException("duplicated date");
-					} else {
-						Interest interest = new Interest(activity.date, activity.credit, fxRate);
-						interestMap.put(key, interest);
+						account.dividend = DoubleUtil.round(account.dividend + activity.credit - activity.debit, 2);
+						break;
 					}
-					
-					account.interest = DoubleUtil.round(account.interest + activity.credit - activity.debit, 2);
-					break;
-				}
-				case "ACH":
-				case "WIRE": {
-					switch (activity.transaction) {
+					case "INTEREST": {
+						// Add record to dividendMap that belong target year
+						String key = activity.date;
+						if (interestMap.containsKey(key)) {
+							logger.error("duplicated date {}", key);
+							throw new SecuritiesException("duplicated date");
+						} else {
+							Interest interest = new Interest(activity.date, activity.credit, fxRate);
+							interestMap.put(key, interest);
+						}
+						
+						account.interest = DoubleUtil.round(account.interest + activity.credit - activity.debit, 2);
+						break;
+					}
 					case "ACH":
-						if (0 < activity.credit) {
-							account.achIn = DoubleUtil.round(account.achIn + activity.credit, 2);
-						} else if (0 < activity.debit) {
-							account.achOut = DoubleUtil.round(account.achOut + activity.debit, 2);
-						} else {
-							logger.error("Unexpected ach  {}  {}", activity.credit, activity.debit);
-							throw new SecuritiesException("Unexpected ach");
+					case "WIRE": {
+						switch (activity.transaction) {
+						case "ACH":
+							if (0 < activity.credit) {
+								account.achIn = DoubleUtil.round(account.achIn + activity.credit, 2);
+							} else if (0 < activity.debit) {
+								account.achOut = DoubleUtil.round(account.achOut + activity.debit, 2);
+							} else {
+								logger.error("Unexpected ach  {}  {}", activity.credit, activity.debit);
+								throw new SecuritiesException("Unexpected ach");
+							}
+							break;
+						case "WIRE":
+							if (0 < activity.credit) {
+								account.wireIn = DoubleUtil.round(account.wireIn + activity.credit, 2);
+							} else if (0 < activity.debit) {
+								account.wireOut = DoubleUtil.round(account.wireOut + activity.debit, 2);
+							} else {
+								logger.error("wire  {}  {}", activity.credit, activity.debit);
+								throw new SecuritiesException("Unexpected wire");
+							}
+							break;
+						default:
+							logger.error("Unknonw transaction {}", activity.transaction);
+							throw new SecuritiesException("Unknonw transaction");
 						}
 						break;
-					case "WIRE":
-						if (0 < activity.credit) {
-							account.wireIn = DoubleUtil.round(account.wireIn + activity.credit, 2);
-						} else if (0 < activity.debit) {
-							account.wireOut = DoubleUtil.round(account.wireOut + activity.debit, 2);
-						} else {
-							logger.error("wire  {}  {}", activity.credit, activity.debit);
-							throw new SecuritiesException("Unexpected wire");
-						}
-						break;
+					}
 					default:
 						logger.error("Unknonw transaction {}", activity.transaction);
 						throw new SecuritiesException("Unknonw transaction");
 					}
-					break;
 				}
-				default:
-					logger.error("Unknonw transaction {}", activity.transaction);
-					throw new SecuritiesException("Unknonw transaction");
-				}
+
 			}
 		}
 	}

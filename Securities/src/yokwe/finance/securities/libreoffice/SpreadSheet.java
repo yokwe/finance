@@ -1,6 +1,8 @@
 package yokwe.finance.securities.libreoffice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.LoggerFactory;
@@ -90,6 +92,15 @@ public class SpreadSheet extends LibreOffice {
 		}
 		logger.info("No sheet {}", sheetName);
 		throw new SecuritiesException("No sheet");
+	}
+	public List<String> getSheetNameList() {
+		List<String> ret = new ArrayList<>();
+		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSheets());
+		String[] names = nameAccess.getElementNames();
+		for(String name: names) {
+			ret.add(name);
+		}
+		return ret;
 	}
 	public String getSheetName(int index) {
 		XNameAccess nameAccess = UnoRuntime.queryInterface(XNameAccess.class, getSheets());

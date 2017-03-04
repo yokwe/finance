@@ -182,7 +182,7 @@
 		</java>
 	</target>
 	
-        <target name="run-report">
+        <target name="run-tax-report">
                 <java classname="yokwe.finance.securities.tax.Report" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />

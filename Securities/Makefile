@@ -166,7 +166,6 @@ update-mizuho:
 	echo "DATE,USD,GBP,EUR,AUD,NZD" >${DIR_DATABASE}/mizuho-header.csv
 	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f,%.2f,%.2f,%.2f,%.2f\n",$$1,$$2,$$3,$$4,$$5,$$6,$$12,$$13)}' >>${DIR_DATABASE}/mizuho-header.csv
 	tail -n +2 ${DIR_DATABASE}/mizuho-header.csv >${DIR_DATABASE}/mizuho.csv
-	cp ${DIR_DATABASE}/mizuho-header.csv ~/Dropbox/Trade
 
 #
 # quantumonline
@@ -180,7 +179,6 @@ fetch-quantum:
 update-quantum:
 	ant run-update-quantum
 	tail -n +2 ${DIR_DATABASE}/quantum-header.csv >${DIR_DATABASE}/quantum.csv
-	cp ${DIR_DATABASE}/quantum-header.csv ~/Dropbox/Trade
 
 #
 # equityStats
@@ -188,7 +186,6 @@ update-quantum:
 update-equityStats:
 	ant run-equityStats
 	tail -n +2 ${DIR_DATABASE}/equityStats-header.csv >${DIR_DATABASE}/equityStats.csv
-	cp ${DIR_DATABASE}/equityStats-header.csv ~/Dropbox/Trade
 
 #
 # eod
@@ -196,5 +193,4 @@ update-equityStats:
 eod-stats:
 	ant run-eod-update-stats
 	cp tmp/eod/stats.csv ${DIR_DATABASE}/stats.csv
-	cp ${DIR_DATABASE}/stats.csv ~/Dropbox/Trade
 

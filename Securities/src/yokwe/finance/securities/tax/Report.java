@@ -16,7 +16,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.DoubleUtil;
-import yokwe.finance.securities.util.Mizuho;
+import yokwe.finance.securities.eod.ForexUtil;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -197,7 +197,7 @@ public class Report {
 				}
 				for(Activity activity: Sheet.getInstance(docActivity, Activity.class, sheetName)) {
 					logger.info("activity {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol);
-					double fxRate = Mizuho.getUSD(activity.date);
+					double fxRate = ForexUtil.getUSD(activity.date);
 					
 					String month = toMonth(activity.date);
 					Account account;
@@ -367,7 +367,7 @@ public class Report {
 	
 	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, Account> accountMap) {
 		String theDate = "9999-99-99";
-		double fxRate = Mizuho.getUSD(theDate);
+		double fxRate = ForexUtil.getUSD(theDate);
 		
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;

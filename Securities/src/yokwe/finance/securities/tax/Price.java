@@ -1,10 +1,7 @@
 package yokwe.finance.securities.tax;
 
 import java.io.File;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,6 +13,7 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.HttpUtil;
 
@@ -32,19 +30,7 @@ public class Price {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		
-		private static final LocalDate DATE_TARGET;
-		static {
-			LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));
-			if (today.getHour() < 16) today = today.minusDays(1); // Move to yesterday if it is before market close
-			
-			// Adjust for weekends
-			DayOfWeek dayOfWeek = today.getDayOfWeek();
-			if (dayOfWeek == DayOfWeek.SUNDAY)   today = today.minusDays(-2); // Move to previous Friday
-			if (dayOfWeek == DayOfWeek.SATURDAY) today = today.minusDays(-1); // Move to previous Friday
-			
-			DATE_TARGET = today.toLocalDate();
-			logger.info("DATE_TARGET       {}", DATE_TARGET);
-		}
+		private static final LocalDate         DATE_TARGET        = Market.getLastTradingDate();
 		
 		private static final Map<String, Price>       priceCache = new TreeMap<>();
 		private static boolean                        needSave   = false;

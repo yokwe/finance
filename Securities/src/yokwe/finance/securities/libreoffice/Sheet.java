@@ -57,6 +57,12 @@ public class Sheet {
 		String value();
 	}
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface NumberFormat {
+		String value();
+	}
+	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		String sheetName = getSheetName(clazz);
 		return getInstance(spreadSheet, clazz, sheetName);
@@ -290,8 +296,8 @@ public class Sheet {
 		return sheetName.value();
 	}
 
-	public static <E extends Sheet> void saveSheet(XSpreadsheet spreadsheet, Class<E> clazz, List<E> dataList) {
-		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
+		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
 		if (sheetName == null) {
@@ -355,9 +361,14 @@ public class Sheet {
 					for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
 						int column = columnMap.get(entry.getKey());
 						XCell cell = spreadsheet.getCellByPosition(column, row);
-
-						Field field = entry.getValue();
-						Class<?> fieldType = field.getType();
+						
+						Field        field        = entry.getValue();
+						Class<?>     fieldType    = field.getType();						
+						NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
+						
+						if (numberFormat != null) {
+							spreadSheet.setNumberFormat(cell, numberFormat.value());
+						}
 						
 						if (fieldType.equals(String.class)) {
 							Object value = field.get(data);
@@ -381,13 +392,8 @@ public class Sheet {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
-		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
-		saveSheet(spreadsheet, clazz, dataList);
-	}
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList) {
 		String sheetName = getSheetName(clazz);
-		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
-		saveSheet(spreadsheet, clazz, dataList);
+		saveSheet(spreadSheet, sheetName, clazz, dataList);
 	}
 }

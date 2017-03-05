@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
+import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
@@ -14,6 +15,7 @@ import com.sun.star.container.XIndexAccess;
 import com.sun.star.container.XNameAccess;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.lang.Locale;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
@@ -25,6 +27,7 @@ import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.UnoRuntime;
+import com.sun.star.util.MalformedNumberFormatException;
 import com.sun.star.util.XNumberFormats;
 import com.sun.star.util.XNumberFormatsSupplier;
 
@@ -214,6 +217,27 @@ public class SpreadSheet extends LibreOffice {
 			String         formatString      = AnyConverter.toString(numberFormatProps.getPropertyValue("FormatString"));
 			return formatString;
 		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
+	}
+	
+	private static final Locale locale = new com.sun.star.lang.Locale();
+	private static final String PROPETY_NAME_NUMBER_FORMAT = "NumberFormat";
+	
+	public void setNumberFormat(XCell cell, String numberFormat) {
+		try {
+			XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
+			XNumberFormats         xNumberFormats         = xNumberFormatsSupplier.getNumberFormats();
+			XPropertySet           xPropertySet           = UnoRuntime.queryInterface(XPropertySet.class, cell);
+			
+			int index = xNumberFormats.queryKey(numberFormat, locale, false);
+			if (index == -1) {
+				index = xNumberFormats.addNew(numberFormat, locale);
+			}
+			
+			xPropertySet.setPropertyValue(PROPETY_NAME_NUMBER_FORMAT, Integer.valueOf(index));
+		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException | MalformedNumberFormatException | PropertyVetoException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}

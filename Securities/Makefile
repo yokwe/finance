@@ -193,5 +193,5 @@ update-equityStats:
 #
 eod-stats:
 	ant run-eod-update-stats
-	cp tmp/eod/stats.csv ${DIR_DATABASE}/stats.csv
+	cp tmp/eod/stats.csv ~/Dropbox/Trade/stats.csv
 

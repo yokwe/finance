@@ -11,12 +11,9 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Stock;
-import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
-import yokwe.finance.securities.util.StockUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
@@ -96,7 +93,7 @@ public class UpdateDividend {
 			}
 			
 			if (targetFound) {
-				CSVUtil.saveWithHeader(dividendList, file.getAbsolutePath());
+				Dividend.save(dividendList, file);
 				return true;
 			} else {
 				// no target date data

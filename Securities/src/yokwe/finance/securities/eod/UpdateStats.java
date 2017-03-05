@@ -9,15 +9,12 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Stock;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
 import yokwe.finance.securities.stats.RSI;
-import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleStreamUtil;
 import yokwe.finance.securities.util.DoubleUtil;
-import yokwe.finance.securities.util.StockUtil;
 
 public class UpdateStats {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStats.class);
@@ -259,7 +256,7 @@ public class UpdateStats {
 			
 			statsList.add(getInstance(stock, priceList, dividendList));
 		}
-		CSVUtil.saveWithHeader(statsList, PATH_STATS);
+		Stats.save(statsList);
 		logger.info("stats  {}", String.format("%4d", statsList.size()));
 		logger.info("STOP");
 	}

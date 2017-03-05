@@ -14,12 +14,9 @@ import java.util.TreeSet;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Stock;
-import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
-import yokwe.finance.securities.util.StockUtil;
 
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
@@ -133,7 +130,7 @@ public class UpdatePrice {
 			}
 			
 			if (targetFound) {
-				CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+				Price.save(priceList, file);
 				return true;
 			} else {
 				// no target date data
@@ -218,7 +215,7 @@ public class UpdatePrice {
 			}
 			
 			if (targetFound) {
-				CSVUtil.saveWithHeader(priceList, file.getAbsolutePath());
+				Price.save(priceList, file);
 				return true;
 			} else {
 				// no target date data

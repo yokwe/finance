@@ -38,7 +38,7 @@ public class Price {
 		UpdateProvider updateProvider = UpdatePrice.getProvider(provider);
 		File file = updateProvider.getFile(symbol);
 		if (file.canRead()) {
-			return CSVUtil.loadWithHeader(file.getPath(), Price.class);
+			return load(file);
 		} else {
 			return null;
 		}
@@ -47,4 +47,14 @@ public class Price {
 	public static List<Price> load(File file) {
 		return CSVUtil.loadWithHeader(file.getPath(), Price.class);
 	}
+	
+	public static void save(List<Price> priceList, String provider, String symbol) {
+		UpdateProvider updateProvider = UpdatePrice.getProvider(provider);
+		File file = updateProvider.getFile(symbol);
+		save(priceList, file);
+	}
+	public static void save(List<Price> priceList, File file) {
+		CSVUtil.saveWithHeader(priceList, file.getPath());
+	}
+
 }

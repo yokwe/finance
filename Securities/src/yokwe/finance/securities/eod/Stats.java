@@ -52,4 +52,9 @@ public class Stats {
 	public static void save(List<Stats> statsList) {
 		CSVUtil.saveWithHeader(statsList, UpdateStats.PATH_STATS);
 	}
+	
+	public static List<Stats> load() {
+		return CSVUtil.loadWithHeader(UpdateStats.PATH_STATS, Stats.class);
+	}
+
 }

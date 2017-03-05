@@ -102,7 +102,7 @@ public class UpdateStock {
 					
 					content.append(line).append("\n");
 				}
-				CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\r\n").withDelimiter(',').withTrim().withQuote('"');
+				CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n").withDelimiter(',').withQuote('"').withTrim();
 				
 				return CSVUtil.load(new StringReader(content.toString()), CompaniesByRegion.class, csvFormat);
 			} catch (IOException e) {
@@ -391,7 +391,7 @@ public class UpdateStock {
 		stockList.sort((a, b) -> a.symbol.compareTo(b.symbol));
 		logger.info("stockList {}", stockList.size());
 		
-		CSVUtil.saveWithHeader(stockList, PATH_STOCK);
+		Stock.save(stockList);
 		
 		logger.info("STOP");
 	}

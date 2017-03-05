@@ -1,7 +1,6 @@
-package yokwe.finance.securities.util;
+package yokwe.finance.securities.eod;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -9,8 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Stock;
-import yokwe.finance.securities.eod.UpdateStock;
+import yokwe.finance.securities.util.FileUtil;
 
 public class StockUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
@@ -18,8 +16,7 @@ public class StockUtil {
 	private static Map<String, Stock> map = new TreeMap<>();
 	
 	static {
-		List<Stock> tableList = CSVUtil.loadWithHeader(UpdateStock.PATH_STOCK, Stock.class);
-		for(Stock table: tableList) {
+		for(Stock table: Stock.load()) {
 			map.put(table.symbol, table);
 		}
 	}

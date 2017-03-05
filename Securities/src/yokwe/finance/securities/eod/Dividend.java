@@ -25,7 +25,23 @@ public class Dividend {
 		return String.format("[%-9s %s %8.4f]", symbol, date, dividend);
 	}
 	
+	public static List<Dividend> load(String symbol) {
+		UpdateProvider updateProvider = UpdateDividend.getProvider(UpdateProvider.YAHOO);
+		File file = updateProvider.getFile(symbol);
+		return load(file);
+	}
+	
 	public static List<Dividend> load(File file) {
 		return CSVUtil.loadWithHeader(file.getPath(), Dividend.class);
+	}
+	
+	
+	public static void save(List<Dividend> dividendList, String symbol) {
+		UpdateProvider updateProvider = UpdateDividend.getProvider(UpdateProvider.YAHOO);
+		File file = updateProvider.getFile(symbol);
+		save(dividendList, file);
+	}
+	public static void save(List<Dividend> dividendList, File file) {
+		CSVUtil.saveWithHeader(dividendList, file.getPath());
 	}
 }

@@ -1,5 +1,9 @@
 package yokwe.finance.securities.eod;
 
+import java.util.List;
+
+import yokwe.finance.securities.util.CSVUtil;
+
 public class Stock {
 	public String symbol;
 	public String symbolGoogle;
@@ -17,5 +21,12 @@ public class Stock {
 	@Override
 	public String toString() {
 		return String.format("%s %s", exchange, name);
+	}
+	
+	public static void save(List<Stock> stockList) {
+		CSVUtil.saveWithHeader(stockList, UpdateStock.PATH_STOCK);
+	}
+	public static List<Stock> load() {
+		return CSVUtil.loadWithHeader(UpdateStock.PATH_STOCK, Stock.class);
 	}
 }

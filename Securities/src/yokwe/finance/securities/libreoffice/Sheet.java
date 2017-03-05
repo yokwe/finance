@@ -297,7 +297,7 @@ public class Sheet {
 	}
 
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
-		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
+		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
 		if (sheetName == null) {
@@ -337,7 +337,7 @@ public class Sheet {
 				int row = headerRow.value();
 				// Build header map
 				for(int column = 0; column < 100; column++) {
-					final XCell cell = spreadsheet.getCellByPosition(column, row);
+					final XCell cell = xSpreadsheet.getCellByPosition(column, row);
 					final CellContentType type = cell.getType();
 					if (type.equals(CellContentType.EMPTY)) break;
 					
@@ -359,8 +359,8 @@ public class Sheet {
 				int row = dataRow.value();
 				for(E data: dataList) {
 					for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
-						int column = columnMap.get(entry.getKey());
-						XCell cell = spreadsheet.getCellByPosition(column, row);
+						int   column = columnMap.get(entry.getKey());
+						XCell cell   = xSpreadsheet.getCellByPosition(column, row);
 						
 						Field        field        = entry.getValue();
 						Class<?>     fieldType    = field.getType();						

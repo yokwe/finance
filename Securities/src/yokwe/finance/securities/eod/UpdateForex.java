@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +21,29 @@ public class UpdateForex {
 	public static final String PATH_MIZUHO      = "tmp/fetch/mizuho/quote.csv";
 	public static final String PATH_FOREX       = "tmp/eod/forex.csv";
 	
-	public static final String[] CURRENCY_LIST  = new String[] {"USD", "GBP", "EUR", "AUD", "NZD"};
-	
 	public static void main (String[] args) {
 		logger.info("START");
+		
+		String[] currencyList;
+		int[]    currencyIndex;
+		{
+			// Build currencyList from double field of Forex class.
+			int size = 0;
+			Field[] fields = Forex.class.getDeclaredFields();
+			
+			for(int i = 0; i < fields.length; i++) {
+				if (fields[i].getType().getName().equals("double")) size++;
+			}
+			currencyList  = new String[size];
+			currencyIndex = new int[size];
+			
+			int j = 0;
+			for(int i = 0; i < fields.length; i++) {
+				if (fields[i].getType().getName().equals("double")) {
+					currencyList[j++] = fields[i].getName().toUpperCase();
+				}
+			}
+		}
 		
 		String contents = FileUtil.read(new File(PATH_MIZUHO), ENCODING_MIZUHO);
 
@@ -31,10 +51,9 @@ public class UpdateForex {
 
 		try (PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(PATH_FOREX)));
 			BufferedReader in = new BufferedReader(new StringReader(contents))) {
-			int[] currencyIndex = new int[CURRENCY_LIST.length];
 			
 			out.append("date");
-			for(String currency: CURRENCY_LIST) {
+			for(String currency: currencyList) {
 				out.append(",").append(currency.toLowerCase());
 			}
 			out.println();
@@ -45,8 +64,8 @@ public class UpdateForex {
 			{
 				// build currencyIndex
 				String[] token = header.split(",");
-				for(int i = 0; i < CURRENCY_LIST.length; i++) {
-					String currency = CURRENCY_LIST[i];
+				for(int i = 0; i < currencyList.length; i++) {
+					String currency = currencyList[i];
 					int index = -1;
 					for(int j = 0; j < token.length; j++) {
 						if (token[j].equals(currency)) {

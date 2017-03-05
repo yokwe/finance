@@ -227,9 +227,8 @@ public class SpreadSheet extends LibreOffice {
 	
 	public void setNumberFormat(XCell cell, String numberFormat) {
 		try {
-			XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
-			XNumberFormats         xNumberFormats         = xNumberFormatsSupplier.getNumberFormats();
-			XPropertySet           xPropertySet           = UnoRuntime.queryInterface(XPropertySet.class, cell);
+			XNumberFormats xNumberFormats = getNumberFormats();
+			XPropertySet   xPropertySet   = UnoRuntime.queryInterface(XPropertySet.class, cell);
 			
 			int index = xNumberFormats.queryKey(numberFormat, locale, false);
 			if (index == -1) {

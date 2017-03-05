@@ -210,26 +210,29 @@ public class SpreadSheet extends LibreOffice {
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
+	
+	private static final Locale locale = new Locale();
+	private static final String PROPERTY_NUMBER_FORMAT = "NumberFormat";
+	private static final String PROPERTY_FORMAT_STRING = "FormatString";
+	
 	public XNumberFormats getNumberFormats() {
-		XNumberFormatsSupplier numberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
-		return numberFormatsSupplier.getNumberFormats();
+		XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
+		return xNumberFormatsSupplier.getNumberFormats();
 	}
 	public String getFormatString(XCell cell) {
 		try {
-			XNumberFormats numberFormats     = getNumberFormats();
-			XPropertySet   cellProps         = UnoRuntime.queryInterface(XPropertySet.class, cell);
-			int            numberFormatIndex = AnyConverter.toInt(cellProps.getPropertyValue("NumberFormat"));
-			XPropertySet   numberFormatProps = numberFormats.getByKey(numberFormatIndex);
-			String         formatString      = AnyConverter.toString(numberFormatProps.getPropertyValue("FormatString"));
+			XNumberFormats xNumberFormats    = getNumberFormats();
+			XPropertySet   xPropertySet      = UnoRuntime.queryInterface(XPropertySet.class, cell);
+			
+			int            index             = AnyConverter.toInt(xPropertySet.getPropertyValue(PROPERTY_NUMBER_FORMAT));
+			XPropertySet   numberFormatProps = xNumberFormats.getByKey(index);
+			String         formatString      = AnyConverter.toString(numberFormatProps.getPropertyValue(PROPERTY_FORMAT_STRING));
 			return formatString;
 		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
-	
-	private static final Locale locale = new com.sun.star.lang.Locale();
-	private static final String PROPETY_NAME_NUMBER_FORMAT = "NumberFormat";
 	
 	public void setNumberFormat(XCell cell, String numberFormat) {
 		try {
@@ -241,15 +244,10 @@ public class SpreadSheet extends LibreOffice {
 				index = xNumberFormats.addNew(numberFormat, locale);
 			}
 			
-			xPropertySet.setPropertyValue(PROPETY_NAME_NUMBER_FORMAT, Integer.valueOf(index));
+			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
 		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException | MalformedNumberFormatException | PropertyVetoException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
-
-
-
-
-
 }

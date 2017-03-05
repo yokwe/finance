@@ -19,6 +19,7 @@ public class Stats extends Sheet {
 	@ColumnName("symbol")
 	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public String symbol;
+	
 	@ColumnName("name")
 	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public String name;
@@ -27,6 +28,7 @@ public class Stats extends Sheet {
 	@ColumnName("date")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;
+	
 	@ColumnName("price")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double price;
@@ -39,79 +41,95 @@ public class Stats extends Sheet {
 	@ColumnName("sd")
 	@NumberFormat("#,##0.0000")
 	public double sd;
-//	@ColumnName("hv")
+	
+	@ColumnName("hv")
 	@NumberFormat("#,##0.0000")
 	public double hv;
-//	@ColumnName("rsi")
+	
+	@ColumnName("rsi")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public double rsi;
 
-//	@ColumnName("min")
+	@ColumnName("min")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double min;
-//	@ColumnName("max")
+	
+	@ColumnName("max")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double max;
-//	@ColumnName("minpct")
+	
+	@ColumnName("minpct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double minpct;
-//	@ColumnName("maxpct")
+	
+	@ColumnName("maxpct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double maxpct;
 
 	// dividend
-//	@ColumnName("div")
+	@ColumnName("div")
 	@NumberFormat("#,##0.0000")
 	public double div;
-//	@ColumnName("divc")
+	
+	@ColumnName("divc")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public int    divc;
-//	@ColumnName("yield")
+	
+	@ColumnName("yield")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double yield;
 	
 	// volume
-//	@ColumnName("vol")
+	@ColumnName("vol")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public long   vol;
-//	@ColumnName("vol5")
+	
+	@ColumnName("vol5")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public long   vol5;
-//	@ColumnName("vol30")
+	
+	@ColumnName("vol30")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public long   vol30;
 	
 	// price change detection
-//	@ColumnName("sma5")
+	@ColumnName("sma5")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double sma5;
-//	@ColumnName("sma20")
+	
+	@ColumnName("sma20")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double sma20;
-//	@ColumnName("sma50")
+	
+	@ColumnName("sma50")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double sma50;
-//	@ColumnName("sma200")
+	
+	@ColumnName("sma200")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double sma200;
 	
-//	@ColumnName("sma5pct")
+	@ColumnName("sma5pct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double sma5pct;
-//	@ColumnName("sma20pct")
+	
+	@ColumnName("sma20pct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double sma20pct;
-//	@ColumnName("sma50pct")
+	
+	@ColumnName("sma50pct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double sma50pct;
-//	@ColumnName("sma200pct")
+	
+	@ColumnName("sma200pct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double sma200pct;
 
-//	@ColumnName("last")
+	@ColumnName("last")
 	@NumberFormat(SpreadSheet.FORMAT_PRICE)
 	public double last;
-//	@ColumnName("lastpct")
+	
+	@ColumnName("lastpct")
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double lastpct;
 	

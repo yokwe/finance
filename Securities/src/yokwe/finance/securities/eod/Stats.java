@@ -2,7 +2,6 @@ package yokwe.finance.securities.eod;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -154,17 +153,9 @@ public class Stats extends Sheet {
 		SpreadSheet docSave = new SpreadSheet();
 		
 		String sheetName = "stats";
-		List<Stats> statsList = new ArrayList<>();
-		Stats stats = new Stats();
-		stats.symbol = "XYZZY";
-		stats.name   = "ZORK";
-		stats.date   = "2123-45-67";
-		stats.price  = 123.4;
-		stats.pricec = 250;
-		stats.sd     = 0.01234;
-		statsList.add(stats);
+		List<Stats> statsList = Stats.load();
 		docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-		Sheet.saveSheet(docSave, Stats.class, statsList);
+		Sheet.saveStatsSheet(docSave, statsList, sheetName);
 
 		// remove first sheet
 		docSave.removeSheet(docSave.getSheetName(0));

@@ -2,9 +2,9 @@ package yokwe.finance.securities.eod;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +143,7 @@ public class Stats extends Sheet {
 		return CSVUtil.loadWithHeader(UpdateStats.PATH_STATS, Stats.class);
 	}
 	public static Map<String, Stats> loadMap() {
-		Map<String, Stats> map = new TreeMap<>();
+		Map<String, Stats> map = new LinkedHashMap<>();
 		for(Stats stats: load()) {
 			Stats old = map.put(stats.symbol, stats);
 			if (old != null) {

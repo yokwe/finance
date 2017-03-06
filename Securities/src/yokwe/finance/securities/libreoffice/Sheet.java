@@ -63,6 +63,12 @@ public class Sheet {
 		String value();
 	}
 	
+	private static final int HASHCODE_STRING = String.class.hashCode();
+	private static final int HASHCODE_INT    = Integer.TYPE.hashCode();
+	private static final int HASHCODE_DOUBLE = Double.TYPE.hashCode();
+	private static final int HASHCODE_LONG   = Long.TYPE.hashCode();
+
+	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		String sheetName = getSheetName(clazz);
 		return getInstance(spreadSheet, clazz, sheetName);
@@ -144,9 +150,6 @@ public class Sheet {
 				i++;
 			}
 		}
-		final int stringHash  = String.class.hashCode();
-		final int integerHash = Integer.TYPE.hashCode();
-		final int doubleHash  = Double.TYPE.hashCode();
 		
 		final LocalDate dateEpoch = LocalDate.of(1899, 12, 30);
 
@@ -191,7 +194,7 @@ public class Sheet {
 				Class<?> fieldType = field.getType();
 				int fieldTypeHash = fieldType.hashCode();
 				
-				if (fieldTypeHash == stringHash) {
+				if (fieldTypeHash == HASHCODE_STRING) {
 					// Convert double value to date string if necessary.
 					XCell   cell         = spreadsheet.getCellByPosition(indexArray[col], rowFirst);
 					String  formatString = spreadSheet.getFormatString(cell);
@@ -226,7 +229,7 @@ public class Sheet {
 							}
 						}
 					}
-				} else if (fieldTypeHash == doubleHash) {
+				} else if (fieldTypeHash == HASHCODE_DOUBLE) {
 					for(int row = 0; row < rowSize; row++) {
 						E instance = instanceArray[row];
 						Object value = dataArray[row][col];
@@ -250,7 +253,7 @@ public class Sheet {
 							throw new SecuritiesException("Unexpected");
 						}
 					}						
-				} else if (fieldTypeHash == integerHash) {
+				} else if (fieldTypeHash == HASHCODE_INT) {
 					for(int row = 0; row < rowSize; row++) {
 						E instance = instanceArray[row];
 						Object value = dataArray[row][col];
@@ -392,6 +395,9 @@ public class Sheet {
 						} else if (fieldType.equals(Double.TYPE)) {
 							double value = field.getDouble(data);
 							cell.setValue(value);
+						} else if (fieldType.equals(Long.TYPE)) {
+							long value = field.getLong(data);
+							cell.setValue(value);
 						} else {
 							logger.error("Unknow field type = {}", fieldType.getName());
 							throw new SecuritiesException("Unexpected");
@@ -412,17 +418,26 @@ public class Sheet {
 	}
 	
 	private static class ColumnInfo {
-		public final String name;
-		public final int    index;
-		public final Field  field;
+		public final String   name;
+		public final int      index;
+		public final Field    field;
+		public final int      fieldType;					
+		public final String   numberFormat;
+
 		
 		public ColumnInfo(String name, int index, Field field) {
-			this.name  = name;
-			this.index = index;
-			this.field = field;
+			this.name         = name;
+			this.index        = index;
+			this.field        = field;
+			this.fieldType    = field.getType().hashCode();
+			
+			NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
+			this.numberFormat = (numberFormat == null) ? null : numberFormat.value();
 		}
 	}
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
+		logger.info("START {}", sheetName);
+		
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow    headerRow    = null;
 		DataRow      dataRow      = null;
@@ -505,9 +520,7 @@ public class Sheet {
 						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
 						CellContentType type = cell.getType();
 						if (type.equals(CellContentType.EMPTY)) continue;
-						
-						XText text = UnoRuntime.queryInterface(XText.class, cell);
-						key = text.getString();
+						key = cell.getFormula();
 						
 						lastRow    = row;
 						blankCount = 0;
@@ -515,41 +528,33 @@ public class Sheet {
 					
 					E data = dataMap.get(key);
 					if (data == null) {
-						logger.warn("Unknonw  {} {}", sheetName, key);
+						logger.warn("Unknonw {} {}", sheetName, key);
 						continue;
 					}
 					
 					for(ColumnInfo columnInfo: columnInfoList) {
-						int   column = columnInfo.index;
-						XCell cell   = xSpreadsheet.getCellByPosition(column, row);
+						Field field  = columnInfo.field;
+						XCell cell   = xSpreadsheet.getCellByPosition(columnInfo.index, row);
 						
-						Field        field        = columnInfo.field;
-						Class<?>     fieldType    = field.getType();						
-						NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
-						
-						if (numberFormat != null) {
-							spreadSheet.setNumberFormat(cell, numberFormat.value());
+						if (columnInfo.numberFormat != null) {
+							spreadSheet.setNumberFormat(cell, columnInfo.numberFormat);
 						}
 						
-						if (fieldType.equals(String.class)) {
-							Object value = field.get(data);
-							cell.setFormula(value.toString());
-						} else if (fieldType.equals(Integer.TYPE)) {
-							int value = field.getInt(data);
-							cell.setValue(value);
-						} else if (fieldType.equals(Double.TYPE)) {
-							double value = field.getDouble(data);
-							cell.setValue(value);
-						} else if (fieldType.equals(Long.TYPE)) {
-							long value = field.getLong(data);
-							cell.setValue(value);
+						if (columnInfo.fieldType == HASHCODE_STRING) {
+							cell.setFormula(field.get(data).toString());
+						} else if (columnInfo.fieldType == HASHCODE_INT) {
+							cell.setValue(field.getInt(data));
+						} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
+							cell.setValue(field.getDouble(data));
+						} else if (columnInfo.fieldType == HASHCODE_LONG) {
+							cell.setValue(field.getLong(data));
 						} else {
-							logger.error("Unknow field type = {}", fieldType.getName());
+							logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
 							throw new SecuritiesException("Unexpected");
 						}
 					}
 				}
-				logger.info("lastRow {} {}", sheetName, lastRow + 1);
+				logger.info("STOP  {}  {}", sheetName, lastRow + 1);
 			}
 		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
 			logger.error("Exception {}", e.toString());

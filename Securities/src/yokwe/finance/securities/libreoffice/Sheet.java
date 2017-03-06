@@ -528,7 +528,7 @@ public class Sheet {
 					
 					E data = dataMap.get(key);
 					if (data == null) {
-						logger.warn("Unknonw {} {}", sheetName, key);
+						logger.warn("Unknown key {}", key);
 						continue;
 					}
 					

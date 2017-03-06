@@ -3,9 +3,12 @@ package yokwe.finance.securities.eod;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.CSVUtil;
@@ -139,6 +142,20 @@ public class Stats extends Sheet {
 	public static List<Stats> load() {
 		return CSVUtil.loadWithHeader(UpdateStats.PATH_STATS, Stats.class);
 	}
+	public static Map<String, Stats> loadMap() {
+		Map<String, Stats> map = new TreeMap<>();
+		for(Stats stats: load()) {
+			Stats old = map.put(stats.symbol, stats);
+			if (old != null) {
+				org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
+				
+				logger.error("Duplicate symbol {}", stats.symbol);
+				throw new SecuritiesException("Duplicate symbol");
+			}
+		}
+		
+		return map;
+	}
 
 	public static void main(String[] args) {
 		final org.slf4j.Logger logger = LoggerFactory.getLogger(Stats.class);
@@ -152,10 +169,12 @@ public class Stats extends Sheet {
 		SpreadSheet docLoad = new SpreadSheet(urlTemplate, true);
 		SpreadSheet docSave = new SpreadSheet();
 		
-		String sheetName = "stats";
-		List<Stats> statsList = Stats.load();
-		docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-		Sheet.saveStatsSheet(docSave, statsList, sheetName);
+		Map<String, Stats> statsMap = Stats.loadMap();
+		
+		for(String sheetName: docLoad.getSheetNameList()) {
+			docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+			Sheet.saveSheet(docSave, statsMap, "symbol", sheetName);
+		}
 
 		// remove first sheet
 		docSave.removeSheet(docSave.getSheetName(0));

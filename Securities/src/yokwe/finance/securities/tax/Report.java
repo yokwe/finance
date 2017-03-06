@@ -466,7 +466,7 @@ public class Report {
 					if (!transferList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(TransferDetail.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, TransferDetail.class, transferList);
+						Sheet.saveSheet(docSave, transferList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -484,7 +484,7 @@ public class Report {
 					if (!summaryList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(TransferSummary.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, TransferSummary.class, summaryList);
+						Sheet.saveSheet(docSave, summaryList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -500,7 +500,7 @@ public class Report {
 					if (!dividendList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(Dividend.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Dividend.class, dividendList);
+						Sheet.saveSheet(docSave, dividendList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -516,7 +516,7 @@ public class Report {
 					if (!interestList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(Interest.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, Interest.class, interestList);
+						Sheet.saveSheet(docSave, interestList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -559,7 +559,7 @@ public class Report {
 				
 				String sheetName = Sheet.getSheetName(Account.class);
 				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-				Sheet.saveSheet(docSave, Account.class, accountList);
+				Sheet.saveSheet(docSave, accountList);
 				
 				String newSheetName = String.format("%s-%s",  "9999", sheetName);
 				logger.info("sheet {}", newSheetName);

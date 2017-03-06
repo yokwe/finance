@@ -298,11 +298,11 @@ public class Sheet {
 
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
-		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
+		HeaderRow    headerRow    = clazz.getDeclaredAnnotation(HeaderRow.class);
+		DataRow      dataRow      = clazz.getDeclaredAnnotation(DataRow.class);
 		if (sheetName == null) {
-			logger.error("No SheetName annotation = {}", clazz.getName());
-			throw new SecuritiesException("No SheetName annotation");
+			logger.error("sheetName is null");
+			throw new SecuritiesException("sheetName is null");
 		}
 		if (headerRow == null) {
 			logger.error("No HeaderRow annotation = {}", clazz.getName());
@@ -317,6 +317,7 @@ public class Sheet {
 		// Insertion order is important, So we use LinkedHashMap instead of HashMap
 		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
 		Map<String, Field> fieldMap = new LinkedHashMap<>();
+		// key is columnName from ColumnName annotation
 		for(Field field: clazz.getDeclaredFields()) {
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
 			if (columnName == null) continue;
@@ -333,6 +334,7 @@ public class Sheet {
 		// Build columnMap - column name to column index
 		try {
 			Map<String, Integer> columnMap = new HashMap<>();
+			// key is columnName from header and it's column index
 			{
 				int row = headerRow.value();
 				// Build header map

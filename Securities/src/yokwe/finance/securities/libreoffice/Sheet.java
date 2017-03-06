@@ -27,6 +27,7 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.Stats;
 
 public class Sheet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);
@@ -397,5 +398,137 @@ public class Sheet {
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList) {
 		String sheetName = getSheetName(clazz);
 		saveSheet(spreadSheet, clazz, dataList, sheetName);
+	}
+	
+	private static class StatsColumnInfo {
+		public final String name;
+		public final int    index;
+		public final Field  field;
+		
+		public StatsColumnInfo(String name, int index, Field field) {
+			this.name  = name;
+			this.index = index;
+			this.field = field;
+		}
+	}
+	public static void saveStatsSheet(SpreadSheet spreadSheet, List<Stats> statsList, String sheetName) {
+		Class<? extends Sheet> clazz = Stats.class;
+		
+		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
+		HeaderRow    headerRow    = clazz.getDeclaredAnnotation(HeaderRow.class);
+		DataRow      dataRow      = clazz.getDeclaredAnnotation(DataRow.class);
+		if (headerRow == null) {
+			logger.error("No HeaderRow annotation = {}", clazz.getName());
+			throw new SecuritiesException("No HeaderRow annotation");
+		}
+		if (dataRow == null) {
+			logger.error("No DataRow annotation = {}", clazz.getName());
+			throw new SecuritiesException("No DataRow annotation");
+		}
+
+		// key is symbol
+		Map<String, Stats> statsMap = new TreeMap<>();
+		for(Stats stats: statsList) statsMap.put(stats.symbol, stats);
+		
+		// key is column name
+		Map<String, Field> fieldMap = new TreeMap<>();
+		for(Field field: clazz.getDeclaredFields()) {
+			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
+			if (columnName == null) continue;
+			fieldMap.put(columnName.value(), field);
+		}
+		
+		try {
+			List<StatsColumnInfo> columnInfoList = new ArrayList<>();
+			
+			// Build columnInfoList
+			{
+				int row = headerRow.value();
+				// Build header map
+				for(int column = 0; column < 100; column++) {
+					final XCell cell = xSpreadsheet.getCellByPosition(column, row);
+					final CellContentType type = cell.getType();
+					if (type.equals(CellContentType.EMPTY)) continue;
+					
+					XText text = UnoRuntime.queryInterface(XText.class, cell);
+					String name = text.getString();
+					
+					StatsColumnInfo columnInfo = new StatsColumnInfo(name, column, fieldMap.get(name));
+					if (columnInfo.field == null) {
+						logger.error("No field {}", name);
+						throw new SecuritiesException("No field");
+					}
+					
+					columnInfoList.add(columnInfo);
+				}				
+			}
+			
+			int symbolIndex = -1;
+			{
+				for(StatsColumnInfo columnInfo: columnInfoList) {
+					if (columnInfo.name.equals("symbol")) {
+						symbolIndex = columnInfo.index;
+						break;
+					}
+				}
+				if (symbolIndex == -1) {
+					logger.error("No symbol");
+					throw new SecuritiesException("No symbol");
+				}
+			}
+			
+			{
+				int row = dataRow.value();
+				for(;;) {
+					String symbol;
+					{
+						XCell cell = xSpreadsheet.getCellByPosition(symbolIndex, row);
+						CellContentType type = cell.getType();
+						if (type.equals(CellContentType.EMPTY)) break;
+						
+						XText text = UnoRuntime.queryInterface(XText.class, cell);
+						symbol = text.getString();
+					}
+					
+					Stats data = statsMap.get(symbol);
+					if (data == null) {
+						logger.error("Unknonw symbol {}", symbol);
+						throw new SecuritiesException("Unknown symbol");
+					}
+					
+					for(StatsColumnInfo columnInfo: columnInfoList) {
+						int   column = columnInfo.index;
+						XCell cell   = xSpreadsheet.getCellByPosition(column, row);
+						
+						Field        field        = columnInfo.field;
+						Class<?>     fieldType    = field.getType();						
+						NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
+						
+						if (numberFormat != null) {
+							spreadSheet.setNumberFormat(cell, numberFormat.value());
+						}
+						
+						if (fieldType.equals(String.class)) {
+							Object value = field.get(data);
+							cell.setFormula(value.toString());
+						} else if (fieldType.equals(Integer.TYPE)) {
+							int value = field.getInt(data);
+							cell.setValue(value);
+						} else if (fieldType.equals(Double.TYPE)) {
+							double value = field.getDouble(data);
+							cell.setValue(value);
+						} else {
+							logger.error("Unknow field type = {}", fieldType.getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+					
+					row++;
+				}
+			}
+		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
+			logger.error("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
+		}
 	}
 }

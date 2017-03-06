@@ -27,7 +27,6 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Stats;
 
 public class Sheet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Sheet.class);
@@ -297,20 +296,31 @@ public class Sheet {
 		return sheetName.value();
 	}
 
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList, String sheetName) {
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, List<E> dataList, String sheetName) {
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow    headerRow    = clazz.getDeclaredAnnotation(HeaderRow.class);
-		DataRow      dataRow      = clazz.getDeclaredAnnotation(DataRow.class);
+		HeaderRow    headerRow    = null;
+		DataRow      dataRow      = null;
+		Field[]      fields       = null;
+		String       className    = null;
+		
+		{
+			E o = dataList.iterator().next();
+			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
+			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
+			fields       = o.getClass().getDeclaredFields();
+			className    = o.getClass().getName();
+		}
+
 		if (sheetName == null) {
 			logger.error("sheetName is null");
 			throw new SecuritiesException("sheetName is null");
 		}
 		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", clazz.getName());
+			logger.error("No HeaderRow annotation = {}", className);
 			throw new SecuritiesException("No HeaderRow annotation");
 		}
 		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", clazz.getName());
+			logger.error("No DataRow annotation = {}", className);
 			throw new SecuritiesException("No DataRow annotation");
 		}
 		//logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
@@ -319,13 +329,13 @@ public class Sheet {
 		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
 		Map<String, Field> fieldMap = new LinkedHashMap<>();
 		// key is columnName from ColumnName annotation
-		for(Field field: clazz.getDeclaredFields()) {
+		for(Field field: fields) {
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
 			if (columnName == null) continue;
 			fieldMap.put(columnName.value(), field);
 		}
 		if (fieldMap.size() == 0) {
-			logger.error("No ColumnName annotation = {}", clazz.getName());
+			logger.error("No ColumnName annotation = {}", className);
 			throw new SecuritiesException("No ColumnName annotation");
 		}
 		
@@ -395,51 +405,58 @@ public class Sheet {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList) {
-		String sheetName = getSheetName(clazz);
-		saveSheet(spreadSheet, clazz, dataList, sheetName);
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, List<E> dataList) {
+		E o = dataList.iterator().next();
+		String sheetName = getSheetName(o.getClass());
+		saveSheet(spreadSheet, dataList, sheetName);
 	}
 	
-	private static class StatsColumnInfo {
+	private static class ColumnInfo {
 		public final String name;
 		public final int    index;
 		public final Field  field;
 		
-		public StatsColumnInfo(String name, int index, Field field) {
+		public ColumnInfo(String name, int index, Field field) {
 			this.name  = name;
 			this.index = index;
 			this.field = field;
 		}
 	}
-	public static void saveStatsSheet(SpreadSheet spreadSheet, List<Stats> statsList, String sheetName) {
-		Class<? extends Sheet> clazz = Stats.class;
-		
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow    headerRow    = clazz.getDeclaredAnnotation(HeaderRow.class);
-		DataRow      dataRow      = clazz.getDeclaredAnnotation(DataRow.class);
+		HeaderRow    headerRow    = null;
+		DataRow      dataRow      = null;
+		Field[]      fields       = null;
+		String       className    = null;
+		
+		{
+			E o = dataMap.values().iterator().next();
+			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
+			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
+			fields       = o.getClass().getDeclaredFields();
+			className    = o.getClass().getName();
+		}
+		
+
 		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", clazz.getName());
+			logger.error("No HeaderRow annotation = {}", className);
 			throw new SecuritiesException("No HeaderRow annotation");
 		}
 		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", clazz.getName());
+			logger.error("No DataRow annotation = {}", className);
 			throw new SecuritiesException("No DataRow annotation");
 		}
 
-		// key is symbol
-		Map<String, Stats> statsMap = new TreeMap<>();
-		for(Stats stats: statsList) statsMap.put(stats.symbol, stats);
-		
 		// key is column name
 		Map<String, Field> fieldMap = new TreeMap<>();
-		for(Field field: clazz.getDeclaredFields()) {
+		for(Field field: fields) {
 			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
 			if (columnName == null) continue;
 			fieldMap.put(columnName.value(), field);
 		}
 		
 		try {
-			List<StatsColumnInfo> columnInfoList = new ArrayList<>();
+			List<ColumnInfo> columnInfoList = new ArrayList<>();
 			
 			// Build columnInfoList
 			{
@@ -453,7 +470,7 @@ public class Sheet {
 					XText text = UnoRuntime.queryInterface(XText.class, cell);
 					String name = text.getString();
 					
-					StatsColumnInfo columnInfo = new StatsColumnInfo(name, column, fieldMap.get(name));
+					ColumnInfo columnInfo = new ColumnInfo(name, column, fieldMap.get(name));
 					if (columnInfo.field == null) {
 						logger.error("No field {}", name);
 						throw new SecuritiesException("No field");
@@ -463,40 +480,40 @@ public class Sheet {
 				}				
 			}
 			
-			int symbolIndex = -1;
+			int keyIndex = -1;
 			{
-				for(StatsColumnInfo columnInfo: columnInfoList) {
-					if (columnInfo.name.equals("symbol")) {
-						symbolIndex = columnInfo.index;
+				for(ColumnInfo columnInfo: columnInfoList) {
+					if (columnInfo.name.equals(keyColumnName)) {
+						keyIndex = columnInfo.index;
 						break;
 					}
 				}
-				if (symbolIndex == -1) {
-					logger.error("No symbol");
-					throw new SecuritiesException("No symbol");
+				if (keyIndex == -1) {
+					logger.error("No keyColumnName {}", keyColumnName);
+					throw new SecuritiesException("No keyColumnName");
 				}
 			}
 			
 			{
 				int row = dataRow.value();
 				for(;;) {
-					String symbol;
+					String key;
 					{
-						XCell cell = xSpreadsheet.getCellByPosition(symbolIndex, row);
+						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
 						CellContentType type = cell.getType();
 						if (type.equals(CellContentType.EMPTY)) break;
 						
 						XText text = UnoRuntime.queryInterface(XText.class, cell);
-						symbol = text.getString();
+						key = text.getString();
 					}
 					
-					Stats data = statsMap.get(symbol);
+					E data = dataMap.get(key);
 					if (data == null) {
-						logger.error("Unknonw symbol {}", symbol);
-						throw new SecuritiesException("Unknown symbol");
+						logger.error("Unknonw key {}", key);
+						throw new SecuritiesException("Unknown key");
 					}
 					
-					for(StatsColumnInfo columnInfo: columnInfoList) {
+					for(ColumnInfo columnInfo: columnInfoList) {
 						int   column = columnInfo.index;
 						XCell cell   = xSpreadsheet.getCellByPosition(column, row);
 						

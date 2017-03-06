@@ -296,7 +296,7 @@ public class Sheet {
 		return sheetName.value();
 	}
 
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, String sheetName, Class<E> clazz, List<E> dataList) {
+	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList, String sheetName) {
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow    headerRow    = clazz.getDeclaredAnnotation(HeaderRow.class);
 		DataRow      dataRow      = clazz.getDeclaredAnnotation(DataRow.class);
@@ -396,6 +396,6 @@ public class Sheet {
 	}
 	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Class<E> clazz, List<E> dataList) {
 		String sheetName = getSheetName(clazz);
-		saveSheet(spreadSheet, sheetName, clazz, dataList);
+		saveSheet(spreadSheet, clazz, dataList, sheetName);
 	}
 }

@@ -495,22 +495,28 @@ public class Sheet {
 			}
 			
 			{
-				int row = dataRow.value();
-				for(;;) {
+				int blankCountMax = 5;
+				int row           = dataRow.value();
+				int lastRow       = -1;
+				
+				for(int blankCount = 0; blankCount < blankCountMax; blankCount++, row++) {
 					String key;
 					{
 						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
 						CellContentType type = cell.getType();
-						if (type.equals(CellContentType.EMPTY)) break;
+						if (type.equals(CellContentType.EMPTY)) continue;
 						
 						XText text = UnoRuntime.queryInterface(XText.class, cell);
 						key = text.getString();
+						
+						lastRow    = row;
+						blankCount = 0;
 					}
 					
 					E data = dataMap.get(key);
 					if (data == null) {
-						logger.error("Unknonw key {}", key);
-						throw new SecuritiesException("Unknown key");
+						logger.warn("Unknonw  {} {}", sheetName, key);
+						continue;
 					}
 					
 					for(ColumnInfo columnInfo: columnInfoList) {
@@ -534,14 +540,16 @@ public class Sheet {
 						} else if (fieldType.equals(Double.TYPE)) {
 							double value = field.getDouble(data);
 							cell.setValue(value);
+						} else if (fieldType.equals(Long.TYPE)) {
+							long value = field.getLong(data);
+							cell.setValue(value);
 						} else {
 							logger.error("Unknow field type = {}", fieldType.getName());
 							throw new SecuritiesException("Unexpected");
 						}
 					}
-					
-					row++;
 				}
+				logger.info("lastRow {} {}", sheetName, lastRow + 1);
 			}
 		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
 			logger.error("Exception {}", e.toString());

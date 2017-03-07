@@ -250,4 +250,20 @@ public class SpreadSheet extends LibreOffice {
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
+	public void setNumberFormat(XCellRange xCellRange, String numberFormat) {
+		try {
+			XNumberFormats xNumberFormats = getNumberFormats();
+			XPropertySet   xPropertySet   = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
+			
+			int index = xNumberFormats.queryKey(numberFormat, locale, false);
+			if (index == -1) {
+				index = xNumberFormats.addNew(numberFormat, locale);
+			}
+			
+			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
+		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException | MalformedNumberFormatException | PropertyVetoException e) {
+			logger.info("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected exception");
+		}
+	}
 }

@@ -173,7 +173,7 @@ public class Stats extends Sheet {
 		
 		for(String sheetName: docLoad.getSheetNameList()) {
 			docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-			Sheet.saveSheet(docSave, statsMap, "symbol", sheetName);
+			Sheet.fillSheet(docSave, statsMap, "symbol", sheetName);
 		}
 
 		// remove first sheet

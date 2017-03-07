@@ -417,6 +417,8 @@ public class Sheet {
 		saveSheet(spreadSheet, dataList, sheetName);
 	}
 	
+	private static final int MAX_BLANK = 5;
+
 	private static class ColumnInfo {
 		public final String   name;
 		public final int      index;
@@ -445,8 +447,8 @@ public class Sheet {
 			this.keys     = keys;
 		}
 	}
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
-		logger.info("START {}", sheetName);
+	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
+		logger.info("fillSheet {}", sheetName);
 		
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow    headerRow    = null;
@@ -484,16 +486,17 @@ public class Sheet {
 					fieldMap.put(columnName.value(), field);
 				}
 				
-				int row = headerRow.value();
 				// Build header map
-				for(int column = 0; column < 100; column++) {
-					final XCell cell = xSpreadsheet.getCellByPosition(column, row);
-					final CellContentType type = cell.getType();
+				final int row = headerRow.value();
+				int column = 0;
+				for(int i = 0; i < MAX_BLANK; i++, column++) {
+					XCell cell = xSpreadsheet.getCellByPosition(column, row);
+					CellContentType type = cell.getType();
 					if (type.equals(CellContentType.EMPTY)) continue;
 					
-					XText text = UnoRuntime.queryInterface(XText.class, cell);
-					String name = text.getString();
-					
+					// Reset counter
+					i = 0;
+					String name = cell.getFormula();
 					ColumnInfo columnInfo = new ColumnInfo(name, column, fieldMap.get(name));
 					if (columnInfo.field == null) {
 						logger.error("No field {}", name);
@@ -521,16 +524,19 @@ public class Sheet {
 					}
 				}
 
-				int blankCountMax = 5;
 				int row           = dataRow.value();
 				
 				for(;;) {
 					String key      = null;
 					int    rowBegin = -1;
-					for(int i = 0; i < blankCountMax; i++, row++) {
+					for(int i = 0; i < MAX_BLANK; i++, row++) {
 						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
+						
+						// Check empty cell
 						CellContentType type = cell.getType();
 						if (type.equals(CellContentType.EMPTY)) continue;
+						
+						// Check value is in dataMap
 						key = cell.getFormula();
 						E data = dataMap.get(key);
 						if (data == null) continue;

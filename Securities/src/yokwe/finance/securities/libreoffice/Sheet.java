@@ -568,12 +568,12 @@ public class Sheet {
 							Object value;
 							if (columnInfo.fieldType == HASHCODE_STRING) {
 								value = columnInfo.field.get(data).toString();
-							} else if (columnInfo.fieldType == HASHCODE_INT) {
-								value = Double.valueOf(columnInfo.field.getInt(data));
 							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
 								value = columnInfo.field.getDouble(data);
+							} else if (columnInfo.fieldType == HASHCODE_INT) {
+								value = Double.valueOf(columnInfo.field.getInt(data));  // Convert to double for numeric value
 							} else if (columnInfo.fieldType == HASHCODE_LONG) {
-								value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double
+								value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double for numeric value
 							} else {
 								logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
 								throw new SecuritiesException("Unexpected");

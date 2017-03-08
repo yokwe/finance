@@ -8,6 +8,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -613,5 +614,14 @@ public class Sheet {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
+	}
+	
+	public static void main(String[] args) {
+		logger.info("START");
+		LocalDate a = LocalDate.of(1899, 12, 30);
+		LocalDate b = LocalDate.parse("1900-01-01");
+		logger.info("{} - {}", a, b);
+		logger.info("c  {}", ChronoUnit.DAYS.between(a,  b));
+		logger.info("STOP");
 	}
 }

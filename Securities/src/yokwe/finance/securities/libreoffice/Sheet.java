@@ -68,7 +68,16 @@ public class Sheet {
 	private static final int HASHCODE_INT    = Integer.TYPE.hashCode();
 	private static final int HASHCODE_DOUBLE = Double.TYPE.hashCode();
 	private static final int HASHCODE_LONG   = Long.TYPE.hashCode();
-
+	
+	private static final LocalDate DATE_EPOCH = LocalDate.of(1899, 12, 30);
+	
+	public static double toDateNumber(String dateString) {
+		LocalDate date = LocalDate.parse(dateString);
+		return ChronoUnit.DAYS.between(DATE_EPOCH, date);
+	}
+	public static String toDateString(double dateNumber) {
+		return DateTimeFormatter.ISO_LOCAL_DATE.format(DATE_EPOCH.plusDays((int)dateNumber));
+	}
 	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		String sheetName = getSheetName(clazz);
@@ -152,8 +161,6 @@ public class Sheet {
 			}
 		}
 		
-		final LocalDate dateEpoch = LocalDate.of(1899, 12, 30);
-
 		try {
 			List<E> ret = new ArrayList<>();
 
@@ -208,8 +215,7 @@ public class Sheet {
 							if (value instanceof String) {
 								field.set(instance, (String)value);
 							} else if (value instanceof Double) {
-								int daysSinceEpoch = ((Double) value).intValue();
-								field.set(instance, DateTimeFormatter.ISO_LOCAL_DATE.format(dateEpoch.plusDays(daysSinceEpoch)));
+								field.set(instance, toDateString((Double)value));
 							} else {
 								logger.error("Unknow value type = {}", value.getClass().getName());
 								throw new SecuritiesException("Unexpected");
@@ -426,6 +432,7 @@ public class Sheet {
 		public final Field    field;
 		public final int      fieldType;					
 		public final String   numberFormat;
+		public final boolean  isDate;
 		
 		public ColumnInfo(String name, int index, Field field) {
 			this.name         = name;
@@ -435,6 +442,7 @@ public class Sheet {
 			
 			NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
 			this.numberFormat = (numberFormat == null) ? null : numberFormat.value();
+			this.isDate       = SpreadSheet.FORMAT_DATE.equals(this.numberFormat);
 		}
 	}
 	private static class RowRange {
@@ -574,7 +582,12 @@ public class Sheet {
 							String fillDataMapKey = key + "-" + columnInfo.name;
 							Object value;
 							if (columnInfo.fieldType == HASHCODE_STRING) {
-								value = columnInfo.field.get(data).toString();
+								String o = columnInfo.field.get(data).toString();
+								if (columnInfo.isDate && o.length() == SpreadSheet.FORMAT_DATE.length()) {
+									value = Double.valueOf(toDateNumber(o)); // Convert to double for date number
+								} else {
+									value = o;
+								}
 							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
 								value = columnInfo.field.getDouble(data);
 							} else if (columnInfo.fieldType == HASHCODE_INT) {
@@ -614,14 +627,5 @@ public class Sheet {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
-	}
-	
-	public static void main(String[] args) {
-		logger.info("START");
-		LocalDate a = LocalDate.of(1899, 12, 30);
-		LocalDate b = LocalDate.parse("1900-01-01");
-		logger.info("{} - {}", a, b);
-		logger.info("c  {}", ChronoUnit.DAYS.between(a,  b));
-		logger.info("STOP");
 	}
 }

@@ -414,6 +414,8 @@ public class Sheet {
 	private static final int MAX_BLANK = 5;
 
 	private static class ColumnInfo {
+		public static final int MAX_COLUMN = 99;
+		
 		public final String   name;
 		public final int      index;
 		public final Field    field;
@@ -430,6 +432,44 @@ public class Sheet {
 			NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
 			this.numberFormat = (numberFormat == null) ? null : numberFormat.value();
 			this.isDate       = SpreadSheet.FORMAT_DATE.equals(this.numberFormat);
+		}
+		
+		public static List<ColumnInfo> getColumnInfoList(XSpreadsheet spreadsheet, int row, Field[] fields) {
+			try {
+				// build fieldMap
+				Map<String, Field> fieldMap = new TreeMap<>();
+				for(Field field: fields) {
+					ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
+					if (columnName == null) continue;
+					fieldMap.put(columnName.value(), field);
+				}
+				
+				XCellRange cellRange = spreadsheet.getCellRangeByPosition(0, row, MAX_COLUMN, row);
+				XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
+				Object data[][] = cellRangeData.getDataArray();
+
+				// build columnInfoList
+				List<ColumnInfo> columnInfoList = new ArrayList<>();
+				int dataSize = data[0].length;
+				for(int index = 0; index < dataSize; index++) {
+					String name = data[0][index].toString();
+					if (name.length() == 0) continue;
+					
+					Field field = fieldMap.get(name);
+					if (field == null) {
+						logger.warn("No field {}", name);
+						continue;
+					}
+					
+					ColumnInfo columnInfo = new ColumnInfo(name, index, field);
+					columnInfoList.add(columnInfo);
+				}
+				
+				return columnInfoList;
+			} catch (IndexOutOfBoundsException e) {
+				logger.error("Exception {}", e.toString());
+				throw new SecuritiesException("Unexpected");
+			} finally {}
 		}
 	}
 	private static class RowRange {
@@ -473,37 +513,7 @@ public class Sheet {
 		}
 
 		try {
-			List<ColumnInfo> columnInfoList = new ArrayList<>();
-			// Build columnInfoList
-			{
-				// build fieldMap. key is column name
-				Map<String, Field> fieldMap = new TreeMap<>();
-				for(Field field: fields) {
-					ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
-					if (columnName == null) continue;
-					fieldMap.put(columnName.value(), field);
-				}
-				
-				// Build header map
-				final int row = headerRow.value();
-				int column = 0;
-				for(int i = 0; i < MAX_BLANK; i++, column++) {
-					XCell cell = xSpreadsheet.getCellByPosition(column, row);
-					CellContentType type = cell.getType();
-					if (type.equals(CellContentType.EMPTY)) continue;
-					
-					// Reset counter
-					i = 0;
-					String name = cell.getFormula();
-					ColumnInfo columnInfo = new ColumnInfo(name, column, fieldMap.get(name));
-					if (columnInfo.field == null) {
-						logger.error("No field {}", name);
-						throw new SecuritiesException("No field");
-					}
-					
-					columnInfoList.add(columnInfo);
-				}				
-			}
+			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
 			
 			// Build rowRangeList
 			List<RowRange> rowRangeList = new ArrayList<>();

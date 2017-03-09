@@ -1,5 +1,8 @@
 package yokwe.finance.securities.libreoffice;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +44,7 @@ public class SpreadSheet extends LibreOffice {
 	public static final String FORMAT_PERCENT = "#,##0.0%";
 	public static final String FORMAT_PRICE   = "#,##0.00";
 	public static final String FORMAT_STRING  = "@";
+	
 
 	private static final Map<CellContentType, String> cellContentTypeMap = new HashMap<>();
 	static {
@@ -56,6 +60,15 @@ public class SpreadSheet extends LibreOffice {
 			throw new SecuritiesException("Unexpected type");
 		}
 		return ret;
+	}
+	
+	public static final LocalDate DATE_EPOCH = LocalDate.of(1899, 12, 30);
+	public static double toDateNumber(String dateString) {
+		LocalDate date = LocalDate.parse(dateString);
+		return ChronoUnit.DAYS.between(DATE_EPOCH, date);
+	}
+	public static String toDateString(double dateNumber) {
+		return DateTimeFormatter.ISO_LOCAL_DATE.format(DATE_EPOCH.plusDays((int)dateNumber));
 	}
 	
 	

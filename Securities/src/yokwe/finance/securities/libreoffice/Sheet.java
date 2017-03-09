@@ -6,9 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -68,16 +65,6 @@ public class Sheet {
 	private static final int HASHCODE_INT    = Integer.TYPE.hashCode();
 	private static final int HASHCODE_DOUBLE = Double.TYPE.hashCode();
 	private static final int HASHCODE_LONG   = Long.TYPE.hashCode();
-	
-	private static final LocalDate DATE_EPOCH = LocalDate.of(1899, 12, 30);
-	
-	public static double toDateNumber(String dateString) {
-		LocalDate date = LocalDate.parse(dateString);
-		return ChronoUnit.DAYS.between(DATE_EPOCH, date);
-	}
-	public static String toDateString(double dateNumber) {
-		return DateTimeFormatter.ISO_LOCAL_DATE.format(DATE_EPOCH.plusDays((int)dateNumber));
-	}
 	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		String sheetName = getSheetName(clazz);
@@ -215,7 +202,7 @@ public class Sheet {
 							if (value instanceof String) {
 								field.set(instance, (String)value);
 							} else if (value instanceof Double) {
-								field.set(instance, toDateString((Double)value));
+								field.set(instance, SpreadSheet.toDateString((Double)value));
 							} else {
 								logger.error("Unknow value type = {}", value.getClass().getName());
 								throw new SecuritiesException("Unexpected");
@@ -590,7 +577,7 @@ public class Sheet {
 							if (columnInfo.fieldType == HASHCODE_STRING) {
 								String string = columnInfo.field.get(data).toString();
 								if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
-									value = Double.valueOf(toDateNumber(string)); // Convert to double for date number
+									value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
 								} else {
 									value = string;
 								}

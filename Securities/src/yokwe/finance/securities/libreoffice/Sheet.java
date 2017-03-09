@@ -582,11 +582,11 @@ public class Sheet {
 							String fillDataMapKey = key + "-" + columnInfo.name;
 							Object value;
 							if (columnInfo.fieldType == HASHCODE_STRING) {
-								String o = columnInfo.field.get(data).toString();
-								if (columnInfo.isDate && o.length() == SpreadSheet.FORMAT_DATE.length()) {
-									value = Double.valueOf(toDateNumber(o)); // Convert to double for date number
+								String string = columnInfo.field.get(data).toString();
+								if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
+									value = Double.valueOf(toDateNumber(string)); // Convert to double for date number
 								} else {
-									value = o;
+									value = string;
 								}
 							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
 								value = columnInfo.field.getDouble(data);
@@ -611,7 +611,9 @@ public class Sheet {
 					XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowRange.rowBegin, columnInfo.index, rowRange.rowEnd);
 					
 					// apply numberFormat
-					spreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat);
+					if (columnInfo.numberFormat != null) {
+						spreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat);
+					}
 					
 					// fill data
 					XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);

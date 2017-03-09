@@ -448,11 +448,13 @@ public class Sheet {
 	private static class RowRange {
 		public final int      rowBegin;
 		public final int      rowEnd;
+		public final int      rowSize;
 		public final String[] keys;
 		
 		public RowRange(int rowBegin, int rowEnd, String[] keys) {
 			this.rowBegin = rowBegin;
 			this.rowEnd   = rowEnd;
+			this.rowSize  = rowEnd - rowBegin + 1;
 			this.keys     = keys;
 		}
 	}
@@ -575,11 +577,15 @@ public class Sheet {
 			Map<String, Object> fillDataMap = new HashMap<>();
 			{
 				for(RowRange rowRange: rowRangeList) {
-					for(String key: rowRange.keys) {
-						E data = dataMap.get(key);
+					final int rowBegin = rowRange.rowBegin;
+					final int rowSize  = rowRange.rowSize;
+					
+					for(int i = 0; i < rowSize; i++) {
+						E data = dataMap.get(rowRange.keys[i]);
 						
 						for(ColumnInfo columnInfo: columnInfoList) {
-							String fillDataMapKey = key + "-" + columnInfo.name;
+							String fillDataMapKey = (rowBegin + i) + "-" + columnInfo.index;
+							
 							Object value;
 							if (columnInfo.fieldType == HASHCODE_STRING) {
 								String string = columnInfo.field.get(data).toString();
@@ -617,9 +623,9 @@ public class Sheet {
 					
 					// fill data
 					XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
-					Object data[][] = new Object[rowRange.rowEnd - rowRange.rowBegin + 1][1]; // row column
-					for(int i = 0; i < rowRange.keys.length; i++) {
-						String fillDataMapKey = rowRange.keys[i] + "-" + columnInfo.name;
+					Object data[][] = new Object[rowRange.rowSize][1]; // row column
+					for(int i = 0; i < rowRange.rowSize; i++) {
+						String fillDataMapKey = (rowRange.rowBegin + i) + "-" + columnInfo.index;
 						data[i][0] = fillDataMap.get(fillDataMapKey);
 					}
 					xCellRangeData.setDataArray(data);

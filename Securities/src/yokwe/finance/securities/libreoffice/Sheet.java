@@ -62,6 +62,7 @@ public class Sheet {
 	
 	private static final int HASHCODE_CLASS_INTEGER = Integer.class.hashCode();
 	private static final int HASHCODE_CLASS_DOUBLE  = Double.class.hashCode();
+	private static final int HASHCODE_CLASS_LONG    = Long.class.hashCode();
 	private static final int HASHCODE_CLASS_STRING  = String.class.hashCode();
 	private static final int HASHCODE_INT           = Integer.TYPE.hashCode();
 	private static final int HASHCODE_DOUBLE        = Double.TYPE.hashCode();
@@ -462,87 +463,25 @@ public class Sheet {
 			// Remove key column to prevent from update
 			columnInfoList.remove(keyColumn);
 			
-			
+			// Build fillMap
 			Map<String, Object> fillMap = new HashMap<>();
-			{
-				for(RowRange rowRange: rowRangeList) {
-					final int rowBegin = rowRange.rowBegin;
-					final int rowSize  = rowRange.rowSize;
-					
-					for(int i = 0; i < rowSize; i++) {
-						E data = dataMap.get(rowRange.keys[i]);
-						if (data == null) {
-							logger.warn("no entry in dataMap  key = {}", rowRange.keys[i]);
-							continue;
-						}
-						
-						for(ColumnInfo columnInfo: columnInfoList) {
-							String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
-							
-							// Type of value must be String or Double
-							Object value;
-							if (columnInfo.fieldType == HASHCODE_CLASS_STRING) {
-								Object o = columnInfo.field.get(data);
-								if (o == null) {
-									value = "";
-								} else {
-									String string = o.toString();
-									if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
-										value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
-									} else {
-										value = string;
-									}
-								}
-							} else if (columnInfo.fieldType == HASHCODE_CLASS_DOUBLE) {
-								Object o = columnInfo.field.get(data);
-								if (o == null) {
-									value = "";
-								} else {
-									value = o;
-								}
-							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
-								value = columnInfo.field.getDouble(data);
-							} else if (columnInfo.fieldType == HASHCODE_INT) {
-								value = Double.valueOf(columnInfo.field.getInt(data));  // Convert to double for numeric value
-							} else if (columnInfo.fieldType == HASHCODE_LONG) {
-								value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double for numeric value
-							} else {
-								logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-							fillMap.put(fillMapKey, value);
-						}
-					}
-				}
-			}
-			
-			// Fill data
 			for(RowRange rowRange: rowRangeList) {
 				final int rowBegin = rowRange.rowBegin;
-				final int rowEnd   = rowRange.rowEnd;
 				final int rowSize  = rowRange.rowSize;
-
-				for(ColumnInfo columnInfo: columnInfoList) {
-					// left top right bottom
-					XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowBegin, columnInfo.index, rowEnd);
-					
-					// apply numberFormat
-					if (columnInfo.numberFormat != null) {
-						spreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat);
+				
+				for(int i = 0; i < rowSize; i++) {
+					E data = dataMap.get(rowRange.keys[i]);
+					if (data == null) {
+						logger.warn("no entry in dataMap  key = {}", rowRange.keys[i]);
+						continue;
 					}
-					
-					// fill data
-					XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
-					Object data[][] = new Object[rowSize][1]; // row column
-					for(int i = 0; i < rowSize; i++) {
-						String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
-						Object value = fillMap.get(fillMapKey);
-						data[i][0] = (value == null) ? "*NA*" : value;
-					}
-					xCellRangeData.setDataArray(data);
+					buildFillMap(columnInfoList, rowBegin + i, data, fillMap);
 				}
 			}
-		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
+			
+			// Apply fillMap
+			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
+		} catch (IllegalArgumentException e) {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
@@ -578,63 +517,73 @@ public class Sheet {
 			// Build rowRangeList
 			List<RowRange> rowRangeList = RowRange.getRowRangeList(dataRow.value(), dataRow.value() + dataList.size() - 1);
 			
-			
+			// Build fillMap
 			Map<String, Object> fillMap = new HashMap<>();
-			{
-				for(RowRange rowRange: rowRangeList) {
-					final int rowBegin = rowRange.rowBegin;
-					final int rowSize  = rowRange.rowSize;
-					
-					for(int i = 0; i < rowSize; i++) {
-						E data = dataList.get(i);
-						for(ColumnInfo columnInfo: columnInfoList) {
-							String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
-							
-							// Type of value must be String or Double
-							Object value;
-							if (columnInfo.fieldType == HASHCODE_CLASS_STRING) {
-								Object o = columnInfo.field.get(data);
-								if (o == null) {
-									value = "";
-								} else {
-									String string = o.toString();
-									if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
-										value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
-									} else {
-										value = string;
-									}
-								}
-							} else if (columnInfo.fieldType == HASHCODE_CLASS_DOUBLE) {
-								Object o = columnInfo.field.get(data);
-								if (o == null) {
-									value = "";
-								} else {
-									value = o;
-								}
-							} else if (columnInfo.fieldType == HASHCODE_CLASS_INTEGER) {
-								Object o = columnInfo.field.get(data);
-								if (o == null) {
-									value = "";
-								} else {
-									value = o;
-								}
-							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
-								value = columnInfo.field.getDouble(data);
-							} else if (columnInfo.fieldType == HASHCODE_INT) {
-								value = Double.valueOf(columnInfo.field.getInt(data));  // Convert to double for numeric value
-							} else if (columnInfo.fieldType == HASHCODE_LONG) {
-								value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double for numeric value
-							} else {
-								logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-							fillMap.put(fillMapKey, value);
-						}
-					}
+			for(RowRange rowRange: rowRangeList) {
+				final int rowBegin = rowRange.rowBegin;
+				final int rowSize  = rowRange.rowSize;
+				
+				for(int i = 0; i < rowSize; i++) {
+					E data = dataList.get(i);
+					buildFillMap(columnInfoList, rowBegin + i, data, fillMap);
 				}
 			}
 			
-			// Fill data
+			// Apply fillMap
+			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
+		} catch (IllegalArgumentException e) {
+			logger.error("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
+		}
+	}
+	
+	private static <E extends Sheet> void buildFillMap(List<ColumnInfo> columnInfoList, int row, E data, Map<String, Object> fillMap) {
+		try {
+			for(ColumnInfo columnInfo: columnInfoList) {
+				String fillMapKey = row + "-" + columnInfo.index;
+				
+				// Type of value must be String or Double
+				Object value;
+				{
+					Object o = columnInfo.field.get(data);
+					if (o == null) {
+						value = "";
+					} else {
+						if (columnInfo.fieldType == HASHCODE_CLASS_STRING) {
+							String string = o.toString();
+							if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
+								value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
+							} else {
+								value = string;
+							}
+						} else if (columnInfo.fieldType == HASHCODE_CLASS_DOUBLE) {
+							value = Double.valueOf((Double)o);
+						} else if (columnInfo.fieldType == HASHCODE_CLASS_INTEGER) {
+							value = Double.valueOf((Integer)o);
+						} else if (columnInfo.fieldType == HASHCODE_CLASS_LONG) {
+							value = Double.valueOf((Long)o);
+						} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
+							value = columnInfo.field.getDouble(data);
+						} else if (columnInfo.fieldType == HASHCODE_INT) {
+							value = Double.valueOf(columnInfo.field.getInt(data));  // Convert to double for numeric value
+						} else if (columnInfo.fieldType == HASHCODE_LONG) {
+							value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double for numeric value
+						} else {
+							logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+				}
+				fillMap.put(fillMapKey, value);
+			}
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			logger.error("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
+		}
+	}
+
+	private static <E extends Sheet> void applyFillMap(SpreadSheet spreadSheet, XSpreadsheet xSpreadsheet, List<ColumnInfo> columnInfoList, List<RowRange> rowRangeList, Map<String, Object> fillMap) {
+		try {
 			for(RowRange rowRange: rowRangeList) {
 				final int rowBegin = rowRange.rowBegin;
 				final int rowEnd   = rowRange.rowEnd;
@@ -660,12 +609,11 @@ public class Sheet {
 					xCellRangeData.setDataArray(data);
 				}
 			}
-		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
+		} catch (IndexOutOfBoundsException e) {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList) {
 		E o = dataList.iterator().next();
 		String sheetName = getSheetName(o.getClass());

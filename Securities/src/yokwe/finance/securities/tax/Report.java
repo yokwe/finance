@@ -366,7 +366,7 @@ public class Report {
 	}
 	
 	private static void addDummySellActivity(Map<String, BuySell> buySellMap, Map<String, Account> accountMap) {
-		String theDate = "9999-99-99";
+		String theDate = "9999-12-31";
 		double fxRate = ForexUtil.getUSD(theDate);
 		
 		for(BuySell buySell: buySellMap.values()) {
@@ -466,7 +466,7 @@ public class Report {
 					if (!transferList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(TransferDetail.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, transferList);
+						Sheet.fillSheet(docSave, transferList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -484,7 +484,7 @@ public class Report {
 					if (!summaryList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(TransferSummary.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, summaryList);
+						Sheet.fillSheet(docSave, summaryList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -500,7 +500,7 @@ public class Report {
 					if (!dividendList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(Dividend.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, dividendList);
+						Sheet.fillSheet(docSave, dividendList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -516,7 +516,7 @@ public class Report {
 					if (!interestList.isEmpty()) {
 						String sheetName = Sheet.getSheetName(Interest.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.saveSheet(docSave, interestList);
+						Sheet.fillSheet(docSave, interestList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);
@@ -559,7 +559,7 @@ public class Report {
 				
 				String sheetName = Sheet.getSheetName(Account.class);
 				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-				Sheet.saveSheet(docSave, accountList);
+				Sheet.fillSheet(docSave, accountList);
 				
 				String newSheetName = String.format("%s-%s",  "9999", sheetName);
 				logger.info("sheet {}", newSheetName);

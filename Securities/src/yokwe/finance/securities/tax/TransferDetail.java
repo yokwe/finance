@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
-import yokwe.finance.securities.util.DoubleUtil;
 
 @Sheet.SheetName("譲渡明細")
 @Sheet.HeaderRow(0)

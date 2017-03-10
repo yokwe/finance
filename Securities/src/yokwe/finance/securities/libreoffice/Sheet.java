@@ -8,7 +8,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -61,10 +60,12 @@ public class Sheet {
 		String value();
 	}
 	
-	private static final int HASHCODE_STRING = String.class.hashCode();
-	private static final int HASHCODE_INT    = Integer.TYPE.hashCode();
-	private static final int HASHCODE_DOUBLE = Double.TYPE.hashCode();
-	private static final int HASHCODE_LONG   = Long.TYPE.hashCode();
+	private static final int HASHCODE_CLASS_INTEGER = Integer.class.hashCode();
+	private static final int HASHCODE_CLASS_DOUBLE  = Double.class.hashCode();
+	private static final int HASHCODE_CLASS_STRING  = String.class.hashCode();
+	private static final int HASHCODE_INT           = Integer.TYPE.hashCode();
+	private static final int HASHCODE_DOUBLE        = Double.TYPE.hashCode();
+	private static final int HASHCODE_LONG          = Long.TYPE.hashCode();
 	
 	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
 		String sheetName = getSheetName(clazz);
@@ -189,7 +190,7 @@ public class Sheet {
 				Class<?> fieldType = field.getType();
 				int fieldTypeHash = fieldType.hashCode();
 				
-				if (fieldTypeHash == HASHCODE_STRING) {
+				if (fieldTypeHash == HASHCODE_CLASS_STRING) {
 					// Convert double value to date string if necessary.
 					XCell   cell         = spreadsheet.getCellByPosition(indexArray[col], rowFirst);
 					String  formatString = spreadSheet.getFormatString(cell);
@@ -293,126 +294,7 @@ public class Sheet {
 		return sheetName.value();
 	}
 
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, List<E> dataList, String sheetName) {
-		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow    headerRow    = null;
-		DataRow      dataRow      = null;
-		Field[]      fields       = null;
-		String       className    = null;
-		
-		{
-			E o = dataList.iterator().next();
-			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
-			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
-			fields       = o.getClass().getDeclaredFields();
-			className    = o.getClass().getName();
-		}
-
-		if (sheetName == null) {
-			logger.error("sheetName is null");
-			throw new SecuritiesException("sheetName is null");
-		}
-		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", className);
-			throw new SecuritiesException("No HeaderRow annotation");
-		}
-		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", className);
-			throw new SecuritiesException("No DataRow annotation");
-		}
-		//logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
-		
-		// Insertion order is important, So we use LinkedHashMap instead of HashMap
-		//   for(Map.Entry<String, Field> entry: fieldMap.entrySet()) { }
-		Map<String, Field> fieldMap = new LinkedHashMap<>();
-		// key is columnName from ColumnName annotation
-		for(Field field: fields) {
-			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
-			if (columnName == null) continue;
-			fieldMap.put(columnName.value(), field);
-		}
-		if (fieldMap.size() == 0) {
-			logger.error("No ColumnName annotation = {}", className);
-			throw new SecuritiesException("No ColumnName annotation");
-		}
-		
-		//
-		// Take information from SpreadSheet
-		//
-		// Build columnMap - column name to column index
-		try {
-			Map<String, Integer> columnMap = new HashMap<>();
-			// key is columnName from header and it's column index
-			{
-				int row = headerRow.value();
-				// Build header map
-				for(int column = 0; column < 100; column++) {
-					final XCell cell = xSpreadsheet.getCellByPosition(column, row);
-					final CellContentType type = cell.getType();
-					if (type.equals(CellContentType.EMPTY)) break;
-					
-					XText text = UnoRuntime.queryInterface(XText.class, cell);
-					String value = text.getString();
-					columnMap.put(value, column);
-//					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
-				}
-				
-				// Sanity check
-				for(String name: fieldMap.keySet()) {
-					if (columnMap.containsKey(name)) continue;
-					logger.error("columnMap contains no field name = {}", name);
-					throw new SecuritiesException("Unexpected");
-				}
-			}
-			
-			{
-				int row = dataRow.value();
-				for(E data: dataList) {
-					for(Map.Entry<String, Field> entry: fieldMap.entrySet()) {
-						int   column = columnMap.get(entry.getKey());
-						XCell cell   = xSpreadsheet.getCellByPosition(column, row);
-						
-						Field        field        = entry.getValue();
-						Class<?>     fieldType    = field.getType();						
-						NumberFormat numberFormat = field.getDeclaredAnnotation(NumberFormat.class);
-						
-						if (numberFormat != null) {
-							spreadSheet.setNumberFormat(cell, numberFormat.value());
-						}
-						
-						if (fieldType.equals(String.class)) {
-							Object value = field.get(data);
-							cell.setFormula(value.toString());
-						} else if (fieldType.equals(Integer.TYPE)) {
-							int value = field.getInt(data);
-							cell.setValue(value);
-						} else if (fieldType.equals(Double.TYPE)) {
-							double value = field.getDouble(data);
-							cell.setValue(value);
-						} else if (fieldType.equals(Long.TYPE)) {
-							long value = field.getLong(data);
-							cell.setValue(value);
-						} else {
-							logger.error("Unknow field type = {}", fieldType.getName());
-							throw new SecuritiesException("Unexpected");
-						}
-					}
-					row++;
-				}
-			}
-		} catch (IllegalArgumentException | IllegalAccessException | IndexOutOfBoundsException e) {
-			logger.error("Exception {}", e.toString());
-			throw new SecuritiesException("Unexpected");
-		}
-	}
-	public static <E extends Sheet> void saveSheet(SpreadSheet spreadSheet, List<E> dataList) {
-		E o = dataList.iterator().next();
-		String sheetName = getSheetName(o.getClass());
-		saveSheet(spreadSheet, dataList, sheetName);
-	}
 	
-	private static final int MAX_BLANK = 5;
-
 	private static class ColumnInfo {
 		public static final int MAX_COLUMN = 99;
 		
@@ -434,7 +316,7 @@ public class Sheet {
 			this.isDate       = SpreadSheet.FORMAT_DATE.equals(this.numberFormat);
 		}
 		
-		public static List<ColumnInfo> getColumnInfoList(XSpreadsheet spreadsheet, int row, Field[] fields) {
+		public static List<ColumnInfo> getColumnInfoList(XSpreadsheet xSpreadsheet, int headerRow, Field[] fields) {
 			try {
 				// build fieldMap
 				Map<String, Field> fieldMap = new TreeMap<>();
@@ -444,7 +326,7 @@ public class Sheet {
 					fieldMap.put(columnName.value(), field);
 				}
 				
-				XCellRange cellRange = spreadsheet.getCellRangeByPosition(0, row, MAX_COLUMN, row);
+				XCellRange cellRange = xSpreadsheet.getCellRangeByPosition(0, headerRow, MAX_COLUMN, headerRow);
 				XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
 				Object data[][] = cellRangeData.getDataArray();
 
@@ -469,10 +351,19 @@ public class Sheet {
 			} catch (IndexOutOfBoundsException e) {
 				logger.error("Exception {}", e.toString());
 				throw new SecuritiesException("Unexpected");
-			} finally {}
+			}
+		}
+		public static ColumnInfo findByName(List<ColumnInfo> columnInfoList, String name) {
+			for(ColumnInfo columnInfo: columnInfoList) {
+				if (columnInfo.name.equals(name)) return columnInfo;
+			}
+			logger.error("Unknown name {}", name);
+			throw new SecuritiesException("Unknown name");
 		}
 	}
 	private static class RowRange {
+		public static final int MAX_ROW = 9999;
+		
 		public final int      rowBegin;
 		public final int      rowEnd;
 		public final int      rowSize;
@@ -483,6 +374,57 @@ public class Sheet {
 			this.rowEnd   = rowEnd;
 			this.rowSize  = rowEnd - rowBegin + 1;
 			this.keys     = keys;
+		}
+		
+		public static List<RowRange> getRowRangeList(XSpreadsheet xSpreadsheet, int keyColumn, int dataRow) {
+			try {
+				XCellRange cellRange = xSpreadsheet.getCellRangeByPosition(keyColumn, dataRow, keyColumn, dataRow + MAX_ROW);
+				XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
+				Object data[][] = cellRangeData.getDataArray();
+				
+				// Build rowRangeList
+				List<RowRange> rowRangeList = new ArrayList<>();
+				int row = 0;
+				for(;;) {
+					if (MAX_ROW <= row) break; // reached to end
+
+					int rowBegin = -1;
+					int rowEnd   = -1;
+					List<String> keyList = new ArrayList<>();
+					
+					// Skip empty value
+					for(; row < MAX_ROW; row++) {
+						String value = data[row][0].toString();
+						if (0 < value.length()) break;
+					}
+					if (MAX_ROW <= row) break; // reached to end
+					rowBegin = dataRow + row;
+					
+					// add until empty value
+					for(; row < MAX_ROW; row++) {
+						String value = data[row][0].toString();
+						if (value.length() == 0) break;
+						keyList.add(value);
+					}
+					rowEnd = dataRow + row - 1;
+					
+					RowRange rowRange = new RowRange(rowBegin, rowEnd, keyList.toArray(new String[0]));
+					rowRangeList.add(rowRange);
+				}
+				return rowRangeList;
+			} catch (IndexOutOfBoundsException e) {
+				logger.error("Exception {}", e.toString());
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+
+		public static List<RowRange> getRowRangeList(int rowBegin, int rowEnd) {
+			List<RowRange> rowRangeList = new ArrayList<>();
+			
+			RowRange rowRange = new RowRange(rowBegin, rowEnd, null);
+			rowRangeList.add(rowRange);
+			
+			return rowRangeList;
 		}
 	}
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
@@ -502,7 +444,6 @@ public class Sheet {
 			className    = o.getClass().getName();
 		}
 		
-
 		if (headerRow == null) {
 			logger.error("No HeaderRow annotation = {}", className);
 			throw new SecuritiesException("No HeaderRow annotation");
@@ -516,62 +457,13 @@ public class Sheet {
 			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
 			
 			// Build rowRangeList
-			List<RowRange> rowRangeList = new ArrayList<>();
-			{
-				int keyIndex = -1;
-				{
-					for(ColumnInfo columnInfo: columnInfoList) {
-						if (columnInfo.name.equals(keyColumnName)) {
-							keyIndex = columnInfo.index;
-							break;
-						}
-					}
-					if (keyIndex == -1) {
-						logger.error("No keyColumnName {}", keyColumnName);
-						throw new SecuritiesException("No keyColumnName");
-					}
-				}
-
-				int row           = dataRow.value();
-				
-				for(;;) {
-					String key      = null;
-					int    rowBegin = -1;
-					for(int i = 0; i < MAX_BLANK; i++, row++) {
-						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
-						
-						// Check empty cell
-						CellContentType type = cell.getType();
-						if (type.equals(CellContentType.EMPTY)) continue;
-						
-						// Check value is in dataMap
-						key = cell.getFormula();
-						E data = dataMap.get(key);
-						if (data == null) continue;
-						
-						rowBegin = row;
-						break;
-					}
-					if (rowBegin == -1) break;
-					
-					List<String> keyList = new ArrayList<>();
-					int rowEnd = row;
-					for(;;row++) {
-						XCell cell = xSpreadsheet.getCellByPosition(keyIndex, row);
-						CellContentType type = cell.getType();
-						if (type.equals(CellContentType.EMPTY)) break;
-						key = cell.getFormula();
-						E data = dataMap.get(key);
-						if (data == null) break;
-						rowEnd = row;
-						keyList.add(key);
-					}
-					
-					rowRangeList.add(new RowRange(rowBegin, rowEnd, keyList.toArray(new String[0])));
-				}
-			}
+			ColumnInfo keyColumn = ColumnInfo.findByName(columnInfoList, keyColumnName);
+			List<RowRange> rowRangeList = RowRange.getRowRangeList(xSpreadsheet, keyColumn.index, dataRow.value());
+			// Remove key column to prevent from update
+			columnInfoList.remove(keyColumn);
 			
-			Map<String, Object> fillDataMap = new HashMap<>();
+			
+			Map<String, Object> fillMap = new HashMap<>();
 			{
 				for(RowRange rowRange: rowRangeList) {
 					final int rowBegin = rowRange.rowBegin;
@@ -579,17 +471,34 @@ public class Sheet {
 					
 					for(int i = 0; i < rowSize; i++) {
 						E data = dataMap.get(rowRange.keys[i]);
+						if (data == null) {
+							logger.warn("no entry in dataMap  key = {}", rowRange.keys[i]);
+							continue;
+						}
 						
 						for(ColumnInfo columnInfo: columnInfoList) {
-							String fillDataMapKey = (rowBegin + i) + "-" + columnInfo.index;
+							String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
 							
+							// Type of value must be String or Double
 							Object value;
-							if (columnInfo.fieldType == HASHCODE_STRING) {
-								String string = columnInfo.field.get(data).toString();
-								if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
-									value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
+							if (columnInfo.fieldType == HASHCODE_CLASS_STRING) {
+								Object o = columnInfo.field.get(data);
+								if (o == null) {
+									value = "";
 								} else {
-									value = string;
+									String string = o.toString();
+									if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
+										value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
+									} else {
+										value = string;
+									}
+								}
+							} else if (columnInfo.fieldType == HASHCODE_CLASS_DOUBLE) {
+								Object o = columnInfo.field.get(data);
+								if (o == null) {
+									value = "";
+								} else {
+									value = o;
 								}
 							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
 								value = columnInfo.field.getDouble(data);
@@ -601,7 +510,7 @@ public class Sheet {
 								logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
 								throw new SecuritiesException("Unexpected");
 							}
-							fillDataMap.put(fillDataMapKey, value);
+							fillMap.put(fillMapKey, value);
 						}
 					}
 				}
@@ -609,9 +518,13 @@ public class Sheet {
 			
 			// Fill data
 			for(RowRange rowRange: rowRangeList) {
+				final int rowBegin = rowRange.rowBegin;
+				final int rowEnd   = rowRange.rowEnd;
+				final int rowSize  = rowRange.rowSize;
+
 				for(ColumnInfo columnInfo: columnInfoList) {
 					// left top right bottom
-					XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowRange.rowBegin, columnInfo.index, rowRange.rowEnd);
+					XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowBegin, columnInfo.index, rowEnd);
 					
 					// apply numberFormat
 					if (columnInfo.numberFormat != null) {
@@ -620,10 +533,11 @@ public class Sheet {
 					
 					// fill data
 					XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
-					Object data[][] = new Object[rowRange.rowSize][1]; // row column
-					for(int i = 0; i < rowRange.rowSize; i++) {
-						String fillDataMapKey = (rowRange.rowBegin + i) + "-" + columnInfo.index;
-						data[i][0] = fillDataMap.get(fillDataMapKey);
+					Object data[][] = new Object[rowSize][1]; // row column
+					for(int i = 0; i < rowSize; i++) {
+						String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
+						Object value = fillMap.get(fillMapKey);
+						data[i][0] = (value == null) ? "*NA*" : value;
 					}
 					xCellRangeData.setDataArray(data);
 				}
@@ -632,5 +546,129 @@ public class Sheet {
 			logger.error("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected");
 		}
+	}
+
+	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList, String sheetName) {
+		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
+		HeaderRow    headerRow    = null;
+		DataRow      dataRow      = null;
+		Field[]      fields       = null;
+		String       className    = null;
+		
+		{
+			E o = dataList.iterator().next();
+			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
+			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
+			fields       = o.getClass().getDeclaredFields();
+			className    = o.getClass().getName();
+		}
+		
+		if (headerRow == null) {
+			logger.error("No HeaderRow annotation = {}", className);
+			throw new SecuritiesException("No HeaderRow annotation");
+		}
+		if (dataRow == null) {
+			logger.error("No DataRow annotation = {}", className);
+			throw new SecuritiesException("No DataRow annotation");
+		}
+
+		try {
+			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
+			
+			// Build rowRangeList
+			List<RowRange> rowRangeList = RowRange.getRowRangeList(dataRow.value(), dataRow.value() + dataList.size() - 1);
+			
+			
+			Map<String, Object> fillMap = new HashMap<>();
+			{
+				for(RowRange rowRange: rowRangeList) {
+					final int rowBegin = rowRange.rowBegin;
+					final int rowSize  = rowRange.rowSize;
+					
+					for(int i = 0; i < rowSize; i++) {
+						E data = dataList.get(i);
+						for(ColumnInfo columnInfo: columnInfoList) {
+							String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
+							
+							// Type of value must be String or Double
+							Object value;
+							if (columnInfo.fieldType == HASHCODE_CLASS_STRING) {
+								Object o = columnInfo.field.get(data);
+								if (o == null) {
+									value = "";
+								} else {
+									String string = o.toString();
+									if (columnInfo.isDate && string.length() == SpreadSheet.FORMAT_DATE.length()) {
+										value = Double.valueOf(SpreadSheet.toDateNumber(string)); // Convert to double for date number
+									} else {
+										value = string;
+									}
+								}
+							} else if (columnInfo.fieldType == HASHCODE_CLASS_DOUBLE) {
+								Object o = columnInfo.field.get(data);
+								if (o == null) {
+									value = "";
+								} else {
+									value = o;
+								}
+							} else if (columnInfo.fieldType == HASHCODE_CLASS_INTEGER) {
+								Object o = columnInfo.field.get(data);
+								if (o == null) {
+									value = "";
+								} else {
+									value = o;
+								}
+							} else if (columnInfo.fieldType == HASHCODE_DOUBLE) {
+								value = columnInfo.field.getDouble(data);
+							} else if (columnInfo.fieldType == HASHCODE_INT) {
+								value = Double.valueOf(columnInfo.field.getInt(data));  // Convert to double for numeric value
+							} else if (columnInfo.fieldType == HASHCODE_LONG) {
+								value = Double.valueOf(columnInfo.field.getLong(data)); // Convert to double for numeric value
+							} else {
+								logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
+								throw new SecuritiesException("Unexpected");
+							}
+							fillMap.put(fillMapKey, value);
+						}
+					}
+				}
+			}
+			
+			// Fill data
+			for(RowRange rowRange: rowRangeList) {
+				final int rowBegin = rowRange.rowBegin;
+				final int rowEnd   = rowRange.rowEnd;
+				final int rowSize  = rowRange.rowSize;
+
+				for(ColumnInfo columnInfo: columnInfoList) {
+					// left top right bottom
+					XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowBegin, columnInfo.index, rowEnd);
+					
+					// apply numberFormat
+					if (columnInfo.numberFormat != null) {
+						spreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat);
+					}
+					
+					// fill data
+					XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
+					Object data[][] = new Object[rowSize][1]; // row column
+					for(int i = 0; i < rowSize; i++) {
+						String fillMapKey = (rowBegin + i) + "-" + columnInfo.index;
+						Object value = fillMap.get(fillMapKey);
+						data[i][0] = (value == null) ? "*NA*" : value;
+					}
+					xCellRangeData.setDataArray(data);
+				}
+			}
+		} catch (IndexOutOfBoundsException | IllegalArgumentException | IllegalAccessException e) {
+			logger.error("Exception {}", e.toString());
+			throw new SecuritiesException("Unexpected");
+		}
+	}
+
+	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList) {
+		E o = dataList.iterator().next();
+		String sheetName = getSheetName(o.getClass());
+		fillSheet(spreadSheet, dataList, sheetName);
 	}
 }

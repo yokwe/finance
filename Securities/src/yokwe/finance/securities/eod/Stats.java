@@ -32,7 +32,7 @@ public class Stats extends Sheet {
 	public String date;
 	
 	@ColumnName("price")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double price;
 	
 	// price
@@ -53,11 +53,11 @@ public class Stats extends Sheet {
 	public double rsi;
 
 	@ColumnName("min")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double min;
 	
 	@ColumnName("max")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double max;
 	
 	@ColumnName("minpct")
@@ -96,19 +96,19 @@ public class Stats extends Sheet {
 	
 	// price change detection
 	@ColumnName("sma5")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double sma5;
 	
 	@ColumnName("sma20")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double sma20;
 	
 	@ColumnName("sma50")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double sma50;
 	
 	@ColumnName("sma200")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double sma200;
 	
 	@ColumnName("sma5pct")
@@ -128,7 +128,7 @@ public class Stats extends Sheet {
 	public double sma200pct;
 
 	@ColumnName("last")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE)
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double last;
 	
 	@ColumnName("lastpct")

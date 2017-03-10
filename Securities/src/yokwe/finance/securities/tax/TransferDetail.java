@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 @Sheet.SheetName("譲渡明細")
 @Sheet.HeaderRow(0)
@@ -12,100 +14,120 @@ public class TransferDetail extends Sheet {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
 	
 	@ColumnName("銘柄コード")
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public final String symbol;
 	@ColumnName("銘柄")
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public final String symbolName;
 
 	@ColumnName("売約定日")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateSell;
 	@ColumnName("売数量")
-	public final String quantitySell;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Double quantitySell;
 	@ColumnName("売値")
-	public final String priceSell;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE5)
+	public final Double priceSell;
 	@ColumnName("売手数料")
-	public final String feeSell;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	public final Double feeSell;
 	@ColumnName("売レート")
-	public final String fxRateSell;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	public final Double fxRateSell;
 	@ColumnName("譲渡金額")
-	public final String sellJPY;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Integer sellJPY;
 	@ColumnName("取得費")
-	public final String costJPY;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Integer costJPY;
 	@ColumnName("譲渡手数料")
-	public final String feeSellJPY;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Integer feeSellJPY;
 	@ColumnName("取得日最初")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuyFirst;
 	@ColumnName("取得日最後")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuyLast;
 		
 	@ColumnName("買約定日")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuy;
 	@ColumnName("買数量")
-	public final String quantityBuy;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Double quantityBuy;
 	@ColumnName("買値")
-	public final String priceBuy;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE5)
+	public final Double priceBuy;
 	@ColumnName("買手数料")
-	public final String feeBuy;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	public final Double feeBuy;
 	@ColumnName("買レート")
-	public final String fxRateBuy;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	public final Double fxRateBuy;
 	@ColumnName("取得価格")
-	public final String buyJPY;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Integer buyJPY;
 	@ColumnName("総数量")
-	public final String totalQuantity;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Double totalQuantity;
 	@ColumnName("総取得価格")
-	public final String totalCostJPY;
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	public final Integer totalCostJPY;
 	
 	public TransferDetail(Transfer.Buy buy) {
 		this.symbol        = buy.symbol;
 		this.symbolName    = buy.name;
 		
-		this.dateSell      = "";
-		this.quantitySell  = "";
-		this.priceSell     = "";
-		this.feeSell       = "";
-		this.fxRateSell    = "";
-		this.feeSellJPY    = "";
-		this.sellJPY       = "";
-		this.costJPY       = "";
-		this.dateBuyFirst  = "";
-		this.dateBuyLast   = "";
+		this.dateSell      = null;
+		this.quantitySell  = null;
+		this.priceSell     = null;
+		this.feeSell       = null;
+		this.fxRateSell    = null;
+		this.feeSellJPY    = null;
+		this.sellJPY       = null;
+		this.costJPY       = null;
+		this.dateBuyFirst  = null;
+		this.dateBuyLast   = null;
 
 		this.dateBuy       = buy.date;
-		this.quantityBuy   = String.format("%.5f", buy.quantity);
-		this.priceBuy      = String.format("%.5f", buy.price);
-		this.feeBuy        = String.format("%.2f", buy.fee);
-		this.fxRateBuy     = String.format("%.2f", buy.fxRate);
-		this.buyJPY        = String.format("%d",   buy.buyJPY + buy.feeJPY);
-		this.totalQuantity = String.format("%.5f", buy.totalQuantity);
-		this.totalCostJPY  = String.format("%d",   buy.totalCostJPY);
+		this.quantityBuy   = buy.quantity;
+		this.priceBuy      = buy.price;
+		this.feeBuy        = buy.fee;
+		this.fxRateBuy     = buy.fxRate;
+		this.buyJPY        = buy.buyJPY + buy.feeJPY;
+		this.totalQuantity = buy.totalQuantity;
+		this.totalCostJPY  = buy.totalCostJPY;
 	}
 	public TransferDetail(Transfer.Sell sell) {
 		this.symbol        = sell.symbol;
 		this.symbolName    = sell.name;
 		
 		this.dateSell      = sell.date;
-		this.quantitySell  = String.format("%.5f", sell.quantity);
-		this.priceSell     = String.format("%.5f", sell.price);
-		this.feeSell       = String.format("%.2f", sell.fee);
-		this.fxRateSell    = String.format("%.2f", sell.fxRate);
-		this.feeSellJPY    = String.format("%d",   sell.feeJPY);
-		this.sellJPY       = String.format("%d",   sell.sellJPY);
-		this.costJPY       = String.format("%d",   sell.costJPY);
+		this.quantitySell  = sell.quantity;
+		this.priceSell     = sell.price;
+		this.feeSell       = sell.fee;
+		this.fxRateSell    = sell.fxRate;
+		this.feeSellJPY    = sell.feeJPY;
+		this.sellJPY       = sell.sellJPY;
+		this.costJPY       = sell.costJPY;
 		this.dateBuyFirst  = sell.dateFirst; 
 		this.dateBuyLast   = sell.dateLast;
 
-		this.dateBuy       = "";
-		this.quantityBuy   = "";
-		this.priceBuy      = "";
-		this.feeBuy        = "";
-		this.fxRateBuy     = "";
-		this.buyJPY        = "";
+		this.dateBuy       = null;
+		this.quantityBuy   = null;
+		this.priceBuy      = null;
+		this.feeBuy        = null;
+		this.fxRateBuy     = null;
+		this.buyJPY        = null;
 		// Output blank if totalQuantity is almost zero
 		if (sell.totalQuantity < 0.0001) {
-			this.totalQuantity = "";
-			this.totalCostJPY  = "";
+			this.totalQuantity = null;
+			this.totalCostJPY  = null;
 		} else {
-			this.totalQuantity = String.format("%.5f", sell.totalQuantity);
-			this.totalCostJPY  = String.format("%d",   sell.totalCostJPY);
+			this.totalQuantity = sell.totalQuantity;
+			this.totalCostJPY  = sell.totalCostJPY;
 		}
 	}
 	public TransferDetail(Transfer.Buy  buy, Transfer.Sell  sell) {
@@ -113,29 +135,29 @@ public class TransferDetail extends Sheet {
 		this.symbolName    = sell.name;
 		
 		this.dateSell      = sell.date;
-		this.quantitySell  = String.format("%.5f", sell.quantity);
-		this.priceSell     = String.format("%.5f", sell.price);
-		this.feeSell       = String.format("%.2f", sell.fee);
-		this.fxRateSell    = String.format("%.2f", sell.fxRate);
-		this.feeSellJPY    = String.format("%d",   sell.feeJPY);
-		this.sellJPY       = String.format("%d",   sell.sellJPY);
-		this.costJPY       = String.format("%d",   sell.costJPY);
+		this.quantitySell  = sell.quantity;
+		this.priceSell     = sell.price;
+		this.feeSell       = sell.fee;
+		this.fxRateSell    = sell.fxRate;
+		this.feeSellJPY    = sell.feeJPY;
+		this.sellJPY       = sell.sellJPY;
+		this.costJPY       = sell.costJPY;
 		this.dateBuyFirst  = sell.dateFirst;
 		this.dateBuyLast   = sell.dateLast;
 
 		this.dateBuy       = buy.date;
-		this.quantityBuy   = String.format("%.5f", buy.quantity);
-		this.priceBuy      = String.format("%.5f", buy.price);
-		this.feeBuy        = String.format("%.2f", buy.fee);
-		this.fxRateBuy     = String.format("%.2f", buy.fxRate);
-		this.buyJPY        = String.format("%d",   buy.buyJPY + buy.feeJPY);
+		this.quantityBuy   = buy.quantity;
+		this.priceBuy      = buy.price;
+		this.feeBuy        = buy.fee;
+		this.fxRateBuy     = buy.fxRate;
+		this.buyJPY        = buy.buyJPY + buy.feeJPY;
 		
 		if (sell.totalQuantity < 0.0001) {
-			this.totalQuantity = "";
-			this.totalCostJPY  = "";
+			this.totalQuantity = null;
+			this.totalCostJPY  = null;
 		} else {
-			this.totalQuantity = String.format("%.5f", sell.totalQuantity);
-			this.totalCostJPY  = String.format("%d",   sell.totalCostJPY);
+			this.totalQuantity = sell.totalQuantity;
+			this.totalCostJPY  = sell.totalCostJPY;
 		}
 	}
 	

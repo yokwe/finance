@@ -1,33 +1,43 @@
 package yokwe.finance.securities.tax;
 
 import yokwe.finance.securities.libreoffice.Sheet;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("配当明細")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class Dividend extends Sheet {
 	@ColumnName("配当年月日")
-	@NumberFormat("YYYY-MM-DD")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	@ColumnName("銘柄コード")
 	public String symbol;
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	@ColumnName("銘柄")
 	public String symbolName;
 	@ColumnName("数量")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public double quantity;
 
 	@ColumnName("配当金額")
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double dividend;
 	@ColumnName("外国源泉額")
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	public double taxWithholding;
+	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
 	@ColumnName("為替レート")
 	public double fxRate;
 	@ColumnName("邦貨配当金額")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public int dividendJPY;
 	@ColumnName("邦貨外国源泉額")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public int taxWithholdingJPY;
 	
 	@ColumnName("収入金額")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public int incomeJPY;
 
 	

@@ -429,38 +429,35 @@ public class Sheet {
 		}
 	}
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
-		logger.info("fillSheet {}", sheetName);
-		
 		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
 		HeaderRow    headerRow    = null;
 		DataRow      dataRow      = null;
 		Field[]      fields       = null;
-		String       className    = null;
 		
 		{
 			E o = dataMap.values().iterator().next();
 			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
 			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
 			fields       = o.getClass().getDeclaredFields();
-			className    = o.getClass().getName();
-		}
-		
-		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", className);
-			throw new SecuritiesException("No HeaderRow annotation");
-		}
-		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", className);
-			throw new SecuritiesException("No DataRow annotation");
+			
+			if (headerRow == null) {
+				logger.error("No HeaderRow annotation = {}", o.getClass().getName());
+				throw new SecuritiesException("No HeaderRow annotation");
+			}
+			if (dataRow == null) {
+				logger.error("No DataRow annotation = {}", o.getClass().getName());
+				throw new SecuritiesException("No DataRow annotation");
+			}
 		}
 
-		try {
+		{
 			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
 			
 			// Build rowRangeList
-			ColumnInfo keyColumn = ColumnInfo.findByName(columnInfoList, keyColumnName);
+			ColumnInfo     keyColumn    = ColumnInfo.findByName(columnInfoList, keyColumnName);
 			List<RowRange> rowRangeList = RowRange.getRowRangeList(xSpreadsheet, keyColumn.index, dataRow.value());
-			// Remove key column to prevent from update
+			
+			// Remove keyColumn to prevent from update
 			columnInfoList.remove(keyColumn);
 			
 			// Build fillMap
@@ -481,9 +478,6 @@ public class Sheet {
 			
 			// Apply fillMap
 			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
-		} catch (IllegalArgumentException e) {
-			logger.error("Exception {}", e.toString());
-			throw new SecuritiesException("Unexpected");
 		}
 	}
 
@@ -492,26 +486,24 @@ public class Sheet {
 		HeaderRow    headerRow    = null;
 		DataRow      dataRow      = null;
 		Field[]      fields       = null;
-		String       className    = null;
 		
 		{
 			E o = dataList.iterator().next();
 			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
 			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
 			fields       = o.getClass().getDeclaredFields();
-			className    = o.getClass().getName();
+			
+			if (headerRow == null) {
+				logger.error("No HeaderRow annotation = {}", o.getClass().getName());
+				throw new SecuritiesException("No HeaderRow annotation");
+			}
+			if (dataRow == null) {
+				logger.error("No DataRow annotation = {}", o.getClass().getName());
+				throw new SecuritiesException("No DataRow annotation");
+			}
 		}
 		
-		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", className);
-			throw new SecuritiesException("No HeaderRow annotation");
-		}
-		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", className);
-			throw new SecuritiesException("No DataRow annotation");
-		}
-
-		try {
+		{
 			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
 			
 			// Build rowRangeList
@@ -531,9 +523,6 @@ public class Sheet {
 			
 			// Apply fillMap
 			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
-		} catch (IllegalArgumentException e) {
-			logger.error("Exception {}", e.toString());
-			throw new SecuritiesException("Unexpected");
 		}
 	}
 	

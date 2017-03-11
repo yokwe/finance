@@ -233,9 +233,8 @@ public class SpreadSheet extends LibreOffice {
 		XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class, component);
 		return xNumberFormatsSupplier.getNumberFormats();
 	}
-	public String getFormatString(XCell cell) {
+	public static String getFormatString(XCell cell, XNumberFormats xNumberFormats) {
 		try {
-			XNumberFormats xNumberFormats    = getNumberFormats();
 			XPropertySet   xPropertySet      = UnoRuntime.queryInterface(XPropertySet.class, cell);
 			
 			int            index             = AnyConverter.toInt(xPropertySet.getPropertyValue(PROPERTY_NUMBER_FORMAT));
@@ -247,37 +246,46 @@ public class SpreadSheet extends LibreOffice {
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
+	public String getFormatString(XCell cell) {
+		return getFormatString(cell, getNumberFormats());
+	}
 	
-	public void setNumberFormat(XCell cell, String numberFormat) {
+	public static void setNumberFormat(XCell cell, String numberFormat, XNumberFormats xNumberFormats) {
 		try {
-			XNumberFormats xNumberFormats = getNumberFormats();
-			XPropertySet   xPropertySet   = UnoRuntime.queryInterface(XPropertySet.class, cell);
-			
 			int index = xNumberFormats.queryKey(numberFormat, locale, false);
 			if (index == -1) {
 				index = xNumberFormats.addNew(numberFormat, locale);
 			}
 			
+			XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, cell);
 			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
-		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException | MalformedNumberFormatException | PropertyVetoException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException | MalformedNumberFormatException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}
 	}
-	public void setNumberFormat(XCellRange xCellRange, String numberFormat) {
+	
+	public static void setNumberFormat(XCellRange xCellRange, String numberFormat, XNumberFormats xNumberFormats) {
 		try {
-			XNumberFormats xNumberFormats = getNumberFormats();
-			XPropertySet   xPropertySet   = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
-			
 			int index = xNumberFormats.queryKey(numberFormat, locale, false);
 			if (index == -1) {
 				index = xNumberFormats.addNew(numberFormat, locale);
 			}
 			
+			XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
 			xPropertySet.setPropertyValue(PROPERTY_NUMBER_FORMAT, Integer.valueOf(index));
-		} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException | MalformedNumberFormatException | PropertyVetoException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException | MalformedNumberFormatException e) {
 			logger.info("Exception {}", e.toString());
 			throw new SecuritiesException("Unexpected exception");
 		}
+	}
+	
+	public void setNumberFormat(XCell cell, String numberFormat) {
+		setNumberFormat(cell, numberFormat, getNumberFormats());
+	}
+	public void setNumberFormat(XCellRange xCellRange, String numberFormat) {
+		setNumberFormat(xCellRange, numberFormat, getNumberFormats());
 	}
 }

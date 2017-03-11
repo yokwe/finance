@@ -68,7 +68,7 @@ public class Equity extends Sheet {
 	static {
 		logger.info("Start load {}", URL_EQUITY);
 		try (SpreadSheet spreadSheet = new SpreadSheet(URL_EQUITY, true)) {
-			for(Equity equity: Sheet.getInstance(spreadSheet, Equity.class)) {
+			for(Equity equity: Sheet.extractSheet(spreadSheet, Equity.class)) {
 				map.put(equity.symbol, equity);
 			}
 		}

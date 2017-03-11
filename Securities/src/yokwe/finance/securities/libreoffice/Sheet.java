@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,10 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellContentType;
-import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
-import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XNumberFormats;
 
@@ -68,224 +64,7 @@ public class Sheet {
 	private static final int HASHCODE_INT           = Integer.TYPE.hashCode();
 	private static final int HASHCODE_DOUBLE        = Double.TYPE.hashCode();
 	private static final int HASHCODE_LONG          = Long.TYPE.hashCode();
-	
-	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz) {
-		String sheetName = getSheetName(clazz);
-		return getInstance(spreadSheet, clazz, sheetName);
-	}
-	public static <E extends Sheet> List<E> getInstance(SpreadSheet spreadSheet, Class<E> clazz, String sheetName) {
-		HeaderRow headerRow = clazz.getDeclaredAnnotation(HeaderRow.class);
-		DataRow   dataRow   = clazz.getDeclaredAnnotation(DataRow.class);
-		if (sheetName == null) {
-			logger.error("sheetName == null");
-			throw new SecuritiesException("sheetName == null");
-		}
-		if (headerRow == null) {
-			logger.error("No HeaderRow annotation = {}", clazz.getName());
-			throw new SecuritiesException("No HeaderRow annotation");
-		}
-		if (dataRow == null) {
-			logger.error("No DataRow annotation = {}", clazz.getName());
-			throw new SecuritiesException("No DataRow annotation");
-		}
-//		logger.info("Sheet {}  headerRow {}  dataRow {}", sheetName.value(), headerRow.value(), dataRow.value());
-		XSpreadsheet spreadsheet = spreadSheet.getSheet(sheetName);
 		
-		Map<String, Field> fieldMap = new TreeMap<>();
-		for(Field field: clazz.getDeclaredFields()) {
-			ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
-			if (columnName == null) continue;
-			fieldMap.put(columnName.value(), field);
-		}
-		if (fieldMap.size() == 0) {
-			logger.error("No ColumnName annotation = {}", clazz.getName());
-			throw new SecuritiesException("No ColumnName annotation");
-		}
-		
-		//
-		// Take information from SpreadSheet
-		//
-		// Build columnMap - column name to column index
-		Map<String, Integer> columnMap = new HashMap<>();
-		
-		{
-			try {
-				// Build header map
-				int row = headerRow.value();
-				
-				for(int i = 0; i < 100; i++) {
-					final XCell cell = spreadsheet.getCellByPosition(i, row);
-					final CellContentType type = cell.getType();
-					if (type.equals(CellContentType.EMPTY)) break;
-					
-					XText text = UnoRuntime.queryInterface(XText.class, cell);
-					String value = text.getString();
-					columnMap.put(value, i);
-//					logger.info("{} - {} {}", i, LibreOffice.toString(type), value);
-				}
-			} catch (IndexOutOfBoundsException e) {
-				logger.error("Exception {}", e.toString());
-				throw new SecuritiesException("Unexpected");
-			}
-			
-			// Sanity check
-			for(String name: fieldMap.keySet()) {
-				if (columnMap.containsKey(name)) continue;
-				logger.error("columnMap contains no field name = {}", name);
-				throw new SecuritiesException("Unexpected");
-			}
-		}
-		
-		Field[]    fieldArray;
-		int[]      indexArray;
-		final int  colSize = fieldMap.size();
-
-		{
-			fieldArray = new Field[colSize];
-			indexArray = new int[colSize];
-			int i = 0;
-			for(String columnName: fieldMap.keySet()) {
-				fieldArray[i] = fieldMap.get(columnName);
-				indexArray[i] = columnMap.get(columnName);
-				i++;
-			}
-		}
-		
-		try {
-			List<E> ret = new ArrayList<>();
-
-			int rowFirst = dataRow.value();
-			int rowLast = SpreadSheet.getLastDataRow(spreadsheet, 0, rowFirst, 65536);
-			int rowSize = rowLast - rowFirst + 1;
-			// cellRange is [rowFirst..rowLast)
-			logger.info("rowSize [{} .. {}] = {}  colSize {}", rowFirst, rowLast, rowSize, colSize);
-			
-			@SuppressWarnings("unchecked")
-			E[] instanceArray = (E[]) Array.newInstance(clazz, rowSize);
-			for(int row = 0; row < rowSize; row++) {
-				E instance = clazz.newInstance();
-				instanceArray[row] = instance;
-				ret.add(instance);
-			}
-			
-			// Capture data in dataArray for each column
-			Object[][] dataArray = new Object[rowSize][colSize];
-			for(int col = 0; col < colSize; col++) {
-				int column = indexArray[col];
-				
-				// left top right bottom
-				//logger.info("cellRange {} {} {} {}", column, rowFirst, column, rowLast);
-				XCellRange cellRange = spreadsheet.getCellRangeByPosition(column, rowFirst, column, rowLast);
-				XCellRangeData cellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, cellRange);
-				Object data[][] = cellRangeData.getDataArray();
-				
-				if (data.length != rowSize) {
-					logger.error("Unexpected rowSize = {}  data.length = {}", rowSize, data.length);
-					throw new SecuritiesException("Unexpected");
-				}
-				for(int row = 0; row < rowSize; row++) dataArray[row][col] = data[row][0];
-			}
-
-			// Assign value to field of each instance
-			for(int col = 0; col < colSize; col++) {
-				Field field = fieldArray[col];
-				Class<?> fieldType = field.getType();
-				int fieldTypeHash = fieldType.hashCode();
-				
-				if (fieldTypeHash == HASHCODE_CLASS_STRING) {
-					// Convert double value to date string if necessary.
-					XCell   cell         = spreadsheet.getCellByPosition(indexArray[col], rowFirst);
-					String  formatString = spreadSheet.getFormatString(cell);
-					boolean isYYYYMMDD   = formatString.equals("YYYY-MM-DD");
-					if (isYYYYMMDD) {
-						for(int row = 0; row < rowSize; row++) {
-							E instance = instanceArray[row];
-							Object value = dataArray[row][col];
-//							logger.info("S {} {} - {}", row, col, value);
-							if (value instanceof String) {
-								field.set(instance, (String)value);
-							} else if (value instanceof Double) {
-								field.set(instance, SpreadSheet.toDateString((Double)value));
-							} else {
-								logger.error("Unknow value type = {}", value.getClass().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-						}
-					} else {
-						for(int row = 0; row < rowSize; row++) {
-							E instance = instanceArray[row];
-							Object value = dataArray[row][col];
-//							logger.info("S {} {} - {}", row, col, value);
-							if (value instanceof String) {
-								field.set(instance, (String)value);
-							} else if (value instanceof Double) {
-								field.set(instance, value.toString());
-							} else {
-								logger.error("Unknow value type = {}", value.getClass().getName());
-								throw new SecuritiesException("Unexpected");
-							}
-						}
-					}
-				} else if (fieldTypeHash == HASHCODE_DOUBLE) {
-					for(int row = 0; row < rowSize; row++) {
-						E instance = instanceArray[row];
-						Object value = dataArray[row][col];
-//						logger.info("D {} {} - {}", row, col, value);
-						if (value instanceof Double) {
-							field.setDouble(instance, ((Double)value).doubleValue());
-						} else if (value instanceof Integer) {
-							field.setDouble(instance, ((Integer)value).intValue());
-						} else if (value instanceof String) {
-							String stringValue = (String)value;
-							if (stringValue.length() == 0) {
-								field.setDouble(instance, 0);
-							} else if (stringValue.equals("NaN")) {
-								field.setDouble(instance, 0);
-							} else {
-								logger.error("Unexpeced dobuleHash stringValue = {} - {} - {}", col, row, stringValue);
-								throw new SecuritiesException("Unexpected");
-							}
-						} else {
-							logger.error("Unknow value type = {}", value.getClass().getName());
-							throw new SecuritiesException("Unexpected");
-						}
-					}						
-				} else if (fieldTypeHash == HASHCODE_INT) {
-					for(int row = 0; row < rowSize; row++) {
-						E instance = instanceArray[row];
-						Object value = dataArray[row][col];
-//						logger.info("I {} {} - {}", row, col, value);
-						if (value instanceof Integer) {
-							field.setInt(instance, ((Integer)value).intValue());
-						} else if (value instanceof Double) {
-							field.setInt(instance, ((Double)value).intValue());
-						} else if (value instanceof String) {
-							String stringValue = (String)value;
-							if (stringValue.length() == 0) {
-								field.setInt(instance, 0);
-							} else if (stringValue.equals("NaN")) {
-								field.setInt(instance, 0);
-							} else {
-								logger.error("Unexpeced integerHash stringValue = {} - {} - {}", col, row, stringValue);
-								throw new SecuritiesException("Unexpected");
-							}
-						} else {
-							logger.error("Unknow value type = {}", value.getClass().getName());
-							throw new SecuritiesException("Unexpected");
-						}
-					}						
-				} else {
-					logger.error("Unknow field type = {}", fieldType.getName());
-					throw new SecuritiesException("Unexpected");
-				}
-			}
-			return ret;
-		} catch (IndexOutOfBoundsException | IllegalAccessException | InstantiationException e) {
-			logger.error("Exception {}", e.toString());
-			throw new SecuritiesException("Unexpected");
-		}
-	}
-	
 	public static <E extends Sheet> String getSheetName(Class<E> clazz) {
 		SheetName sheetName = clazz.getDeclaredAnnotation(SheetName.class);
 		if (sheetName == null) {
@@ -614,5 +393,164 @@ public class Sheet {
 		E o = dataList.iterator().next();
 		String sheetName = getSheetName(o.getClass());
 		fillSheet(spreadSheet, dataList, sheetName);
+	}
+	
+	public static <E extends Sheet> List<E> extractSheet(SpreadSheet spreadSheet, Class<E> clazz, String sheetName) {
+		final XSpreadsheet   xSpreadsheet   = spreadSheet.getSheet(sheetName);
+		final int            headerRow;
+		final int            dataRow;
+		final Field[]        fields;
+		
+		{
+			HeaderRow      headerRowAnnotation    = clazz.getDeclaredAnnotation(HeaderRow.class);
+			DataRow        dataRowAnnotation      = clazz.getDeclaredAnnotation(DataRow.class);
+			
+			if (headerRowAnnotation == null) {
+				logger.error("No HeaderRow annotation = {}", clazz.getName());
+				throw new SecuritiesException("No HeaderRow annotation");
+			}
+			if (dataRowAnnotation == null) {
+				logger.error("No DataRow annotation = {}", clazz.getName());
+				throw new SecuritiesException("No DataRow annotation");
+			}
+			headerRow = headerRowAnnotation.value();
+			dataRow   = dataRowAnnotation.value();
+			fields    = clazz.getDeclaredFields();
+		}
+
+		List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow, fields);
+		List<RowRange>   rowRangeList   = RowRange.getRowRangeList(xSpreadsheet, 0, dataRow); // assume column 0 as key column
+		
+		{
+			try {
+				// key is row-columnIndex
+				Map<String, Object> extractMap = new HashMap<>();
+				
+				// build extractMap
+				for(RowRange rowRange: rowRangeList) {
+					final int rowBegin = rowRange.rowBegin;
+					final int rowEnd   = rowRange.rowEnd;
+					final int rowSize  = rowRange.rowSize;
+
+					for(ColumnInfo columnInfo: columnInfoList) {
+						// left top right bottom
+						XCellRange xCellRange = xSpreadsheet.getCellRangeByPosition(columnInfo.index, rowBegin, columnInfo.index, rowEnd);
+												
+						// extract data
+						XCellRangeData xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
+						Object[][] data = xCellRangeData.getDataArray();
+						
+						// put data into extractMap
+						for(int i = 0; i < rowSize; i++) {
+							String extractMapKey = (rowBegin + i) + "-" + columnInfo.index;
+							extractMap.put(extractMapKey, data[i][0]);
+						}
+					}
+				}
+				
+				// build dataList
+				List<E> dataList = new ArrayList<>();
+				for(RowRange rowRange: rowRangeList) {
+					final int rowBegin = rowRange.rowBegin;
+					final int rowSize  = rowRange.rowSize;
+
+					for(int i = 0; i < rowSize; i++) {
+						E data = clazz.newInstance();
+						for(ColumnInfo columnInfo: columnInfoList) {
+							Field   field     = columnInfo.field;
+							int     fieldType = columnInfo.fieldType;
+							boolean isDate    = columnInfo.isDate;
+							
+							String extractMapKey = (rowBegin + i) + "-" + columnInfo.index;
+							Object o = extractMap.get(extractMapKey);
+							int    oType = o.getClass().hashCode();
+							if (oType == HASHCODE_CLASS_STRING) {
+								String value = (String)o;
+								boolean isEmpty = value.length() == 0;
+								
+								if (isEmpty) {
+									if (fieldType == HASHCODE_CLASS_STRING) {
+										field.set(data, null);
+									} else if (fieldType == HASHCODE_CLASS_DOUBLE) {
+										field.set(data, null);
+									} else if (fieldType == HASHCODE_CLASS_INTEGER) {
+										field.set(data, null);
+									} else if (fieldType == HASHCODE_CLASS_LONG) {
+										field.set(data, null);
+									} else if (fieldType == HASHCODE_DOUBLE) {
+										field.setDouble(data, 0);
+									} else if (fieldType == HASHCODE_INT) {
+										field.setInt(data, 0);
+									} else if (fieldType == HASHCODE_LONG) {
+										field.setLong(data, 0);
+									} else {
+										logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
+										throw new SecuritiesException("Unexpected");
+									}
+								} else {
+									if (fieldType == HASHCODE_CLASS_STRING) {
+										field.set(data, value);
+									} else if (fieldType == HASHCODE_CLASS_DOUBLE) {
+										field.set(data, Double.valueOf(value));
+									} else if (fieldType == HASHCODE_CLASS_INTEGER) {
+										field.set(data, Integer.valueOf(value));
+									} else if (fieldType == HASHCODE_CLASS_LONG) {
+										field.set(data, Long.valueOf(value));
+									} else if (fieldType == HASHCODE_DOUBLE) {
+										field.setDouble(data, Double.valueOf(value));
+									} else if (fieldType == HASHCODE_INT) {
+										field.setInt(data, Integer.valueOf(value));
+									} else if (fieldType == HASHCODE_LONG) {
+										field.setLong(data, Integer.valueOf(value));
+									} else {
+										logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
+										throw new SecuritiesException("Unexpected");
+									}
+								}
+							} else if (oType == HASHCODE_CLASS_DOUBLE) {
+								double value = (Double)o;
+								
+								if (fieldType == HASHCODE_CLASS_STRING) {
+									if (isDate) {
+										field.set(data, SpreadSheet.toDateString(value));
+									} else {
+										field.set(data, String.valueOf(value));
+									}
+								} else if (fieldType == HASHCODE_CLASS_DOUBLE) {
+									field.set(data, (Double)value);
+								} else if (fieldType == HASHCODE_CLASS_INTEGER) {
+									field.set(data, (Integer)((int)value));
+								} else if (fieldType == HASHCODE_CLASS_LONG) {
+									field.set(data, (Long)((long)value));
+								} else if (fieldType == HASHCODE_DOUBLE) {
+									field.setDouble(data, value);
+								} else if (fieldType == HASHCODE_INT) {
+									field.setInt(data, (int)value);
+								} else if (fieldType == HASHCODE_LONG) {
+									field.setLong(data, (long)value);
+								} else {
+									logger.error("Unknow field type = {}", columnInfo.field.getType().getName());
+									throw new SecuritiesException("Unexpected");
+								}
+							} else {
+								logger.error("Unknow oType = {}  {}", o.getClass().getName());
+								throw new SecuritiesException("Unexpected");
+							}
+						}
+						dataList.add(data);
+					}
+				}
+				
+				return dataList;
+			} catch (IndexOutOfBoundsException | InstantiationException | IllegalAccessException e) {
+				logger.error("Exception {}", e.toString());
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+	}
+
+	public static <E extends Sheet> List<E> extractSheet(SpreadSheet spreadSheet, Class<E> clazz) {
+		String sheetName = getSheetName(clazz);
+		return extractSheet(spreadSheet, clazz, sheetName);
 	}
 }

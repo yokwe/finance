@@ -22,6 +22,7 @@ import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
 import com.sun.star.text.XText;
 import com.sun.star.uno.UnoRuntime;
+import com.sun.star.util.XNumberFormats;
 
 import yokwe.finance.securities.SecuritiesException;
 
@@ -429,33 +430,36 @@ public class Sheet {
 		}
 	}
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, Map<String, E> dataMap, String keyColumnName, String sheetName) {
-		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow    headerRow    = null;
-		DataRow      dataRow      = null;
-		Field[]      fields       = null;
+		final XSpreadsheet   xSpreadsheet   = spreadSheet.getSheet(sheetName);
+		final XNumberFormats xNumberFormats = spreadSheet.getNumberFormats();
+		final int            headerRow;
+		final int            dataRow;
+		final Field[]        fields;
 		
 		{
 			E o = dataMap.values().iterator().next();
-			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
-			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
-			fields       = o.getClass().getDeclaredFields();
+			HeaderRow headerRowAnnotation = o.getClass().getDeclaredAnnotation(HeaderRow.class);
+			DataRow   dataRowAnnotation   = o.getClass().getDeclaredAnnotation(DataRow.class);
 			
-			if (headerRow == null) {
+			if (headerRowAnnotation == null) {
 				logger.error("No HeaderRow annotation = {}", o.getClass().getName());
 				throw new SecuritiesException("No HeaderRow annotation");
 			}
-			if (dataRow == null) {
+			if (dataRowAnnotation == null) {
 				logger.error("No DataRow annotation = {}", o.getClass().getName());
 				throw new SecuritiesException("No DataRow annotation");
 			}
+			headerRow = headerRowAnnotation.value();
+			dataRow   = dataRowAnnotation.value();
+			fields    = o.getClass().getDeclaredFields();
 		}
 
 		{
-			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
+			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow, fields);
 			
 			// Build rowRangeList
 			ColumnInfo     keyColumn    = ColumnInfo.findByName(columnInfoList, keyColumnName);
-			List<RowRange> rowRangeList = RowRange.getRowRangeList(xSpreadsheet, keyColumn.index, dataRow.value());
+			List<RowRange> rowRangeList = RowRange.getRowRangeList(xSpreadsheet, keyColumn.index, dataRow);
 			
 			// Remove keyColumn to prevent from update
 			columnInfoList.remove(keyColumn);
@@ -477,37 +481,40 @@ public class Sheet {
 			}
 			
 			// Apply fillMap
-			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
+			applyFillMap(xSpreadsheet, xNumberFormats, columnInfoList, rowRangeList, fillMap);
 		}
 	}
 
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList, String sheetName) {
-		XSpreadsheet xSpreadsheet = spreadSheet.getSheet(sheetName);
-		HeaderRow    headerRow    = null;
-		DataRow      dataRow      = null;
-		Field[]      fields       = null;
+		final XSpreadsheet   xSpreadsheet   = spreadSheet.getSheet(sheetName);
+		final XNumberFormats xNumberFormats = spreadSheet.getNumberFormats();
+		final int            headerRow;
+		final int            dataRow;
+		final Field[]        fields;
 		
 		{
 			E o = dataList.iterator().next();
-			headerRow    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
-			dataRow      = o.getClass().getDeclaredAnnotation(DataRow.class);
-			fields       = o.getClass().getDeclaredFields();
+			HeaderRow      headerRowAnnotation    = o.getClass().getDeclaredAnnotation(HeaderRow.class);
+			DataRow        dataRowAnnotation      = o.getClass().getDeclaredAnnotation(DataRow.class);
 			
-			if (headerRow == null) {
+			if (headerRowAnnotation == null) {
 				logger.error("No HeaderRow annotation = {}", o.getClass().getName());
 				throw new SecuritiesException("No HeaderRow annotation");
 			}
-			if (dataRow == null) {
+			if (dataRowAnnotation == null) {
 				logger.error("No DataRow annotation = {}", o.getClass().getName());
 				throw new SecuritiesException("No DataRow annotation");
 			}
+			headerRow = headerRowAnnotation.value();
+			dataRow   = dataRowAnnotation.value();
+			fields    = o.getClass().getDeclaredFields();
 		}
 		
 		{
-			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow.value(), fields);
+			List<ColumnInfo> columnInfoList = ColumnInfo.getColumnInfoList(xSpreadsheet, headerRow, fields);
 			
 			// Build rowRangeList
-			List<RowRange> rowRangeList = RowRange.getRowRangeList(dataRow.value(), dataRow.value() + dataList.size() - 1);
+			List<RowRange> rowRangeList = RowRange.getRowRangeList(dataRow, dataRow + dataList.size() - 1);
 			
 			// Build fillMap
 			Map<String, Object> fillMap = new HashMap<>();
@@ -522,7 +529,7 @@ public class Sheet {
 			}
 			
 			// Apply fillMap
-			applyFillMap(spreadSheet, xSpreadsheet, columnInfoList, rowRangeList, fillMap);
+			applyFillMap(xSpreadsheet, xNumberFormats, columnInfoList, rowRangeList, fillMap);
 		}
 	}
 	
@@ -571,7 +578,7 @@ public class Sheet {
 		}
 	}
 
-	private static <E extends Sheet> void applyFillMap(SpreadSheet spreadSheet, XSpreadsheet xSpreadsheet, List<ColumnInfo> columnInfoList, List<RowRange> rowRangeList, Map<String, Object> fillMap) {
+	private static <E extends Sheet> void applyFillMap(XSpreadsheet xSpreadsheet, XNumberFormats xNumberFormats, List<ColumnInfo> columnInfoList, List<RowRange> rowRangeList, Map<String, Object> fillMap) {
 		try {
 			for(RowRange rowRange: rowRangeList) {
 				final int rowBegin = rowRange.rowBegin;
@@ -584,7 +591,7 @@ public class Sheet {
 					
 					// apply numberFormat
 					if (columnInfo.numberFormat != null) {
-						spreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat);
+						SpreadSheet.setNumberFormat(xCellRange, columnInfo.numberFormat, xNumberFormats);
 					}
 					
 					// fill data

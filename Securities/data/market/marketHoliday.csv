@@ -1,4 +1,25 @@
 date,event,status
+2015-01-01,New Years Day (Observed),Closed
+2015-01-19,"Martin Luther King Jr. Day",Closed
+2015-02-16,President's Day,Closed
+2015-04-03,Good Friday,Close
+2015-05-25,Memorial Day,Closed
+2015-07-03,Independence Day (Observed),Closed
+2015-09-07,Labor Day,Closed
+2015-11-26,Thanksgiving Day,1:00 p.m. EST
+2015-11-27,Early Market Close,1:00 p.m. EST
+2015-12-24,Christmas Eve,1:00 p.m. EST
+2015-12-25,Christmas Day,Closed
+2016-01-01,New Years Day (Observed),Closed
+2016-01-18,"Martin Luther King Jr. Day",Closed
+2016-02-15,President's Day,Closed
+2016-03-25,Good Friday,Close
+2016-05-30,Memorial Day,Closed
+2016-07-04,Independence Day,Closed
+2016-09-05,Labor Day,Closed
+2016-11-24,Thanksgiving Day,Close
+2016-11-25,Early Market Close,1:00 p.m. EST
+2016-12-26,Christmas Day,Closed
 2017-01-02,New Years Day (Observed),Closed
 2017-01-16,"Martin Luther King Jr. Day",Closed
 2017-02-20,President's Day,Closed
@@ -10,3 +31,39 @@ date,event,status
 2017-11-23,Thanksgiving Day,Close
 2017-11-24,Early Market Close,1:00 p.m. EST
 2017-12-25,Christmas Day (Observed),Closed
+2018-01-02,New Years Day (Observed),Closed
+2018-01-15,"Martin Luther King Jr. Day",Closed
+2018-02-19,President's Day,Closed
+2018-03-30,Good Friday,Close
+2018-05-28,Memorial Day,Closed
+2018-07-03,Early Market Close,1:00 PM EST
+2018-07-04,Independence Day,Closed
+2018-09-03,Labor Day,Closed
+2018-11-22,Thanksgiving Day,Close
+2018-11-23,Early Market Close,1:00 p.m. EST
+2018-12-24,Christmas Day,1:00 p.m. EST
+2018-12-25,Christmas Day,Closed
+2019-01-01,New Years Day,Closed
+2019-01-21,"Martin Luther King Jr. Day",Closed
+2019-02-18,President's Day,Closed
+2019-04-19,Good Friday,Close
+2019-05-27,Memorial Day,Closed
+2019-07-03,Early Market Close,1:00 PM EST
+2019-07-04,Independence Day,Closed
+2019-09-02,Labor Day,Closed
+2019-11-28,Thanksgiving Day,Close
+2019-11-29,Early Market Close,1:00 p.m. EST
+2019-12-24,Christmas Day,1:00 p.m. EST
+2019-12-25,Christmas Day,Closed
+2020-01-01,New Years Day,Closed
+2020-01-20,"Martin Luther King Jr. Day",Closed
+2020-02-17,President's Day,Closed
+2020-04-10,Good Friday,Close
+2020-05-25,Memorial Day,Closed
+2020-07-03,Early Market Close,1:00 PM EST
+2020-09-07,Labor Day,Closed
+2020-11-26,Thanksgiving Day,Close
+2020-11-27,Early Market Close,1:00 p.m. EST
+2020-12-24,Christmas Day,1:00 p.m. EST
+2020-12-25,Christmas Day,Closed
+

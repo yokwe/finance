@@ -195,7 +195,7 @@ public class Report {
 					logger.info("Skip sheet {}", sheetName);
 					continue;
 				}
-				for(Activity activity: Sheet.getInstance(docActivity, Activity.class, sheetName)) {
+				for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
 					logger.info("activity {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol);
 					double fxRate = ForexUtil.getUSD(activity.date);
 					

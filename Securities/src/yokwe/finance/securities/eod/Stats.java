@@ -173,6 +173,7 @@ public class Stats extends Sheet {
 		
 		for(String sheetName: docLoad.getSheetNameList()) {
 			docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+			logger.info("sheet {}", sheetName);
 			Sheet.fillSheet(docSave, statsMap, "symbol", sheetName);
 		}
 

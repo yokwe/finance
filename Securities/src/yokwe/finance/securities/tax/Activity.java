@@ -1,6 +1,7 @@
 package yokwe.finance.securities.tax;
 
 import yokwe.finance.securities.libreoffice.Sheet;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("Transaction")
 @Sheet.HeaderRow(0)
@@ -8,26 +9,39 @@ import yokwe.finance.securities.libreoffice.Sheet;
 public class Activity extends Sheet {
 	@ColumnName("YYYY-MM")
 	public String yyyyMM;
+	
 	@ColumnName("Page")
 	public String page;
+	
 	@ColumnName("Transaction")
 	public String transaction;
+	
 	@ColumnName("Date")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;
+	
 	@ColumnName("TradeDate")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String tradeDate;
+	
 	@ColumnName("Symbol")
 	public String symbol;
+	
 	@ColumnName("Name")
 	public String name;
+	
 	@ColumnName("Quantity")
 	public double quantity;
+	
 	@ColumnName("Price")
 	public double price;
+	
 	@ColumnName("Commission")
 	public double commission;
+	
 	@ColumnName("Debit")
 	public double debit;
+	
 	@ColumnName("Credit")
 	public double credit;
 	

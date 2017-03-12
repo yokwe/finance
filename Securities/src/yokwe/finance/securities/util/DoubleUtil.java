@@ -18,12 +18,22 @@ import yokwe.finance.securities.SecuritiesException;
 public final class DoubleUtil {
 	private static final Logger logger = LoggerFactory.getLogger(DoubleUtil.class);
 	
+	public static final double ALMOST_ZERO = 0.000001;
+	public static boolean isAlmostZero(double value) {
+		return -ALMOST_ZERO < value && value < ALMOST_ZERO;
+	}
+	public static boolean isAlmostEqual(double a, double b) {
+		return isAlmostZero(a - b);
+	}
+	
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
 
 	    BigDecimal bd = new BigDecimal(value);
 	    return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
 	}
+	
+	
 
 	public static final double CONFIDENCE_95_PERCENT = 1.65;
 	public static final double CONFIDENCE_99_PERCENT = 2.33;

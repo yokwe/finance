@@ -214,6 +214,7 @@ public class Report {
 				}
 			}
 			
+			logger.info("transferList {}", transferList.size());
 			for(Transfer transfer: transferList) {
 				switch(transfer.action) {
 				case BUY:
@@ -226,12 +227,14 @@ public class Report {
 					break;
 				}
 			}
-		}
-		
-		// Current positions
-		for(Stock stock: Stock.map.values()) {
-			if (stock.totalQuantity == 0) continue;
-			logger.info("Stock  {}", stock);
+			
+			// Current positions
+			logger.info("Stock.map {}", Stock.map.size());
+			for(Stock stock: Stock.map.values()) {
+				if (stock.totalQuantity == 0) continue;
+				logger.info("Stock  {}", stock);
+			}
+			
 		}
 		
 		logger.info("STOP");

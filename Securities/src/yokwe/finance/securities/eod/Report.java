@@ -22,23 +22,51 @@ public class Report {
 
 	public static final String URL_ACTIVITY      = "file:///home/hasegawa/Dropbox/Trade/投資活動.ods";
 	public static final String URL_ACTIVITY_TEST = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
-	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/TAX_REPORT_TEMPLATE.ods";
-	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/TAX_REPORT_%s.ods", TIMESTAMP);
+	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/EOD_REPORT_TEMPLATE.ods";
+	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/EOD_REPORT_%s.ods", TIMESTAMP);
 
 	// Create daily profit report
-	private static class Stock {
-		private static double ALMOST_ZERO = 0.000001;
-		private static boolean isZero(double value) {
-			return -ALMOST_ZERO < value && value < ALMOST_ZERO;
+	
+	static class Transfer {		
+		enum Action {
+			BUY, SELL,
 		}
+		
+		final Action action;
+		final String date;
+		final String symbol;
+		final double price;
+		final double quantity;
+		final double commission;
+		final double total;
+		
+		private Transfer(Action action, String date, String symbol, double price, double quantity, double commission, double total) {
+			this.action     = action;
+			this.date       = date;
+			this.symbol     = symbol;
+			this.price      = price;
+			this.quantity   = quantity;
+			this.commission = commission;
+			this.total      = total;
+		}
+		static Transfer buy(String date, String symbol, double price, double quantity, double commission) {
+			return new Transfer(Action.BUY, date, symbol, price, quantity, commission, DoubleUtil.round((price * quantity) + commission, 2));
+		}
+		static Transfer sell(String date, String symbol, double price, double quantity, double commission) {
+			return new Transfer(Action.SELL, date, symbol, price, quantity, commission, DoubleUtil.round((price * quantity) - commission, 2));
+		}
+	}
+
+
+	private static class Stock {
 		static Map<String, Stock> map = new TreeMap<>();
 		
-		private static class Transaction {
+		private static class History {
 			String date;
 			double quantity;
 			double cost;
 			
-			Transaction(String date, double quantity, double cost) {
+			History(String date, double quantity, double cost) {
 				this.date     = date;
 				this.quantity = quantity;
 				this.cost     = cost;
@@ -50,11 +78,11 @@ public class Report {
 			}
 		}
 		
-		String            symbol;
+		String        symbol;
 		//
-		double            totalQuantity;
-		double            totalCost;
-		List<Transaction> history;
+		double        totalQuantity;
+		double        totalCost;
+		List<History> history;
 		
 		public Stock(String symbol) {
 			this.symbol        = symbol;
@@ -63,12 +91,18 @@ public class Report {
 			this.history       = new ArrayList<>();
 		}
 		
+		void reset() {
+			this.totalQuantity = 0;
+			this.totalCost     = 0;			
+			this.history.clear();
+		}
+		
 		@Override
 		public String toString() {
 			return String.format("%-10s  %10.5f  %8.2f", symbol, totalQuantity, totalCost);
 		}
 		
-		public static void buy(String date, String symbol, double quantity, double price, double commission) {
+		public static void buy(String date, String symbol, double quantity, double total) {
 			Stock stock;
 			if (map.containsKey(symbol)) {
 				stock = map.get(symbol);
@@ -77,20 +111,18 @@ public class Report {
 				map.put(symbol, stock);
 			}
 			// Shortcut
-			if (isZero(stock.totalQuantity + quantity)) {
-				map.remove(symbol);
+			if (DoubleUtil.isAlmostZero(stock.totalQuantity + quantity)) {
+				stock.reset();
 				return;
 			}
 
-			double cost = DoubleUtil.round((quantity * price) + commission, 2);
-			
 			stock.totalQuantity = DoubleUtil.round(stock.totalQuantity + quantity, 5);
-			stock.totalCost     = DoubleUtil.round(stock.totalCost     + cost,     2);
+			stock.totalCost     = DoubleUtil.round(stock.totalCost     + total,    2);
 			
-			Transaction transaction = new Transaction(date, quantity, cost);
+			History transaction = new History(date, quantity, total);
 			stock.history.add(transaction);
 		}
-		public static void sell(String date, String symbol, double quantity, double price, double commission) {
+		public static void sell(String date, String symbol, double quantity, double total) {
 			Stock stock;
 			if (map.containsKey(symbol)) {
 				stock = map.get(symbol);
@@ -99,19 +131,19 @@ public class Report {
 				throw new SecuritiesException("Unknonw symbol");
 			}
 			// Shortcut
-			if (isZero(stock.totalQuantity - quantity)) {
-				map.remove(symbol);
+			if (DoubleUtil.isAlmostZero(stock.totalQuantity - quantity)) {
+				stock.reset();
 				return;
 			}
 			
 			// Update history
 			{
 				double quantitySell = quantity;
-				for(Transaction transaction: stock.history) {
-					if (isZero(quantitySell)) break;				
+				for(History transaction: stock.history) {
+					if (DoubleUtil.isAlmostZero(quantitySell)) break;				
 					if (transaction.quantity == 0) continue;
 					
-					if (isZero(transaction.quantity - quantitySell)) {
+					if (DoubleUtil.isAlmostEqual(transaction.quantity, quantitySell)) {
 						quantitySell = 0;
 						
 						transaction.quantity = 0;
@@ -137,7 +169,7 @@ public class Report {
 			// Calculate totalCost from history
 			double newTotalCost = 0;
 			double newTotalQuantity = 0;
-			for(Transaction transaction: stock.history) {
+			for(History transaction: stock.history) {
 				newTotalCost     += transaction.cost;
 				newTotalQuantity += transaction.quantity;
 			}
@@ -150,6 +182,8 @@ public class Report {
 		logger.info("START");
 		
 		try (SpreadSheet docActivity = new SpreadSheet(URL_ACTIVITY, true)) {
+			List<Transfer> transferList = new ArrayList<>();
+			
 			List<String> sheetNameList = docActivity.getSheetNameList();
 			sheetNameList.sort((a, b) -> a.compareTo(b));
 			for(String sheetName: sheetNameList) {
@@ -163,13 +197,15 @@ public class Report {
 					case "BOUGHT":
 					case "NAME CHG": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						Stock.buy(activity.tradeDate, activity.symbol, activity.quantity, activity.price, activity.commission);
+						Transfer transfer = Transfer.buy(activity.date, activity.symbol, activity.price, activity.quantity, activity.commission);
+						transferList.add(transfer);
 						break;
 					}
 					case "SOLD":
 					case "REDEEMED": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						Stock.sell(activity.tradeDate, activity.symbol, activity.quantity, activity.price, activity.commission);
+						Transfer transfer = Transfer.sell(activity.date, activity.symbol, activity.price, activity.quantity, activity.commission);
+						transferList.add(transfer);
 						break;
 					}
 					default:
@@ -177,10 +213,24 @@ public class Report {
 					}
 				}
 			}
+			
+			for(Transfer transfer: transferList) {
+				switch(transfer.action) {
+				case BUY:
+					Stock.buy(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					break;
+				case SELL:
+					Stock.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					break;
+				default:
+					break;
+				}
+			}
 		}
 		
 		// Current positions
 		for(Stock stock: Stock.map.values()) {
+			if (stock.totalQuantity == 0) continue;
 			logger.info("Stock  {}", stock);
 		}
 		

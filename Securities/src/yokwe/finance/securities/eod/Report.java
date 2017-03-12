@@ -107,10 +107,8 @@ public class Report {
 			// Update history
 			{
 				double quantitySell = quantity;
-				for(int i = 0; i < stock.history.size(); i++) {
-					if (isZero(quantitySell)) break;
-					
-					Transaction transaction = stock.history.get(i);
+				for(Transaction transaction: stock.history) {
+					if (isZero(quantitySell)) break;				
 					if (transaction.quantity == 0) continue;
 					
 					if (transaction.quantity <= quantitySell) {

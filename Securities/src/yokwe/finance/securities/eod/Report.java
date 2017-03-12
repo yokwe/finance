@@ -119,8 +119,7 @@ public class Report {
 			stock.totalQuantity = DoubleUtil.round(stock.totalQuantity + quantity, 5);
 			stock.totalCost     = DoubleUtil.round(stock.totalCost     + total,    2);
 			
-			History transaction = new History(date, quantity, total);
-			stock.history.add(transaction);
+			stock.history.add(new History(date, quantity, total));
 		}
 		public static void sell(String date, String symbol, double quantity, double total) {
 			Stock stock;
@@ -139,42 +138,42 @@ public class Report {
 			// Update history
 			{
 				double quantitySell = quantity;
-				for(History transaction: stock.history) {
+				for(History history: stock.history) {
 					if (DoubleUtil.isAlmostZero(quantitySell)) break;				
-					if (transaction.quantity == 0) continue;
+					if (history.quantity == 0) continue;
 					
-					if (DoubleUtil.isAlmostEqual(transaction.quantity, quantitySell)) {
+					if (DoubleUtil.isAlmostEqual(history.quantity, quantitySell)) {
 						quantitySell = 0;
 						
-						transaction.quantity = 0;
-						transaction.cost     = 0;
-					} else if (transaction.quantity < quantitySell) {
-						quantitySell -= transaction.quantity;
+						history.quantity = 0;
+						history.cost     = 0;
+					} else if (history.quantity < quantitySell) {
+						quantitySell -= history.quantity;
 						
-						transaction.quantity = 0;
-						transaction.cost     = 0;
-					} else if (quantitySell < transaction.quantity) {
-						double cost = DoubleUtil.round(transaction.cost * (quantitySell / transaction.quantity), 2);
-						transaction.quantity = DoubleUtil.round(transaction.quantity - quantitySell, 5);
-						transaction.cost     = DoubleUtil.round(transaction.cost     - cost,         2);
+						history.quantity = 0;
+						history.cost     = 0;
+					} else if (quantitySell < history.quantity) {
+						double cost = DoubleUtil.round(history.cost * (quantitySell / history.quantity), 2);
+						history.quantity = DoubleUtil.round(history.quantity - quantitySell, 5);
+						history.cost     = DoubleUtil.round(history.cost     - cost,         2);
 						
 						quantitySell = 0;
 					} else {
-						logger.error("Unexpected transaction {}", transaction);
+						logger.error("Unexpected history {}", history);
 						throw new SecuritiesException("Unexpected");
 					}
 				}
 			}
 			
 			// Calculate totalCost from history
-			double newTotalCost = 0;
-			double newTotalQuantity = 0;
-			for(History transaction: stock.history) {
-				newTotalCost     += transaction.cost;
-				newTotalQuantity += transaction.quantity;
+			double totalCost     = 0;
+			double totalQuantity = 0;
+			for(History history: stock.history) {
+				totalCost     += history.cost;
+				totalQuantity += history.quantity;
 			}
-			stock.totalQuantity = DoubleUtil.round(newTotalQuantity, 5);
-			stock.totalCost     = DoubleUtil.round(newTotalCost,     2);
+			stock.totalQuantity = DoubleUtil.round(totalQuantity, 5);
+			stock.totalCost     = DoubleUtil.round(totalCost,     2);
 		}
 	}
 	

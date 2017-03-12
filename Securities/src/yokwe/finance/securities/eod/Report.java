@@ -111,16 +111,21 @@ public class Report {
 					if (isZero(quantitySell)) break;				
 					if (transaction.quantity == 0) continue;
 					
-					if (transaction.quantity <= quantitySell) {
+					if (isZero(transaction.quantity - quantitySell)) {
+						quantitySell = 0;
+						
+						transaction.quantity = 0;
+						transaction.cost     = 0;
+					} else if (transaction.quantity < quantitySell) {
 						quantitySell -= transaction.quantity;
 						
 						transaction.quantity = 0;
 						transaction.cost     = 0;
 					} else if (quantitySell < transaction.quantity) {
 						double cost = DoubleUtil.round(transaction.cost * (quantitySell / transaction.quantity), 2);
-						
 						transaction.quantity = DoubleUtil.round(transaction.quantity - quantitySell, 5);
 						transaction.cost     = DoubleUtil.round(transaction.cost     - cost,         2);
+						
 						quantitySell = 0;
 					} else {
 						logger.error("Unexpected transaction {}", transaction);

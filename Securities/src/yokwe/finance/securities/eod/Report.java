@@ -27,26 +27,26 @@ public class Report {
 
 	// Create daily profit report
 	
-	static class Transfer {		
-		enum Action {
+	private static class Transfer {
+		private enum Action {
 			BUY, SELL,
 		}
 		
 		final Action action;
 		final String date;
 		final String symbol;
-		final double price;
+//		final double price;
 		final double quantity;
-		final double commission;
+//		final double commission;
 		final double total;
 		
 		private Transfer(Action action, String date, String symbol, double price, double quantity, double commission, double total) {
 			this.action     = action;
 			this.date       = date;
 			this.symbol     = symbol;
-			this.price      = price;
+//			this.price      = price;
 			this.quantity   = quantity;
-			this.commission = commission;
+//			this.commission = commission;
 			this.total      = total;
 		}
 		static Transfer buy(String date, String symbol, double price, double quantity, double commission) {
@@ -57,10 +57,26 @@ public class Report {
 		}
 	}
 
-
 	private static class Stock {
-		static Map<String, Stock> map = new TreeMap<>();
+		private static Map<String, Stock> map = new TreeMap<>();
 		
+		static Stock get(String symbol) {
+			if (map.containsKey(symbol)) {
+				return map.get(symbol);
+			} else {
+				logger.error("Unknonw symbol {}", symbol);
+				throw new SecuritiesException("Unknonw symbol");
+			}
+		}
+		static Stock getOrCreate(String symbol) {
+			if (map.containsKey(symbol)) {
+				return map.get(symbol);
+			} else {
+				Stock stock = new Stock(symbol);
+				map.put(symbol, stock);
+				return stock;
+			}
+		}
 		private static class History {
 			String date;
 			double quantity;
@@ -103,13 +119,7 @@ public class Report {
 		}
 		
 		public static void buy(String date, String symbol, double quantity, double total) {
-			Stock stock;
-			if (map.containsKey(symbol)) {
-				stock = map.get(symbol);
-			} else {
-				stock = new Stock(symbol);
-				map.put(symbol, stock);
-			}
+			Stock stock = Stock.getOrCreate(symbol);
 			// Shortcut
 			if (DoubleUtil.isAlmostZero(stock.totalQuantity + quantity)) {
 				stock.reset();
@@ -122,13 +132,7 @@ public class Report {
 			stock.history.add(new History(date, quantity, total));
 		}
 		public static void sell(String date, String symbol, double quantity, double total) {
-			Stock stock;
-			if (map.containsKey(symbol)) {
-				stock = map.get(symbol);
-			} else {
-				logger.error("Unknonw symbol {}", symbol);
-				throw new SecuritiesException("Unknonw symbol");
-			}
+			Stock stock = Stock.get(symbol);
 			// Shortcut
 			if (DoubleUtil.isAlmostZero(stock.totalQuantity - quantity)) {
 				stock.reset();
@@ -177,11 +181,41 @@ public class Report {
 		}
 	}
 	
+	private static class Transaction {
+		final String date;
+		final String symbol;
+		final double quantity;
+		final double buy;
+		final double sell;
+		final double sellCost;
+		
+		private Transaction(String date, String symbol, double quantity, double buy, double sell, double sellCost) {
+			this.date     = date;
+			this.symbol   = symbol;
+			this.quantity = quantity;
+			this.buy      = buy;
+			this.sell     = sell;
+			this.sellCost = sellCost;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("%s %-10s %10.5f %8.2f %8.2f %8.2f", date, symbol, quantity, buy, sell, sellCost);
+		}
+		
+		static Transaction buy(String date, String symbol, double quantity, double buy) {
+			return new Transaction(date, symbol, quantity, buy, 0, 0);
+		}
+		static Transaction sell(String date, String symbol, double quantity, double sell, double sellCost) {
+			return new Transaction(date, symbol, quantity, 0, sell, sellCost);
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		
 		try (SpreadSheet docActivity = new SpreadSheet(URL_ACTIVITY, true)) {
-			List<Transfer> transferList = new ArrayList<>();
+			List<Transfer>    transferList    = new ArrayList<>();
 			
 			List<String> sheetNameList = docActivity.getSheetNameList();
 			sheetNameList.sort((a, b) -> a.compareTo(b));
@@ -214,14 +248,26 @@ public class Report {
 			}
 			
 			logger.info("transferList {}", transferList.size());
+			List<Transaction> transactionList = new ArrayList<>();
 			for(Transfer transfer: transferList) {
 				switch(transfer.action) {
-				case BUY:
+				case BUY: {
 					Stock.buy(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					Transaction transaction = Transaction.buy(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					logger.info("transaction BUY   {}", transaction);
+					transactionList.add(transaction);
 					break;
-				case SELL:
+				}
+				case SELL: {
+					Stock stock = Stock.get(transfer.symbol);
+					double costBefore = stock.totalCost;
 					Stock.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					double costAfter = stock.totalCost;
+					Transaction transaction = Transaction.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total, costBefore - costAfter);
+					logger.info("transaction SELL  {}", transaction);
+					transactionList.add(transaction);
 					break;
+				}
 				default:
 					break;
 				}
@@ -233,7 +279,6 @@ public class Report {
 				if (stock.totalQuantity == 0) continue;
 				logger.info("Stock  {}", stock);
 			}
-			
 		}
 		
 		logger.info("STOP");

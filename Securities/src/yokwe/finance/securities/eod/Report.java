@@ -135,7 +135,6 @@ public class Report {
 			double newTotalCost = 0;
 			double newTotalQuantity = 0;
 			for(Transaction transaction: stock.history) {
-				logger.info("history  {}", transaction);
 				newTotalCost     += transaction.cost;
 				newTotalQuantity += transaction.quantity;
 			}
@@ -152,9 +151,10 @@ public class Report {
 			sheetNameList.sort((a, b) -> a.compareTo(b));
 			for(String sheetName: sheetNameList) {
 				if (!sheetName.matches("^20[0-9][0-9]$")) {
-					logger.info("Skip sheet {}", sheetName);
+					logger.warn("Sheet {} skip", sheetName);
 					continue;
 				}
+				logger.info("Sheet {}", sheetName);
 				for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
 					switch(activity.transaction) {
 					case "BOUGHT":

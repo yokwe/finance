@@ -27,36 +27,6 @@ public class Report {
 
 	// Create daily profit report
 	
-	private static class Transfer {
-		private enum Action {
-			BUY, SELL,
-		}
-		
-		final Action action;
-		final String date;
-		final String symbol;
-//		final double price;
-		final double quantity;
-//		final double commission;
-		final double total;
-		
-		private Transfer(Action action, String date, String symbol, double price, double quantity, double commission, double total) {
-			this.action     = action;
-			this.date       = date;
-			this.symbol     = symbol;
-//			this.price      = price;
-			this.quantity   = quantity;
-//			this.commission = commission;
-			this.total      = total;
-		}
-		static Transfer buy(String date, String symbol, double price, double quantity, double commission) {
-			return new Transfer(Action.BUY, date, symbol, price, quantity, commission, DoubleUtil.round((price * quantity) + commission, 2));
-		}
-		static Transfer sell(String date, String symbol, double price, double quantity, double commission) {
-			return new Transfer(Action.SELL, date, symbol, price, quantity, commission, DoubleUtil.round((price * quantity) - commission, 2));
-		}
-	}
-
 	private static class Stock {
 		private static Map<String, Stock> map = new TreeMap<>();
 		
@@ -188,32 +158,63 @@ public class Report {
 	}
 	
 	private static class Transaction {
+		enum Type {
+			WIRE_IN, WIRE_OUT, ACH_IN, ACH_OUT,
+			INTEREST, DIVIDEND, BUY, SELL,
+		}
+
+		static final String FILLER = "*NA*";
+		
+		final Type   type;
 		final String date;
 		final String symbol;
 		final double quantity;
-		final double buy;
-		final double sell;
+		final double debit;
+		final double credit;
 		final double sellCost;
 		
-		private Transaction(String date, String symbol, double quantity, double buy, double sell, double sellCost) {
+		private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit, double sellCost) {
+			this.type     = type;
 			this.date     = date;
 			this.symbol   = symbol;
 			this.quantity = quantity;
-			this.buy      = buy;
-			this.sell     = sell;
+			this.debit    = debit;
+			this.credit   = credit;
 			this.sellCost = sellCost;
+		}
+		
+		private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit) {
+			this(type, date, symbol, quantity, debit, credit, 0);
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("%s %-10s %10.5f %8.2f %8.2f %8.2f", date, symbol, quantity, buy, sell, sellCost);
+			return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f", type, date, symbol, quantity, debit, credit, sellCost);
 		}
 		
-		static Transaction buy(String date, String symbol, double quantity, double buy) {
-			return new Transaction(date, symbol, quantity, buy, 0, 0);
+		static Transaction buy(String date, String symbol, double quantity, double debit) {
+			return new Transaction(Type.BUY, date, symbol, quantity, debit, 0);
 		}
-		static Transaction sell(String date, String symbol, double quantity, double sell, double sellCost) {
-			return new Transaction(date, symbol, quantity, 0, sell, sellCost);
+		static Transaction sell(String date, String symbol, double quantity, double credit, double sellCost) {
+			return new Transaction(Type.SELL, date, symbol, quantity, 0, credit, sellCost);
+		}
+		static Transaction interest(String date, double credit) {
+			return new Transaction(Type.INTEREST, date, FILLER, 0, 0, credit);
+		}
+		static Transaction dividend(String date, String symbol, double debit, double credit) {
+			return new Transaction(Type.DIVIDEND, date, symbol, 0, debit, credit);
+		}
+		static Transaction achOut(String date, double debit) {
+			return new Transaction(Type.ACH_OUT, date, FILLER, 0, debit, 0);
+		}
+		static Transaction achIn(String date, double credit) {
+			return new Transaction(Type.ACH_IN, date, FILLER, 0, 0, credit);
+		}
+		static Transaction wireOut(String date, double debit) {
+			return new Transaction(Type.WIRE_OUT, date, FILLER, 0, debit, 0);
+		}
+		static Transaction wireIn(String date, double credit) {
+			return new Transaction(Type.WIRE_IN, date, FILLER, 0, 0, credit);
 		}
 	}
 	
@@ -221,7 +222,7 @@ public class Report {
 		logger.info("START");
 		
 		try (SpreadSheet docActivity = new SpreadSheet(URL_ACTIVITY, true)) {
-			List<Transfer>    transferList    = new ArrayList<>();
+			List<Transaction> transactionList = new ArrayList<>();
 			
 			List<String> sheetNameList = docActivity.getSheetNameList();
 			sheetNameList.sort((a, b) -> a.compareTo(b));
@@ -236,43 +237,92 @@ public class Report {
 					case "BOUGHT":
 					case "NAME CHG": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						Transfer transfer = Transfer.buy(activity.date, activity.symbol, activity.price, activity.quantity, activity.commission);
-						transferList.add(transfer);
+						String date     = activity.date;
+						String symbol   = activity.symbol;
+						double quantity = activity.quantity;
+						double total    = DoubleUtil.round((activity.price * activity.quantity) + activity.commission, 2);
+						
+						Stock.buy(date, symbol, quantity, total);
+						Transaction transaction = Transaction.buy(date, symbol, quantity, total);
+						logger.info("transaction {}", transaction);
+						transactionList.add(transaction);
 						break;
 					}
 					case "SOLD":
 					case "REDEEMED": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						Transfer transfer = Transfer.sell(activity.date, activity.symbol, activity.price, activity.quantity, activity.commission);
-						transferList.add(transfer);
+						String date     = activity.date;
+						String symbol   = activity.symbol;
+						double quantity = activity.quantity;
+						double total    = DoubleUtil.round((activity.price * activity.quantity) - activity.commission, 2);
+
+						double sellCost = Stock.sell(date, symbol, quantity, total);
+						Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost);
+						logger.info("transaction {}", transaction);
+						transactionList.add(transaction);
+						break;
+					}
+					case "INTEREST": {
+						String date     = activity.date;
+						double credit   = activity.credit;
+
+						Transaction transaction = Transaction.interest(date, credit);
+						logger.info("transaction {}", transaction);
+						transactionList.add(transaction);
+						break;
+					}
+					case "DIVIDEND":
+					case "ADR":
+					case "MLP":
+					case "NRA":
+					case "CAP GAIN": {
+						String date     = activity.date;
+						String symbol   = activity.symbol;
+						double debit    = activity.debit;
+						double credit   = activity.credit;
+
+						Transaction transaction = Transaction.dividend(date, symbol, debit, credit);
+						logger.info("transaction {}", transaction);
+						transactionList.add(transaction);
+						break;
+					}
+					case "ACH": {
+						String date     = activity.date;
+						double debit    = activity.debit;
+						double credit   = activity.credit;
+						
+						if (debit != 0) {
+							Transaction transaction = Transaction.achOut(date, debit);
+							logger.info("transaction {}", transaction);
+							transactionList.add(transaction);
+						}
+						if (credit != 0) {
+							Transaction transaction = Transaction.achIn(date, credit);
+							logger.info("transaction {}", transaction);
+							transactionList.add(transaction);
+						}
+						break;
+					}
+					case "WIRE": {
+						String date     = activity.date;
+						double debit    = activity.debit;
+						double credit   = activity.credit;
+						
+						if (debit != 0) {
+							Transaction transaction = Transaction.wireOut(date, debit);
+							logger.info("transaction {}", transaction);
+							transactionList.add(transaction);
+						}
+						if (credit != 0) {
+							Transaction transaction = Transaction.wireIn(date, credit);
+							logger.info("transaction {}", transaction);
+							transactionList.add(transaction);
+						}
 						break;
 					}
 					default:
 						break;
 					}
-				}
-			}
-			
-			logger.info("transferList {}", transferList.size());
-			List<Transaction> transactionList = new ArrayList<>();
-			for(Transfer transfer: transferList) {
-				switch(transfer.action) {
-				case BUY: {
-					Stock.buy(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
-					Transaction transaction = Transaction.buy(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
-					logger.info("transaction BUY   {}", transaction);
-					transactionList.add(transaction);
-					break;
-				}
-				case SELL: {
-					double sellCost = Stock.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
-					Transaction transaction = Transaction.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total, sellCost);
-					logger.info("transaction SELL  {}", transaction);
-					transactionList.add(transaction);
-					break;
-				}
-				default:
-					break;
 				}
 			}
 			

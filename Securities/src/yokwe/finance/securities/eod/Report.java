@@ -321,7 +321,8 @@ public class Report {
 						break;
 					}
 					default:
-						break;
+						logger.error("Unknown transaction {}", activity.transaction);
+						throw new SecuritiesException("Unknown transaction");
 					}
 				}
 			}

@@ -109,7 +109,7 @@ public class Report {
 		
 		void reset() {
 			this.totalQuantity = 0;
-			this.totalCost     = 0;			
+			this.totalCost     = 0;
 			this.history.clear();
 		}
 		
@@ -131,12 +131,16 @@ public class Report {
 			
 			stock.history.add(new History(date, quantity, total));
 		}
-		public static void sell(String date, String symbol, double quantity, double total) {
+		
+		// Returns sellCost
+		public static double sell(String date, String symbol, double quantity, double total) {
 			Stock stock = Stock.get(symbol);
+			double totalCostBefore = stock.totalCost;
+			
 			// Shortcut
-			if (DoubleUtil.isAlmostZero(stock.totalQuantity - quantity)) {
+			if (DoubleUtil.isAlmostEqual(stock.totalQuantity, quantity)) {
 				stock.reset();
-				return;
+				return totalCostBefore;
 			}
 			
 			// Update history
@@ -178,6 +182,8 @@ public class Report {
 			}
 			stock.totalQuantity = DoubleUtil.round(totalQuantity, 5);
 			stock.totalCost     = DoubleUtil.round(totalCost,     2);
+			
+			return DoubleUtil.round(totalCostBefore - stock.totalCost, 2);
 		}
 	}
 	
@@ -259,11 +265,8 @@ public class Report {
 					break;
 				}
 				case SELL: {
-					Stock stock = Stock.get(transfer.symbol);
-					double costBefore = stock.totalCost;
-					Stock.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
-					double costAfter = stock.totalCost;
-					Transaction transaction = Transaction.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total, costBefore - costAfter);
+					double sellCost = Stock.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total);
+					Transaction transaction = Transaction.sell(transfer.date, transfer.symbol, transfer.quantity, transfer.total, sellCost);
 					logger.info("transaction SELL  {}", transaction);
 					transactionList.add(transaction);
 					break;

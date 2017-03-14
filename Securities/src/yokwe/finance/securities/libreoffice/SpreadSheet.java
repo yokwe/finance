@@ -39,12 +39,15 @@ import yokwe.finance.securities.SecuritiesException;
 public class SpreadSheet extends LibreOffice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SpreadSheet.class);
 	
-	public static final String FORMAT_DATE    = "YYYY-MM-DD";
-	public static final String FORMAT_INTEGER = "#,##0.#####";
-	public static final String FORMAT_PERCENT = "#,##0.0%";
-	public static final String FORMAT_PRICE2  = "#,##0.00";
-	public static final String FORMAT_PRICE5  = "#,##0.00000";
 	public static final String FORMAT_STRING  = "@";
+	public static final String FORMAT_DATE    = "YYYY-MM-DD";
+	
+	public static final String FORMAT_INTEGER = "#,##0.#####;[RED]-#,##0.#####";
+	public static final String FORMAT_PERCENT = "#,##0.0%;[RED]-#,##0.0%";
+	public static final String FORMAT_NUMBER2 = "#,##0.00;[RED]-#,##0.00";
+	public static final String FORMAT_NUMBER5 = "#,##0.00000;[RED]-#,##0.00000";
+	
+	public static final String FORMAT_NUMBER2_BLANK = "#,##0.00;[RED]-#,##0.00;\"\";@";
 	
 
 	private static final Map<CellContentType, String> cellContentTypeMap = new HashMap<>();

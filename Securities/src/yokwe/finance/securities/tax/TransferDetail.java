@@ -15,6 +15,7 @@ public class TransferDetail extends Sheet {
 	@ColumnName("銘柄コード")
 	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public final String symbol;
+	
 	@ColumnName("銘柄")
 	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public final String symbolName;
@@ -22,30 +23,39 @@ public class TransferDetail extends Sheet {
 	@ColumnName("売約定日")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateSell;
+	
 	@ColumnName("売数量")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Double quantitySell;
+	
 	@ColumnName("売値")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE5)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER5)
 	public final Double priceSell;
+	
 	@ColumnName("売手数料")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public final Double feeSell;
+	
 	@ColumnName("売レート")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public final Double fxRateSell;
+	
 	@ColumnName("譲渡金額")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Integer sellJPY;
+	
 	@ColumnName("取得費")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Integer costJPY;
+	
 	@ColumnName("譲渡手数料")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Integer feeSellJPY;
+	
 	@ColumnName("取得日最初")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuyFirst;
+	
 	@ColumnName("取得日最後")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuyLast;
@@ -53,27 +63,35 @@ public class TransferDetail extends Sheet {
 	@ColumnName("買約定日")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public final String dateBuy;
+	
 	@ColumnName("買数量")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Double quantityBuy;
+	
 	@ColumnName("買値")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE5)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER5)
 	public final Double priceBuy;
+	
 	@ColumnName("買手数料")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public final Double feeBuy;
+	
 	@ColumnName("買レート")
-	@NumberFormat(SpreadSheet.FORMAT_PRICE2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public final Double fxRateBuy;
+	
 	@ColumnName("取得価格")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Integer buyJPY;
+	
 	@ColumnName("総数量")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Double totalQuantity;
+	
 	@ColumnName("総取得価格")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
 	public final Integer totalCostJPY;
+	
 	
 	public TransferDetail(Transfer.Buy buy) {
 		this.symbol        = buy.symbol;

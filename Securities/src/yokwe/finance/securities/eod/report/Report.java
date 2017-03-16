@@ -137,6 +137,8 @@ public class Report {
 					}
 				}
 			}
+			// Sort by date
+			transactionList.sort((a, b) -> a.date.compareTo(b.date)); 
 			
 			// Add dummy sell transaction {
 			{
@@ -199,13 +201,12 @@ public class Report {
 					case INTEREST:
 						account.interest = transaction.credit;
 						
-//						fundTotal = DoubleUtil.round(fundTotal + account.interest, 2);
 						cashTotal = DoubleUtil.round(cashTotal + account.interest, 2);
 						break;
 					case DIVIDEND:
 						account.dividend = transaction.credit - transaction.debit;
+						account.symbol   = transaction.symbol;
 						
-//						fundTotal = DoubleUtil.round(fundTotal + account.dividend, 2);
 						cashTotal = DoubleUtil.round(cashTotal + account.dividend, 2);
 						break;
 					case BUY:

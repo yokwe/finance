@@ -55,7 +55,7 @@ public class UpdatePrice {
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// Convert from '.PR.' to  '-' in symbol for google
-			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbol, dateFrom, dateTo);
+			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbolGoogle, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -76,7 +76,9 @@ public class UpdatePrice {
 			String GOOGLE_PRICE_HEADER = "\uFEFFDate,Open,High,Low,Close,Volume";
 			String header = lines[0];
 			if (!header.equals(GOOGLE_PRICE_HEADER)) {
-				logger.error("Unexpected header  {}", header);
+				logger.error("Unexpected header  symbol {}", symbol);
+				logger.error("Unexpected header  url    {}", url);
+				logger.error("Unexpected header  header {}", header);
 				throw new SecuritiesException("Unexpected header");
 			}
 

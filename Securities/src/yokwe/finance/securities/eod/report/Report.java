@@ -48,7 +48,7 @@ public class Report {
 					case "BOUGHT":
 					case "NAME CHG": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						String date     = activity.date;
+						String date     = activity.tradeDate;
 						String symbol   = activity.symbol;
 						double quantity = activity.quantity;
 						double total    = DoubleUtil.round((activity.price * activity.quantity) + activity.commission, 2);
@@ -62,7 +62,7 @@ public class Report {
 					case "SOLD":
 					case "REDEEMED": {
 //						logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-						String date     = activity.date;
+						String date     = activity.tradeDate;
 						String symbol   = activity.symbol;
 						double quantity = activity.quantity;
 						double total    = DoubleUtil.round((activity.price * activity.quantity) - activity.commission, 2);
@@ -167,7 +167,6 @@ public class Report {
 				double fundTotal  = 0;
 				double cashTotal  = 0;
 				double stockTotal = 0;
-				double gainTotal  = 0;
 				
 				for(Transaction transaction: transactionList) {
 					Account account = new Account();
@@ -200,23 +199,27 @@ public class Report {
 					case INTEREST:
 						account.interest = transaction.credit;
 						
-						fundTotal = DoubleUtil.round(fundTotal + account.interest, 2);
+//						fundTotal = DoubleUtil.round(fundTotal + account.interest, 2);
 						cashTotal = DoubleUtil.round(cashTotal + account.interest, 2);
 						break;
 					case DIVIDEND:
 						account.dividend = transaction.credit - transaction.debit;
 						
-						fundTotal = DoubleUtil.round(fundTotal + account.dividend, 2);
+//						fundTotal = DoubleUtil.round(fundTotal + account.dividend, 2);
 						cashTotal = DoubleUtil.round(cashTotal + account.dividend, 2);
 						break;
 					case BUY:
-						account.buy = transaction.debit;
+						account.buy    = transaction.debit;
+						account.symbol = transaction.symbol;
 						
 						cashTotal  = DoubleUtil.round(cashTotal  - account.buy, 2);
 						stockTotal = DoubleUtil.round(stockTotal + account.buy, 2);
 						break;
 					case SELL:
-						account.sell = transaction.credit;
+						account.sell     = transaction.credit;
+						account.symbol   = transaction.symbol;
+						account.sellCost = transaction.sellCost;
+						account.sellGain = account.sell - account.sellCost;
 						
 						cashTotal  = DoubleUtil.round(cashTotal  + account.sell, 2);
 						stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
@@ -230,7 +233,7 @@ public class Report {
 					account.fundTotal  = fundTotal;
 					account.cashTotal  = cashTotal;
 					account.stockTotal = stockTotal;
-					account.gainTotal  = gainTotal;
+					account.gainTotal  = cashTotal + stockTotal - fundTotal;
 					accountList.add(new Account(account));
 					
 					logger.info("account {}", account);

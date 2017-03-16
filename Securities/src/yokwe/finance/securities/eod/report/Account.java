@@ -7,7 +7,7 @@ import yokwe.finance.securities.libreoffice.SpreadSheet;
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class Account extends Sheet {
-	@ColumnName("date")
+	@ColumnName("Date")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;       // YYYY-MM
 	
@@ -29,7 +29,7 @@ public class Account extends Sheet {
 	public double gainTotal;  // cash + stock - fund
 	
 	// detail of fund
-	@ColumnName("WIre In")
+	@ColumnName("Wire In")
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double wireIn;     // wired money deposit for this month
 	
@@ -71,7 +71,37 @@ public class Account extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double sellGain;   // sell gain for this month
 	
-	
+	public Account(String date, double fundTotal, double cashTotal, double stockTotal, double gainTotal,
+			double wireIn, double wireOut, double achIn, double achOut,
+			double interest, double dividend, double buy, double sell, double sellCost, double sellGain) {
+		this.date       = date;
+		this.fundTotal  = fundTotal;
+		this.cashTotal  = cashTotal;
+		this.stockTotal = stockTotal;
+		this.gainTotal  = gainTotal;
+		
+		this.wireIn     = wireIn;
+		this.wireOut    = wireOut;
+		this.achIn      = achIn;
+		this.achOut     = achOut;
+		
+		this.interest   = interest;
+		this.dividend   = dividend;
+		this.buy        = buy;
+		this.sell       = sell;
+		this.sellCost   = sellCost;
+		this.sellGain   = sellGain;
+	}
+	public Account() {
+		this("", 0, 0, 0, 0,
+				0, 0, 0, 0,
+				0, 0, 0, 0, 0, 0);
+	}
+	public Account(Account that) {
+		this(new String(that.date), that.fundTotal, that.cashTotal, that.stockTotal, that.gainTotal,
+				that.wireIn, that.wireOut, that.achIn, that.achOut,
+				that.interest, that.dividend, that.buy, that.sell, that.sellCost, that.sellGain);
+	}
 	@Override
 	public String toString() {
 		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", 

@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +11,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Activity;
+import yokwe.finance.securities.tax.Price;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Report {
@@ -30,6 +30,9 @@ public class Report {
 		logger.info("START");
 		
 		try (SpreadSheet docActivity = new SpreadSheet(URL_ACTIVITY, true)) {
+			SpreadSheet docLoad = new SpreadSheet(URL_TEMPLATE, true);
+			SpreadSheet docSave = new SpreadSheet();
+
 			List<Transaction> transactionList = new ArrayList<>();
 			
 			List<String> sheetNameList = docActivity.getSheetNameList();
@@ -135,15 +138,120 @@ public class Report {
 				}
 			}
 			
-			// Current positions
+			// Add dummy sell transaction {
 			{
-				Map<String, Stock> stockMap = Stock.getMap();
-				
-				logger.info("stockMap {}", stockMap.size());
-				for(Stock stock: stockMap.values()) {
+				for(Stock stock: Stock.getMap().values()) {
 					if (stock.totalQuantity == 0) continue;
 					logger.info("Stock  {}", stock);
+					
+					String date       = "9999-12-31";
+					String symbol     = stock.symbol;
+					double price      = Price.getLastPrice(symbol).close;
+					double quantity   = stock.totalQuantity;
+					double commission = 5;
+					double total      = DoubleUtil.round((price * quantity) - commission, 2);
+
+					double sellCost = Stock.sell(date, symbol, quantity, total);
+					Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost);
+					logger.info("transaction {}", transaction);
+					transactionList.add(transaction);
 				}
+				
+				// Save cache for later use
+				Price.saveCache();
+			}
+			
+			// Build accountList
+			List<Account> accountList = new ArrayList<>();
+			{
+				double fundTotal  = 0;
+				double cashTotal  = 0;
+				double stockTotal = 0;
+				double gainTotal  = 0;
+				
+				for(Transaction transaction: transactionList) {
+					Account account = new Account();
+					
+					switch(transaction.type) {
+					case WIRE_IN:
+						account.wireIn = transaction.credit;
+						
+						fundTotal = DoubleUtil.round(fundTotal + account.wireIn, 2);
+						cashTotal = DoubleUtil.round(cashTotal + account.wireIn, 2);
+						break;
+					case WIRE_OUT:
+						account.wireOut = transaction.debit;
+						
+						fundTotal = DoubleUtil.round(fundTotal - account.wireOut, 2);
+						cashTotal = DoubleUtil.round(cashTotal - account.wireOut, 2);
+						break;
+					case ACH_IN:
+						account.achIn = transaction.credit;
+						
+						fundTotal = DoubleUtil.round(fundTotal + account.achIn, 2);
+						cashTotal = DoubleUtil.round(cashTotal + account.achIn, 2);
+						break;
+					case ACH_OUT:
+						account.achOut = transaction.debit;
+						
+						fundTotal = DoubleUtil.round(fundTotal - account.achOut, 2);
+						cashTotal = DoubleUtil.round(cashTotal - account.achOut, 2);
+						break;
+					case INTEREST:
+						account.interest = transaction.credit;
+						
+						fundTotal = DoubleUtil.round(fundTotal + account.interest, 2);
+						cashTotal = DoubleUtil.round(cashTotal + account.interest, 2);
+						break;
+					case DIVIDEND:
+						account.dividend = transaction.credit - transaction.debit;
+						
+						fundTotal = DoubleUtil.round(fundTotal + account.dividend, 2);
+						cashTotal = DoubleUtil.round(cashTotal + account.dividend, 2);
+						break;
+					case BUY:
+						account.buy = transaction.debit;
+						
+						cashTotal  = DoubleUtil.round(cashTotal  - account.buy, 2);
+						stockTotal = DoubleUtil.round(stockTotal + account.buy, 2);
+						break;
+					case SELL:
+						account.sell = transaction.credit;
+						
+						cashTotal  = DoubleUtil.round(cashTotal  + account.sell, 2);
+						stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
+						break;
+					default:
+						logger.error("Unknown transaction type {}", transaction.type);
+						throw new SecuritiesException("Unknown transaction type");
+					}
+					
+					account.date       = transaction.date;
+					account.fundTotal  = fundTotal;
+					account.cashTotal  = cashTotal;
+					account.stockTotal = stockTotal;
+					account.gainTotal  = gainTotal;
+					accountList.add(new Account(account));
+					
+					logger.info("account {}", account);
+				}
+				
+				{
+					String sheetName = Sheet.getSheetName(Account.class);
+					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+					Sheet.fillSheet(docSave, accountList);
+					
+					String newSheetName = String.format("%s-%s",  "9999", sheetName);
+					logger.info("sheet {}", newSheetName);
+					docSave.renameSheet(sheetName, newSheetName);
+				}
+				
+				// remove first sheet
+				docSave.removeSheet(docSave.getSheetName(0));
+
+				docSave.store(URL_REPORT);
+				logger.info("output {}", URL_REPORT);
+				docLoad.close();
 			}
 		}
 		

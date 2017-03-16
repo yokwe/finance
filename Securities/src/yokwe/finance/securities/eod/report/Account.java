@@ -28,6 +28,10 @@ public class Account extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public double gainTotal;  // cash + stock - fund
 	
+	@ColumnName("Symbol")
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
+	public String symbol;     // symbol of stock
+	
 	// detail of fund
 	@ColumnName("Wire In")
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
@@ -71,7 +75,9 @@ public class Account extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double sellGain;   // sell gain for this month
 	
-	public Account(String date, double fundTotal, double cashTotal, double stockTotal, double gainTotal,
+	
+	
+	public Account(String date, double fundTotal, double cashTotal, double stockTotal, double gainTotal, String symbol,
 			double wireIn, double wireOut, double achIn, double achOut,
 			double interest, double dividend, double buy, double sell, double sellCost, double sellGain) {
 		this.date       = date;
@@ -79,6 +85,7 @@ public class Account extends Sheet {
 		this.cashTotal  = cashTotal;
 		this.stockTotal = stockTotal;
 		this.gainTotal  = gainTotal;
+		this.symbol     = symbol;
 		
 		this.wireIn     = wireIn;
 		this.wireOut    = wireOut;
@@ -93,18 +100,18 @@ public class Account extends Sheet {
 		this.sellGain   = sellGain;
 	}
 	public Account() {
-		this("", 0, 0, 0, 0,
+		this("", 0, 0, 0, 0, "",
 				0, 0, 0, 0,
 				0, 0, 0, 0, 0, 0);
 	}
 	public Account(Account that) {
-		this(new String(that.date), that.fundTotal, that.cashTotal, that.stockTotal, that.gainTotal,
+		this(new String(that.date), that.fundTotal, that.cashTotal, that.stockTotal, that.gainTotal, that.symbol,
 				that.wireIn, that.wireOut, that.achIn, that.achOut,
 				that.interest, that.dividend, that.buy, that.sell, that.sellCost, that.sellGain);
 	}
 	@Override
 	public String toString() {
-		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", 
-			date, fundTotal, cashTotal, stockTotal, gainTotal, wireIn, wireOut, achIn, achOut, interest, dividend, buy, sell, sellCost, sellGain);
+		return String.format("%s %9.2f %9.2f %9.2f %9.2f %-10s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", 
+			date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, wireIn, wireOut, achIn, achOut, interest, dividend, buy, sell, sellCost, sellGain);
 	}
 }

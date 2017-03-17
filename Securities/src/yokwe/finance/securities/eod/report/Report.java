@@ -251,9 +251,9 @@ public class Report {
 					LocalDate  dateSummary   = LocalDate.parse("2000-01-01");
 					Account summary = null;
 					for(Account account: accountList) {
-						LocalDate dateLocal = LocalDate.parse(account.date);
+						LocalDate dateAccount = LocalDate.parse(account.date);
 						
-						if (dateSummary.getYear() == dateSummary.getYear() && dateSummary.getMonthValue() == dateSummary.getMonthValue()) {
+						if (dateSummary.getYear() == dateAccount.getYear() && dateSummary.getMonthValue() == dateAccount.getMonthValue()) {
 							summary.fundTotal  = account.fundTotal;
 							summary.cashTotal  = account.cashTotal;
 							summary.stockTotal = account.stockTotal;
@@ -276,12 +276,11 @@ public class Report {
 							if (summary != null) {
 								summaryList.add(summary);
 							}
-							dateSummary = LocalDate.of(dateLocal.getYear(), dateLocal.getMonthValue(), 1).plusMonths(1).minusDays(1);
+							dateSummary = LocalDate.of(dateAccount.getYear(), dateAccount.getMonthValue(), 1).plusMonths(1).minusDays(1);
 
 							summary = new Account(account);
 							summary.symbol = "";
 							summary.date = dateSummary.toString();
-							
 						}
 					}
 					if (summary != null) {
@@ -289,16 +288,18 @@ public class Report {
 					}
 				}
 				
+				// Save accountList
 				{
 					String sheetName = Sheet.getSheetName(Account.class);
 					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 					Sheet.fillSheet(docSave, accountList);
 					
-					String newSheetName = String.format("%s-%s",  "9999", sheetName);
+					String newSheetName = String.format("%s-%s",  "9999", "detail");
 					logger.info("sheet {}", newSheetName);
 					docSave.renameSheet(sheetName, newSheetName);
 				}
 				
+				// Save summaryList
 				{
 					String sheetName = Sheet.getSheetName(Account.class);
 					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());

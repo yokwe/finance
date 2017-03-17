@@ -1,6 +1,6 @@
 package yokwe.finance.securities.eod.report;
 
-public class Transaction {
+public class Transaction implements Comparable<Transaction> {
 	enum Type {
 		WIRE_IN, WIRE_OUT, ACH_IN, ACH_OUT,
 		INTEREST, DIVIDEND, BUY, SELL,
@@ -58,5 +58,14 @@ public class Transaction {
 	}
 	public static Transaction wireIn(String date, double credit) {
 		return new Transaction(Type.WIRE_IN, date, FILLER, 0, 0, credit);
+	}
+
+	@Override
+	public int compareTo(Transaction that) {
+		if (this.date.equals(that.date)) {
+			return this.symbol.compareTo(that.symbol);
+		} else {
+			return this.date.compareTo(that.date);
+		}
 	}
 }

@@ -6,7 +6,7 @@ import yokwe.finance.securities.libreoffice.SpreadSheet;
 @Sheet.SheetName("Account")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
-public class Account extends Sheet {
+public class Account extends Sheet implements Comparable<Account> {
 	@ColumnName("Date")
 	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;       // YYYY-MM
@@ -113,5 +113,13 @@ public class Account extends Sheet {
 	public String toString() {
 		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %-10s %9.2f %9.2f %9.2f %9.2f", 
 			date, fundTotal, cashTotal, stockTotal, gainTotal, wireIn, wireOut, achIn, achOut, interest, dividend, symbol, buy, sell, sellCost, sellGain);
+	}
+	@Override
+	public int compareTo(Account that) {
+		if (this.date.equals(that.date)) {
+			return this.symbol.compareTo(that.symbol);
+		} else {
+			return this.date.compareTo(that.date);
+		}
 	}
 }

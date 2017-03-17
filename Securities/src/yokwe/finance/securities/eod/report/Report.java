@@ -1,8 +1,10 @@
 package yokwe.finance.securities.eod.report;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -137,8 +139,6 @@ public class Report {
 					}
 				}
 			}
-			// Sort by date
-			transactionList.sort((a, b) -> a.date.compareTo(b.date)); 
 			
 			// Add dummy sell transaction {
 			{
@@ -162,7 +162,9 @@ public class Report {
 				// Save cache for later use
 				Price.saveCache();
 			}
-			
+			// Sort transactionList
+			Collections.sort(transactionList);
+
 			// Build accountList
 			List<Account> accountList = new ArrayList<>();
 			{
@@ -239,6 +241,53 @@ public class Report {
 					
 					logger.info("account {}", account);
 				}
+				// Sort accountList
+				Collections.sort(accountList);
+			
+				
+				// Summary accountList
+				List<Account> summaryList = new ArrayList<>();
+				{
+					LocalDate  dateSummary   = LocalDate.parse("2000-01-01");
+					Account summary = null;
+					for(Account account: accountList) {
+						LocalDate dateLocal = LocalDate.parse(account.date);
+						
+						if (dateSummary.getYear() == dateSummary.getYear() && dateSummary.getMonthValue() == dateSummary.getMonthValue()) {
+							summary.fundTotal  = account.fundTotal;
+							summary.cashTotal  = account.cashTotal;
+							summary.stockTotal = account.stockTotal;
+							summary.gainTotal  = account.gainTotal;
+							
+							summary.wireIn  = DoubleUtil.round(summary.wireIn  + account.wireIn,  2);
+							summary.wireOut = DoubleUtil.round(summary.wireOut + account.wireOut, 2);
+							summary.achIn   = DoubleUtil.round(summary.achIn   + account.achIn,   2);
+							summary.achOut  = DoubleUtil.round(summary.achOut  + account.achOut,  2);
+							
+							summary.interest = DoubleUtil.round(summary.interest + account.interest, 2);
+							summary.dividend = DoubleUtil.round(summary.dividend + account.dividend, 2);
+
+							summary.buy  = DoubleUtil.round(summary.buy  + account.buy,  2);
+							summary.sell = DoubleUtil.round(summary.sell + account.sell, 2);
+							
+							summary.sellCost = DoubleUtil.round(summary.sellCost + account.sellCost, 2);
+							summary.sellGain = DoubleUtil.round(summary.sellGain + account.sellGain, 2);
+						} else {
+							if (summary != null) {
+								summaryList.add(summary);
+							}
+							dateSummary = LocalDate.of(dateLocal.getYear(), dateLocal.getMonthValue(), 1).plusMonths(1).minusDays(1);
+
+							summary = new Account(account);
+							summary.symbol = "";
+							summary.date = dateSummary.toString();
+							
+						}
+					}
+					if (summary != null) {
+						summaryList.add(summary);
+					}
+				}
 				
 				{
 					String sheetName = Sheet.getSheetName(Account.class);
@@ -246,6 +295,16 @@ public class Report {
 					Sheet.fillSheet(docSave, accountList);
 					
 					String newSheetName = String.format("%s-%s",  "9999", sheetName);
+					logger.info("sheet {}", newSheetName);
+					docSave.renameSheet(sheetName, newSheetName);
+				}
+				
+				{
+					String sheetName = Sheet.getSheetName(Account.class);
+					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+					Sheet.fillSheet(docSave, summaryList);
+					
+					String newSheetName = String.format("%s-%s",  "9999", "summary");
 					logger.info("sheet {}", newSheetName);
 					docSave.renameSheet(sheetName, newSheetName);
 				}

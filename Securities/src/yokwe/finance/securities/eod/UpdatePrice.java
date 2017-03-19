@@ -366,6 +366,9 @@ public class UpdatePrice {
 	public static void main(String[] args) {
 		logger.info("START");
 		
+		logger.info("DATE_FIRST {}", UpdateProvider.DATE_FIRST);
+		logger.info("DATE_LAST  {}", UpdateProvider.DATE_LAST);
+
 		String providerName = args[0];
 		UpdateProvider updateProvider = getProvider(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());

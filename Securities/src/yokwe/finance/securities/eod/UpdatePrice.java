@@ -40,7 +40,7 @@ public class UpdatePrice {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		public boolean updateFile(String exch, String symbol) {
+		public boolean updateFile(String exch, String symbol, boolean newFile) {
 			File file = getFile(symbol);
 			
 			String dateFrom = DATE_FIRST.format(DATE_FORMAT_URL).replace(" ", "%20");
@@ -125,7 +125,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			
-			if (targetFound) {
+			if (targetFound || newFile) {
 				Price.save(priceList, file);
 				return true;
 			} else {
@@ -148,7 +148,7 @@ public class UpdatePrice {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol) {
+		public boolean updateFile(String exch, String symbol, boolean newFile) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
@@ -210,7 +210,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			
-			if (targetFound) {
+			if (targetFound || newFile) {
 				Price.save(priceList, file);
 				return true;
 			} else {
@@ -322,7 +322,7 @@ public class UpdatePrice {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
-						if (updateProvider.updateFile(exch, symbol)) {
+						if (updateProvider.updateFile(exch, symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 							countUpdate++;
 						} else {
@@ -335,7 +335,7 @@ public class UpdatePrice {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol)) {
+					if (updateProvider.updateFile(exch, symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 						countNew++;
 					} else {

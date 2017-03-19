@@ -14,5 +14,5 @@ public interface UpdateProvider {
 
 	public String  getName();
 	public File    getFile(String symbol);
-	public boolean updateFile(String exch, String symbol);
+	public boolean updateFile(String exch, String symbol, boolean newFile);
 }

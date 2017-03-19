@@ -29,7 +29,7 @@ public class UpdateDividend {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol) {
+		public boolean updateFile(String exch, String symbol, boolean newFile) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
@@ -211,7 +211,7 @@ public class UpdateDividend {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
-						if (updateProvider.updateFile(exch, symbol)) {
+						if (updateProvider.updateFile(exch, symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 							countUpdate++;
 						} else {
@@ -223,7 +223,7 @@ public class UpdateDividend {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol)) {
+					if (updateProvider.updateFile(exch, symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 						countNew++;
 					} else {

@@ -228,7 +228,7 @@ public class UpdateDividend {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 						countNew++;
 					} else {
-//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
+						if (showOutput) logger.info("{}  none   {}", String.format("%4d / %4d",  count, total), symbol);
 						countNone++;
 					}
 				}

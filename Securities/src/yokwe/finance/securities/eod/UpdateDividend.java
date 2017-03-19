@@ -1,7 +1,6 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,10 +17,6 @@ import yokwe.finance.securities.util.HttpUtil;
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
 	
-	private static final int       DURTION_YEAR  =  1; // we need one year data
-	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
-	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
-		
 	public static class UpdateProviderYahoo implements UpdateProvider {
 		private static final String PATH_DIR      = "tmp/eod/dividend";
 		public String getName() {
@@ -34,19 +29,19 @@ public class UpdateDividend {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
-			int a = dateFirst.getMonthValue(); // mm
-			int b = dateFirst.getDayOfMonth(); // dd
-			int c = dateFirst.getYear();       // yyyy
+			int a = DATE_FIRST.getMonthValue(); // mm
+			int b = DATE_FIRST.getDayOfMonth(); // dd
+			int c = DATE_FIRST.getYear();       // yyyy
 			// last
-			int d = dateLast.getMonthValue(); // mm
-			int e = dateLast.getDayOfMonth(); // dd
-			int f = dateLast.getYear();       // yyyy
+			int d = DATE_LAST.getMonthValue(); // mm
+			int e = DATE_LAST.getDayOfMonth(); // dd
+			int f = DATE_LAST.getYear();       // yyyy
 			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -71,7 +66,7 @@ public class UpdateDividend {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			String         targetDate   = dateLast.toString();
+			String         targetDate   = DATE_LAST.toString();
 			boolean        targetFound  = false;
 			List<Dividend> dividendList = new ArrayList<>();
 			
@@ -116,7 +111,7 @@ public class UpdateDividend {
 		}
 	}
 
-	private static boolean needUpdate(File file, LocalDate dateFirst, LocalDate dateLast) {
+	private static boolean needUpdate(File file) {
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
 		
@@ -144,7 +139,7 @@ public class UpdateDividend {
 		}
 		String date = values[0];
 		
-		return !date.equals(dateLast.toString());
+		return !date.equals(UpdateProvider.DATE_LAST.toString());
 	}
 	
 	// This methods update end of day csv in tmp/eod directory.
@@ -216,8 +211,8 @@ public class UpdateDividend {
 				
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
-					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+					if (needUpdate(file)) {
+						if (updateProvider.updateFile(exch, symbol)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 							countUpdate++;
 						} else {
@@ -229,7 +224,7 @@ public class UpdateDividend {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+					if (updateProvider.updateFile(exch, symbol)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 						countNew++;
 					} else {

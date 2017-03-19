@@ -21,12 +21,6 @@ import yokwe.finance.securities.util.HttpUtil;
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
-	private static final int       DURTION_YEAR  = 1; // we need one year data
-	private static final int       MAX_RETRY     = 3;  // try 3 times
-	
-	private static final LocalDate DATE_LAST     = Market.getLastTradingDate();
-	private static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(DURTION_YEAR);
-	
 	public static final class UpdateProviderGoogle implements UpdateProvider {
 		private static final String PATH_DIR      = "tmp/eod/price";
 		public String getRootPath() {
@@ -46,11 +40,11 @@ public class UpdatePrice {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol) {
 			File file = getFile(symbol);
 			
-			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
-			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
+			String dateFrom = DATE_FIRST.format(DATE_FORMAT_URL).replace(" ", "%20");
+			String dateTo   = DATE_LAST.format(DATE_FORMAT_URL).replace(" ", "%20");
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
@@ -82,7 +76,7 @@ public class UpdatePrice {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			String      targetDate  = dateLast.toString();
+			String      targetDate  = DATE_LAST.toString();
 			boolean     targetFound = false;
 			List<Price> priceList   = new ArrayList<>();
 			
@@ -154,19 +148,19 @@ public class UpdatePrice {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
-			int a = dateFirst.getMonthValue(); // mm
-			int b = dateFirst.getDayOfMonth(); // dd
-			int c = dateFirst.getYear();       // yyyy
+			int a = DATE_FIRST.getMonthValue(); // mm
+			int b = DATE_FIRST.getDayOfMonth(); // dd
+			int c = DATE_FIRST.getYear();       // yyyy
 			// last
-			int d = dateLast.getMonthValue(); // mm
-			int e = dateLast.getDayOfMonth(); // dd
-			int f = dateLast.getYear();       // yyyy
+			int d = DATE_LAST.getMonthValue(); // mm
+			int e = DATE_LAST.getDayOfMonth(); // dd
+			int f = DATE_LAST.getYear();       // yyyy
 			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -191,7 +185,7 @@ public class UpdatePrice {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			String      targetDate  = dateLast.toString();
+			String      targetDate  = DATE_LAST.toString();
 			boolean     targetFound = false;
 			List<Price> priceList   = new ArrayList<>();
 			
@@ -241,7 +235,7 @@ public class UpdatePrice {
 		}
 	}
 
-	private static boolean needUpdate(File file, LocalDate dateFirst, LocalDate dateLast) {
+	private static boolean needUpdate(File file) {
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
 		
@@ -269,7 +263,7 @@ public class UpdatePrice {
 		}
 		String date = values[0];
 		
-		return !date.equals(dateLast.toString());
+		return !date.equals(UpdateProvider.DATE_LAST.toString());
 	}
 	
 	private static void updateFile(UpdateProvider updateProvider) {
@@ -290,7 +284,7 @@ public class UpdatePrice {
 
 		for(;;) {
 			retryCount++;
-			if (MAX_RETRY < retryCount) break;
+			if (UpdateProvider.MAX_RETRY < retryCount) break;
 			logger.info("retry  {}", String.format("%4d", retryCount));
 			
 			if (needSleep) {
@@ -327,8 +321,8 @@ public class UpdatePrice {
 				
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
-					if (needUpdate(file, DATE_FIRST, DATE_LAST)) {
-						if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+					if (needUpdate(file)) {
+						if (updateProvider.updateFile(exch, symbol)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 							countUpdate++;
 						} else {
@@ -341,7 +335,7 @@ public class UpdatePrice {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol, DATE_FIRST, DATE_LAST)) {
+					if (updateProvider.updateFile(exch, symbol)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 						countNew++;
 					} else {
@@ -351,6 +345,7 @@ public class UpdatePrice {
 				}
 			}
 			logger.info("old    {}", String.format("%4d", countOld));
+			if (countOld == 0) break; // Exit loop because there is no old file. 
 			if (countOld != lastCountOld) {
 				retryCount = 0; // reset retry count
 			}

@@ -4,7 +4,7 @@ import java.io.File;
 import java.time.LocalDate;
 
 public interface UpdateProvider {
-	public static final LocalDate DATE_FIRST    = LocalDate.of(2015, 11, 1);
+	public static final LocalDate DATE_FIRST    = LocalDate.of(2015, 1, 1);
 	public static final LocalDate DATE_LAST     = Market.getLastTradingDate();
 	
 	public static final int       MAX_RETRY     = 3;  // try 3 times at least

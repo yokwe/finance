@@ -18,8 +18,8 @@ public class DateMap<E> {
 	
 	public void put(String date, E data) {
 		if (map.containsKey(date)) {
-			logger.error("Duplicate date {}", date);
-			throw new SecuritiesException("Duplicate date");
+			map.replace(date, data);
+			return;
 		}
 		map.put(date, data);
 		

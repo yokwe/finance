@@ -24,7 +24,7 @@ public class PriceUtil {
 		if (map.containsKey(date)) {
 			return map.get(date);
 		} else {
-			logger.info("Unexpected date = {}", date);
+			logger.error("Unexpected {}  {}  {}", symbol, date, map.size());
 			throw new SecuritiesException("Unexpected");
 		}
 	}

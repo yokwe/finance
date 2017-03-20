@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
@@ -37,6 +38,7 @@ public class Report {
 			SpreadSheet docSave = new SpreadSheet();
 
 			List<Transaction> transactionList = new ArrayList<>();
+			DateMap<Double> unrealGainMap = new DateMap<>();
 			
 			List<String> sheetNameList = docActivity.getSheetNameList();
 			sheetNameList.sort((a, b) -> a.compareTo(b));
@@ -60,6 +62,8 @@ public class Report {
 						Transaction transaction = Transaction.buy(date, symbol, quantity, total);
 						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
+						//
+						unrealGainMap.put(date, Stock.getUnrealizedGain(date));
 						break;
 					}
 					case "SOLD":
@@ -74,6 +78,8 @@ public class Report {
 						Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost);
 						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
+						//
+						unrealGainMap.put(date, Stock.getUnrealizedGain(date));
 						break;
 					}
 					case "INTEREST": {
@@ -215,6 +221,7 @@ public class Report {
 					case BUY:
 						account.buy    = transaction.debit;
 						account.symbol = transaction.symbol;
+						account.unrealGain = unrealGainMap.get(transaction.date);
 						
 						cashTotal  = DoubleUtil.round(cashTotal  - account.buy, 2);
 						stockTotal = DoubleUtil.round(stockTotal + account.buy, 2);
@@ -224,6 +231,7 @@ public class Report {
 						account.symbol   = transaction.symbol;
 						account.sellCost = transaction.sellCost;
 						account.sellGain = account.sell - account.sellCost;
+						account.unrealGain = unrealGainMap.get(transaction.date);
 						
 						cashTotal  = DoubleUtil.round(cashTotal  + account.sell, 2);
 						stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
@@ -273,6 +281,8 @@ public class Report {
 							
 							summary.sellCost = DoubleUtil.round(summary.sellCost + account.sellCost, 2);
 							summary.sellGain = DoubleUtil.round(summary.sellGain + account.sellGain, 2);
+							
+							summary.unrealGain = Stock.getUnrealizedGain(summary.date);
 						} else {
 							if (summary != null) {
 								summaryList.add(summary);

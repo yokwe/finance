@@ -1,10 +1,12 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
@@ -19,15 +21,13 @@ import yokwe.finance.securities.util.DoubleUtil;
 public class UpdateStats {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStats.class);
 	
-	private static final String lastTradingDate  = Market.getLastTradingDate().toString();
+	private static final LocalDate DATE_LAST  = Market.getLastTradingDate();
+	private static final String STRING_DATE_LAST  = DATE_LAST.toString();
+	private static final String STRING_DATE_FIRST = DATE_LAST.minusYears(1).toString();
 
 	public static final String PATH_STATS        = "tmp/eod/stats.csv";
 
 	private static Stats getInstance(Stock stock, List<Price> priceList, List<Dividend> dividendList) {
-		// Order of data is important
-		priceList.sort((a, b) -> a.date.compareTo(b.date));
-		dividendList.sort((a, b) -> a.date.compareTo(b.date));
-
 		Stats ret = new Stats();
 		
 //		this.exchange = stock.exchange;
@@ -42,6 +42,7 @@ public class UpdateStats {
 		}
 		
 		{
+			// Limit to 1 year
 			double[] priceArray = priceList.stream().mapToDouble(o -> o.close).toArray();
 			ret.pricec = priceArray.length;
 			
@@ -103,6 +104,7 @@ public class UpdateStats {
 		
 		// dividend
 		{
+			// Limit to 1 year
 			double[] divArray = dividendList.stream().mapToDouble(o -> o.dividend).toArray();
 			
 			ret.div   = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
@@ -160,12 +162,13 @@ public class UpdateStats {
 			
 			if (!priceFile.exists()) continue;
 			
-			final List<Price> priceList = Price.load(priceFile);
+			// Filter data for last one year
+			final List<Price> priceList = Price.load(priceFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
 			
 			// date is not last trading date
 			{
 				String date = priceList.get(0).date;
-				if (!date.equals(lastTradingDate)) {
+				if (!date.equals(STRING_DATE_LAST)) {
 					logger.warn("{}  old    {}", String.format("%4d / %4d",  count, total), String.format("%-8s %s", symbol, date));
 				}
 			}
@@ -195,11 +198,16 @@ public class UpdateStats {
 			
 			List<Dividend> dividendList;
 			if (dividendFile.exists()) {
-				dividendList = Dividend.load(dividendFile);
+				// Filter data for last one year
+				dividendList = Dividend.load(dividendFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());;
 			} else {
 				dividendList = new ArrayList<>();
 			}
-			
+						
+			// Order of data is important
+			priceList.sort((a, b) -> a.date.compareTo(b.date));
+			dividendList.sort((a, b) -> a.date.compareTo(b.date));
+
 			statsList.add(getInstance(stock, priceList, dividendList));
 		}
 		Stats.save(statsList);

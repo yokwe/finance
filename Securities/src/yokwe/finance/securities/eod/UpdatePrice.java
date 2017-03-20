@@ -21,8 +21,9 @@ import yokwe.finance.securities.util.HttpUtil;
 public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
+	public static final String PATH_DIR = "tmp/eod/price";
+	
 	public static final class UpdateProviderGoogle implements UpdateProvider {
-		private static final String PATH_DIR      = "tmp/eod/price";
 		public String getRootPath() {
 			return PATH_DIR;
 		}
@@ -137,7 +138,6 @@ public class UpdatePrice {
 	}
 	
 	public static final class UpdateProviderYahoo implements UpdateProvider {
-		private static final String PATH_DIR      = "tmp/eod/price";
 		public String getName() {
 			return YAHOO;
 		}

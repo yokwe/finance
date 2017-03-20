@@ -42,7 +42,7 @@ public class Market {
 		}
 	}
 	
-	public static final LocalDate lastTradingDate;
+	private static final LocalDate lastTradingDate;
 	
 	static {
 		LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));

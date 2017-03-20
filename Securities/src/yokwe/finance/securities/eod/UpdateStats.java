@@ -164,10 +164,13 @@ public class UpdateStats {
 			
 			// Filter data for last one year
 			final List<Price> priceList = Price.load(priceFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
+			if (priceList.size() == 0) continue;
 			
+			priceList.sort((a, b) -> a.date.compareTo(b.date));
+
 			// date is not last trading date
 			{
-				String date = priceList.get(0).date;
+				String date = priceList.get(priceList.size() - 1).date;
 				if (!date.equals(STRING_DATE_LAST)) {
 					logger.warn("{}  old    {}", String.format("%4d / %4d",  count, total), String.format("%-8s %s", symbol, date));
 				}
@@ -200,14 +203,11 @@ public class UpdateStats {
 			if (dividendFile.exists()) {
 				// Filter data for last one year
 				dividendList = Dividend.load(dividendFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());;
+				dividendList.sort((a, b) -> a.date.compareTo(b.date));
 			} else {
 				dividendList = new ArrayList<>();
 			}
 						
-			// Order of data is important
-			priceList.sort((a, b) -> a.date.compareTo(b.date));
-			dividendList.sort((a, b) -> a.date.compareTo(b.date));
-
 			statsList.add(getInstance(stock, priceList, dividendList));
 		}
 		Stats.save(statsList);

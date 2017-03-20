@@ -41,11 +41,11 @@ public class UpdatePrice {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		public boolean updateFile(String exch, String symbol, boolean newFile) {
+		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			String dateFrom = DATE_FIRST.format(DATE_FORMAT_URL).replace(" ", "%20");
-			String dateTo   = DATE_LAST.format(DATE_FORMAT_URL).replace(" ", "%20");
+			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
+			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
@@ -94,7 +94,7 @@ public class UpdatePrice {
 				// Fix year of date    02-Jan-80 => 1980-01-02
 				{
 					LocalDate localDate = LocalDate.from(DATE_FORMAT_PARSE.parse(values[0]));
-					if (DATE_LAST.getYear() < localDate.getYear()) localDate = localDate.minusYears(100);
+					if (dateLast.getYear() < localDate.getYear()) localDate = localDate.minusYears(100);
 					values[0] = DATE_FORMAT_FORMAT.format(localDate);
 				}
 				
@@ -148,19 +148,19 @@ public class UpdatePrice {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol, boolean newFile) {
+		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
-			int a = DATE_FIRST.getMonthValue(); // mm
-			int b = DATE_FIRST.getDayOfMonth(); // dd
-			int c = DATE_FIRST.getYear();       // yyyy
+			int a = dateFirst.getMonthValue(); // mm
+			int b = dateFirst.getDayOfMonth(); // dd
+			int c = dateFirst.getYear();       // yyyy
 			// last
-			int d = DATE_LAST.getMonthValue(); // mm
-			int e = DATE_LAST.getDayOfMonth(); // dd
-			int f = DATE_LAST.getYear();       // yyyy
+			int d = dateLast.getMonthValue(); // mm
+			int e = dateLast.getDayOfMonth(); // dd
+			int f = dateLast.getYear();       // yyyy
 			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -185,7 +185,7 @@ public class UpdatePrice {
 				throw new SecuritiesException("Unexpected header");
 			}
 
-			String      targetDate  = DATE_LAST.toString();
+			String      targetDate  = dateLast.toString();
 			boolean     targetFound = false;
 			List<Price> priceList   = new ArrayList<>();
 			

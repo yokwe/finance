@@ -1,6 +1,7 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,19 +30,19 @@ public class UpdateDividend {
 			return file;
 		}
 
-		public boolean updateFile(String exch, String symbol, boolean newFile) {
+		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// first
-			int a = DATE_FIRST.getMonthValue(); // mm
-			int b = DATE_FIRST.getDayOfMonth(); // dd
-			int c = DATE_FIRST.getYear();       // yyyy
+			int a = dateFirst.getMonthValue(); // mm
+			int b = dateFirst.getDayOfMonth(); // dd
+			int c = dateFirst.getYear();       // yyyy
 			// last
-			int d = DATE_LAST.getMonthValue(); // mm
-			int e = DATE_LAST.getDayOfMonth(); // dd
-			int f = DATE_LAST.getYear();       // yyyy
+			int d = dateLast.getMonthValue(); // mm
+			int e = dateLast.getDayOfMonth(); // dd
+			int f = dateLast.getYear();       // yyyy
 			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {

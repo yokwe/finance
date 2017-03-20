@@ -1,11 +1,5 @@
 package yokwe.finance.securities.eod;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
@@ -13,18 +7,13 @@ import yokwe.finance.securities.SecuritiesException;
 public class ForexUtil {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(ForexUtil.class);
 
-	private static List<String> dateList = new ArrayList<>();
-	// key is date
-	private static Map<String, Forex> forexMap = new TreeMap<>();
+	private static DateMap<Forex> forexMap = new DateMap<>();
 	
 	static {
 		for(Forex forex: Forex.load()) {
-			dateList.add(forex.date);
-			forexMap.put(forex.date, forex);
+			forexMap.add(forex.date, forex);
 		}
 		logger.info("forexMap {}", forexMap.size());
-		// sort dateList
-		Collections.sort(dateList);
 	}
 	
 	private static boolean testMode = false;
@@ -33,21 +22,12 @@ public class ForexUtil {
 		logger.info("enableTestMode {}", testMode);
 	}
 	
-	public static String getValidDate(String date) {
-		int index = Collections.binarySearch(dateList, date);
-		if (index < 0) {
-			index = - (index + 1) - 1;
-			if (index < 0) {
-				logger.info("Unexpected date = {}", date);
-				throw new SecuritiesException("Unexpected");
-			}
-		}
-		return dateList.get(index);
-	}
 	
 	public static Forex get(String date) {
-		String validDate = getValidDate(date);
-		return forexMap.get(validDate);
+		return forexMap.get(date);
+	}
+	public static String getValidDate(String date) {
+		return forexMap.getValidDate(date);
 	}
 	
 	public static double getUSD(String date) {

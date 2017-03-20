@@ -16,7 +16,7 @@ public class DateMap<E> {
 	private List<String>   dateList = new ArrayList<>();
 	private Map<String, E> map      = new TreeMap<>();
 	
-	public void add(String date, E data) {
+	public void put(String date, E data) {
 		if (map.containsKey(date)) {
 			logger.error("Duplicate date {}", date);
 			throw new SecuritiesException("Duplicate date");

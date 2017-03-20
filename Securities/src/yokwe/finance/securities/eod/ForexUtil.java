@@ -11,7 +11,7 @@ public class ForexUtil {
 	
 	static {
 		for(Forex forex: Forex.load()) {
-			forexMap.add(forex.date, forex);
+			forexMap.put(forex.date, forex);
 		}
 		logger.info("forexMap {}", forexMap.size());
 	}

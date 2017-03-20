@@ -281,7 +281,7 @@ public class Report {
 							// dateSummary can be market holiday
 							for(;;) {
 								if (Market.isClosed(dateSummary)) {
-									dateSummary.minusDays(1);
+									dateSummary = dateSummary.minusDays(1);
 									continue;
 								}
 								break;

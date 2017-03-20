@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Activity;
@@ -277,6 +278,14 @@ public class Report {
 								summaryList.add(summary);
 							}
 							dateSummary = LocalDate.of(dateAccount.getYear(), dateAccount.getMonthValue(), 1).plusMonths(1).minusDays(1);
+							// dateSummary can be market holiday
+							for(;;) {
+								if (Market.isClosed(dateSummary)) {
+									dateSummary.minusDays(1);
+									continue;
+								}
+								break;
+							}
 
 							summary = new Account(account);
 							summary.symbol = "";

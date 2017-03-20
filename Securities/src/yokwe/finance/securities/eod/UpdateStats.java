@@ -127,10 +127,6 @@ public class UpdateStats {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
-		UpdateProvider priceYahooProvider    = UpdatePrice.getProvider(UpdateProvider.YAHOO);
-		UpdateProvider dividendYahooProvider = UpdateDividend.getProvider(UpdateProvider.YAHOO);
-		
 		List<Stats> statsList = new ArrayList<>();
 		
 		Collection<Stock> stockCollection = StockUtil.getAll();
@@ -159,62 +155,12 @@ public class UpdateStats {
 
 			count++;
 			
-			final List<Price> priceList;
-			final File dividendFile;
-			{
-				File priceGoogle   = priceGoogleProvider.getFile(stock.symbol);
-				File priceYahoo    = priceYahooProvider.getFile(stock.symbol);
-				File dividendYahoo = dividendYahooProvider.getFile(stock.symbol);
-								
-				if (priceGoogle.exists() && priceYahoo.exists()) {
-					// both
-					List<Price> priceListGoogle = Price.load(priceGoogle);
-					List<Price> priceListYahoo  = Price.load(priceYahoo);
-					
-					String dateGoogle = priceListGoogle.get(0).date;
-					String dateYahoo  = priceListYahoo.get(0).date;
-					
-					if (dateGoogle.equals(lastTradingDate) && dateYahoo.equals(lastTradingDate)) {
-						// both
-						int priceGoogleSize = priceListGoogle.size();
-						int priceYahooSize  = priceListYahoo.size();
-						
-						if (priceGoogleSize <= priceYahooSize) { // prefer yahoo over google
-							priceList = priceListYahoo;
-						} else {
-							priceList = priceListGoogle;
-						}
-					} else if (dateGoogle.equals(lastTradingDate)) {
-						// google
-						priceList = priceListGoogle;
-					} else if (dateYahoo.equals(lastTradingDate)) {
-						// yahoo
-						priceList = priceListYahoo;
-					} else {
-						// none -- could be happen for discontinued stock
-						int priceGoogleSize = priceListGoogle.size();
-						int priceYahooSize  = priceListYahoo.size();
-						
-						if (priceGoogleSize < priceYahooSize) {
-							priceList = priceListYahoo;
-						} else {
-							priceList = priceListGoogle;
-						}
-					}
-				} else if (priceGoogle.exists()) {
-					// only google
-					priceList = Price.load(priceGoogle);
-				} else if (priceYahoo.exists()) {
-					// only yahoo
-					priceList = Price.load(priceYahoo);
-				} else {
-					// none
-//					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s NO PRICE DATA", symbol));
-					continue;
-				}
-				
-				dividendFile = dividendYahoo;
-			}
+			File priceFile    = Price.getFile(symbol);
+			File dividendFile = Dividend.getFile(symbol);
+			
+			if (!priceFile.exists()) continue;
+			
+			final List<Price> priceList = Price.load(priceFile);
 			
 			// date is not last trading date
 			{

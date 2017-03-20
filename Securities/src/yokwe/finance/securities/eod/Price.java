@@ -43,7 +43,16 @@ public class Price {
 			return null;
 		}
 	}
+	
+	public static File getFile(String symbol) {
+		String path = String.format("%s/%s.csv", UpdatePrice.PATH_DIR, symbol);
+		File   file = new File(path);
+		return file;
+	}
 
+	public static List<Price> load(String symbol) {
+		return load(getFile(symbol));
+	}
 	public static List<Price> load(File file) {
 		return CSVUtil.loadWithHeader(file.getPath(), Price.class);
 	}

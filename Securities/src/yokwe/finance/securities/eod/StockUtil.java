@@ -1,6 +1,8 @@
 package yokwe.finance.securities.eod;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -13,11 +15,13 @@ import yokwe.finance.securities.util.FileUtil;
 public class StockUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 	
-	private static Map<String, Stock> map = new TreeMap<>();
+	private static Map<String, Stock> map        = new TreeMap<>();
+	private static List<String>       symbolList = new ArrayList<>();
 	
 	static {
-		for(Stock table: Stock.load()) {
-			map.put(table.symbol, table);
+		for(Stock stock: Stock.load()) {
+			map.put(stock.symbol, stock);
+			symbolList.add(stock.symbol);
 		}
 	}
 	
@@ -39,5 +43,9 @@ public class StockUtil {
 	
 	public static Map<String, Stock> getMap() {
 		return map;
+	}
+	
+	public static List<String> getSymbolList() {
+		return symbolList;
 	}
 }

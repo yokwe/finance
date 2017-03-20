@@ -225,6 +225,14 @@
                 </java>
         </target>
 
+        <target name="run-eod-merge-price">
+                <java classname="yokwe.finance.securities.eod.MergePrice" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
         <target name="run-eod-update-dividend-yahoo">
                 <java classname="yokwe.finance.securities.eod.UpdateDividend" fork="true">
                         <classpath location="${jar.yokwe}" />

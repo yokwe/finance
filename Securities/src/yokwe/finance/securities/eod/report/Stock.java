@@ -8,6 +8,7 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Stock {
@@ -143,5 +144,23 @@ public class Stock {
 		stock.totalCost     = DoubleUtil.round(totalCost,     2);
 		
 		return DoubleUtil.round(totalCostBefore - stock.totalCost, 2);
+	}
+	
+	public static double getUnrealizedGain(String date) {
+		double commission = 5;
+		double ret = 0;
+		
+		for(Stock stock: map.values()) {
+			double quantity = stock.totalQuantity;
+			double cost     = stock.totalCost;
+			
+			if (quantity == 0) continue;
+			
+			double price = PriceUtil.getClose(stock.symbol, date);
+			double unrealizedGain = (price * quantity) - commission - cost;
+			
+			ret = DoubleUtil.round(ret + unrealizedGain, 2);
+		}
+		return ret;
 	}
 }

@@ -166,6 +166,7 @@ public class UpdateStats {
 			final List<Price> priceList = Price.load(priceFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
 			if (priceList.size() == 0) continue;
 			
+			// Order of data is very important to calculate statistics number
 			priceList.sort((a, b) -> a.date.compareTo(b.date));
 
 			// date is not last trading date
@@ -203,6 +204,7 @@ public class UpdateStats {
 			if (dividendFile.exists()) {
 				// Filter data for last one year
 				dividendList = Dividend.load(dividendFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());;
+				// Order of data is very important to calculate statistics number
 				dividendList.sort((a, b) -> a.date.compareTo(b.date));
 			} else {
 				dividendList = new ArrayList<>();

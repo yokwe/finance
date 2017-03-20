@@ -50,22 +50,9 @@ public class Market {
 		
 		
 		for(;;) {
-			DayOfWeek dayOfWeek = today.getDayOfWeek();
-			if (dayOfWeek == DayOfWeek.SUNDAY) {
-				today = today.minusDays(2); // Move to previous Friday
+			if (isClosed(today)) {
+				today = today.minusDays(1);
 				continue;
-			}
-			if (dayOfWeek == DayOfWeek.SATURDAY) {
-				today = today.minusDays(1); // Move to previous Friday
-				continue;
-			}
-			
-			Holiday holiday = holidayMap.get(today.toLocalDate());
-			if (holiday != null) {
-				if (holiday.closed) {
-					today = today.minusDays(1); // Move to previous day
-					continue;
-				}
 			}
 
 			break;
@@ -77,5 +64,17 @@ public class Market {
 	
 	public static LocalDate getLastTradingDate() {
 		return lastTradingDate;
+	}
+	
+	public static final boolean isClosed(LocalDateTime dateTime) {
+		return isClosed(dateTime.toLocalDate());
+	}
+	public static final boolean isClosed(LocalDate date) {
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		if (dayOfWeek == DayOfWeek.SUNDAY)   return true;
+		if (dayOfWeek == DayOfWeek.SATURDAY) return true;
+		
+		Holiday holiday = holidayMap.get(date);
+		return holiday != null && holiday.closed;
 	}
 }

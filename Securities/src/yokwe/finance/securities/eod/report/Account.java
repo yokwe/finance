@@ -75,11 +75,14 @@ public class Account extends Sheet implements Comparable<Account> {
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double sellGain;   // sell gain for this month
 	
-	
+	@ColumnName("Unreal Gain")
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	public double unrealGain;   // unrealized gain for this month
+		
 	
 	public Account(String date, double fundTotal, double cashTotal, double stockTotal, double gainTotal,
 			double wireIn, double wireOut, double achIn, double achOut, double interest, double dividend,
-			String symbol, double buy, double sell, double sellCost, double sellGain) {
+			String symbol, double buy, double sell, double sellCost, double sellGain, double unrealGain) {
 		this.date       = date;
 		this.fundTotal  = fundTotal;
 		this.cashTotal  = cashTotal;
@@ -98,21 +101,22 @@ public class Account extends Sheet implements Comparable<Account> {
 		this.sell       = sell;
 		this.sellCost   = sellCost;
 		this.sellGain   = sellGain;
+		this.unrealGain = unrealGain;
 	}
 	public Account() {
 		this("", 0, 0, 0, 0,
 				0, 0, 0, 0, 0, 0,
-				"", 0, 0, 0, 0);
+				"", 0, 0, 0, 0, 0);
 	}
 	public Account(Account that) {
 		this(new String(that.date), that.fundTotal, that.cashTotal, that.stockTotal, that.gainTotal,
 				that.wireIn, that.wireOut, that.achIn, that.achOut, that.interest, that.dividend,
-				that.symbol, that.buy, that.sell, that.sellCost, that.sellGain);
+				that.symbol, that.buy, that.sell, that.sellCost, that.sellGain, that.unrealGain);
 	}
 	@Override
 	public String toString() {
-		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %-10s %9.2f %9.2f %9.2f %9.2f", 
-			date, fundTotal, cashTotal, stockTotal, gainTotal, wireIn, wireOut, achIn, achOut, interest, dividend, symbol, buy, sell, sellCost, sellGain);
+		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %-10s %9.2f %9.2f %9.2f %9.2f %9.2f", 
+			date, fundTotal, cashTotal, stockTotal, gainTotal, wireIn, wireOut, achIn, achOut, interest, dividend, symbol, buy, sell, sellCost, sellGain, unrealGain);
 	}
 	@Override
 	public int compareTo(Account that) {

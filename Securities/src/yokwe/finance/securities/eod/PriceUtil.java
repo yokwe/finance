@@ -12,7 +12,7 @@ public class PriceUtil {
 
 	private static Map<String, Map<String, Price>> priceMap = new TreeMap<>();
 	
-	public static double getPrice(String symbol, String date) {
+	public static Price getPrice(String symbol, String date) {
 		if (!priceMap.containsKey(symbol)) {
 			Map<String, Price> map = new TreeMap<>();
 			for(Price price: Price.load(symbol)) {
@@ -22,11 +22,13 @@ public class PriceUtil {
 		}
 		Map<String, Price> map = priceMap.get(symbol);
 		if (map.containsKey(date)) {
-			Price price = map.get(date);
-			return price.close;
+			return map.get(date);
 		} else {
 			logger.info("Unexpected date = {}", date);
 			throw new SecuritiesException("Unexpected");
 		}
+	}
+	public static double getClose(String symbol, String date) {
+		return getPrice(symbol, date).close;
 	}
 }

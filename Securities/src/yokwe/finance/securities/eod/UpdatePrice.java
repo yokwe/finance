@@ -303,11 +303,12 @@ public class UpdatePrice {
 			countOld = 0;
 
 			int symbolSetSize = symbolSet.size();
+			int showInterval = (symbolSetSize < 100) ? 1 : 100;
+			
 			for(String symbol: symbolSet) {
 				Stock  stock = stockMap.get(symbol);
 				String exch  = stock.exchange;
 
-				int showInterval = (symbolSet.size() < 100) ? 1 : 100;
 				int outputCount = count / showInterval;
 				boolean showOutput;
 				if (outputCount != lastOutputCount) {

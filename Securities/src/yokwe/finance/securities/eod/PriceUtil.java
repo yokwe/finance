@@ -14,6 +14,8 @@ public class PriceUtil {
 	private static Map<String, Map<String, Price>> priceMap = new TreeMap<>();
 	
 	public static boolean contains(String symbol, String date) {
+		symbol = symbol.replace(".PR.", "-");
+		
 		if (!priceMap.containsKey(symbol)) {
 			File file = Price.getFile(symbol);
 			if (file.canRead()) {
@@ -23,13 +25,21 @@ public class PriceUtil {
 				}
 				priceMap.put(symbol, map);
 			} else {
+				logger.warn("no price file  {}", file.getPath());
 				return false;
 			}
 		}
 		Map<String, Price> map = priceMap.get(symbol);
-		return map.containsKey(date);
+		if (map.containsKey(date)) {
+			return true;
+		} else {
+			logger.warn("no data in map  {}  {}", symbol, date);
+			return false;
+		}
 	}
 	public static Price getPrice(String symbol, String date) {
+		symbol = symbol.replace(".PR.", "-");
+
 		if (!priceMap.containsKey(symbol)) {
 			File file = Price.getFile(symbol);
 			if (file.canRead()) {

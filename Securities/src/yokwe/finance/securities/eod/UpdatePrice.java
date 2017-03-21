@@ -37,20 +37,20 @@ public class UpdatePrice {
 			return file;
 		}
 
-		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
+		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d,yyyy", Locale.US);
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20");
-			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20");
+			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "+");
+			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "+");
 			
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
 
 			// Convert from '.PR.' to  '-' in symbol for google
-			String url = String.format("https://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbolGoogle, dateFrom, dateTo);
+			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbolGoogle, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {

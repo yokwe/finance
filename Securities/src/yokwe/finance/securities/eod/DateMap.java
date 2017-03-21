@@ -47,4 +47,8 @@ public class DateMap<E> {
 	public int size() {
 		return dateList.size();
 	}
+	
+	public Map<String, E> getMap() {
+		return map;
+	}
 }

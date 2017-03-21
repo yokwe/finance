@@ -1,5 +1,6 @@
 package yokwe.finance.securities.eod;
 
+import java.io.File;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -12,13 +13,35 @@ public class PriceUtil {
 
 	private static Map<String, Map<String, Price>> priceMap = new TreeMap<>();
 	
+	public static boolean contains(String symbol, String date) {
+		if (!priceMap.containsKey(symbol)) {
+			File file = Price.getFile(symbol);
+			if (file.canRead()) {
+				Map<String, Price> map = new TreeMap<>();
+				for(Price price: Price.load(file)) {
+					map.put(price.date, price);
+				}
+				priceMap.put(symbol, map);
+			} else {
+				return false;
+			}
+		}
+		Map<String, Price> map = priceMap.get(symbol);
+		return map.containsKey(date);
+	}
 	public static Price getPrice(String symbol, String date) {
 		if (!priceMap.containsKey(symbol)) {
-			Map<String, Price> map = new TreeMap<>();
-			for(Price price: Price.load(symbol)) {
-				map.put(price.date, price);
+			File file = Price.getFile(symbol);
+			if (file.canRead()) {
+				Map<String, Price> map = new TreeMap<>();
+				for(Price price: Price.load(file)) {
+					map.put(price.date, price);
+				}
+				priceMap.put(symbol, map);
+			} else {
+				logger.error("Unexpected symbol {}", symbol);
+				throw new SecuritiesException("Unexpected symbol");
 			}
-			priceMap.put(symbol, map);
 		}
 		Map<String, Price> map = priceMap.get(symbol);
 		if (map.containsKey(date)) {

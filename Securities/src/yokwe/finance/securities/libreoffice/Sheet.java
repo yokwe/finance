@@ -265,6 +265,11 @@ public class Sheet {
 	}
 
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList, String sheetName) {
+		if (dataList.isEmpty()) {
+			logger.warn("dataList is empty");
+			return;
+		}
+		
 		final XSpreadsheet   xSpreadsheet   = spreadSheet.getSheet(sheetName);
 		final XNumberFormats xNumberFormats = spreadSheet.getNumberFormats();
 		final int            headerRow;
@@ -390,6 +395,11 @@ public class Sheet {
 		}
 	}
 	public static <E extends Sheet> void fillSheet(SpreadSheet spreadSheet, List<E> dataList) {
+		if (dataList.isEmpty()) {
+			logger.warn("dataList is empty");
+			return;
+		}
+		
 		E o = dataList.iterator().next();
 		String sheetName = getSheetName(o.getClass());
 		fillSheet(spreadSheet, dataList, sheetName);

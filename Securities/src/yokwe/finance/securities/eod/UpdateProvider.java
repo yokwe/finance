@@ -17,6 +17,6 @@ public interface UpdateProvider {
 	public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast);
 	
 	public default boolean updateFile(String exch, String symbol, boolean newFile) {
-		return updateFile(exch, symbol, newFile, DATE_FIRST, DATE_FIRST);
+		return updateFile(exch, symbol, newFile, DATE_FIRST, DATE_LAST);
 	}
 }

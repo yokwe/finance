@@ -254,16 +254,25 @@ public class UpdatePrice {
 			logger.error("Unexpected header  {}", header);
 			throw new SecuritiesException("Unexpected header");
 		}
-		// second line should be last data
-		String line = lines[1];
-		String[] values = line.split(",");
-		if (values.length != 7) {
-			logger.error("Unexpected line  {}", line);
-			throw new SecuritiesException("Unexpected header");
-		}
-		String date = values[0];
 		
-		return !date.equals(UpdateProvider.DATE_LAST.toString());
+		// Does it contains data of DATE_LAST?
+		String  dateLastString = UpdateProvider.DATE_LAST.toString();
+		boolean needUpdate     = true;
+		for(int i = 1; i < lines.length; i++) {
+			String line = lines[i];
+			String[] values = line.split(",");
+			if (values.length != 7) {
+				logger.error("Unexpected line  {}", line);
+				throw new SecuritiesException("Unexpected header");
+			}
+			String date = values[0];
+			if (date.equals(dateLastString)) {
+				needUpdate = false;
+				break;
+			}
+		}
+		
+		return needUpdate;
 	}
 	
 	private static void updateFile(UpdateProvider updateProvider) {

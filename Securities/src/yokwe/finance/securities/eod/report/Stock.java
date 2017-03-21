@@ -164,6 +164,7 @@ public class Stock {
 				ret = DoubleUtil.round(ret + unrealizedGain, 2);
 			} else {
 				// price of symbol at the date is not available
+				logger.warn("price of {} at {} is missing", symbol, date);
 				return 0;
 			}
 		}

@@ -44,6 +44,15 @@ public class DateMap<E> {
 		return map.get(validDate);
 	}
 	
+	public boolean contains(String date) {
+		int index = Collections.binarySearch(dateList, date);
+		if (index < 0) {
+			index = - (index + 1) - 1;
+			if (index < 0) return false;
+		}
+		return true;
+	}
+	
 	public int size() {
 		return dateList.size();
 	}

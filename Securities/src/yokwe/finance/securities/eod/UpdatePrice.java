@@ -126,7 +126,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			
-			if (targetFound || newFile) {
+			if (targetFound || (newFile && 1 < lines.length)) {
 				Price.save(priceList, file);
 				return true;
 			} else {
@@ -210,7 +210,7 @@ public class UpdatePrice {
 				priceList.add(new Price(date, symbol, open, high, low, close, volume));
 			}
 			
-			if (targetFound || newFile) {
+			if (targetFound || (newFile && 1 < lines.length)) {
 				Price.save(priceList, file);
 				return true;
 			} else {

@@ -151,15 +151,21 @@ public class Stock {
 		double ret = 0;
 		
 		for(Stock stock: map.values()) {
+			String symbol   = stock.symbol;
 			double quantity = stock.totalQuantity;
-			double cost     = stock.totalCost;
 			
 			if (quantity == 0) continue;
 			
-			double price = PriceUtil.getClose(stock.symbol, date);
-			double unrealizedGain = (price * quantity) - commission - cost;
-			
-			ret = DoubleUtil.round(ret + unrealizedGain, 2);
+			if (PriceUtil.contains(symbol, date)) {
+				double cost  = stock.totalCost;
+				double price = PriceUtil.getClose(symbol, date);
+				double unrealizedGain = (price * quantity) - commission - cost;
+				
+				ret = DoubleUtil.round(ret + unrealizedGain, 2);
+			} else {
+				// price of symbol at the date is not available
+				return 0;
+			}
 		}
 		return ret;
 	}

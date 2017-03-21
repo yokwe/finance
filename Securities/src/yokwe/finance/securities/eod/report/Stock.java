@@ -146,26 +146,33 @@ public class Stock {
 		return DoubleUtil.round(totalCostBefore - stock.totalCost, 2);
 	}
 	
-	public static double getUnrealizedValue(String date, List<Position> positionList) {
+	
+	public static double getUnrealizedValue(String date, Position position) {
 		double commission = 5;
 		double ret = 0;
 		
+		String symbol   = position.symbol;
+		double quantity = position.quantity;
+		
+		if (PriceUtil.contains(symbol, date)) {
+			double price = PriceUtil.getClose(symbol, date);
+			double unrealizedValue = (price * quantity) - commission;
+			
+			ret = DoubleUtil.round(ret + unrealizedValue, 2);
+		} else {
+			// price of symbol at the date is not available
+			logger.warn("price of {} at {} is missing", symbol, date);
+			return 0;
+		}
+		return ret;
+	}
+
+	public static double getUnrealizedValue(String date, List<Position> positionList) {
+		double ret = 0;
+		
 		for(Position position: positionList) {
-			String symbol   = position.symbol;
-			double quantity = position.quantity;
-			
-			if (quantity == 0) continue;
-			
-			if (PriceUtil.contains(symbol, date)) {
-				double price = PriceUtil.getClose(symbol, date);
-				double unrealizedValue = (price * quantity) - commission;
-				
-				ret = DoubleUtil.round(ret + unrealizedValue, 2);
-			} else {
-				// price of symbol at the date is not available
-				logger.warn("price of {} at {} is missing", symbol, date);
-				return 0;
-			}
+			double unrealizedValue = getUnrealizedValue(date, position);
+			ret = DoubleUtil.round(ret + unrealizedValue, 2);
 		}
 		return ret;
 	}

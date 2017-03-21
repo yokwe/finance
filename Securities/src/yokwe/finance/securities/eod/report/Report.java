@@ -261,6 +261,35 @@ public class Report {
 		}
 	}
 
+	private static void buildStockGainList(List<Transaction> transactionList, List<StockGain> stockGainList) {
+		double stock    = 0;
+		double realGain = 0;
+		
+		for(Transaction transaction: transactionList) {
+			StockGain stockGain = new StockGain();
+			
+			switch(transaction.type) {
+			case WIRE_IN:
+			case WIRE_OUT:
+			case ACH_IN:
+			case ACH_OUT:
+			case INTEREST:
+			case DIVIDEND:
+			case BUY:
+				stock = DoubleUtil.round(stock + transaction.debit, 2);
+				break;
+			case SELL:
+				stock = DoubleUtil.round(stock - transaction.sellCost, 2);
+				double sellGain = transaction.credit - transaction.sellCost;
+				realGain = DoubleUtil.round(realGain + sellGain, 2);
+				break;
+			default:
+				logger.error("Unknown transaction type {}", transaction.type);
+				throw new SecuritiesException("Unknown transaction type");
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		
@@ -286,7 +315,9 @@ public class Report {
 			List<Account> accountList = new ArrayList<>();
 			buildAccountList(transactionList, accountList);
 
-
+			List<StockGain> stockGainList = new ArrayList<>();
+			buildStockGainList(transactionList, stockGainList);
+			
 			// Save accountList
 			{
 				String sheetName = Sheet.getSheetName(Account.class);
@@ -294,6 +325,17 @@ public class Report {
 				Sheet.fillSheet(docSave, accountList);
 				
 				String newSheetName = String.format("%s-%s",  "9999", "detail");
+				logger.info("sheet {}", newSheetName);
+				docSave.renameSheet(sheetName, newSheetName);
+			}
+						
+			// Save stockGainList
+			{
+				String sheetName = Sheet.getSheetName(StockGain.class);
+				docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+				Sheet.fillSheet(docSave, stockGainList);
+				
+				String newSheetName = String.format("%s-%s",  "9999", "stockGain");
 				logger.info("sheet {}", newSheetName);
 				docSave.renameSheet(sheetName, newSheetName);
 			}

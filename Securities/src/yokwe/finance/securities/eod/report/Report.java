@@ -1,5 +1,6 @@
 package yokwe.finance.securities.eod.report;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -10,10 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
+import yokwe.finance.securities.eod.Market;
+import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Activity;
-import yokwe.finance.securities.tax.Price;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Report {
@@ -26,7 +28,9 @@ public class Report {
 	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/EOD_REPORT_TEMPLATE.ods";
 	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/EOD_REPORT_%s.ods", TIMESTAMP);
 
-	private static void readActivity(SpreadSheet docActivity, List<Transaction> transactionList, DateMap<List<Stock.Position>> positionMap) {
+	private static List<Transaction> getTransactionList(SpreadSheet docActivity) {
+		List<Transaction> transactionList = new ArrayList<>();
+		
 		List<String> sheetNameList = docActivity.getSheetNameList();
 		sheetNameList.sort((a, b) -> a.compareTo(b));
 		
@@ -47,11 +51,9 @@ public class Report {
 					double total    = DoubleUtil.round((activity.price * activity.quantity) + activity.commission, 2);
 					
 					Stock.buy(date, symbol, quantity, total);
-					Transaction transaction = Transaction.buy(date, symbol, quantity, total);
+					Transaction transaction = Transaction.buy(date, symbol, quantity, total, Stock.getPositionList());
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
-					//
-					positionMap.put(date, Stock.getPositionList());
 					break;
 				}
 				case "SOLD":
@@ -63,11 +65,9 @@ public class Report {
 					double total    = DoubleUtil.round((activity.price * activity.quantity) - activity.commission, 2);
 
 					double sellCost = Stock.sell(date, symbol, quantity, total);
-					Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost);
+					Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost, Stock.getPositionList());
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
-					//
-					positionMap.put(date, Stock.getPositionList());
 					break;
 				}
 				case "INTEREST": {
@@ -134,31 +134,12 @@ public class Report {
 				}
 			}
 		}
+		return transactionList;
 	}
 	
-	private static void addDummySellTransaction(List<Transaction> transactionList) {
-		for(Stock stock: Stock.getMap().values()) {
-			if (stock.totalQuantity == 0) continue;
-			logger.info("Stock  {}", stock);
-			
-			String date       = "9999-12-31";
-			String symbol     = stock.symbol;
-			double price      = Price.getLastPrice(symbol).close;
-			double quantity   = stock.totalQuantity;
-			double commission = 5;
-			double total      = DoubleUtil.round((price * quantity) - commission, 2);
-
-			double sellCost = Stock.sell(date, symbol, quantity, total);
-			Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost);
-			logger.info("transaction {}", transaction);
-			transactionList.add(transaction);
-		}
+	private static DateMap<Double> getCostMap(List<Transaction> transactionList) {
+		DateMap<Double> costMap = new DateMap<>();
 		
-		// Save cache for later use
-		Price.saveCache();
-	}
-	
-	private static void buildCostMap(List<Transaction> transactionList, DateMap<Double> costMap) {
 		double stockTotal = 0;
 		
 		for(Transaction transaction: transactionList) {
@@ -183,9 +164,37 @@ public class Report {
 				throw new SecuritiesException("Unknown transaction type");
 			}
 		}
+		return costMap;
 	}
 	
-	private static void buildAccountList(List<Transaction> transactionList, List<Account> accountList) {
+	private static DateMap<Double> getValueMap(List<Transaction> transactionList) {
+		DateMap<Double> valueMap = new DateMap<>();
+		
+		for(Transaction transaction: transactionList) {
+			switch(transaction.type) {
+			case WIRE_IN:
+			case WIRE_OUT:
+			case ACH_IN:
+			case ACH_OUT:
+			case INTEREST:
+			case DIVIDEND:
+				break;
+			case BUY:
+			case SELL:
+				double value = Position.getValue(transaction.date, transaction.positionList);
+				valueMap.put(transaction.date, value);
+				break;
+			default:
+				logger.error("Unknown transaction type {}", transaction.type);
+				throw new SecuritiesException("Unknown transaction type");
+			}
+		}
+		return valueMap;
+	}
+
+	private static List<Account> getAccountList(List<Transaction> transactionList) {
+		List<Account> accountList = new ArrayList<>();
+		
 		double fundTotal  = 0;
 		double cashTotal  = 0;
 		double stockTotal = 0;
@@ -257,37 +266,96 @@ public class Report {
 			account.gainTotal  = cashTotal + stockTotal - fundTotal;
 			accountList.add(new Account(account));
 			
-			logger.info("account {}", account);
+//			logger.info("account {}", account);
 		}
+		
+		return accountList;
 	}
 
-	private static void buildStockGainList(List<Transaction> transactionList, List<StockGain> stockGainList) {
-		double stock    = 0;
-		double realGain = 0;
-		
-		for(Transaction transaction: transactionList) {
-			StockGain stockGain = new StockGain();
+	private static List<StockGain> getStockGainList(List<Transaction> transactionList, DateMap<Double> costMap, DateMap<Double> valueMap) {
+		DateMap<StockGain> stockGainMap = new DateMap<>();
+		{
+			double stockTotal = 0;
+			double gainTotal  = 0;
 			
-			switch(transaction.type) {
-			case WIRE_IN:
-			case WIRE_OUT:
-			case ACH_IN:
-			case ACH_OUT:
-			case INTEREST:
-			case DIVIDEND:
-			case BUY:
-				stock = DoubleUtil.round(stock + transaction.debit, 2);
-				break;
-			case SELL:
-				stock = DoubleUtil.round(stock - transaction.sellCost, 2);
-				double sellGain = transaction.credit - transaction.sellCost;
-				realGain = DoubleUtil.round(realGain + sellGain, 2);
-				break;
-			default:
-				logger.error("Unknown transaction type {}", transaction.type);
-				throw new SecuritiesException("Unknown transaction type");
+			for(Transaction transaction: transactionList) {
+				String date = transaction.date;
+				
+				switch(transaction.type) {
+				case WIRE_IN:
+				case WIRE_OUT:
+				case ACH_IN:
+				case ACH_OUT:
+				case INTEREST:
+				case DIVIDEND:
+					break;
+				case BUY: {
+					if (!stockGainMap.contains(date)) {
+						stockGainMap.put(date, new StockGain(date));
+					}
+					StockGain stockGain = new StockGain(stockGainMap.get(date));
+					stockGain.date = date;
+					stockGainMap.put(date, stockGain);
+					
+					double buy = transaction.debit;
+					stockTotal = DoubleUtil.round(stockTotal + buy, 2);
+					
+					stockGain.stock      = stockTotal;
+					stockGain.unreal     = valueMap.get(date);
+					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					stockGain.buy        = DoubleUtil.round(stockGain.buy + buy, 2);
+//					stockGain.sell
+//					stockGain.sellGain
+					stockGain.realGain   = gainTotal;
+					
+					logger.info("buy  {}", stockGain);
+					break;
+				}
+				case SELL: {
+					StockGain stockGain = new StockGain(stockGainMap.get(date));
+					stockGain.date = date;
+					stockGainMap.put(date, stockGain);
+
+					double sell = transaction.credit;
+					double cost = transaction.sellCost;
+					double gain = sell - cost;
+					
+					stockTotal = DoubleUtil.round(stockTotal + cost, 2);
+					gainTotal  = DoubleUtil.round(gainTotal + gain, 2);
+
+					stockGain.stock      = stockTotal;
+					stockGain.unreal     = valueMap.get(date);
+					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+//					stockGain.buy
+					stockGain.sell       = DoubleUtil.round(stockGain.sell + sell, 2);
+					stockGain.sellGain   = DoubleUtil.round(stockGain.sellGain + gain, 2);
+					stockGain.realGain   = gainTotal;
+
+					logger.info("sell {}", stockGain);
+					break;
+				}
+				default:
+					logger.error("Unknown transaction type {}", transaction.type);
+					throw new SecuritiesException("Unknown transaction type");
+				}
 			}
 		}
+		
+		// Build stockGainList for last 1 month from stockGainMap
+		List<StockGain> stockGainList = new ArrayList<>();
+		LocalDate last = UpdateProvider.DATE_LAST;		
+		for(LocalDate date = last.minusMonths(1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+			if (Market.isClosed(date)) continue;
+			
+			StockGain stockGain = new StockGain(stockGainMap.get(date.toString()));
+
+			stockGain.date       = date.toString();
+			stockGain.unreal     = valueMap.get(date);
+			stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+			
+			stockGainList.add(stockGain);
+		}
+		return stockGainList;
 	}
 	
 	public static void main(String[] args) {
@@ -297,26 +365,16 @@ public class Report {
 			SpreadSheet docLoad = new SpreadSheet(URL_TEMPLATE, true);
 			SpreadSheet docSave = new SpreadSheet();
 
-			List<Transaction> transactionList = new ArrayList<>();
-			DateMap<List<Stock.Position>> positionMap = new DateMap<>();
-			
-			// Build transactionList
-			readActivity(docActivity, transactionList, positionMap);
-			addDummySellTransaction(transactionList);
-			
-			// Sort transactionList
+			List<Transaction> transactionList = getTransactionList(docActivity);
 			Collections.sort(transactionList);
 
-			// Build costMap
-			DateMap<Double> costMap = new DateMap<>();
-			buildCostMap(transactionList, costMap);
+			DateMap<Double> costMap  = getCostMap(transactionList);
+			DateMap<Double> valueMap = getValueMap(transactionList);
 
 			// Build accountList
-			List<Account> accountList = new ArrayList<>();
-			buildAccountList(transactionList, accountList);
+			List<Account> accountList = getAccountList(transactionList);
 
-			List<StockGain> stockGainList = new ArrayList<>();
-			buildStockGainList(transactionList, stockGainList);
+			List<StockGain> stockGainList = getStockGainList(transactionList, costMap, valueMap);
 			
 			// Save accountList
 			{

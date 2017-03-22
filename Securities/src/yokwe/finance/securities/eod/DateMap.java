@@ -1,5 +1,6 @@
 package yokwe.finance.securities.eod;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,9 @@ public class DateMap<E> {
 	public E get(String date) {
 		String validDate = getValidDate(date);
 		return map.get(validDate);
+	}
+	public E get(LocalDate date) {
+		return get(date.toString());
 	}
 	
 	public boolean contains(String date) {

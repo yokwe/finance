@@ -52,6 +52,9 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 	public StockGain() {
 		this("", 0, 0, 0, 0, 0, 0, 0);
 	}
+	public StockGain(String date) {
+		this(date, 0, 0, 0, 0, 0, 0, 0);
+	}
 	public StockGain(StockGain that) {
 		this.date       = that.date;
 		this.stock      = that.stock;
@@ -61,6 +64,10 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 		this.sell       = that.sell;
 		this.sellGain   = that.sellGain;
 		this.realGain   = that.realGain;
+	}
+	
+	public static StockGain buy(String date, double stock, double unreal, double unrealGain, double buy, double realGain) {
+		return new StockGain(date, stock, unreal, unrealGain, buy, 0, 0, realGain);
 	}
 	
 	@Override

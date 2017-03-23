@@ -69,6 +69,9 @@ public class Market {
 	public static final boolean isClosed(LocalDateTime dateTime) {
 		return isClosed(dateTime.toLocalDate());
 	}
+	public static final boolean isClosed(String date) {
+		return isClosed(LocalDate.parse(date));
+	}
 	public static final boolean isClosed(LocalDate date) {
 		DayOfWeek dayOfWeek = date.getDayOfWeek();
 		if (dayOfWeek == DayOfWeek.SUNDAY)   return true;

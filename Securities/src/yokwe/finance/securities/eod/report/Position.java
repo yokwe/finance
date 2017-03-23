@@ -20,6 +20,11 @@ public class Position {
 		this.symbol   = symbol;
 		this.quantity = quantity;
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("[%s %.4f]", symbol, quantity);
+	}
 
 	
 	public static double getValue(String date, Position position) {

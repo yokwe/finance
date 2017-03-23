@@ -16,11 +16,11 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 	public double stock;
 
 	@ColumnName("Unreal")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double unreal;
 
 	@ColumnName("Unreal Gain")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
 	public double unrealGain;
 
 	@ColumnName("Buy")

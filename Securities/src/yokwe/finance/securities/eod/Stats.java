@@ -164,7 +164,7 @@ public class Stats extends Sheet {
 		final String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
 
 		final String urlTemplate      = "file:///home/hasegawa/Dropbox/Trade/STATS_REPORT_TEMPLATE.ods";
-		final String urlReport        = String.format("file:///home/hasegawa/Dropbox/Trade/STATS_REPORT_%s.ods", timeStamp);
+		final String urlReport        = String.format("file:///home/hasegawa/Dropbox/Trade/Report/STATS_REPORT_%s.ods", timeStamp);
 
 		SpreadSheet docLoad = new SpreadSheet(urlTemplate, true);
 		SpreadSheet docSave = new SpreadSheet();

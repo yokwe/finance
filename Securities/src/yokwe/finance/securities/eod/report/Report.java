@@ -1,6 +1,5 @@
 package yokwe.finance.securities.eod.report;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.Market;
-import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Activity;
@@ -41,6 +39,23 @@ public class Report {
 			}
 			logger.info("Sheet {}", sheetName);
 			for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
+				// Sanity check
+				{
+					if (activity.date != null && 0 < activity.date.length()) {
+						String date = activity.date;
+						if (Market.isClosed(date)) {
+							logger.error("Market is closed - date -  {}", activity);
+							throw new SecuritiesException("Market is closed");
+						}
+					}
+					if (activity.tradeDate != null && 0 < activity.tradeDate.length()) {
+						String date = activity.tradeDate;
+						if (Market.isClosed(date)) {
+							logger.error("Market is closed - tradeDate -  {}", activity);
+							throw new SecuritiesException("Market is closed");
+						}
+					}
+				}
 				switch(activity.transaction) {
 				case "BOUGHT":
 				case "NAME CHG": {
@@ -290,19 +305,27 @@ public class Report {
 				case DIVIDEND:
 					break;
 				case BUY: {
-					if (!stockGainMap.contains(date)) {
-						stockGainMap.put(date, new StockGain(date));
+					StockGain stockGain;
+					if (stockGainMap.containsKey(date)) {
+						stockGain = stockGainMap.get(date);
+					} else {
+						stockGain = new StockGain(date);
+						stockGainMap.put(date, stockGain);
 					}
-					StockGain stockGain = new StockGain(stockGainMap.get(date));
-					stockGain.date = date;
-					stockGainMap.put(date, stockGain);
 					
 					double buy = transaction.debit;
+					double unreal = valueMap.get(date);
+					
 					stockTotal = DoubleUtil.round(stockTotal + buy, 2);
 					
 					stockGain.stock      = stockTotal;
-					stockGain.unreal     = valueMap.get(date);
-					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					if (unreal == Position.NO_VALUE) {
+						stockGain.unreal     = 0;
+						stockGain.unrealGain = 0;
+					} else {
+						stockGain.unreal     = valueMap.get(date);
+						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					}
 					stockGain.buy        = DoubleUtil.round(stockGain.buy + buy, 2);
 //					stockGain.sell
 //					stockGain.sellGain
@@ -312,20 +335,30 @@ public class Report {
 					break;
 				}
 				case SELL: {
-					StockGain stockGain = new StockGain(stockGainMap.get(date));
-					stockGain.date = date;
-					stockGainMap.put(date, stockGain);
+					StockGain stockGain;
+					if (stockGainMap.containsKey(date)) {
+						stockGain = stockGainMap.get(date);
+					} else {
+						stockGain = new StockGain(date);
+						stockGainMap.put(date, stockGain);
+					}
 
-					double sell = transaction.credit;
-					double cost = transaction.sellCost;
-					double gain = sell - cost;
-					
-					stockTotal = DoubleUtil.round(stockTotal + cost, 2);
+					double sell   = transaction.credit;
+					double cost   = transaction.sellCost;
+					double gain   = sell - cost;
+					double unreal = valueMap.get(date);
+
+					stockTotal = DoubleUtil.round(stockTotal - cost, 2);
 					gainTotal  = DoubleUtil.round(gainTotal + gain, 2);
 
 					stockGain.stock      = stockTotal;
-					stockGain.unreal     = valueMap.get(date);
-					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					if (unreal == Position.NO_VALUE) {
+						stockGain.unreal     = 0;
+						stockGain.unrealGain = 0;
+					} else {
+						stockGain.unreal     = valueMap.get(date);
+						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					}
 //					stockGain.buy
 					stockGain.sell       = DoubleUtil.round(stockGain.sell + sell, 2);
 					stockGain.sellGain   = DoubleUtil.round(stockGain.sellGain + gain, 2);
@@ -342,19 +375,19 @@ public class Report {
 		}
 		
 		// Build stockGainList for last 1 month from stockGainMap
-		List<StockGain> stockGainList = new ArrayList<>();
-		LocalDate last = UpdateProvider.DATE_LAST;		
-		for(LocalDate date = last.minusMonths(1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
-			if (Market.isClosed(date)) continue;
-			
-			StockGain stockGain = new StockGain(stockGainMap.get(date.toString()));
-
-			stockGain.date       = date.toString();
-			stockGain.unreal     = valueMap.get(date);
-			stockGain.unrealGain = stockGain.unreal - stockGain.stock;
-			
-			stockGainList.add(stockGain);
-		}
+		List<StockGain> stockGainList = new ArrayList<>(stockGainMap.getMap().values());
+//		LocalDate last = UpdateProvider.DATE_LAST;		
+//		for(LocalDate date = last.minusMonths(1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+//			if (Market.isClosed(date)) continue;
+//			
+//			StockGain stockGain = new StockGain(stockGainMap.get(date.toString()));
+//
+//			stockGain.date       = date.toString();
+//			stockGain.unreal     = valueMap.get(date);
+//			stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+//			
+//			stockGainList.add(stockGain);
+//		}
 		return stockGainList;
 	}
 	

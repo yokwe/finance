@@ -2,13 +2,11 @@ package yokwe.finance.securities.eod.report;
 
 import java.util.List;
 
-import org.slf4j.LoggerFactory;
-
 import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Position {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Position.class);
+//	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Position.class);
 	
 	public static final double COMMISSION = 5;
 	public static final double NO_VALUE   = -1;
@@ -40,7 +38,6 @@ public class Position {
 			ret = DoubleUtil.round(ret + value, 2);
 		} else {
 			// price of symbol at the date is not available
-			logger.warn("price of {} at {} is missing", symbol, date);
 			return NO_VALUE;
 		}
 		return ret;

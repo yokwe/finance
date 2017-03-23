@@ -1,16 +1,20 @@
 package yokwe.finance.securities.eod.report;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.Market;
+import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Activity;
@@ -152,61 +156,6 @@ public class Report {
 		return transactionList;
 	}
 	
-	private static DateMap<Double> getCostMap(List<Transaction> transactionList) {
-		DateMap<Double> costMap = new DateMap<>();
-		
-		double stockTotal = 0;
-		
-		for(Transaction transaction: transactionList) {
-			switch(transaction.type) {
-			case WIRE_IN:
-			case WIRE_OUT:
-			case ACH_IN:
-			case ACH_OUT:
-			case INTEREST:
-			case DIVIDEND:
-				break;
-			case BUY:
-				stockTotal = DoubleUtil.round(stockTotal + transaction.debit, 2);
-				costMap.put(transaction.date, stockTotal);
-				break;
-			case SELL:
-				stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
-				costMap.put(transaction.date, stockTotal);
-				break;
-			default:
-				logger.error("Unknown transaction type {}", transaction.type);
-				throw new SecuritiesException("Unknown transaction type");
-			}
-		}
-		return costMap;
-	}
-	
-	private static DateMap<Double> getValueMap(List<Transaction> transactionList) {
-		DateMap<Double> valueMap = new DateMap<>();
-		
-		for(Transaction transaction: transactionList) {
-			switch(transaction.type) {
-			case WIRE_IN:
-			case WIRE_OUT:
-			case ACH_IN:
-			case ACH_OUT:
-			case INTEREST:
-			case DIVIDEND:
-				break;
-			case BUY:
-			case SELL:
-				double value = Position.getValue(transaction.date, transaction.positionList);
-				valueMap.put(transaction.date, value);
-				break;
-			default:
-				logger.error("Unknown transaction type {}", transaction.type);
-				throw new SecuritiesException("Unknown transaction type");
-			}
-		}
-		return valueMap;
-	}
-
 	private static List<Account> getAccountList(List<Transaction> transactionList) {
 		List<Account> accountList = new ArrayList<>();
 		
@@ -287,8 +236,10 @@ public class Report {
 		return accountList;
 	}
 
-	private static List<StockGain> getStockGainList(List<Transaction> transactionList, DateMap<Double> costMap, DateMap<Double> valueMap) {
-		DateMap<StockGain> stockGainMap = new DateMap<>();
+	private static List<StockGain> getStockGainList(List<Transaction> transactionList) {
+		Map<String, StockGain>  stockGainMap = new TreeMap<>();
+		DateMap<List<Position>> positionMap  = new DateMap<>();
+		
 		{
 			double stockTotal = 0;
 			double gainTotal  = 0;
@@ -305,6 +256,8 @@ public class Report {
 				case DIVIDEND:
 					break;
 				case BUY: {
+					positionMap.put(date, transaction.positionList);
+
 					StockGain stockGain;
 					if (stockGainMap.containsKey(date)) {
 						stockGain = stockGainMap.get(date);
@@ -313,8 +266,8 @@ public class Report {
 						stockGainMap.put(date, stockGain);
 					}
 					
-					double buy = transaction.debit;
-					double unreal = valueMap.get(date);
+					double buy    = transaction.debit;
+					double unreal = Position.getValue(date, transaction.positionList);
 					
 					stockTotal = DoubleUtil.round(stockTotal + buy, 2);
 					
@@ -323,7 +276,7 @@ public class Report {
 						stockGain.unreal     = 0;
 						stockGain.unrealGain = 0;
 					} else {
-						stockGain.unreal     = valueMap.get(date);
+						stockGain.unreal     = unreal;
 						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
 					}
 					stockGain.buy        = DoubleUtil.round(stockGain.buy + buy, 2);
@@ -335,6 +288,8 @@ public class Report {
 					break;
 				}
 				case SELL: {
+					positionMap.put(date, transaction.positionList);
+
 					StockGain stockGain;
 					if (stockGainMap.containsKey(date)) {
 						stockGain = stockGainMap.get(date);
@@ -346,7 +301,7 @@ public class Report {
 					double sell   = transaction.credit;
 					double cost   = transaction.sellCost;
 					double gain   = sell - cost;
-					double unreal = valueMap.get(date);
+					double unreal = Position.getValue(date, transaction.positionList);
 
 					stockTotal = DoubleUtil.round(stockTotal - cost, 2);
 					gainTotal  = DoubleUtil.round(gainTotal + gain, 2);
@@ -356,7 +311,7 @@ public class Report {
 						stockGain.unreal     = 0;
 						stockGain.unrealGain = 0;
 					} else {
-						stockGain.unreal     = valueMap.get(date);
+						stockGain.unreal     = unreal;
 						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
 					}
 //					stockGain.buy
@@ -374,20 +329,36 @@ public class Report {
 			}
 		}
 		
-		// Build stockGainList for last 1 month from stockGainMap
-		List<StockGain> stockGainList = new ArrayList<>(stockGainMap.getMap().values());
-//		LocalDate last = UpdateProvider.DATE_LAST;		
-//		for(LocalDate date = last.minusMonths(1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
-//			if (Market.isClosed(date)) continue;
-//			
-//			StockGain stockGain = new StockGain(stockGainMap.get(date.toString()));
-//
-//			stockGain.date       = date.toString();
-//			stockGain.unreal     = valueMap.get(date);
-//			stockGain.unrealGain = stockGain.unreal - stockGain.stock;
-//			
-//			stockGainList.add(stockGain);
-//		}
+		// Build stockGainList for last 3 month from stockGainMap
+		List<StockGain> stockGainList = new ArrayList<>();
+		{
+			StockGain stockGain = null;
+			LocalDate last = UpdateProvider.DATE_LAST;		
+			for(LocalDate date = last.minusMonths(3); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+				if (Market.isClosed(date)) continue;
+				
+				// Skip if unreal has no value.
+				double unreal = Position.getValue(date.toString(), positionMap.get(date));
+				if (unreal == Position.NO_VALUE) continue;
+				
+				if (stockGainMap.containsKey(date.toString())) {
+					stockGain = new StockGain(stockGainMap.get(date.toString()));
+				} else {
+					if (stockGain == null) continue;
+					
+					// Before reuse, clear some fields.
+					stockGain.buy      = 0;
+					stockGain.sell     = 0;
+					stockGain.sellGain = 0;
+				}
+				
+				stockGain.date       = date.toString();
+				stockGain.unreal     = unreal;
+				stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+
+				stockGainList.add(new StockGain(stockGain));
+			}
+		}
 		return stockGainList;
 	}
 	
@@ -401,13 +372,10 @@ public class Report {
 			List<Transaction> transactionList = getTransactionList(docActivity);
 			Collections.sort(transactionList);
 
-			DateMap<Double> costMap  = getCostMap(transactionList);
-			DateMap<Double> valueMap = getValueMap(transactionList);
-
 			// Build accountList
 			List<Account> accountList = getAccountList(transactionList);
 
-			List<StockGain> stockGainList = getStockGainList(transactionList, costMap, valueMap);
+			List<StockGain> stockGainList = getStockGainList(transactionList);
 			
 			// Save accountList
 			{

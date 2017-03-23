@@ -56,6 +56,9 @@ public class DateMap<E> {
 		}
 		return true;
 	}
+	public boolean containsKey(String date) {
+		return map.containsKey(date);
+	}
 	
 	public int size() {
 		return dateList.size();

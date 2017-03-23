@@ -37,7 +37,7 @@ public class Transaction implements Comparable<Transaction> {
 	
 	@Override
 	public String toString() {
-		return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f %s", type, date, symbol, quantity, debit, credit, sellCost, positionList);
+		return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f %2d", type, date, symbol, quantity, debit, credit, sellCost, positionList.size());
 	}
 	
 	public static Transaction buy(String date, String symbol, double quantity, double debit, List<Position> positionList) {

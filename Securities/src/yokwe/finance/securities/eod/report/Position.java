@@ -11,6 +11,7 @@ public class Position {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Position.class);
 	
 	public static final double COMMISSION = 5;
+	public static final double NO_VALUE   = -1;
 
 	public final String symbol;
 	public final double quantity;
@@ -35,7 +36,7 @@ public class Position {
 		} else {
 			// price of symbol at the date is not available
 			logger.warn("price of {} at {} is missing", symbol, date);
-			return 0;
+			return NO_VALUE;
 		}
 		return ret;
 	}
@@ -45,6 +46,8 @@ public class Position {
 		
 		for(Position position: positionList) {
 			double value = getValue(date, position);
+			if (value == NO_VALUE) return NO_VALUE;
+			
 			ret = DoubleUtil.round(ret + value, 2);
 		}
 		return ret;

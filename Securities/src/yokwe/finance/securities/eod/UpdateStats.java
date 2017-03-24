@@ -110,6 +110,30 @@ public class UpdateStats {
 			ret.div   = DoubleUtil.round(Arrays.stream(divArray).sum(), 4);
 			ret.divc  = divArray.length;
 			ret.yield = DoubleUtil.round(ret.div / ret.price, 3);
+			
+			double divLast  = (divArray.length == 0) ? 0 : divArray[divArray.length - 1];
+			double divAdj;
+			switch(ret.divc) {
+			case 13:
+				divAdj = divLast * 12; // remove irregular dividend
+				break;
+			case 12:
+				divAdj = divLast * 12;
+				break;
+			case 4:
+				divAdj = divLast * 4;
+				break;
+			case 2:
+				divAdj = divLast * 2;
+				break;
+			case 1:
+				divAdj = divLast;
+				break;
+			default:
+				divAdj = 0;
+				break;
+			}
+			ret.yieldAdj = DoubleUtil.round(divAdj / ret.price, 3);
 		}
 		
 		// volume

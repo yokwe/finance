@@ -81,6 +81,10 @@ public class Stats extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
 	public double yield;
 	
+	@ColumnName("yieldAdj")
+	@NumberFormat(SpreadSheet.FORMAT_PERCENT)
+	public double yieldAdj;
+	
 	// volume
 	@ColumnName("vol")
 	@NumberFormat(SpreadSheet.FORMAT_INTEGER)

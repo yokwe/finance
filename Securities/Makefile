@@ -195,3 +195,10 @@ eod-stats:
 	ant run-eod-update-stats
 	cp tmp/eod/stats.csv ~/Dropbox/Trade/stats.csv
 
+#
+# sp500
+#
+fetch-sp500:
+	mkdir -p tmp/fetch/sp500
+	wget -nv -O tmp/fetch/sp500/constituents.csv            'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents.csv'
+	wget -nv -O tmp/fetch/sp500/constituents-financials.csv 'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents-financials.csv'

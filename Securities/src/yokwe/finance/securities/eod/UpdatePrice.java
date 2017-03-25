@@ -41,16 +41,19 @@ public class UpdatePrice {
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+			// Convert from '.PR.' to  '-' in symbol for google
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
+			return updateFile(stock.exchange, stock.symbolGoogle, newFile, dateFirst, dateLast);
+		}
+		
 		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "+");
 			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "+");
 			
-			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-
-			// Convert from '.PR.' to  '-' in symbol for google
-			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", stock.exchange, stock.symbolGoogle, dateFrom, dateTo);
+			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbol, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -147,12 +150,15 @@ public class UpdatePrice {
 			File file = new File(path);
 			return file;
 		}
+		
+		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
+			return updateFile(stock.exchange, stock.symbolYahoo, newFile, dateFirst, dateLast);
+		}		
 
 		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-
 			// first
 			int a = dateFirst.getMonthValue(); // mm
 			int b = dateFirst.getDayOfMonth(); // dd
@@ -161,7 +167,7 @@ public class UpdatePrice {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", symbol, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
@@ -315,9 +321,6 @@ public class UpdatePrice {
 			int showInterval = (symbolSetSize < 100) ? 1 : 100;
 			
 			for(String symbol: symbolSet) {
-				Stock  stock = stockMap.get(symbol);
-				String exch  = stock.exchange;
-
 				int outputCount = count / showInterval;
 				boolean showOutput;
 				if (outputCount != lastOutputCount) {
@@ -332,7 +335,7 @@ public class UpdatePrice {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
-						if (updateProvider.updateFile(exch, symbol, false)) {
+						if (updateProvider.updateFile(symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 							countUpdate++;
 						} else {
@@ -345,7 +348,7 @@ public class UpdatePrice {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol, true)) {
+					if (updateProvider.updateFile(symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 						countNew++;
 					} else {

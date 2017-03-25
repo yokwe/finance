@@ -30,11 +30,14 @@ public class UpdateDividend {
 			return file;
 		}
 
+		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
+			return updateFile(stock.exchange, stock.symbolYahoo, newFile, dateFirst, dateLast);
+		}
+		
 		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-
 			// first
 			int a = dateFirst.getMonthValue(); // mm
 			int b = dateFirst.getDayOfMonth(); // dd
@@ -43,7 +46,7 @@ public class UpdateDividend {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", stock.symbolYahoo, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", symbol, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
@@ -196,7 +199,6 @@ public class UpdateDividend {
 			boolean showOutput;
 			int lastOutputCount = -1;
 			for(Stock stock: stockCollection) {
-				String exch   = stock.exchange;
 				String symbol = stock.symbol;
 
 				int outputCount = count / showInterval;
@@ -212,7 +214,7 @@ public class UpdateDividend {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
-						if (updateProvider.updateFile(exch, symbol, false)) {
+						if (updateProvider.updateFile(symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 							countUpdate++;
 						} else {
@@ -224,7 +226,7 @@ public class UpdateDividend {
 						countSkip++;
 					}
 				} else {
-					if (updateProvider.updateFile(exch, symbol, true)) {
+					if (updateProvider.updateFile(symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 						countNew++;
 					} else {

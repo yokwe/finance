@@ -1,6 +1,7 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,23 @@ import yokwe.finance.securities.SecuritiesException;
 public class MergePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MergePrice.class);
 
+	private static class DelistedStock {
+		public final String exch;
+		public final String symbol;
+		
+		DelistedStock(String exch, String symbol) {
+			this.exch   = exch;
+			this.symbol = symbol;
+		}
+	}
+	
+	private static List<DelistedStock> delistedStockList = new ArrayList<>();
+	static {
+		delistedStockList.add(new DelistedStock("NYSE", "NRF"));
+		delistedStockList.add(new DelistedStock("NYSE", "NRF-A"));
+	}
+	
+	
 	public static void main(String[] args) {
 		logger.info("START");
 
@@ -34,7 +52,18 @@ public class MergePrice {
 		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
 		UpdateProvider priceYahooProvider    = UpdatePrice.getProvider(UpdateProvider.YAHOO);
 		
-		int total       = StockUtil.getSymbolList().size();
+		// Create price file for delisted stock
+		List<String> symbolList = new ArrayList<>(StockUtil.getSymbolList());
+		for(DelistedStock delistedStock: delistedStockList) {
+			logger.info("add delisted stock  {}:{}", delistedStock.exch, delistedStock.symbol);
+			priceGoogleProvider.updateFile(delistedStock.exch, delistedStock.symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
+			priceYahooProvider.updateFile(delistedStock.exch, delistedStock.symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
+			
+			symbolList.add(delistedStock.symbol);
+		}
+		
+		
+		int total       = symbolList.size();
 		int count       = 0;
 		int countGoogle = 0;
 		int countYahoo  = 0;
@@ -43,7 +72,7 @@ public class MergePrice {
 		int showInterval = 100;
 
 		logger.info("MERGE");
-		for(String symbol: StockUtil.getSymbolList()) {
+		for(String symbol: symbolList) {
 			int outputCount = count / showInterval;
 			boolean showOutput;
 			if (outputCount != lastOutputCount) {

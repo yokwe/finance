@@ -23,6 +23,7 @@ public class MergePrice {
 	
 	private static List<DelistedStock> delistedStockList = new ArrayList<>();
 	static {
+		delistedStockList.add(new DelistedStock("NYSE", "ENH-B"));
 		delistedStockList.add(new DelistedStock("NYSE", "NRF"));
 		delistedStockList.add(new DelistedStock("NYSE", "NRF-A"));
 	}

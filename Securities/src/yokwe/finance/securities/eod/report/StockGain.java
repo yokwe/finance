@@ -39,7 +39,11 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public double realGain;
 
-	public StockGain(String date, double stock, double unreal, double unrealGain, double buy, double sell, double sellGain, double realGain) {
+	@ColumnName("Total Gain")
+	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	public double totalGain;
+
+	public StockGain(String date, double stock, double unreal, double unrealGain, double buy, double sell, double sellGain, double realGain, double totalGain) {
 		this.date       = date;
 		this.stock      = stock;
 		this.unreal     = unreal;
@@ -48,12 +52,13 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 		this.sell       = sell;
 		this.sellGain   = sellGain;
 		this.realGain   = realGain;
+		this.totalGain  = totalGain;
 	}
 	public StockGain() {
-		this("", 0, 0, 0, 0, 0, 0, 0);
+		this("", 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 	public StockGain(String date) {
-		this(date, 0, 0, 0, 0, 0, 0, 0);
+		this(date, 0, 0, 0, 0, 0, 0, 0, 0);
 	}
 	public StockGain(StockGain that) {
 		this.date       = that.date;
@@ -64,15 +69,12 @@ public class StockGain extends Sheet implements Comparable<StockGain> {
 		this.sell       = that.sell;
 		this.sellGain   = that.sellGain;
 		this.realGain   = that.realGain;
-	}
-	
-	public static StockGain buy(String date, double stock, double unreal, double unrealGain, double buy, double realGain) {
-		return new StockGain(date, stock, unreal, unrealGain, buy, 0, 0, realGain);
+		this.totalGain  = that.totalGain;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", date, stock, unreal, unrealGain, buy, sell, sellGain, realGain);
+		return String.format("%s %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f %9.2f", date, stock, unreal, unrealGain, buy, sell, sellGain, realGain, totalGain);
 	}
 	@Override
 	public int compareTo(StockGain that) {

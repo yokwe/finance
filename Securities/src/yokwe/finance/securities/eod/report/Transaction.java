@@ -49,7 +49,7 @@ public class Transaction implements Comparable<Transaction> {
 	
 	@Override
 	public String toString() {
-		return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f %2d %-8s %8.2f",
+		return String.format("%-9s %10s %-10s %10.5f %8.2f %8.2f %8.2f %2d %-9s %8.2f",
 				type, date, symbol, quantity, debit, credit, sellCost, positionList.size(), newSymbol, newQuantity);
 	}
 	

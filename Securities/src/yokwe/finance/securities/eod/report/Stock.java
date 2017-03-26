@@ -92,6 +92,19 @@ public class Stock {
 		return String.format("%-10s  %10.5f  %8.2f", symbol, totalQuantity, totalCost);
 	}
 	
+	public static void change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {		
+		Stock stock = Stock.get(symbol);
+		if (DoubleUtil.isAlmostEqual(stock.totalQuantity, -quantity)) {
+			stock.symbol = newSymbol;
+			stock.totalQuantity = newQuantity;
+			map.remove(symbol);
+			map.put(newSymbol, stock);
+		} else {
+			logger.error("Unexpected {} {} {}", symbol, stock.totalQuantity, quantity);
+			throw new SecuritiesException("Unexpected");
+		}
+	}
+	
 	public static void buy(String date, String symbol, double quantity, double total) {
 		Stock stock = Stock.getOrCreate(symbol);
 		// Shortcut

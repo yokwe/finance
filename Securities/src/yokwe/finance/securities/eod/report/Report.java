@@ -366,11 +366,10 @@ public class Report {
 		{
 			StockGain stockGain = null;
 			LocalDate last = UpdateProvider.DATE_LAST;
-			// Start from JAN 1 of the year
-			for(LocalDate date = LocalDate.of(last.getYear(), 1, 1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+			
+			for(LocalDate date = UpdateProvider.DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
 				if (Market.isClosed(date)) continue;
 				
-				// Skip if unreal has no value.
 				double unreal = Position.getValue(date.toString(), positionMap.get(date));
 				
 				if (stockGainMap.containsKey(date.toString())) {
@@ -389,9 +388,11 @@ public class Report {
 				if (unreal != Position.NO_VALUE) {
 					stockGain.unreal     = unreal;
 					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+					stockGain.totalGain  = stockGain.unrealGain + stockGain.realGain;
 				} else {
 					stockGain.unreal     = 0;
 					stockGain.unrealGain = 0;
+					stockGain.totalGain  = 0;
 				}
 
 				stockGainList.add(new StockGain(stockGain));

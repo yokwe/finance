@@ -311,18 +311,12 @@ public class Report {
 					}
 					
 					double buy    = transaction.debit;
-					double unreal = Position.getValue(date, transaction.positionList);
 					
 					stockTotal = DoubleUtil.round(stockTotal + buy, 2);
 					
 					stockGain.stock      = stockTotal;
-					if (unreal == Position.NO_VALUE) {
-						stockGain.unreal     = 0;
-						stockGain.unrealGain = 0;
-					} else {
-						stockGain.unreal     = unreal;
-						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
-					}
+//					stockGain.unreal
+//					stockGain.unrealGain
 					stockGain.buy        = DoubleUtil.round(stockGain.buy + buy, 2);
 //					stockGain.sell
 //					stockGain.sellGain
@@ -345,19 +339,13 @@ public class Report {
 					double sell   = transaction.credit;
 					double cost   = transaction.sellCost;
 					double gain   = sell - cost;
-					double unreal = Position.getValue(date, transaction.positionList);
 
 					stockTotal = DoubleUtil.round(stockTotal - cost, 2);
 					gainTotal  = DoubleUtil.round(gainTotal + gain, 2);
 
 					stockGain.stock      = stockTotal;
-					if (unreal == Position.NO_VALUE) {
-						stockGain.unreal     = 0;
-						stockGain.unrealGain = 0;
-					} else {
-						stockGain.unreal     = unreal;
-						stockGain.unrealGain = stockGain.unreal - stockGain.stock;
-					}
+//					stockGain.unreal
+//					stockGain.unrealGain
 //					stockGain.buy
 					stockGain.sell       = DoubleUtil.round(stockGain.sell + sell, 2);
 					stockGain.sellGain   = DoubleUtil.round(stockGain.sellGain + gain, 2);

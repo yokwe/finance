@@ -37,7 +37,7 @@ public class Market {
 		List<MarketHoliday> marketHolidayList = CSVUtil.loadWithHeader(PATH_MARKET_HOLIDAY_CSV, MarketHoliday.class);
 		for(MarketHoliday marketHoliday: marketHolidayList) {
 			LocalDate date   = LocalDate.parse(marketHoliday.date);
-			boolean   closed = marketHoliday.status.equals("Closed");
+			boolean   closed = marketHoliday.status.toLowerCase().startsWith("close"); // To avoid confusion comes from misspelled word
 			holidayMap.put(date, new Holiday(date, closed));
 		}
 	}

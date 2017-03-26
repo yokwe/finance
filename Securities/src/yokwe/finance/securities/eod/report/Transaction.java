@@ -6,7 +6,7 @@ import java.util.List;
 public class Transaction implements Comparable<Transaction> {
 	enum Type {
 		WIRE_IN, WIRE_OUT, ACH_IN, ACH_OUT,
-		INTEREST, DIVIDEND, BUY, SELL,
+		INTEREST, DIVIDEND, BUY, SELL, CHANGE,
 	}
 
 	public  static final String         FILLER = "*NA*";
@@ -21,7 +21,13 @@ public class Transaction implements Comparable<Transaction> {
 	public final double         sellCost;
 	public final List<Position> positionList;
 	
-	private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit, double sellCost, List<Position> positionList) {
+	// for name change
+	public final String         newSymbol;
+	public final double         newQuantity;
+	
+	
+	private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit, double sellCost, List<Position> positionList,
+			String newSymbol, double newQuantity) {
 		this.type         = type;
 		this.date         = date;
 		this.symbol       = symbol;
@@ -30,14 +36,21 @@ public class Transaction implements Comparable<Transaction> {
 		this.credit       = credit;
 		this.sellCost     = sellCost;
 		this.positionList = positionList;
+		
+		this.newSymbol    = newSymbol;
+		this.newQuantity  = newQuantity;
+	}
+	private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit, double sellCost, List<Position> positionList) {
+		this(type, date, symbol, quantity, debit, credit, sellCost, positionList, "", 0);
 	}
 	private Transaction(Type type, String date, String symbol, double quantity, double debit, double credit) {
-		this(type, date, symbol, quantity, debit, credit, 0, EMPTY_POSITION_LIST);
+		this(type, date, symbol, quantity, debit, credit, 0, EMPTY_POSITION_LIST, "", 0);
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f %2d", type, date, symbol, quantity, debit, credit, sellCost, positionList.size());
+		return String.format("%-8s %10s %-10s %10.5f %8.2f %8.2f %8.2f %2d %-8s %8.2f",
+				type, date, symbol, quantity, debit, credit, sellCost, positionList.size(), newSymbol, newQuantity);
 	}
 	
 	public static Transaction buy(String date, String symbol, double quantity, double debit, List<Position> positionList) {
@@ -63,6 +76,9 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	public static Transaction wireIn(String date, double credit) {
 		return new Transaction(Type.WIRE_IN, date, FILLER, 0, 0, credit);
+	}
+	public static Transaction change(String date, String symbol, double quantity, String newSymbol, double newQuantity, List<Position> positionList) {
+		return new Transaction(Type.CHANGE, date, symbol, quantity, 0, 0, 0, positionList, newSymbol, newQuantity);
 	}
 
 	@Override

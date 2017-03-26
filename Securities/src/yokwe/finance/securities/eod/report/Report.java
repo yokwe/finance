@@ -384,7 +384,6 @@ public class Report {
 				
 				// Skip if unreal has no value.
 				double unreal = Position.getValue(date.toString(), positionMap.get(date));
-				if (unreal == Position.NO_VALUE) continue;
 				
 				if (stockGainMap.containsKey(date.toString())) {
 					stockGain = new StockGain(stockGainMap.get(date.toString()));
@@ -398,8 +397,14 @@ public class Report {
 				}
 				
 				stockGain.date       = date.toString();
-				stockGain.unreal     = unreal;
-				stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+				
+				if (unreal != Position.NO_VALUE) {
+					stockGain.unreal     = unreal;
+					stockGain.unrealGain = stockGain.unreal - stockGain.stock;
+				} else {
+					stockGain.unreal     = 0;
+					stockGain.unrealGain = 0;
+				}
 
 				stockGainList.add(new StockGain(stockGain));
 			}

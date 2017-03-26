@@ -334,6 +334,10 @@ public class Report {
 						break;
 					}
 					default:
+						if (activity.transaction.startsWith("*")) {
+							logger.info("skip transaction {}", activity.transaction);
+							continue;
+						}
 						logger.error("Unknonw transaction {}", activity.transaction);
 						throw new SecuritiesException("Unknonw transaction");
 					}

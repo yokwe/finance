@@ -3,7 +3,7 @@ package yokwe.finance.securities.eod.report;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Transaction implements Comparable<Transaction> {
+public class Transaction {
 	enum Type {
 		WIRE_IN, WIRE_OUT, ACH_IN, ACH_OUT,
 		INTEREST, DIVIDEND, BUY, SELL, CHANGE,
@@ -79,14 +79,5 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	public static Transaction change(String date, String symbol, double quantity, String newSymbol, double newQuantity, List<Position> positionList) {
 		return new Transaction(Type.CHANGE, date, symbol, quantity, 0, 0, 0, positionList, newSymbol, newQuantity);
-	}
-
-	@Override
-	public int compareTo(Transaction that) {
-		if (this.date.equals(that.date)) {
-			return this.symbol.compareTo(that.symbol);
-		} else {
-			return this.date.compareTo(that.date);
-		}
 	}
 }

@@ -190,7 +190,6 @@ public class Report {
 				}
 			}
 		}
-		Collections.sort(transactionList);
 		return transactionList;
 	}
 	

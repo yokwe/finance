@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -42,7 +43,14 @@ public class Report {
 				continue;
 			}
 			logger.info("Sheet {}", sheetName);
-			for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
+			
+			List<Activity> activityList = Sheet.extractSheet(docActivity, Activity.class, sheetName);
+			// Need to sort activityList to adjust item order of activityList
+			Collections.sort(activityList);
+			
+			for(Iterator<Activity> iterator = activityList.iterator(); iterator.hasNext();) {
+				Activity activity = iterator.next();
+				
 				// Sanity check
 				{
 					if (activity.date != null && 0 < activity.date.length()) {
@@ -61,8 +69,37 @@ public class Report {
 					}
 				}
 				switch(activity.transaction) {
-				case "BOUGHT":
+				// TODO temporary ignore old "NAME CHG"
 				case "NAME CHG": {
+					break;
+				}
+				// TODO use "NAME CHG" and "MERGER" after everything works as expected.
+				case "*NAME CHG":
+				case "*MERGER": {
+					Activity nextActivity = iterator.next();
+					if (nextActivity.date.equals(activity.date) && nextActivity.transaction.equals(activity.transaction)) {
+						String date        = activity.date;
+						String newSymbol   = activity.symbol;
+						double newQuantity = activity.quantity;
+						
+						String symbol      = nextActivity.symbol;
+						double quantity    = nextActivity.quantity;
+						
+						Stock.change(date, symbol, quantity, newSymbol, newQuantity);
+						
+						Transaction transaction = Transaction.change(date, symbol, quantity, newSymbol, newQuantity, Stock.getPositionList());
+						logger.info("transaction {}", transaction);
+						transactionList.add(transaction);
+					} else {
+						logger.error("Unexpect transaction  {}  {}", activity.transaction, nextActivity);
+						logger.error("activity  {}", activity);
+						logger.error("next      {}", nextActivity);
+						throw new SecuritiesException("Unexpected");
+					}
+					
+					break;
+				}
+				case "BOUGHT": {
 //					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
 					String date     = activity.tradeDate;
 					String symbol   = activity.symbol;
@@ -153,6 +190,7 @@ public class Report {
 				}
 			}
 		}
+		Collections.sort(transactionList);
 		return transactionList;
 	}
 	
@@ -218,6 +256,9 @@ public class Report {
 				cashTotal  = DoubleUtil.round(cashTotal  + account.sell, 2);
 				stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
 				break;
+			case CHANGE:
+				// Nothing is changed for account
+				break;
 			default:
 				logger.error("Unknown transaction type {}", transaction.type);
 				throw new SecuritiesException("Unknown transaction type");
@@ -254,6 +295,9 @@ public class Report {
 				case ACH_OUT:
 				case INTEREST:
 				case DIVIDEND:
+					break;
+				case CHANGE:
+					positionMap.put(date, transaction.positionList);
 					break;
 				case BUY: {
 					positionMap.put(date, transaction.positionList);
@@ -333,8 +377,9 @@ public class Report {
 		List<StockGain> stockGainList = new ArrayList<>();
 		{
 			StockGain stockGain = null;
-			LocalDate last = UpdateProvider.DATE_LAST;		
-			for(LocalDate date = last.minusMonths(3); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+			LocalDate last = UpdateProvider.DATE_LAST;
+			// Start from JAN 1 of the year
+			for(LocalDate date = LocalDate.of(last.getYear(), 1, 1); date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
 				if (Market.isClosed(date)) continue;
 				
 				// Skip if unreal has no value.
@@ -370,7 +415,6 @@ public class Report {
 			SpreadSheet docSave = new SpreadSheet();
 
 			List<Transaction> transactionList = getTransactionList(docActivity);
-			Collections.sort(transactionList);
 
 			// Build accountList
 			List<Account> accountList = getAccountList(transactionList);

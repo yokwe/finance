@@ -266,6 +266,14 @@
                 </java>
         </target>
 
+        <target name="run-eod-update-delisted">
+                <java classname="yokwe.finance.securities.eod.UpdateDelisted" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
         <target name="run-eod-stats">
                 <java classname="yokwe.finance.securities.eod.Stats" fork="true">
                         <classpath location="${jar.yokwe}" />

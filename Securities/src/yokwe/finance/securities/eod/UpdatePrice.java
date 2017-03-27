@@ -153,6 +153,7 @@ public class UpdatePrice {
 		
 		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
+			// TODO should provide stock.symbol for saving file and stock.symbolYahoo for retrieving data
 			return updateFile(stock.exchange, stock.symbolYahoo, newFile, dateFirst, dateLast);
 		}		
 

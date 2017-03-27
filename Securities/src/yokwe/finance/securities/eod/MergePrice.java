@@ -1,6 +1,9 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,24 +14,6 @@ import yokwe.finance.securities.SecuritiesException;
 public class MergePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MergePrice.class);
 
-	private static class DelistedStock {
-		public final String exch;
-		public final String symbol;
-		
-		DelistedStock(String exch, String symbol) {
-			this.exch   = exch;
-			this.symbol = symbol;
-		}
-	}
-	
-	private static List<DelistedStock> delistedStockList = new ArrayList<>();
-	static {
-		delistedStockList.add(new DelistedStock("NYSE", "ENH-B"));
-		delistedStockList.add(new DelistedStock("NYSE", "NRF"));
-		delistedStockList.add(new DelistedStock("NYSE", "NRF-A"));
-	}
-	
-	
 	public static void main(String[] args) {
 		logger.info("START");
 
@@ -48,21 +33,29 @@ public class MergePrice {
 			for(File file: fileList) {
 				file.delete();
 			}
+			
+			// Copy delisted files
+			for(Delisted delisted: Delisted.load()) {
+				String symbol = delisted.symbol;
+				logger.info("delisted  {}", symbol);
+				File delistedFile = Delisted.getFile(symbol);
+				if (delistedFile.exists()) {
+					try {
+						File priceFile = Price.getFile(symbol);
+						Files.copy(delistedFile.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					} catch (IOException e) {
+						logger.info("IOException {}", e.getMessage());
+						throw new SecuritiesException("IOException");
+					}
+				}
+			}
 		}
 
 		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
 		UpdateProvider priceYahooProvider    = UpdatePrice.getProvider(UpdateProvider.YAHOO);
 		
 		// Create price file for delisted stock
-		List<String> symbolList = new ArrayList<>(StockUtil.getSymbolList());
-		for(DelistedStock delistedStock: delistedStockList) {
-			logger.info("add delisted stock  {}:{}", delistedStock.exch, delistedStock.symbol);
-			priceGoogleProvider.updateFile(delistedStock.exch, delistedStock.symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
-			priceYahooProvider.updateFile(delistedStock.exch, delistedStock.symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
-			
-			symbolList.add(delistedStock.symbol);
-		}
-		
+		List<String> symbolList = new ArrayList<>(StockUtil.getSymbolList());		
 		
 		int total       = symbolList.size();
 		int count       = 0;

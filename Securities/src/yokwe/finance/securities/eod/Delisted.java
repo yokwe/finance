@@ -15,11 +15,11 @@ public class Delisted {
 	}
 	
 	public static File getFile(String symbol) {
-		String path = String.format("%s/%s.csv", DelistedUtil.PATH_DIR, symbol);
+		String path = String.format("%s/%s.csv", UpdateDelisted.PATH_DIR, symbol);
 		return new File(path);
 	}
 
 	public static List<Delisted> load() {
-		return CSVUtil.loadWithHeader(DelistedUtil.PATH_CSV, Delisted.class);
+		return CSVUtil.loadWithHeader(UpdateDelisted.PATH_CSV, Delisted.class);
 	}
 }

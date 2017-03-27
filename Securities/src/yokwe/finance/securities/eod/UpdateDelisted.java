@@ -7,8 +7,8 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 
-public class DelistedUtil {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DelistedUtil.class);
+public class UpdateDelisted {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDelisted.class);
 	
 	public static final String PATH_CSV = "data/stock/delisted.csv";
 	public static final String PATH_DIR = "tmp/eod/delisted";

@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,11 +37,16 @@ public class CSVUtil {
 	}
 
 	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
-		Field[] fields = clazz.getDeclaredFields();
-		final int size = fields.length;
-		String[] names = new String[size];
-		for(int i = 0; i < size; i++) {
-			names[i] = fields[i].getName();
+		String[] names;
+		{
+			List<String> nameList = new ArrayList<>();
+			for(Field field: clazz.getDeclaredFields()) {
+				// Skip static field
+				if (Modifier.isStatic(field.getModifiers())) continue;
+				
+				nameList.add(field.getName());
+			}
+			names = nameList.toArray(new String[0]);
 		}
 		
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
@@ -62,13 +68,25 @@ public class CSVUtil {
 	}
 
 	public static <E> List<E> load(Reader reader, Class<E> clazz, CSVFormat csvFormat) {
-		Field[] fields = clazz.getDeclaredFields();
-		final int size = fields.length;
-		String[] types = new String[size];
-		for(int i = 0; i < size; i++) {
-			types[i] = fields[i].getType().getName();
+		Field[]  fields;
+		String[] types;
+		int      size;
+		{
+			List<Field>  fieldList = new ArrayList<>();
+			List<String> typeList  = new ArrayList<>();
+			for(Field field: clazz.getDeclaredFields()) {
+				// Skip static field
+				if (Modifier.isStatic(field.getModifiers())) continue;
+
+				fieldList.add(field);
+				typeList.add(field.getType().getName());
+			}
+			
+			fields = fieldList.toArray(new Field[0]);
+			types  = typeList.toArray(new String[0]);
+			size   = fieldList.size();
 		}
-		
+				
 		String[] names = csvFormat.getHeader();
 		
 		try (CSVParser csvParser = csvFormat.parse(reader)) {

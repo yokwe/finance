@@ -97,12 +97,12 @@ public class MergePrice {
 					int priceGoogleSize = priceListGoogle.size();
 					int priceYahooSize  = priceListYahoo.size();
 					
-					if (priceGoogleSize <= priceYahooSize) { // prefer yahoo over google
-						priceList = priceListYahoo;
-						countYahoo++;
-					} else {
+					if (priceYahooSize <= priceGoogleSize) { // prefer google over google
 						priceList = priceListGoogle;
 						countGoogle++;
+					} else {
+						priceList = priceListYahoo;
+						countYahoo++;
 					}
 				} else if (dateGoogle.equals(UpdateProvider.DATE_LAST)) {
 					// google

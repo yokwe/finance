@@ -14,7 +14,7 @@ public interface UpdateProvider {
 
 	public String  getName();
 	public File    getFile(String symbol);
-	public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast);
+	public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast);
 	
 	public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast);
 	

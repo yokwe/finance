@@ -37,7 +37,7 @@ public class UpdatePrice {
 			return file;
 		}
 
-		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d,yyyy", Locale.US);
+		private static final DateTimeFormatter DATE_FORMAT_URL    = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US);
 		private static final DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("d-MMM-yy");
 		private static final DateTimeFormatter DATE_FORMAT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -50,9 +50,10 @@ public class UpdatePrice {
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "+");
-			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "+");
+			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "%20").replace(",", "%2C");
+			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20").replace(",", "%2C");
 			
+			// http://www.google.com/finance/historical?q=NASDAQ:ACGLP&startdate=Mar%2027%2C%202016&enddate=Mar+27,+2017&output=csv
 			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);

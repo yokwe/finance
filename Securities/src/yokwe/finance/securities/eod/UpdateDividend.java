@@ -32,10 +32,10 @@ public class UpdateDividend {
 
 		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-			return updateFile(stock.exchange, stock.symbolYahoo, newFile, dateFirst, dateLast);
+			return updateFile(stock.exchange, stock.symbol, stock.symbolYahoo, newFile, dateFirst, dateLast);
 		}
 		
-		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			// first
@@ -46,7 +46,7 @@ public class UpdateDividend {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", symbol, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", symbolURL, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content

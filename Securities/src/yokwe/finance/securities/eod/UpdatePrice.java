@@ -44,16 +44,16 @@ public class UpdatePrice {
 		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			// Convert from '.PR.' to  '-' in symbol for google
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-			return updateFile(stock.exchange, stock.symbolGoogle, newFile, dateFirst, dateLast);
+			return updateFile(stock.exchange, stock.symbol, stock.symbolGoogle, newFile, dateFirst, dateLast);
 		}
 		
-		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			String dateFrom = dateFirst.format(DATE_FORMAT_URL).replace(" ", "+");
 			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "+");
 			
-			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbol, dateFrom, dateTo);
+			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -153,11 +153,10 @@ public class UpdatePrice {
 		
 		public boolean updateFile(String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			Stock stock = StockUtil.get(symbol.replace(".PR.", "-"));
-			// TODO should provide stock.symbol for saving file and stock.symbolYahoo for retrieving data
-			return updateFile(stock.exchange, stock.symbolYahoo, newFile, dateFirst, dateLast);
+			return updateFile(stock.exchange, stock.symbol, stock.symbolYahoo, newFile, dateFirst, dateLast);
 		}		
 
-		public boolean updateFile(String exch, String symbol, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
+		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
 			// first
@@ -168,7 +167,7 @@ public class UpdatePrice {
 			int d = dateLast.getMonthValue(); // mm
 			int e = dateLast.getDayOfMonth(); // dd
 			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", symbol, a - 1, b, c, d - 1, e, f);
+			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", symbolURL, a - 1, b, c, d - 1, e, f);
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content

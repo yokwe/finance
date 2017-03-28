@@ -37,7 +37,7 @@ public class UpdateDelisted {
 			File fileGoogle = updateProviderGoogle.getFile(symbol);
 			fileGoogle.delete(); // make sure file is actually created
 			
-			updateProviderGoogle.updateFile(exch, symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
+			updateProviderGoogle.updateFile(exch, symbol, symbol, true, UpdateProvider.DATE_FIRST, UpdateProvider.DATE_LAST);
 			if (fileGoogle.canRead()) {
 				boolean success = fileGoogle.renameTo(fileDelisted);
 				if (!success) {

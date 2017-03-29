@@ -133,7 +133,7 @@ public class UpdateStats {
 				divAdj = 0;
 				break;
 			}
-			ret.yieldAdj = DoubleUtil.round(divAdj / ret.price, 3);
+			ret.yieldadj = DoubleUtil.round(divAdj / ret.price, 3);
 		}
 		
 		// volume

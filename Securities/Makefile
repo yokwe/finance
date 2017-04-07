@@ -93,6 +93,10 @@ update-nasdaq:
 	ant run-update-nasdaq
 	ant run-update-nasdaq-company
 
+update-stock:
+	ant run-eod-update-stock
+	cp tmp/eod/sotck.csv ~/Dropbox/Trade
+
 
 #
 # fetch-google-*
@@ -166,8 +170,10 @@ update-mizuho:
 	echo "DATE,USD,GBP,EUR,AUD,NZD" >${DIR_DATABASE}/mizuho-header.csv
 	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f,%.2f,%.2f,%.2f,%.2f\n",$$1,$$2,$$3,$$4,$$5,$$6,$$12,$$13)}' >>${DIR_DATABASE}/mizuho-header.csv
 	tail -n +2 ${DIR_DATABASE}/mizuho-header.csv >${DIR_DATABASE}/mizuho.csv
-	ant run-eod-update-forex
 
+update-forex:
+	ant run-eod-update-forex
+	cp tmp/eod/forex.csv ~/Dropbox/Trade
 #
 # quantumonline
 #

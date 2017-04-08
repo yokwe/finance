@@ -93,9 +93,6 @@ update-nasdaq:
 	ant run-update-nasdaq
 	ant run-update-nasdaq-company
 
-update-stock:
-	ant run-eod-update-stock
-	cp tmp/eod/sotck.csv ~/Dropbox/Trade
 
 
 #
@@ -171,9 +168,6 @@ update-mizuho:
 	nkf   -S -w -Lu ${DIR_FETCH_MIZUHO}/quote.csv | awk -F '[/,]' '2015<=$$1{printf("%s-%02d-%02d,%.2f,%.2f,%.2f,%.2f,%.2f\n",$$1,$$2,$$3,$$4,$$5,$$6,$$12,$$13)}' >>${DIR_DATABASE}/mizuho-header.csv
 	tail -n +2 ${DIR_DATABASE}/mizuho-header.csv >${DIR_DATABASE}/mizuho.csv
 
-update-forex:
-	ant run-eod-update-forex
-	cp tmp/eod/forex.csv ~/Dropbox/Trade
 #
 # quantumonline
 #
@@ -208,3 +202,29 @@ fetch-sp500:
 	mkdir -p tmp/fetch/sp500
 	wget -nv -O tmp/fetch/sp500/constituents.csv            'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents.csv'
 	wget -nv -O tmp/fetch/sp500/constituents-financials.csv 'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents-financials.csv'
+
+#
+# stock
+#
+
+fetch-stock:
+	mkdir -p ${DIR_FETCH_NASDAQ}
+	rm    -f ${DIR_FETCH_NASDAQ}/*
+	wget            -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt        ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'http://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
+
+update-stock:
+	ant run-eod-update-stock
+	cp tmp/eod/stock.csv ~/Dropbox/Trade
+
+#
+# forex
+#
+fetch-forex:
+	mkdir -p ${DIR_FETCH_MIZUHO}
+	rm    -f ${DIR_FETCH_MIZUHO}/*
+	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+
+update-forex:
+	ant run-eod-update-forex
+	cp tmp/eod/forex.csv ~/Dropbox/Trade

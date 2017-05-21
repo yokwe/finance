@@ -17,6 +17,8 @@ public class MergePrice {
 	public static void main(String[] args) {
 		logger.info("START");
 
+		final String dateLast = UpdateProvider.DATE_LAST.toString();
+
 		{
 			File dir = Price.getFile("DUMMY").getParentFile();
 			if (!dir.exists()) {
@@ -92,7 +94,7 @@ public class MergePrice {
 				String dateGoogle = priceListGoogle.get(0).date;
 				String dateYahoo  = priceListYahoo.get(0).date;
 				
-				if (dateGoogle.equals(UpdateProvider.DATE_LAST) && dateYahoo.equals(UpdateProvider.DATE_LAST)) {
+				if (dateGoogle.equals(dateLast) && dateYahoo.equals(dateLast)) {
 					// both
 					int priceGoogleSize = priceListGoogle.size();
 					int priceYahooSize  = priceListYahoo.size();
@@ -104,11 +106,11 @@ public class MergePrice {
 						priceList = priceListYahoo;
 						countYahoo++;
 					}
-				} else if (dateGoogle.equals(UpdateProvider.DATE_LAST)) {
+				} else if (dateGoogle.equals(dateLast)) {
 					// google
 					priceList = priceListGoogle;
 					countGoogle++;
-				} else if (dateYahoo.equals(UpdateProvider.DATE_LAST)) {
+				} else if (dateYahoo.equals(dateLast)) {
 					// yahoo
 					priceList = priceListYahoo;
 					countYahoo++;

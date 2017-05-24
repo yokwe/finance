@@ -37,8 +37,11 @@ public class YahooQuery {
 	private static String cookie = null;
 	private static String crumb  = null;
 	
-	
 	static {
+		init();
+	}
+	
+	private static void init() {
 		final String urlHistoryYahoo = "https://finance.yahoo.com/quote/YHOO/history";
 		
 		HttpGet httpGet = new HttpGet(urlHistoryYahoo);
@@ -47,7 +50,7 @@ public class YahooQuery {
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
 			CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			final int code = response.getStatusLine().getStatusCode();
-			logger.info("code {}", code);
+//			logger.info("code {}", code);
 			
 			if (code == HttpStatus.SC_OK) {
 				if (response.containsHeader(HEADER_SET_COOKIE)) {
@@ -60,9 +63,8 @@ public class YahooQuery {
 						
 						if (key.equals("B")) {
 							cookie = keyValuePair;
-							logger.info("cookie = {}", cookie);
+//							logger.info("cookie = {}", cookie);
 						}
-						
 //							logger.info("cookie {} = {}!", keyValuePair.substring(0, pos), keyValuePair.substring(pos + 1));
 					}
 				}
@@ -86,8 +88,11 @@ public class YahooQuery {
 
 			    			if (matcher.reset(line).find()) {
 			    				crumb = matcher.group(1);
-			    				// TODO need to unescape crumb that contains \\u00XXX char sequence
-			    				logger.info("crumb = {}", crumb);
+			    				// Change \\u002F to / in crumb
+			    				if (crumb.contains("\\u002F")) {
+			    					crumb = crumb.replaceAll("\\\\u002F", "/");
+			    				}
+//			    				logger.info("crumb = {}", crumb);
 			    			}
 			    		}
 			    	}
@@ -106,6 +111,7 @@ public class YahooQuery {
 				logger.error("crumb is null");
 				throw new SecuritiesException("crumb is null");
 			}
+			logger.info("cookie = {}  crumb = {}", cookie, crumb);
 		} catch (UnsupportedOperationException e) {
 			logger.error("UnsupportedOperationException {}", e.toString());
 			throw new SecuritiesException("UnsupportedOperationException");
@@ -114,7 +120,6 @@ public class YahooQuery {
 			throw new SecuritiesException("IOException");
 		}
 	}
-	
 
 	
 	public static String getCookie() {
@@ -123,6 +128,14 @@ public class YahooQuery {
 	
 	public static String getCrumb() {
 		return crumb;
+	}
+	
+	public static String getURLPrice(LocalDate dateFrom, LocalDate dateTo, String symbol) {
+		return getURL(dateFrom, dateTo, symbol, Events.HISTORY);
+	}
+	
+	public static String getURLDividend(LocalDate dateFrom, LocalDate dateTo, String symbol) {
+		return getURL(dateFrom, dateTo, symbol, Events.DIVIDEND);
 	}
 	
 	public static String getURL(LocalDate dateFrom, LocalDate dateTo, String symbol, Events events) {
@@ -142,12 +155,16 @@ public class YahooQuery {
 	}
 	
 	public static void main(String[] args) {
+		logger.info("START");
 		LocalDate dateTo = Market.getLastTradingDate();
-		LocalDate dateFrom = dateTo.minusYears(1);
-//		LocalDate dateFrom = dateTo.minusDays(10);
-		fetch(dateFrom, dateTo, "IBM", Events.HISTORY);
-		fetch(dateFrom, dateTo, "IBM", Events.DIVIDEND);
-		fetch(dateFrom, dateTo, "NYT", Events.HISTORY);
-		fetch(dateFrom, dateTo, "NYT", Events.DIVIDEND);
+//		LocalDate dateFrom = dateTo.minusYears(1);
+		LocalDate dateFrom = dateTo.minusDays(10);
+		for(int i = 0; i < 5; i++) {
+			logger.info("i = {}", i);
+//			init();
+			fetch(dateFrom, dateTo, "IBM", Events.HISTORY);
+			fetch(dateFrom, dateTo, "IBM", Events.DIVIDEND);
+		}
+		logger.info("STOP");
 	}
 }

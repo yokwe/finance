@@ -20,9 +20,16 @@ public class HttpUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
 	public static String downloadAsString(String url) {
+		return downloadAsString(url, null);
+	}
+	
+	public static String downloadAsString(String url, String cookie) {
 		HttpGet httpGet = new HttpGet(url);
 		httpGet.setHeader("User-Agent", "Mozilla");
-		
+		if (cookie != null) {
+			httpGet.setHeader("Cookie", cookie);
+		}
+
 		int retryCount = 0;
 		for(;;) {
 			try (CloseableHttpClient httpClient = HttpClients.createDefault();

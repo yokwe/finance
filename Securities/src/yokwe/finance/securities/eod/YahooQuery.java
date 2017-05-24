@@ -148,6 +148,11 @@ public class YahooQuery {
 		return url;
 	}
 	
+	public static String downloadAsString(String url) {
+		String content = HttpUtil.downloadAsString(url, getCookie());
+		return content;
+	}
+	
 	private static void fetch(LocalDate dateFrom, LocalDate dateTo, String symbol, Events events) {
 		String url = getURL(dateFrom, dateTo, symbol, events);
 		String content = HttpUtil.downloadAsString(url, getCookie());

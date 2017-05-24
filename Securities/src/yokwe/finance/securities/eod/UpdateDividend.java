@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
-import yokwe.finance.securities.util.HttpUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
@@ -38,16 +37,8 @@ public class UpdateDividend {
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			// first
-			int a = dateFirst.getMonthValue(); // mm
-			int b = dateFirst.getDayOfMonth(); // dd
-			int c = dateFirst.getYear();       // yyyy
-			// last
-			int d = dateLast.getMonthValue(); // mm
-			int e = dateLast.getDayOfMonth(); // dd
-			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&g=v&ignore=.csv", symbolURL, a - 1, b, c, d - 1, e, f);
-			String content = HttpUtil.downloadAsString(url);
+			String url = YahooQuery.getURLDividend(dateFirst, dateLast, symbol);
+			String content = YahooQuery.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
 				file.delete();

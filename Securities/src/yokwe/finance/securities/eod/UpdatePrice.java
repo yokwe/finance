@@ -160,16 +160,8 @@ public class UpdatePrice {
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			// first
-			int a = dateFirst.getMonthValue(); // mm
-			int b = dateFirst.getDayOfMonth(); // dd
-			int c = dateFirst.getYear();       // yyyy
-			// last
-			int d = dateLast.getMonthValue(); // mm
-			int e = dateLast.getDayOfMonth(); // dd
-			int f = dateLast.getYear();       // yyyy
-			String url = String.format("http://real-chart.finance.yahoo.com/table.csv?s=%s&a=%02d&b=%02d&c=%04d&d=%02d&e=%02d&f=%04d&ignore=.csv", symbolURL, a - 1, b, c, d - 1, e, f);
-			String content = HttpUtil.downloadAsString(url);
+			String url = YahooQuery.getURLPrice(dateFirst, dateLast, symbol);
+			String content = YahooQuery.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
 				file.delete();
@@ -185,7 +177,8 @@ public class UpdatePrice {
 			}
 			
 			// Sanity check
-			String YAHOO_PRICE_HEADER = "Date,Open,High,Low,Close,Volume,Adj Close";
+			
+			String YAHOO_PRICE_HEADER = "Date,Open,High,Low,Close,Adj Close,Volume";
 			String header = lines[0];
 			if (!header.equals(YAHOO_PRICE_HEADER)) {
 				logger.error("Unexpected header  {}", header);
@@ -198,19 +191,21 @@ public class UpdatePrice {
 			
 			for(String line: lines) {
 				if (line.startsWith(YAHOO_PRICE_HEADER)) continue;
+				if (line.contains("null")) continue;
 				
 				String[] values = line.split(",");
 				if (values.length != 7) {
 					logger.error("Unexpected line  {}", line);
 					throw new SecuritiesException("Unexpected header");
 				}
+//				logger.info("line = {}!", line);
 				
 				String date   = values[0];
 				double open   = DoubleUtil.round(Double.valueOf(values[1]), 2);
 				double high   = DoubleUtil.round(Double.valueOf(values[2]), 2);
 				double low    = DoubleUtil.round(Double.valueOf(values[3]), 2);
 				double close  = DoubleUtil.round(Double.valueOf(values[4]), 2);
-				long   volume = Long.valueOf(values[5]);
+				long   volume = Long.valueOf(values[6]);
 				
 				if (date.equals(targetDate)) targetFound = true;
 				

@@ -18,6 +18,7 @@ public class Market {
 
 	public static final String PATH_MARKET_HOLIDAY_CSV = "data/market/marketHoliday.csv";
 	public static final int HOUR_CLOSE_MARKET = 16; // market close at 1600
+	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");
 	
 	public static class MarketHoliday {
 		public String date;
@@ -45,7 +46,7 @@ public class Market {
 	private static final LocalDate lastTradingDate;
 	
 	static {
-		LocalDateTime today = LocalDateTime.now(ZoneId.of("America/New_York"));
+		LocalDateTime today = LocalDateTime.now(ZONE_ID);
 		if (today.getHour() < HOUR_CLOSE_MARKET) today = today.minusDays(1); // Move to yesterday if it is before market close
 		
 		

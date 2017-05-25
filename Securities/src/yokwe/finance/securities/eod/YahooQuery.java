@@ -16,7 +16,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.HttpUtil;
 
 public class YahooQuery {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooQuery.class);
@@ -31,17 +30,104 @@ public class YahooQuery {
 		}
 	}
 
+	private static final int    MAX_RETRY_COUNT   = 10;
 	private static final String HEADER_SET_COOKIE = "Set-Cookie";
 	private static final String PATTERN_CRUMB     = "CrumbStore\\\":\\{\"crumb\":\\\"([^\"]+)\\\"\\}";
 	
-	private static String cookie = null;
-	private static String crumb  = null;
+	private String cookie;
+	private String crumb;
 	
-	static {
-		init();
+	private YahooQuery() {
+		cookie    = "A=A";
+		crumb     = "aabbccdee";
 	}
 	
-	private static void init() {
+	public static YahooQuery getInstance() {
+		YahooQuery yahooQuery = new YahooQuery();
+		return yahooQuery;
+	}
+	
+	public String downloadPrice(LocalDate dateFrom, LocalDate dateTo, String symbol) {
+		return download(dateFrom, dateTo, symbol, "history");
+	}
+	public String downloadDividend(LocalDate dateFrom, LocalDate dateTo, String symbol) {
+		return download(dateFrom, dateTo, symbol, "dividend");
+	}
+	public String download(LocalDate dateFrom, LocalDate dateTo, String symbol, String event) {
+		int retryCount = 0;
+		for(;;) {
+			String url = getURL(dateFrom, dateTo, symbol, event);
+			HttpGet httpGet = new HttpGet(url);
+			httpGet.setHeader("User-Agent", "Mozilla");
+			httpGet.setHeader("Cookie", cookie);
+			
+			try (CloseableHttpClient httpClient = HttpClients.createDefault();
+				CloseableHttpResponse response = httpClient.execute(httpGet)) {
+				final int code = response.getStatusLine().getStatusCode();
+				final String reasonPhrase = response.getStatusLine().getReasonPhrase();
+				
+				if (code == HttpStatus.SC_UNAUTHORIZED) {
+					if (retryCount < MAX_RETRY_COUNT) {
+						retryCount++;
+						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
+						Thread.sleep(1000 * retryCount); // sleep 1 * retryCount sec
+						init();
+						continue;
+					}
+				}
+				if (code == HttpStatus.SC_NOT_FOUND) { // 404
+//					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
+				}
+				if (code == HttpStatus.SC_OK) {
+				    HttpEntity entity = response.getEntity();
+				    if (entity != null) {
+						StringBuilder ret = new StringBuilder();
+				    	char[] cbuf = new char[1024 * 64];
+				    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
+				    		for(;;) {
+				    			int len = isr.read(cbuf);
+				    			if (len == -1) break;
+				    			ret.append(cbuf, 0, len);
+				    		}
+				    	}
+				    	return ret.toString();
+				    } else {
+						logger.error("entity is null");
+						throw new SecuritiesException("entity is null");
+				    }
+				}
+				
+				// Other code
+				logger.error("statusLine = {}", response.getStatusLine().toString());
+				logger.error("url {}", url);
+				logger.error("code {}", code);
+				throw new SecuritiesException("download");
+
+			} catch (UnsupportedOperationException e) {
+				logger.error("UnsupportedOperationException {}", e.toString());
+				throw new SecuritiesException("UnsupportedOperationException");
+			} catch (IOException e) {
+				logger.error("IOException {}", e.toString());
+				throw new SecuritiesException("IOException");
+			} catch (InterruptedException e) {
+				logger.error("InterruptedException {}", e.toString());
+				throw new SecuritiesException("InterruptedException");
+			}
+		}
+	}
+	
+	public String getURL(LocalDate dateFrom, LocalDate dateTo, String symbol, String event) {
+		long period1 = dateFrom.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
+		long period2 = dateTo.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
+		
+		String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=%s&crumb=%s",
+				symbol, period1, period2, event, crumb);
+		return url;
+	}
+
+	
+	private void init() {
 		final String urlHistoryYahoo = "https://finance.yahoo.com/quote/YHOO/history";
 		
 		HttpGet httpGet = new HttpGet(urlHistoryYahoo);
@@ -111,7 +197,8 @@ public class YahooQuery {
 				logger.error("crumb is null");
 				throw new SecuritiesException("crumb is null");
 			}
-			logger.info("cookie = {}  crumb = {}", cookie, crumb);
+			logger.info("cookie = {}", cookie);
+			logger.info("crumb  = {}", crumb);
 		} catch (UnsupportedOperationException e) {
 			logger.error("UnsupportedOperationException {}", e.toString());
 			throw new SecuritiesException("UnsupportedOperationException");
@@ -122,53 +209,15 @@ public class YahooQuery {
 	}
 
 	
-	public static String getCookie() {
-		return cookie;
-	}
-	
-	public static String getCrumb() {
-		return crumb;
-	}
-	
-	public static String getURLPrice(LocalDate dateFrom, LocalDate dateTo, String symbol) {
-		return getURL(dateFrom, dateTo, symbol, Events.HISTORY);
-	}
-	
-	public static String getURLDividend(LocalDate dateFrom, LocalDate dateTo, String symbol) {
-		return getURL(dateFrom, dateTo, symbol, Events.DIVIDEND);
-	}
-	
-	public static String getURL(LocalDate dateFrom, LocalDate dateTo, String symbol, Events events) {
-		long period1 = dateFrom.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
-		long period2 = dateTo.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
-		String eventString = events.value;
-		
-		String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=%s&crumb=%s",
-				symbol, period1, period2, eventString, crumb);
-		return url;
-	}
-	
-	public static String downloadAsString(String url) {
-		String content = HttpUtil.downloadAsString(url, getCookie());
-		return content;
-	}
-	
-	private static void fetch(LocalDate dateFrom, LocalDate dateTo, String symbol, Events events) {
-		String url = getURL(dateFrom, dateTo, symbol, events);
-		String content = HttpUtil.downloadAsString(url, getCookie());
-		logger.info("content {}!", content);
-	}
-	
 	public static void main(String[] args) {
 		logger.info("START");
 		LocalDate dateTo = Market.getLastTradingDate();
 //		LocalDate dateFrom = dateTo.minusYears(1);
 		LocalDate dateFrom = dateTo.minusDays(10);
-		for(int i = 0; i < 5; i++) {
-			logger.info("i = {}", i);
-//			init();
-			fetch(dateFrom, dateTo, "IBM", Events.HISTORY);
-			fetch(dateFrom, dateTo, "IBM", Events.DIVIDEND);
+		YahooQuery yq = YahooQuery.getInstance();
+		for(int i = 0; i < 2000; i++) {
+			String price = yq.downloadPrice(dateFrom, dateTo, "IBM");
+			logger.info("i = {}  {}", i, price.length());
 		}
 		logger.info("STOP");
 	}

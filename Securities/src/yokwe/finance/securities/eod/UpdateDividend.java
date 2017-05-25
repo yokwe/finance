@@ -34,11 +34,12 @@ public class UpdateDividend {
 			return updateFile(stock.exchange, stock.symbol, stock.symbolYahoo, newFile, dateFirst, dateLast);
 		}
 		
+		private YahooQuery yahooQuery = YahooQuery.getInstance();
+
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
-			String url = YahooQuery.getURLDividend(dateFirst, dateLast, symbol);
-			String content = YahooQuery.downloadAsString(url);
+			String content = yahooQuery.downloadDividend(dateFirst, dateLast, symbol);
 			if (content == null) {
 				// cannot get content
 				file.delete();

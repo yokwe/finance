@@ -69,7 +69,7 @@ public class YahooQuery {
 					if (retryCount < MAX_RETRY_COUNT) {
 						retryCount++;
 //						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
-						Thread.sleep(1000 * retryCount); // sleep 1 * retryCount sec
+						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
 						init();
 						continue;
 					}

@@ -64,12 +64,11 @@ public class YahooQuery {
 			try (CloseableHttpClient httpClient = HttpClients.createDefault();
 				CloseableHttpResponse response = httpClient.execute(httpGet)) {
 				final int code = response.getStatusLine().getStatusCode();
-				final String reasonPhrase = response.getStatusLine().getReasonPhrase();
 				
 				if (code == HttpStatus.SC_UNAUTHORIZED) {
 					if (retryCount < MAX_RETRY_COUNT) {
 						retryCount++;
-						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
+//						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
 						Thread.sleep(1000 * retryCount); // sleep 1 * retryCount sec
 						init();
 						continue;

@@ -171,7 +171,8 @@ public class UpdateStock {
 	static ConverterList nasdaqConverter = new ConverterList();
 	
 	static {
-		baseConverter.addConverter1("^([A-Z]+).*$", "%s");
+		// Remove suffix for called and when issued
+		baseConverter.addConverter1("^([^\\*\\#\\$]+)[\\*\\#\\$]?$", "%s");
 		
 		//
 		yahooConverter.addConverter1(PAT_NORMAL,            "%s");       // Normal
@@ -352,7 +353,7 @@ public class UpdateStock {
 
 			Stock stock = new Stock();
 			
-			stock.symbol       = e.symbol;
+			stock.symbol       = baseConverter.convert(e.symbol); //
 			stock.symbolGoogle = googleConverter.convert(e.symbol);
 			stock.symbolNasdaq = nasdaqConverter.convert(e.symbol);
 			stock.symbolYahoo  = yahooConverter.convert(e.symbol);

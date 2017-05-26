@@ -172,7 +172,7 @@ public class UpdateStock {
 	
 	static {
 		// Remove suffix for called and when issued
-		baseConverter.addConverter1("^([^\\*\\#\\$]+)[\\*\\#\\$]?$", "%s");
+		baseConverter.addConverter1("^([^\\*\\#\\$\\^]+)[\\*\\#\\$\\^]?$", "%s");
 		
 		//
 		yahooConverter.addConverter1(PAT_NORMAL,            "%s");       // Normal

@@ -3,6 +3,8 @@ package yokwe.finance.securities.eod;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,12 +119,17 @@ public class YahooQuery {
 	}
 	
 	public String getURL(LocalDate dateFrom, LocalDate dateTo, String symbol, String event) {
-		long period1 = dateFrom.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
-		long period2 = dateTo.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
-		
-		String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=%s&crumb=%s",
-				symbol, period1, period2, event, crumb);
-		return url;
+		try {
+			long period1 = dateFrom.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
+			long period2 = dateTo.atStartOfDay(Market.ZONE_ID).plusHours(10).toEpochSecond();
+			String encodedSymbol = URLEncoder.encode(symbol, "UTF-8");
+			String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=%s&crumb=%s",
+					encodedSymbol, period1, period2, event, crumb);
+			return url;
+		} catch (UnsupportedEncodingException e) {
+			logger.error("UnsupportedEncodingException {}", e.toString());
+			throw new SecuritiesException("UnsupportedEncodingException");
+		}
 	}
 
 	

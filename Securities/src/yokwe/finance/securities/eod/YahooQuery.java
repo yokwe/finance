@@ -71,9 +71,13 @@ public class YahooQuery {
 					if (retryCount < MAX_RETRY_COUNT) {
 						retryCount++;
 //						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
+						logger.info("retry {} - {}", retryCount, symbol);
 						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
 						init();
 						continue;
+					} else {
+						logger.error("Exceeds max retry count {}", MAX_RETRY_COUNT);
+						throw new SecuritiesException("Exceeds max retry count");
 					}
 				}
 				if (code == HttpStatus.SC_NOT_FOUND) { // 404

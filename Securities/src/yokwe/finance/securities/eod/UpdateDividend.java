@@ -80,6 +80,7 @@ public class UpdateDividend {
 			}
 			
 			if (0 < dividendList.size()) {
+				dividendList.sort((a, b) -> -a.date.compareTo(b.date));
 				Dividend.save(dividendList, file);
 				return true;
 			} else {

@@ -131,6 +131,7 @@ public class UpdatePrice {
 			}
 			
 			if (targetFound || (newFile && 1 < lines.length)) {
+				priceList.sort((a, b) -> -a.date.compareTo(b.date));
 				Price.save(priceList, file);
 				return true;
 			} else {
@@ -214,6 +215,7 @@ public class UpdatePrice {
 			}
 			
 			if (targetFound || (newFile && 1 < lines.length)) {
+				priceList.sort((a, b) -> -a.date.compareTo(b.date));
 				Price.save(priceList, file);
 				return true;
 			} else {

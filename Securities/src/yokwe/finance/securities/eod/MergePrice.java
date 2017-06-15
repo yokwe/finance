@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,9 @@ public class MergePrice {
 				// both
 				List<Price> priceListGoogle = Price.load(priceGoogle);
 				List<Price> priceListYahoo  = Price.load(priceYahoo);
+				
+				Collections.sort(priceListGoogle, (a, b) -> -a.date.compareTo(b.date));
+				Collections.sort(priceListYahoo,  (a, b) -> -a.date.compareTo(b.date));
 				
 				String dateGoogle = priceListGoogle.get(0).date;
 				String dateYahoo  = priceListYahoo.get(0).date;

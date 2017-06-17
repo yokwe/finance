@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
-import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.stats.DoubleArray;
 import yokwe.finance.securities.stats.HV;
 import yokwe.finance.securities.stats.MA;
@@ -52,12 +51,12 @@ public class UpdateStats {
 				
 				double sd = stats.getStandardDeviation();
 				if (Double.isInfinite(sd)) {
-					logger.error("sd is infinite  {}", ret.symbol);
-					throw new SecuritiesException("sd is infinite");
+					logger.warn("sd is infinite  {}", ret.symbol);
+					return null;
 				}
 				if (Double.isNaN(sd)) {
-					logger.error("sd is Nan  {}", ret.symbol);
-					throw new SecuritiesException("sd is NaN");
+					logger.warn("sd is Nan  {}", ret.symbol);
+					return null;
 				}
 				
 				ret.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
@@ -233,8 +232,9 @@ public class UpdateStats {
 			} else {
 				dividendList = new ArrayList<>();
 			}
-						
-			statsList.add(getInstance(stock, priceList, dividendList));
+			
+			Stats stats = getInstance(stock, priceList, dividendList);
+			if (stats != null) statsList.add(getInstance(stock, priceList, dividendList));
 		}
 		Stats.save(statsList);
 		logger.info("stats  {}", String.format("%4d", statsList.size()));

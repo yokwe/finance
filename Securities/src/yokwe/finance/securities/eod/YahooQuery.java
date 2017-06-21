@@ -138,7 +138,7 @@ public class YahooQuery {
 
 	
 	private void init() {
-		final String urlHistoryYahoo = "https://finance.yahoo.com/quote/YHOO/history";
+		final String urlHistoryYahoo = "https://finance.yahoo.com/lookup?s=YHOO";
 		
 		HttpGet httpGet = new HttpGet(urlHistoryYahoo);
 		httpGet.setHeader("User-Agent", "Mozilla");

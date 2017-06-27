@@ -35,22 +35,6 @@ public class MergePrice {
 			for(File file: fileList) {
 				file.delete();
 			}
-			
-			// Copy delisted files
-			for(Delisted delisted: Delisted.load()) {
-				String symbol = delisted.symbol;
-				logger.info("delisted  {}", symbol);
-				File delistedFile = Delisted.getFile(symbol);
-				if (delistedFile.exists()) {
-					try {
-						File priceFile = Price.getFile(symbol);
-						Files.copy(delistedFile.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					} catch (IOException e) {
-						logger.info("IOException {}", e.getMessage());
-						throw new SecuritiesException("IOException");
-					}
-				}
-			}
 		}
 
 		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
@@ -152,6 +136,23 @@ public class MergePrice {
 		logger.info("count  {}", String.format("%4d", count));
 		logger.info("yahoo  {}", String.format("%4d", countYahoo));
 		logger.info("google {}", String.format("%4d", countGoogle));
+		
+		// Copy delisted files
+		for(Delisted delisted: Delisted.load()) {
+			String symbol = delisted.symbol;
+			logger.info("delisted  {}", symbol);
+			File delistedFile = Delisted.getFile(symbol);
+			if (delistedFile.exists()) {
+				try {
+					File priceFile = Price.getFile(symbol);
+					Files.copy(delistedFile.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException e) {
+					logger.info("IOException {}", e.getMessage());
+					throw new SecuritiesException("IOException");
+				}
+			}
+		}
+
 		
 		logger.info("STOP");
 	}

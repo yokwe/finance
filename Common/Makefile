@@ -18,9 +18,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3 fetch-gson
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3 fetch-gson fetch-jsonp
 
-update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3 update-gson
+update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3 update-gson update-jsonp
 
 
 fetch-logback:
@@ -50,6 +50,10 @@ fetch-commons-math3:
 fetch-gson:
 	rm -rf tmp/gson
 	cd tmp; git clone https://github.com/google/gson
+
+fetch-jsonp:
+	rm -rf tmp/jsonp
+	cd tmp; git clone https://github.com/javaee/jsonp
 
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
@@ -99,3 +103,7 @@ update-gson:
 	    gson/target/gson-2.8.1-SNAPSHOT-sources.jar \
 	    ../../jar
 
+update-jsonp:
+	cd tmp/jsonp; mvn -U -C clean install -Dnon.final=true
+	cd tmp/jsonp; \
+	  cp -p impl/target/javax.json-*.jar ../../jar

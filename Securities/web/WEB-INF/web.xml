@@ -45,7 +45,18 @@
         <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3</param-value>
       </init-param>
       <!-- Load this servlet at server startup time -->
-      <load-on-startup>5</load-on-startup>
+      <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+      <servlet-name>csv002</servlet-name>
+      <servlet-class>yokwe.finance.securities.web.JsonServlet</servlet-class>
+      <init-param>
+        <param-name>path.sqlite.database</param-name>
+        <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3</param-value>
+      </init-param>
+      <!-- Load this servlet at server startup time -->
+      <load-on-startup>1</load-on-startup>
     </servlet>
 
     <!-- Define mappings that are used by the servlet container to
@@ -69,6 +80,11 @@
     <servlet-mapping>
       <servlet-name>csv001</servlet-name>
       <url-pattern>/csv</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+      <servlet-name>csv002</servlet-name>
+      <url-pattern>/json</url-pattern>
     </servlet-mapping>
 
 

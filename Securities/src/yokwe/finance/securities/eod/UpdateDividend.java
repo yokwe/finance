@@ -104,7 +104,14 @@ public class UpdateDividend {
 		}
 	}
 
+	static final long gracePeriod = System.currentTimeMillis() - (1000 * 60 * 60 * 8); // 8 hours before from now;
 	private static boolean needUpdate(File file) {
+		// Don't update file after gracePeriod
+		if (gracePeriod < file.lastModified()) {
+//			logger.info("Recently updated {}", file.getName());
+			return false;
+		}
+
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
 		

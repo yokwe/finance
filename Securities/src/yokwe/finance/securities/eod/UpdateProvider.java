@@ -9,6 +9,9 @@ public interface UpdateProvider {
 	
 	public static final int       MAX_RETRY     = 3;  // try 3 times at least
 	
+	public static final int       GRACE_HOURS   = 12; // Don't update file that lastModified is within GRACE_HOURS
+	public static final long      GRACE_PERIOD  = System.currentTimeMillis() - (1000 * 60 * 60 * GRACE_HOURS);
+	
 	public static final String    GOOGLE        = "google";
 	public static final String    YAHOO         = "yahoo";
 

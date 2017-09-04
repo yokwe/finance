@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleUtil;
 
+// Stock class represents current holding of stocks
+// Holding of stocks can be changed by invocation of Stock.buy() and Stock.sell().
 public class Stock {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
 
@@ -95,10 +97,30 @@ public class Stock {
 	public static void change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {		
 		Stock stock = Stock.get(symbol);
 		if (DoubleUtil.isAlmostEqual(stock.totalQuantity, -quantity)) {
-			stock.symbol = newSymbol;
-			stock.totalQuantity = newQuantity;
-			map.remove(symbol);
-			map.put(newSymbol, stock);
+			if (DoubleUtil.isAlmostEqual(stock.totalQuantity, newQuantity)) {
+				// Simple case: -quantity == newQuantity
+				stock.symbol = newSymbol;
+				stock.totalQuantity = newQuantity;
+				map.remove(symbol);
+				map.put(newSymbol, stock);
+			} else {
+				// Complex case: -quantity != newQuantity
+				// TODO Is this correct?
+				double totalQuantity = 0;
+				double quantityRatio = stock.totalQuantity / newQuantity;
+				for(History history: stock.history) {
+					history.quantity *= quantityRatio;
+					totalQuantity += history.quantity;
+				}
+				if (!DoubleUtil.isAlmostEqual(totalQuantity, newQuantity)) {
+					logger.error("Unexpected {} {} {}", symbol, totalQuantity, newQuantity);
+					throw new SecuritiesException("Unexpected");
+				}
+				stock.symbol = newSymbol;
+				stock.totalQuantity = newQuantity;
+				map.remove(symbol);
+				map.put(newSymbol, stock);
+			}
 		} else {
 			logger.error("Unexpected {} {} {}", symbol, stock.totalQuantity, quantity);
 			throw new SecuritiesException("Unexpected");

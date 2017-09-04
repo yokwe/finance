@@ -1,4 +1,4 @@
-package yokwe.finance.securities.eod.report;
+package yokwe.finance.securities.eod.tax;
 
 import java.util.List;
 

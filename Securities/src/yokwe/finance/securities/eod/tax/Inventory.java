@@ -1,10 +1,11 @@
-package yokwe.finance.securities.eod.report;
+package yokwe.finance.securities.eod.tax;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import yokwe.finance.securities.eod.report.Position;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Inventory {

@@ -120,6 +120,10 @@ public class Stock {
 				stock.totalQuantity = newQuantity;
 				map.remove(symbol);
 				map.put(newSymbol, stock);
+				// TODO Very careful for TAX calculation.
+				// TODO Add entry to transaction detail for change of stock buying cost.
+				logger.error("Unexpected {} {} {}", symbol, stock.totalQuantity, quantity);
+				throw new SecuritiesException("Unexpected");
 			}
 		} else {
 			logger.error("Unexpected {} {} {}", symbol, stock.totalQuantity, quantity);

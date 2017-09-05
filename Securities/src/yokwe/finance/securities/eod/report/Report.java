@@ -80,14 +80,16 @@ public class Report {
 					if (nextActivity.date.equals(activity.date) && nextActivity.transaction.equals(activity.transaction)) {
 						String date        = activity.date;
 						String newSymbol   = activity.symbol;
+						String newName     = activity.name;
 						double newQuantity = activity.quantity;
 						
 						String symbol      = nextActivity.symbol;
+						String name        = nextActivity.name;
 						double quantity    = nextActivity.quantity;
 						
 						Stock.change(date, symbol, quantity, newSymbol, newQuantity);
 						
-						Transaction transaction = Transaction.change(date, symbol, quantity, newSymbol, newQuantity, Stock.getPositionList());
+						Transaction transaction = Transaction.change(date, symbol, name, quantity, newSymbol, newName, newQuantity, Stock.getPositionList());
 						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					} else {
@@ -103,11 +105,12 @@ public class Report {
 //					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
 					String date     = activity.tradeDate;
 					String symbol   = activity.symbol;
+					String name     = activity.name;
 					double quantity = activity.quantity;
 					double total    = DoubleUtil.round((activity.price * activity.quantity) + activity.commission, 2);
 					
 					Stock.buy(date, symbol, quantity, total);
-					Transaction transaction = Transaction.buy(date, symbol, quantity, total, Stock.getPositionList());
+					Transaction transaction = Transaction.buy(date, symbol, name, quantity, total, Stock.getPositionList());
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
@@ -117,11 +120,12 @@ public class Report {
 //					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
 					String date     = activity.tradeDate;
 					String symbol   = activity.symbol;
+					String name     = activity.name;
 					double quantity = activity.quantity;
 					double total    = DoubleUtil.round((activity.price * activity.quantity) - activity.commission, 2);
 
 					double sellCost = Stock.sell(date, symbol, quantity, total);
-					Transaction transaction = Transaction.sell(date, symbol, quantity, total, sellCost, Stock.getPositionList());
+					Transaction transaction = Transaction.sell(date, symbol, name, quantity, total, sellCost, Stock.getPositionList());
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
@@ -142,10 +146,12 @@ public class Report {
 				case "CAP GAIN": {
 					String date     = activity.date;
 					String symbol   = activity.symbol;
+					String name     = activity.name;
+					double quantity = activity.quantity;
 					double debit    = activity.debit;
 					double credit   = activity.credit;
 
-					Transaction transaction = Transaction.dividend(date, symbol, debit, credit);
+					Transaction transaction = Transaction.dividend(date, symbol, name, quantity, debit, credit);
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;

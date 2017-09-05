@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Transaction {
-	enum Type {
+	public enum Type {
 		WIRE_IN, WIRE_OUT, ACH_IN, ACH_OUT,
 		INTEREST, DIVIDEND, BUY, SELL, CHANGE,
 	}

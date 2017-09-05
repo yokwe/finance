@@ -290,4 +290,12 @@
                 </java>
         </target>
 
+        <target name="run-eod-tax-report">
+                <java classname="yokwe.finance.securities.eod.tax.Report" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
 </project>

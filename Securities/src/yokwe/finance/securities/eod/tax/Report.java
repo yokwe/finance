@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.eod.ForexUtil;
-import yokwe.finance.securities.eod.report.Transaction;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Dividend;

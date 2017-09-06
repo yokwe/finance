@@ -103,7 +103,7 @@ public class Transaction {
 	private static Transaction buy(String date, String symbol, String name, double quantity, double price, double fee, double debit) {
 		return new Transaction(Type.BUY, date, symbol, name, quantity, price, fee, debit, 0);
 	}
-	private static Transaction sell(String date, String symbol, String name, double quantity, double price, double fee, double credit) {
+	public static Transaction sell(String date, String symbol, String name, double quantity, double price, double fee, double credit) {
 		return new Transaction(Type.SELL, date, symbol, name, quantity, price, fee, 0, credit);
 	}
 	private static Transaction interest(String date, double credit) {

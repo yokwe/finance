@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.eod.ForexUtil;
+import yokwe.finance.securities.eod.Market;
+import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Dividend;
@@ -62,7 +64,63 @@ public class Report {
 		}
 		return ret;
 	}
+	static Map<String, BuySell>  getBuySellMap(List<Transaction> transactionList) {
+		Map<String, BuySell> ret = new TreeMap<>();
 
+		for(Transaction transaction: transactionList) {
+			if (transaction.type == Transaction.Type.BUY) {
+				String key = transaction.symbol;
+				BuySell buySell;
+				if (ret.containsKey(key)) {
+					buySell = ret.get(key);
+				} else {
+					buySell = new BuySell(transaction.symbol, transaction.name);
+					ret.put(key, buySell);
+				}
+				buySell.buy(transaction);
+				// Special case for TAL/TRTN(negative quantity for BUY)
+				if (buySell.isAlmostZero()) {
+					ret.remove(key);
+				}
+			}
+			if (transaction.type == Transaction.Type.SELL) {
+				String key = transaction.symbol;
+				BuySell buySell;
+				if (ret.containsKey(key)) {
+					buySell = ret.get(key);
+				} else {
+					buySell = new BuySell(transaction.symbol, transaction.name);
+					ret.put(key, buySell);
+				}
+				
+				buySell.sell(transaction);
+			}
+		}
+		
+		return ret;
+	}
+	
+	static void addDummySell(Map<String, BuySell> buySellMap) {
+		String theDate = "9999-12-31";
+		String lastTradingDate = Market.getLastTradingDate().toString();
+		for(BuySell buySell: buySellMap.values()) {
+			if (buySell.isAlmostZero()) continue;
+			
+			String symbol = buySell.symbol;
+			String name   = buySell.name;
+			double quantity = buySell.totalQuantity;
+			
+			// Get latest price of symbol
+//			logger.info("symbol {}", buySell.symbol);
+			double price = PriceUtil.getClose(symbol, lastTradingDate);
+			logger.info("price {}", price);
+
+			// Add dummy sell record
+			Transaction transaction = Transaction.sell(theDate, symbol, name, quantity, price, 5, quantity * price);	
+			buySell.sell(transaction);
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		
@@ -78,6 +136,10 @@ public class Report {
 
 			// key is date
 			Map<String, Interest> interestMap = getInterestMap(transactionList);
+			
+			// key is symbol
+			Map<String, BuySell> buySellMap = getBuySellMap(transactionList);
+			addDummySell(buySellMap);
 
 			SortedSet<String> yearSet = new TreeSet<>();
 

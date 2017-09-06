@@ -68,6 +68,7 @@ public class Transaction {
 		this.debitJPY     = (int)Math.floor(this.debit  * fxRate);
 		this.creditJPY    = (int)Math.floor(this.credit * fxRate);
 		
+		// Sanity check
 		if (!DoubleUtil.isAlmostEqual(fxRate, this.fxRate)) {
 			logger.error("fxRate  {}  {}", fxRate, this.fxRate);
 			throw new SecuritiesException("Unexpected");

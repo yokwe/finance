@@ -25,7 +25,7 @@ public class Position {
 	}
 
 	
-	public static double getValue(String date, Position position) {
+	public static double getUnrealizedValue(String date, Position position) {
 		double ret = 0;
 		
 		String symbol   = position.symbol;
@@ -43,11 +43,12 @@ public class Position {
 		return ret;
 	}
 
-	public static double getValue(String date, List<Position> positionList) {
+	// This method is used to get unrealized value of stocks. Value is not accurate. Because commission is fixed values.
+	public static double getUnrealizedValue(String date, List<Position> positionList) {
 		double ret = 0;
 		
 		for(Position position: positionList) {
-			double value = getValue(date, position);
+			double value = getUnrealizedValue(date, position);
 			if (value == NO_VALUE) return NO_VALUE;
 			
 			ret = DoubleUtil.round(ret + value, 2);

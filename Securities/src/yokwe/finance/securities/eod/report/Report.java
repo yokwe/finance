@@ -204,7 +204,7 @@ public class Report {
 			for(LocalDate date = UpdateProvider.DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
 				if (Market.isClosed(date)) continue;
 				
-				double unreal = Position.getValue(date.toString(), positionMap.get(date));
+				double unreal = Position.getUnrealizedValue(date.toString(), positionMap.get(date));
 				
 				if (stockGainMap.containsKey(date.toString())) {
 					stockGain = new StockGain(stockGainMap.get(date.toString()));

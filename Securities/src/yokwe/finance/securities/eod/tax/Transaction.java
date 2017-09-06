@@ -30,6 +30,7 @@ public class Transaction {
 	public final String         symbol;
 	public final String         name;
 	public final double         quantity;
+	public final double         price;
 	public final double         fee;
 	public final double         debit;
 	public final double         credit;
@@ -46,7 +47,7 @@ public class Transaction {
 	public final int            creditJPY;
 	
 	
-	private Transaction(Type type, String date, String symbol, String name, double quantity, double fee, double debit, double credit,
+	private Transaction(Type type, String date, String symbol, String name, double quantity, double price, double fee, double debit, double credit,
 			String newSymbol, String newName, double newQuantity) {
 		double fxRate = ForexUtil.getUSD(date);
 		
@@ -55,6 +56,7 @@ public class Transaction {
 		this.symbol       = symbol;
 		this.name         = name;
 		this.quantity     = roundQuantity(quantity);
+		this.price        = roundQuantity(price);
 		this.fee          = roundPrice(fee);
 		this.debit        = roundPrice(debit);
 		this.credit       = roundPrice(credit);
@@ -77,6 +79,10 @@ public class Transaction {
 			logger.error("quantity  {}  {}", quantity, this.quantity);
 			throw new SecuritiesException("Unexpected");
 		}
+		if (!DoubleUtil.isAlmostEqual(price, this.price)) {
+			logger.error("price  {}  {}", price, this.price);
+			throw new SecuritiesException("Unexpected");
+		}
 		if (!DoubleUtil.isAlmostEqual(fee, this.fee)) {
 			logger.error("fee  {}  {}", fee, this.fee);
 			throw new SecuritiesException("Unexpected");
@@ -90,42 +96,42 @@ public class Transaction {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-	private Transaction(Type type, String date, String symbol, String name, double quantity, double fee, double debit, double credit) {
-		this(type, date, symbol, name, quantity, fee, debit, credit, "", "", 0);
+	private Transaction(Type type, String date, String symbol, String name, double quantity, double price, double fee, double debit, double credit) {
+		this(type, date, symbol, name, quantity, price, fee, debit, credit, "", "", 0);
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%-9s %10s %-10s %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f %4d %7d %7d",
-				type, date, symbol, quantity, fee, debit, credit, newSymbol, newQuantity, fxRate, feeJPY, debitJPY, creditJPY);
+		return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f %4d %7d %7d",
+				type, date, symbol, quantity, price, fee, debit, credit, newSymbol, newQuantity, fxRate, feeJPY, debitJPY, creditJPY);
 	}
 	
-	private static Transaction buy(String date, String symbol, String name, double quantity, double fee, double debit) {
-		return new Transaction(Type.BUY, date, symbol, name, quantity, fee, debit, 0);
+	private static Transaction buy(String date, String symbol, String name, double quantity, double price, double fee, double debit) {
+		return new Transaction(Type.BUY, date, symbol, name, quantity, price, fee, debit, 0);
 	}
-	private static Transaction sell(String date, String symbol, String name, double quantity, double fee, double credit) {
-		return new Transaction(Type.SELL, date, symbol, name, quantity, fee, 0, credit);
+	private static Transaction sell(String date, String symbol, String name, double quantity, double price, double fee, double credit) {
+		return new Transaction(Type.SELL, date, symbol, name, quantity, price, fee, 0, credit);
 	}
 	private static Transaction interest(String date, double credit) {
-		return new Transaction(Type.INTEREST, date, FILLER, FILLER, 0, 0, 0, credit);
+		return new Transaction(Type.INTEREST, date, FILLER, FILLER, 0, 0, 0, 0, credit);
 	}
 	private static Transaction dividend(String date, String symbol, String name, double quantity, double fee, double debit, double credit) {
-		return new Transaction(Type.DIVIDEND, date, symbol, name, quantity, fee, debit, credit);
+		return new Transaction(Type.DIVIDEND, date, symbol, name, quantity, 0, fee, debit, credit);
 	}
 	private static Transaction achOut(String date, double debit) {
-		return new Transaction(Type.ACH_OUT, date, FILLER, FILLER, 0, 0, debit, 0);
+		return new Transaction(Type.ACH_OUT, date, FILLER, FILLER, 0, 0, 0, debit, 0);
 	}
 	private static Transaction achIn(String date, double credit) {
-		return new Transaction(Type.ACH_IN, date, FILLER, FILLER, 0, 0, 0, credit);
+		return new Transaction(Type.ACH_IN, date, FILLER, FILLER, 0, 0, 0, 0, credit);
 	}
 	private static Transaction wireOut(String date, double debit) {
-		return new Transaction(Type.WIRE_OUT, date, FILLER, FILLER, 0, 0, debit, 0);
+		return new Transaction(Type.WIRE_OUT, date, FILLER, FILLER, 0, 0, 0, debit, 0);
 	}
 	private static Transaction wireIn(String date, double credit) {
-		return new Transaction(Type.WIRE_IN, date, FILLER, FILLER, 0, 0, 0, credit);
+		return new Transaction(Type.WIRE_IN, date, FILLER, FILLER, 0, 0, 0, 0, credit);
 	}
 	private static Transaction change(String date, String symbol, String name, double quantity, String newSymbol, String newName, double newQuantity) {
-		return new Transaction(Type.CHANGE, date, symbol, name, quantity, 0, 0, 0, newSymbol, newName, newQuantity);
+		return new Transaction(Type.CHANGE, date, symbol, name, quantity, 0, 0, 0, 0, newSymbol, newName, newQuantity);
 	}
 	
 	public static double roundPrice(double value) {
@@ -327,6 +333,7 @@ public class Transaction {
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = roundQuantity(activity.quantity);
+					double price    = roundQuantity(activity.price);
 					double fee      = roundPrice(activity.commission);
 					double debit    = roundPrice(activity.price * activity.quantity);
 					
@@ -339,7 +346,7 @@ public class Transaction {
 						}
 					}
 					
-					Transaction transaction = Transaction.buy(date, symbol, name, quantity, fee, debit);
+					Transaction transaction = Transaction.buy(date, symbol, name, quantity, price, fee, debit);
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
@@ -381,6 +388,7 @@ public class Transaction {
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = roundQuantity(activity.quantity);
+					double price    = roundQuantity(activity.price);
 					double fee      = roundPrice(activity.commission);
 					double credit   = roundPrice(activity.price * activity.quantity);
 					
@@ -393,7 +401,7 @@ public class Transaction {
 						}
 					}
 
-					Transaction transaction = Transaction.sell(date, symbol, name, quantity, fee, credit);
+					Transaction transaction = Transaction.sell(date, symbol, name, quantity, price, fee, credit);
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;

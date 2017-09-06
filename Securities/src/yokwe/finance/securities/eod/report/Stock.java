@@ -139,13 +139,13 @@ public class Stock {
 			return;
 		}
 
-		stock.totalQuantity = DoubleUtil.round(stock.totalQuantity + quantity, 5);
-		stock.totalCost     = DoubleUtil.round(stock.totalCost     + total,    2);
+		stock.totalQuantity = Transaction.roundQuantity(stock.totalQuantity + quantity);
+		stock.totalCost     = Transaction.roundPrice(stock.totalCost + total);
 		
 		stock.history.add(new History(date, quantity, total));
 	}
 	
-	// Returns sellCost
+	// Returns sellCost using LIFO method
 	public static double sell(String date, String symbol, double quantity, double total) {
 		Stock stock = Stock.get(symbol);
 		double totalCostBefore = stock.totalCost;
@@ -174,9 +174,9 @@ public class Stock {
 					history.quantity = 0;
 					history.cost     = 0;
 				} else if (quantitySell < history.quantity) {
-					double cost = DoubleUtil.round(history.cost * (quantitySell / history.quantity), 2);
-					history.quantity = DoubleUtil.round(history.quantity - quantitySell, 5);
-					history.cost     = DoubleUtil.round(history.cost     - cost,         2);
+					double cost = Transaction.roundPrice(history.cost * (quantitySell / history.quantity));
+					history.quantity = Transaction.roundQuantity(history.quantity - quantitySell);
+					history.cost     = Transaction.roundPrice(history.cost     - cost);
 					
 					quantitySell = 0;
 				} else {
@@ -193,9 +193,9 @@ public class Stock {
 			totalCost     += history.cost;
 			totalQuantity += history.quantity;
 		}
-		stock.totalQuantity = DoubleUtil.round(totalQuantity, 5);
-		stock.totalCost     = DoubleUtil.round(totalCost,     2);
+		stock.totalQuantity = Transaction.roundQuantity(totalQuantity);
+		stock.totalCost     = Transaction.roundPrice(totalCost);
 		
-		return DoubleUtil.round(totalCostBefore - stock.totalCost, 2);
+		return Transaction.roundPrice(totalCostBefore - stock.totalCost);
 	}
 }

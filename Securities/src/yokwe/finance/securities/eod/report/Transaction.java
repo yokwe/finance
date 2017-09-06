@@ -98,6 +98,13 @@ public class Transaction {
 		return new Transaction(Type.CHANGE, date, symbol, name, quantity, 0, 0, 0, positionList, newSymbol, newName, newQuantity);
 	}
 	
+	public static double roundPrice(double value) {
+		return DoubleUtil.round(value, 2);
+	}
+	public static double roundQuantity(double value) {
+		return DoubleUtil.round(value, 5);
+	}
+	
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
 		List<Transaction> transactionList = new ArrayList<>();
 		
@@ -174,7 +181,7 @@ public class Transaction {
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = activity.quantity;
-					double total    = DoubleUtil.round((activity.price * activity.quantity) + activity.commission, 2);
+					double total    = roundPrice((activity.price * activity.quantity) + activity.commission);
 					
 					Stock.buy(date, symbol, quantity, total);
 					Transaction transaction = Transaction.buy(date, symbol, name, quantity, total, Stock.getPositionList());
@@ -189,7 +196,7 @@ public class Transaction {
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = activity.quantity;
-					double total    = DoubleUtil.round((activity.price * activity.quantity) - activity.commission, 2);
+					double total    = roundPrice((activity.price * activity.quantity) - activity.commission);
 
 					double sellCost = Stock.sell(date, symbol, quantity, total);
 					Transaction transaction = Transaction.sell(date, symbol, name, quantity, total, sellCost, Stock.getPositionList());

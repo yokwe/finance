@@ -3,7 +3,6 @@ package yokwe.finance.securities.eod.report;
 import java.util.List;
 
 import yokwe.finance.securities.eod.PriceUtil;
-import yokwe.finance.securities.util.DoubleUtil;
 
 public class Position {
 //	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Position.class);
@@ -35,7 +34,7 @@ public class Position {
 			double price = PriceUtil.getClose(symbol, date);
 			double value = (price * quantity) - COMMISSION;
 			
-			ret = DoubleUtil.round(ret + value, 2);
+			ret = Transaction.roundPrice(ret + value);
 		} else {
 			// price of symbol at the date is not available
 			return NO_VALUE;
@@ -51,7 +50,7 @@ public class Position {
 			double value = getUnrealizedValue(date, position);
 			if (value == NO_VALUE) return NO_VALUE;
 			
-			ret = DoubleUtil.round(ret + value, 2);
+			ret = Transaction.roundPrice(ret + value);
 		}
 		return ret;
 	}

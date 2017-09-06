@@ -16,7 +16,6 @@ import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
-import yokwe.finance.securities.util.DoubleUtil;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -42,44 +41,44 @@ public class Report {
 			case WIRE_IN:
 				account.wireIn = transaction.credit;
 				
-				fundTotal = DoubleUtil.round(fundTotal + account.wireIn, 2);
-				cashTotal = DoubleUtil.round(cashTotal + account.wireIn, 2);
+				fundTotal = Transaction.roundPrice(fundTotal + account.wireIn);
+				cashTotal = Transaction.roundPrice(cashTotal + account.wireIn);
 				break;
 			case WIRE_OUT:
 				account.wireOut = transaction.debit;
 				
-				fundTotal = DoubleUtil.round(fundTotal - account.wireOut, 2);
-				cashTotal = DoubleUtil.round(cashTotal - account.wireOut, 2);
+				fundTotal = Transaction.roundPrice(fundTotal - account.wireOut);
+				cashTotal = Transaction.roundPrice(cashTotal - account.wireOut);
 				break;
 			case ACH_IN:
 				account.achIn = transaction.credit;
 				
-				fundTotal = DoubleUtil.round(fundTotal + account.achIn, 2);
-				cashTotal = DoubleUtil.round(cashTotal + account.achIn, 2);
+				fundTotal = Transaction.roundPrice(fundTotal + account.achIn);
+				cashTotal = Transaction.roundPrice(cashTotal + account.achIn);
 				break;
 			case ACH_OUT:
 				account.achOut = transaction.debit;
 				
-				fundTotal = DoubleUtil.round(fundTotal - account.achOut, 2);
-				cashTotal = DoubleUtil.round(cashTotal - account.achOut, 2);
+				fundTotal = Transaction.roundPrice(fundTotal - account.achOut);
+				cashTotal = Transaction.roundPrice(cashTotal - account.achOut);
 				break;
 			case INTEREST:
 				account.interest = transaction.credit;
 				
-				cashTotal = DoubleUtil.round(cashTotal + account.interest, 2);
+				cashTotal = Transaction.roundPrice(cashTotal + account.interest);
 				break;
 			case DIVIDEND:
 				account.dividend = transaction.credit - transaction.debit;
 				account.symbol   = transaction.symbol;
 				
-				cashTotal = DoubleUtil.round(cashTotal + account.dividend, 2);
+				cashTotal = Transaction.roundPrice(cashTotal + account.dividend);
 				break;
 			case BUY:
 				account.buy    = transaction.debit;
 				account.symbol = transaction.symbol;
 				
-				cashTotal  = DoubleUtil.round(cashTotal  - account.buy, 2);
-				stockTotal = DoubleUtil.round(stockTotal + account.buy, 2);
+				cashTotal  = Transaction.roundPrice(cashTotal  - account.buy);
+				stockTotal = Transaction.roundPrice(stockTotal + account.buy);
 				break;
 			case SELL:
 				account.sell     = transaction.credit;
@@ -87,8 +86,8 @@ public class Report {
 				account.sellCost = transaction.sellCost;
 				account.sellGain = account.sell - account.sellCost;
 				
-				cashTotal  = DoubleUtil.round(cashTotal  + account.sell, 2);
-				stockTotal = DoubleUtil.round(stockTotal - transaction.sellCost, 2);
+				cashTotal  = Transaction.roundPrice(cashTotal  + account.sell);
+				stockTotal = Transaction.roundPrice(stockTotal - transaction.sellCost);
 				break;
 			case CHANGE:
 				// Nothing is changed for account
@@ -146,12 +145,12 @@ public class Report {
 					
 					double buy    = transaction.debit;
 					
-					stockTotal = DoubleUtil.round(stockTotal + buy, 2);
+					stockTotal = Transaction.roundPrice(stockTotal + buy);
 					
 					stockGain.stock      = stockTotal;
 //					stockGain.unreal
 //					stockGain.unrealGain
-					stockGain.buy        = DoubleUtil.round(stockGain.buy + buy, 2);
+					stockGain.buy        = Transaction.roundPrice(stockGain.buy + buy);
 //					stockGain.sell
 //					stockGain.sellGain
 					stockGain.realGain   = gainTotal;
@@ -174,15 +173,15 @@ public class Report {
 					double cost   = transaction.sellCost;
 					double gain   = sell - cost;
 
-					stockTotal = DoubleUtil.round(stockTotal - cost, 2);
-					gainTotal  = DoubleUtil.round(gainTotal + gain, 2);
+					stockTotal = Transaction.roundPrice(stockTotal - cost);
+					gainTotal  = Transaction.roundPrice(gainTotal + gain);
 
 					stockGain.stock      = stockTotal;
 //					stockGain.unreal
 //					stockGain.unrealGain
 //					stockGain.buy
-					stockGain.sell       = DoubleUtil.round(stockGain.sell + sell, 2);
-					stockGain.sellGain   = DoubleUtil.round(stockGain.sellGain + gain, 2);
+					stockGain.sell       = Transaction.roundPrice(stockGain.sell + sell);
+					stockGain.sellGain   = Transaction.roundPrice(stockGain.sellGain + gain);
 					stockGain.realGain   = gainTotal;
 
 					logger.info("sell {}", stockGain);

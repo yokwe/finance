@@ -20,7 +20,7 @@ public class Position {
 	
 	@Override
 	public String toString() {
-		return String.format("[%s %.4f]", symbol, quantity);
+		return String.format("[%s %.5f]", symbol, quantity);
 	}
 
 	

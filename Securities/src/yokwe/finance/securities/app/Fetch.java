@@ -58,7 +58,7 @@ public class Fetch {
 			
 		    HttpEntity entity = response.getEntity();
 		    if (entity != null) {
-		    	int fileSize = 0;
+//		    	int fileSize = 0;
 	    		byte[] buffer = new byte[65536 * 2];
 		    	try (BufferedInputStream bis = new BufferedInputStream(entity.getContent(), buffer.length);
 		    			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fileName), buffer.length)) {
@@ -66,7 +66,7 @@ public class Fetch {
 			    		int len = bis.read(buffer);
 			    		if (len == -1) break;
 			    		bos.write(buffer, 0, len);
-			    		fileSize += len;
+//			    		fileSize += len;
 		    		}
 		    	}
 //				if (fileSize == 0) {

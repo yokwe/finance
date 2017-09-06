@@ -42,9 +42,6 @@ public class Transaction {
 	
 	// USDJPY
 	public final double         fxRate;
-	public final int            feeJPY;
-	public final int            debitJPY;
-	public final int            creditJPY;
 	
 	
 	private Transaction(Type type, String date, String symbol, String name, double quantity, double price, double fee, double debit, double credit,
@@ -66,9 +63,6 @@ public class Transaction {
 		this.newQuantity  = newQuantity;
 		
 		this.fxRate       = roundPrice(fxRate);
-		this.feeJPY       = (int)Math.floor(this.fee    * fxRate);
-		this.debitJPY     = (int)Math.floor(this.debit  * fxRate);
-		this.creditJPY    = (int)Math.floor(this.credit * fxRate);
 		
 		// Sanity check
 		if (!DoubleUtil.isAlmostEqual(fxRate, this.fxRate)) {
@@ -102,8 +96,8 @@ public class Transaction {
 	
 	@Override
 	public String toString() {
-		return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f %4d %7d %7d",
-				type, date, symbol, quantity, price, fee, debit, credit, newSymbol, newQuantity, fxRate, feeJPY, debitJPY, creditJPY);
+		return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f",
+				type, date, symbol, quantity, price, fee, debit, credit, newSymbol, newQuantity, fxRate);
 	}
 	
 	private static Transaction buy(String date, String symbol, String name, double quantity, double price, double fee, double debit) {

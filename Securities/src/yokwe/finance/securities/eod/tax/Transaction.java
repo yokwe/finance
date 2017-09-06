@@ -48,23 +48,46 @@ public class Transaction {
 	
 	private Transaction(Type type, String date, String symbol, String name, double quantity, double fee, double debit, double credit,
 			String newSymbol, String newName, double newQuantity) {
+		double fxRate = ForexUtil.getUSD(date);
+		
 		this.type         = type;
 		this.date         = date;
 		this.symbol       = symbol;
 		this.name         = name;
-		this.quantity     = quantity;
-		this.fee          = fee;
-		this.debit        = debit;
-		this.credit       = credit;
+		this.quantity     = roundQuantity(quantity);
+		this.fee          = roundPrice(fee);
+		this.debit        = roundPrice(debit);
+		this.credit       = roundPrice(credit);
 		
 		this.newSymbol    = newSymbol;
 		this.newName      = newName;
 		this.newQuantity  = newQuantity;
 		
-		this.fxRate       = ForexUtil.getUSD(date);
-		this.feeJPY       = (int)Math.floor(fee * fxRate);
-		this.debitJPY     = (int)Math.floor(debit * fxRate);
-		this.creditJPY    = (int)Math.floor(credit * fxRate);
+		this.fxRate       = roundPrice(fxRate);
+		this.feeJPY       = (int)Math.floor(this.fee    * fxRate);
+		this.debitJPY     = (int)Math.floor(this.debit  * fxRate);
+		this.creditJPY    = (int)Math.floor(this.credit * fxRate);
+		
+		if (!DoubleUtil.isAlmostEqual(fxRate, this.fxRate)) {
+			logger.error("fxRate  {}  {}", fxRate, this.fxRate);
+			throw new SecuritiesException("Unexpected");
+		}
+		if (!DoubleUtil.isAlmostEqual(quantity, this.quantity)) {
+			logger.error("quantity  {}  {}", quantity, this.quantity);
+			throw new SecuritiesException("Unexpected");
+		}
+		if (!DoubleUtil.isAlmostEqual(fee, this.fee)) {
+			logger.error("fee  {}  {}", fee, this.fee);
+			throw new SecuritiesException("Unexpected");
+		}
+		if (!DoubleUtil.isAlmostEqual(debit, this.debit)) {
+			logger.error("debit  {}  {}", debit, this.debit);
+			throw new SecuritiesException("Unexpected");
+		}
+		if (!DoubleUtil.isAlmostEqual(credit, this.credit)) {
+			logger.error("fxRate  {}  {}", credit, this.credit);
+			throw new SecuritiesException("Unexpected");
+		}
 	}
 	private Transaction(Type type, String date, String symbol, String name, double quantity, double fee, double debit, double credit) {
 		this(type, date, symbol, name, quantity, fee, debit, credit, "", "", 0);
@@ -72,8 +95,8 @@ public class Transaction {
 	
 	@Override
 	public String toString() {
-		return String.format("%-9s %10s %-10s %10.5f %5.2f %8.2f %8.2f %-10s %8.2f",
-				type, date, symbol, quantity, fee, debit, credit, newSymbol, newQuantity);
+		return String.format("%-9s %10s %-10s %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f %4d %7d %7d",
+				type, date, symbol, quantity, fee, debit, credit, newSymbol, newQuantity, fxRate, feeJPY, debitJPY, creditJPY);
 	}
 	
 	private static Transaction buy(String date, String symbol, String name, double quantity, double fee, double debit) {
@@ -441,8 +464,8 @@ public class Transaction {
 						logger.error("price != 0  {}", activity.price);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (activity.commission < 0) {
-						logger.error("commission < 0  {}", activity.commission);
+					if (activity.commission != 0) {
+						logger.error("commission != 0  {}", activity.commission);
 						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.debit < 0) {

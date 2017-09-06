@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.ForexUtil;
 import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.eod.PriceUtil;
@@ -78,10 +79,6 @@ public class Report {
 					ret.put(key, buySell);
 				}
 				buySell.buy(transaction);
-				// Special case for TAL/TRTN(negative quantity for BUY)
-				if (buySell.isAlmostZero()) {
-					ret.remove(key);
-				}
 			}
 			if (transaction.type == Transaction.Type.SELL) {
 				String key = transaction.symbol;
@@ -89,11 +86,24 @@ public class Report {
 				if (ret.containsKey(key)) {
 					buySell = ret.get(key);
 				} else {
-					buySell = new BuySell(transaction.symbol, transaction.name);
-					ret.put(key, buySell);
+					logger.error("Unknonw symbol {}", key);
+					throw new SecuritiesException("Unexpected");
 				}
 				
 				buySell.sell(transaction);
+			}
+			if (transaction.type == Transaction.Type.CHANGE) {
+				String key = transaction.symbol;
+				
+				BuySell buySell;
+				if (ret.containsKey(key)) {
+					buySell = ret.get(key);
+				} else {
+					logger.error("Unknonw symbol {}", key);
+					throw new SecuritiesException("Unexpected");
+				}
+				
+				buySell.change(transaction);
 			}
 		}
 		

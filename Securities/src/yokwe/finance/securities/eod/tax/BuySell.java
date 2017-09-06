@@ -134,4 +134,7 @@ public class BuySell {
 			reset();
 		}
 	}
+	void change(Transaction transaction) {
+		// TODO implement this
+	}
 }

@@ -56,7 +56,7 @@ public class Transfer {
 		public final int    feeJPY;
 		
 		public final double cost;
-		public final int    costJPY;		
+		public final int    costJPY;
 
 		public final String dateFirst;
 		public final String dateLast;
@@ -95,7 +95,7 @@ public class Transfer {
 			
 			this.totalQuantity = totalQuantity;
 			this.totalCost     = totalCost;
-			this.totalCostJPY  = totalCostJPY;			
+			this.totalCostJPY  = totalCostJPY;
 		}
 	}
 	

@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.tax.Transfer;
 import yokwe.finance.securities.util.DoubleUtil;
 
@@ -95,7 +96,7 @@ public class BuySell {
 			totalCostJPY  -= costJPY;
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-			logger.info("SELL {}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
+			logger.info("SELL {}", String.format("%s %-9s %9.5f %7d %7d %7d %s %s",
 					transaction.date, symbol, totalQuantity, sellJPY, costJPY, feeJPY, dateBuyFirst, dateBuyLast));
 		} else {
 			double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up. See https://www.nta.go.jp/taxanswer/shotoku/1466.htm
@@ -109,7 +110,7 @@ public class BuySell {
 			totalCostJPY  -= costJPY;
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
-			logger.info("SELL*{}", String.format("%s %-8s %9.5f %7d %7d %7d %s %s",
+			logger.info("SELL*{}", String.format("%s %-9s %9.5f %7d %7d %7d %s %s",
 					transaction.date, symbol, totalQuantity, sellJPY, totalCostJPY, feeJPY, dateBuyFirst, dateBuyLast));
 		}
 
@@ -135,6 +136,39 @@ public class BuySell {
 		}
 	}
 	void change(Transaction transaction) {
-		// TODO implement this
+		if (-transaction.quantity == transaction.newQuantity) {
+			// rename symbol with newSymbol
+			String newSymbol = transaction.newSymbol;
+			String newName   = transaction.newName;
+			
+			this.symbol = newSymbol;
+			this.name   = newName;
+			
+//			for(Transfer transfer: current) {
+//				if (transfer.buy != null) {
+//					transfer.buy.symbol = newSymbol;
+//					transfer.buy.name = newName;
+//				}
+//				if (transfer.sell != null) {
+//					transfer.sell.symbol = newSymbol;
+//					transfer.sell.name = newName;
+//				}
+//			}
+//			for(List<Transfer> transferList: past) {
+//				for(Transfer transfer: transferList) {
+//					if (transfer.buy != null) {
+//						transfer.buy.symbol = newSymbol;
+//						transfer.buy.name = newName;
+//					}
+//					if (transfer.sell != null) {
+//						transfer.sell.symbol = newSymbol;
+//						transfer.sell.name = newName;
+//					}
+//				}
+//			}
+		} else {
+			logger.error("quantity  {}  {}", transaction.quantity, transaction.newQuantity);
+			throw new SecuritiesException("Unexpected");
+		}
 	}
 }

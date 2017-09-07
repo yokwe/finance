@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.ForexUtil;
-import yokwe.finance.securities.eod.Market;
+import yokwe.finance.securities.eod.Price;
 import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
@@ -102,8 +102,10 @@ public class Report {
 					logger.error("Unknonw symbol {}", key);
 					throw new SecuritiesException("Unexpected");
 				}
+				ret.remove(key);
 				
 				buySell.change(transaction);
+				ret.put(buySell.symbol, buySell);
 			}
 		}
 		
@@ -111,22 +113,21 @@ public class Report {
 	}
 	
 	static void addDummySell(Map<String, BuySell> buySellMap) {
+		double fee = 5.0;
 		String theDate = "9999-12-31";
-		String lastTradingDate = Market.getLastTradingDate().toString();
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;
 			
-			String symbol = buySell.symbol;
-			String name   = buySell.name;
+			String symbol   = buySell.symbol;
+			String name     = buySell.name;
 			double quantity = buySell.totalQuantity;
 			
 			// Get latest price of symbol
-//			logger.info("symbol {}", buySell.symbol);
-			double price = PriceUtil.getClose(symbol, lastTradingDate);
-			logger.info("price {}", price);
+			Price price = PriceUtil.getLastPrice(symbol);
+//			logger.info("price {} {} {}", price.date, price.symbol, price.close);
 
 			// Add dummy sell record
-			Transaction transaction = Transaction.sell(theDate, symbol, name, quantity, price, 5, quantity * price);	
+			Transaction transaction = Transaction.sell(theDate, symbol, name, quantity, price.close, fee, Transaction.roundPrice(quantity * price.close));	
 			buySell.sell(transaction);
 		}
 	}

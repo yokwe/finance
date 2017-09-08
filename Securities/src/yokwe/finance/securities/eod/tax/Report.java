@@ -20,6 +20,9 @@ import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Dividend;
 import yokwe.finance.securities.tax.Interest;
+import yokwe.finance.securities.tax.Transfer;
+import yokwe.finance.securities.tax.TransferDetail;
+import yokwe.finance.securities.tax.TransferSummary;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -180,6 +183,46 @@ public class Report {
 		}
 	}
 	
+	static Map<String, TransferSummary> getSummaryMap(Map<String, BuySell> buySellMap) {
+		Map<String, TransferSummary> ret = new TreeMap<>();
+		
+		for(BuySell buySell: buySellMap.values()) {
+			String symbol = buySell.symbol;
+			for(List<Transfer> pastTransferList: buySell.past) {
+				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+				if (lastTransfer.sell == null) {
+					logger.error("lastTransfer is null");
+					throw new SecuritiesException("lastTransfer is null");
+				}
+				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
+				ret.put(key, new TransferSummary(lastTransfer.sell));
+			}
+		}
+		return ret;
+	}
+	static Map<String, List<TransferDetail>> getDetailMap(Map<String, BuySell> buySellMap) {
+		Map<String, List<TransferDetail>> ret = new TreeMap<>();
+		
+		for(BuySell buySell: buySellMap.values()) {
+			String symbol = buySell.symbol;
+			for(List<Transfer> pastTransferList: buySell.past) {
+				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
+				if (lastTransfer.sell == null) {
+					logger.error("lastTransfer is null");
+					throw new SecuritiesException("lastTransfer is null");
+				}
+				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
+				
+				List<TransferDetail> detailList = new ArrayList<>();
+				for(Transfer transfer: pastTransferList) {
+					detailList.add(TransferDetail.getInstance(transfer));
+				}
+				ret.put(key, detailList);
+			}
+		}
+		return ret;
+	}
+
 	public static void main(String[] args) {
 		logger.info("START");
 		
@@ -199,12 +242,70 @@ public class Report {
 			// key is symbol
 			Map<String, BuySell> buySellMap = getBuySellMap(transactionList);
 			addDummySell(buySellMap);
+			
+			// key is date-symbol
+			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
+			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
+
 
 			SortedSet<String> yearSet = new TreeSet<>();
 
+			yearSet.addAll(detailMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
+			yearSet.addAll(dividendMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 			yearSet.addAll(interestMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 
 			for(String targetYear: yearSet) {
+				// Detail
+				{
+					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
+					for(String key: detailMap.keySet()) {
+						if (!key.startsWith(targetYear)) continue;
+						
+						List<TransferDetail> aList = detailMap.get(key);
+						if (aList.isEmpty()) continue;
+						
+						String symbol = aList.get(0).symbol;
+						if (!workMap.containsKey(symbol)) {
+							workMap.put(symbol, new ArrayList<>());
+						}
+						workMap.get(symbol).addAll(aList);
+					}
+					
+					List<TransferDetail> transferList = new ArrayList<>();
+					for(String key: workMap.keySet()) {
+						transferList.addAll(workMap.get(key));
+					}
+					
+					if (!transferList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(TransferDetail.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.fillSheet(docSave, transferList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
+
+				// Summary
+				{
+					List<TransferSummary> summaryList = new ArrayList<>();
+					for(String key: summaryMap.keySet()) {
+						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
+					}
+					// Sort with symbol name and dateSell
+					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
+					if (!summaryList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(TransferSummary.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.fillSheet(docSave, summaryList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
+				
 				// Dividend
 				{
 					List<Dividend> dividendList = new ArrayList<>();

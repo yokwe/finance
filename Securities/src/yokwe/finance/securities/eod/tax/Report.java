@@ -223,10 +223,9 @@ public class Report {
 		return ret;
 	}
 
-	public static void main(String[] args) {
-		logger.info("START");
-		
-		try (SpreadSheet docActivity = new SpreadSheet(URL_ACTIVITY, true)) {
+	public static void generateReport(String url) {
+		logger.info("url        {}", url);		
+		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
 			SpreadSheet docLoad = new SpreadSheet(URL_TEMPLATE, true);
 			SpreadSheet docSave = new SpreadSheet();
 
@@ -234,7 +233,6 @@ public class Report {
 			
 			// key is date
 			Map<String, Dividend> dividendMap = getDividendMap(transactionList);
-			logger.info("dividendMap size = {}", dividendMap.size());
 
 			// key is date
 			Map<String, Interest> interestMap = getInterestMap(transactionList);
@@ -350,7 +348,18 @@ public class Report {
 			logger.info("output {}", URL_REPORT);
 			docLoad.close();
 		}
+	}
+	
+	public static void main(String[] args) {
+		logger.info("START");
 		
+		// For test
+//		ForexUtil.enableTestMode();
+//		generateReport(URL_ACTIVITY_TEST);
+		
+		// Not test
+		generateReport(URL_ACTIVITY);
+
 		logger.info("STOP");
 		System.exit(0);
 	}

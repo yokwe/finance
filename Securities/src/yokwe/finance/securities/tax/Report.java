@@ -197,6 +197,7 @@ public class Report {
 				}
 				for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
 					logger.info("activity {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol);
+					// FIXME date of fxRate should be activity.tradeDate for buy and sell
 					double fxRate = ForexUtil.getUSD(activity.date);
 					
 					String month = toMonth(activity.date);

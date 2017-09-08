@@ -57,8 +57,9 @@ public class YahooQuery {
 	}
 	public String download(LocalDate dateFrom, LocalDate dateTo, String symbol, String event) {
 		int retryCount = 0;
+		String symbolURL = StockUtil.get(symbol).symbolYahoo;
 		for(;;) {
-			String url = getURL(dateFrom, dateTo, symbol, event);
+			String url = getURL(dateFrom, dateTo, symbolURL, event);
 			HttpGet httpGet = new HttpGet(url);
 			httpGet.setHeader("User-Agent", "Mozilla");
 			httpGet.setHeader("Cookie", cookie);

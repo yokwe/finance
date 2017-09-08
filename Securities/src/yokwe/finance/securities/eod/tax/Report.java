@@ -67,8 +67,56 @@ public class Report {
 	}
 	static Map<String, BuySell>  getBuySellMap(List<Transaction> transactionList) {
 		Map<String, BuySell> ret = new TreeMap<>();
+		
+		// To calculate correct Japanese tax,
+		// If buy and sell happen in same day, treat as all buy first then sell
+		// Order of transaction should be change, buy and sell per stock for one day
+		List<Transaction> reorderedTransactionList = new ArrayList<>();
+		{
+			String lastDate   = "*NA*";
+			String lastSymbol = "*NA*";
+			List<Transaction> buyList    = new ArrayList<>();
+			List<Transaction> sellList   = new ArrayList<>();
+			List<Transaction> changeList = new ArrayList<>();
+			
+			for(Transaction transaction: transactionList) {
+				String date   = transaction.date;
+				String symbol = transaction.symbol;
+				
+				if (!date.equals(lastDate) || !symbol.equals(lastSymbol)) {
+					reorderedTransactionList.addAll(changeList);
+					reorderedTransactionList.addAll(buyList);
+					reorderedTransactionList.addAll(sellList);
+					
+					buyList.clear();
+					sellList.clear();
+					changeList.clear();
+				}
 
-		for(Transaction transaction: transactionList) {
+				switch(transaction.type) {
+				case BUY:
+					buyList.add(transaction);
+					break;
+				case SELL:
+					sellList.add(transaction);
+					break;
+				case CHANGE:
+					changeList.add(transaction);
+					break;
+				default:
+					break;
+				}
+				
+				lastDate = date;
+				lastSymbol = symbol;
+			}
+			
+			reorderedTransactionList.addAll(buyList);
+			reorderedTransactionList.addAll(sellList);
+			reorderedTransactionList.addAll(changeList);
+		}
+
+		for(Transaction transaction: reorderedTransactionList) {
 			if (transaction.type == Transaction.Type.BUY) {
 				String key = transaction.symbol;
 				BuySell buySell;

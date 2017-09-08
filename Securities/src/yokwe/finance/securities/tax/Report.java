@@ -197,7 +197,6 @@ public class Report {
 				}
 				for(Activity activity: Sheet.extractSheet(docActivity, Activity.class, sheetName)) {
 					logger.info("activity {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol);
-					// FIXME date of fxRate should be activity.tradeDate for buy and sell
 					double fxRate = ForexUtil.getUSD(activity.date);
 					
 					String month = toMonth(activity.date);
@@ -219,6 +218,8 @@ public class Report {
 							logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
 							throw new SecuritiesException("tradeDate is empty");
 						}
+						// FIXME date of fxRate should be activity.tradeDate for buy and sell
+						// fxRate = ForexUtil.getUSD(activity.tradeDate);
 						String key = activity.symbol;
 						BuySell buySell;
 						if (buySellMap.containsKey(key)) {
@@ -243,6 +244,8 @@ public class Report {
 							logger.error("tradeDate is empty  {} {} {}", activity.date, activity.symbol, activity.transaction);
 							throw new SecuritiesException("tradeDate is empty");
 						}
+						// FIXME date of fxRate should be activity.tradeDate for buy and sell
+						// fxRate = ForexUtil.getUSD(activity.tradeDate);
 						String key = activity.symbol;
 						BuySell buySell;
 						if (buySellMap.containsKey(key)) {

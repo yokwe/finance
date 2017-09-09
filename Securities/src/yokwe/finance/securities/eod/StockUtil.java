@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.FileUtil;
 
 public class StockUtil {
 	private static final Logger logger = LoggerFactory.getLogger(StockUtil.class);

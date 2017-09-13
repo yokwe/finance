@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.ForexUtil;
-import yokwe.finance.securities.eod.Price;
-import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.tax.Dividend;
@@ -67,120 +65,6 @@ public class Report {
 			}
 		}
 		return ret;
-	}
-	static Map<String, BuySell>  getBuySellMap(List<Transaction> transactionList) {
-		Map<String, BuySell> ret = new TreeMap<>();
-		
-		// To calculate correct Japanese tax,
-		// If buy and sell happen in same day, treat as all buy first then sell
-		// Order of transaction should be change, buy and sell per stock for one day
-		List<Transaction> reorderedTransactionList = new ArrayList<>();
-		{
-			String lastDate   = "*NA*";
-			String lastSymbol = "*NA*";
-			List<Transaction> buyList    = new ArrayList<>();
-			List<Transaction> sellList   = new ArrayList<>();
-			List<Transaction> changeList = new ArrayList<>();
-			
-			for(Transaction transaction: transactionList) {
-				String date   = transaction.date;
-				String symbol = transaction.symbol;
-				
-				if (!date.equals(lastDate) || !symbol.equals(lastSymbol)) {
-					reorderedTransactionList.addAll(changeList);
-					reorderedTransactionList.addAll(buyList);
-					reorderedTransactionList.addAll(sellList);
-					
-					buyList.clear();
-					sellList.clear();
-					changeList.clear();
-				}
-
-				switch(transaction.type) {
-				case BUY:
-					buyList.add(transaction);
-					break;
-				case SELL:
-					sellList.add(transaction);
-					break;
-				case CHANGE:
-					changeList.add(transaction);
-					break;
-				default:
-					break;
-				}
-				
-				lastDate = date;
-				lastSymbol = symbol;
-			}
-			
-			reorderedTransactionList.addAll(buyList);
-			reorderedTransactionList.addAll(sellList);
-			reorderedTransactionList.addAll(changeList);
-		}
-
-		for(Transaction transaction: reorderedTransactionList) {
-			if (transaction.type == Transaction.Type.BUY) {
-				String key = transaction.symbol;
-				BuySell buySell;
-				if (ret.containsKey(key)) {
-					buySell = ret.get(key);
-				} else {
-					buySell = new BuySell(transaction.symbol, transaction.name);
-					ret.put(key, buySell);
-				}
-				buySell.buy(transaction);
-			}
-			if (transaction.type == Transaction.Type.SELL) {
-				String key = transaction.symbol;
-				BuySell buySell;
-				if (ret.containsKey(key)) {
-					buySell = ret.get(key);
-				} else {
-					logger.error("Unknonw symbol {}", key);
-					throw new SecuritiesException("Unexpected");
-				}
-				
-				buySell.sell(transaction);
-			}
-			if (transaction.type == Transaction.Type.CHANGE) {
-				String key = transaction.symbol;
-				
-				BuySell buySell;
-				if (ret.containsKey(key)) {
-					buySell = ret.get(key);
-				} else {
-					logger.error("Unknonw symbol {}", key);
-					throw new SecuritiesException("Unexpected");
-				}
-				ret.remove(key);
-				
-				buySell.change(transaction);
-				ret.put(buySell.symbol, buySell);
-			}
-		}
-		
-		return ret;
-	}
-	
-	static void addDummySell(Map<String, BuySell> buySellMap) {
-		double fee = 5.0;
-		String theDate = "9999-12-31";
-		for(BuySell buySell: buySellMap.values()) {
-			if (buySell.isAlmostZero()) continue;
-			
-			String symbol   = buySell.symbol;
-			String name     = buySell.name;
-			double quantity = buySell.totalQuantity;
-			
-			// Get latest price of symbol
-			Price price = PriceUtil.getLastPrice(symbol);
-//			logger.info("price {} {} {}", price.date, price.symbol, price.close);
-
-			// Add dummy sell record
-			Transaction transaction = Transaction.sell(theDate, symbol, name, quantity, price.close, fee, Transaction.roundPrice(quantity * price.close));	
-			buySell.sell(transaction);
-		}
 	}
 	
 	static Map<String, TransferSummary> getSummaryMap(Map<String, BuySell> buySellMap) {
@@ -238,8 +122,8 @@ public class Report {
 			Map<String, Interest> interestMap = getInterestMap(transactionList);
 			
 			// key is symbol
-			Map<String, BuySell> buySellMap = getBuySellMap(transactionList);
-			addDummySell(buySellMap);
+			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
+			BuySell.addDummySell(buySellMap);
 			
 			// key is date-symbol
 			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);

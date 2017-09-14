@@ -12,7 +12,6 @@ import yokwe.finance.securities.eod.ForexUtil;
 import yokwe.finance.securities.eod.Market;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
-import yokwe.finance.securities.tax.Activity;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Transaction {

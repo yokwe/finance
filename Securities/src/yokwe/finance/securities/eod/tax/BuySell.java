@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.Price;
 import yokwe.finance.securities.eod.PriceUtil;
-import yokwe.finance.securities.tax.Transfer;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class BuySell {
@@ -269,12 +268,14 @@ public class BuySell {
 			}
 		}
 		
+		// Add dummy sell record for remaining stocks
+		addDummySell(ret);
 		return ret;
 	}
 	
 	public static final String DUMMY_DATE = "9999-12-31";
 	public static final double DUMMY_FEE  = 5.0;
-	public static void addDummySell(Map<String, BuySell> buySellMap) {
+	private static void addDummySell(Map<String, BuySell> buySellMap) {
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;
 			

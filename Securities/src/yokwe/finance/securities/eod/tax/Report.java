@@ -16,11 +16,6 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.ForexUtil;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
-import yokwe.finance.securities.tax.Dividend;
-import yokwe.finance.securities.tax.Interest;
-import yokwe.finance.securities.tax.Transfer;
-import yokwe.finance.securities.tax.TransferDetail;
-import yokwe.finance.securities.tax.TransferSummary;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -113,6 +108,7 @@ public class Report {
 			SpreadSheet docLoad = new SpreadSheet(URL_TEMPLATE, true);
 			SpreadSheet docSave = new SpreadSheet();
 
+			// Create transaction from activity
 			List<Transaction> transactionList = Transaction.getTransactionList(docActivity);
 			
 			// key is date
@@ -123,7 +119,6 @@ public class Report {
 			
 			// key is symbol
 			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
-			BuySell.addDummySell(buySellMap);
 			
 			// key is date-symbol
 			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);

@@ -101,6 +101,99 @@ public class Report {
 		}
 		return ret;
 	}
+	
+	static Map<String, Account> getAccountMap(List<Transaction> transactionList) {
+		Map<String, Account> ret = new TreeMap<>();
+		
+		double fundTotal  = 0;
+		double cashTotal  = 0;
+		double stockTotal = 0;
+		double gainTotal  = 0;
+		
+		for(Transaction transaction: transactionList) {
+			String date = transaction.date;
+			
+			switch(transaction.type) {
+			case WIRE_IN:
+			{
+				double credit = transaction.credit;
+				fundTotal += credit;
+				cashTotal += credit;
+				
+				Account account = Account.wireIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
+				ret.put(date, account);
+			}
+				break;
+			case WIRE_OUT:
+			{
+				double debit = transaction.debit;
+				fundTotal -= debit;
+				cashTotal -= debit;
+				
+				Account account = Account.wireOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit);
+				ret.put(date, account);
+			}
+				break;
+			case ACH_IN:
+			{
+				double credit = transaction.credit;
+				fundTotal += credit;
+				cashTotal += credit;
+				
+				Account account = Account.achIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
+				ret.put(date, account);
+			}
+				break;
+			case ACH_OUT:
+			{
+				double debit = transaction.debit;
+				fundTotal -= debit;
+				cashTotal -= debit;
+				
+				Account account = Account.achOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit);
+				ret.put(date, account);
+			}
+				break;
+			case INTEREST:
+			{
+				double credit = transaction.credit;
+				fundTotal += credit;
+				cashTotal += credit;
+				
+				Account account = Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
+				ret.put(date, account);
+			}
+				break;
+			case DIVIDEND:
+			{
+				String symbol = transaction.symbol;
+				double debit  = transaction.debit;
+				double credit = transaction.credit;
+				fundTotal -= debit;
+				cashTotal -= debit;
+				fundTotal += credit;
+				cashTotal += credit;
+				
+				Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
+				ret.put(date, account);
+			}
+				break;
+			case BUY:
+				// FIXME
+				break;
+			case SELL:
+				// FIXME
+				break;
+			case CHANGE:
+				break;
+			default:
+				logger.error("Unknown type = {}", transaction.type);
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+		return ret;
+	}
+
 
 	public static void generateReport(String url) {
 		logger.info("url        {}", url);		
@@ -123,13 +216,16 @@ public class Report {
 			// key is date-symbol
 			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
 			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
-
+			
+			// key is date
+			Map<String, Account> accountMap = getAccountMap(transactionList);
 
 			SortedSet<String> yearSet = new TreeSet<>();
 
 			yearSet.addAll(detailMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 			yearSet.addAll(dividendMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 			yearSet.addAll(interestMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
+			yearSet.addAll(accountMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 
 			for(String targetYear: yearSet) {
 				// Detail
@@ -212,6 +308,24 @@ public class Report {
 						String sheetName = Sheet.getSheetName(Interest.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 						Sheet.fillSheet(docSave, interestList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
+				
+				// Account
+				{
+					List<Account> accountList = new ArrayList<>();
+					for(String key: accountMap.keySet()) {
+						if (key.startsWith(targetYear)) accountList.add(accountMap.get(key));
+					}
+
+					if (!accountList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(Account.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.fillSheet(docSave, accountList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);

@@ -154,7 +154,7 @@ public class SpreadSheet extends LibreOffice {
 			XSpreadsheet sheet = UnoRuntime.queryInterface(XSpreadsheet.class, nameAccess.getByName(name));
 			return sheet;
 		} catch (NoSuchElementException e) {
-			logger.info("NoSuchElementException {}", e.toString());
+			logger.info("NoSuchElementException {} {}", e.toString(), name);
 			throw new SecuritiesException("NoSuchElementException");
 		} catch (WrappedTargetException e) {
 			logger.info("WrappedTargetException {}", e.toString());

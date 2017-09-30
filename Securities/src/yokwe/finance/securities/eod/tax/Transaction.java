@@ -14,7 +14,7 @@ import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.DoubleUtil;
 
-public class Transaction {
+public class Transaction implements Comparable<Transaction> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transaction.class);
 
 	public enum Type {
@@ -102,6 +102,25 @@ public class Transaction {
 		return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %-10s %10.5f  %6.2f",
 				type, date, symbol, quantity, price, fee, debit, credit, newSymbol, newQuantity, fxRate);
 	}
+	
+	// To calculate correct Japanese tax,
+	// If buy and sell happen in same day, treat as all buy first then sell
+	// Order of transaction need to be change, buy and sell per stock for one day
+	@Override
+	public int compareTo(Transaction that) {
+		// Compare date
+		int ret = this.date.compareTo(that.date);
+		if (ret != 0) return ret;
+		
+		// Compare type
+		ret = this.type.compareTo(that.type);
+		if (ret != 0) return ret;
+		
+		// Compare symbol
+		ret = this.symbol.compareTo(that.symbol);
+		return ret;
+	}
+
 	
 	private static Transaction buy(String date, String symbol, String name, double quantity, double price, double fee, double debit) {
 		return new Transaction(Type.BUY, date, symbol, name, quantity, price, fee, debit, 0);
@@ -627,6 +646,9 @@ public class Transaction {
 				}
 			}
 		}
+		
+		// Sort using compareTo method.
+		Collections.sort(transactionList);
 		return transactionList;
 	}
 }

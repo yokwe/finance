@@ -157,7 +157,6 @@ public class Report {
 			case INTEREST:
 			{
 				double credit = transaction.credit;
-				fundTotal += credit;
 				cashTotal += credit;
 				
 				Account account = Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
@@ -167,15 +166,22 @@ public class Report {
 			case DIVIDEND:
 			{
 				String symbol = transaction.symbol;
+				
 				double debit  = transaction.debit;
 				double credit = transaction.credit;
-				fundTotal -= debit;
-				cashTotal -= debit;
-				fundTotal += credit;
-				cashTotal += credit;
 				
-				Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
-				ret.put(date, account);
+				if (debit != 0) {
+					cashTotal -= debit;
+					
+					Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
+					ret.put(date, account);
+				}
+				if (credit != 0) {
+					cashTotal += credit;
+					
+					Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
+					ret.put(date, account);
+				}
 			}
 				break;
 			case BUY:

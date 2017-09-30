@@ -487,7 +487,6 @@ public class Transaction {
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = roundQuantity(activity.quantity);
-					double fee      = roundPrice(activity.commission);
 					double debit    = roundPrice(activity.debit);
 					double credit   = roundPrice(activity.credit);
 					
@@ -501,7 +500,7 @@ public class Transaction {
 						throw new SecuritiesException("Unexpected");
 					}
 
-					Transaction transaction = Transaction.dividend(date, symbol, name, quantity, fee, debit, credit);
+					Transaction transaction = Transaction.dividend(date, symbol, name, quantity, 0, debit, credit);
 					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;

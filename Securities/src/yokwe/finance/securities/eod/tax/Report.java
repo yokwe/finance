@@ -155,6 +155,7 @@ public class Report {
 			{
 				double credit = transaction.credit;
 				cashTotal += credit;
+				gainTotal += credit;
 				
 				ret.add(Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
@@ -168,12 +169,14 @@ public class Report {
 				
 				if (!DoubleUtil.isAlmostZero(debit)) {
 					cashTotal -= debit;
-					
+					gainTotal -= debit;
+
 					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, -debit));
 				}
 				if (!DoubleUtil.isAlmostZero(credit)) {
 					cashTotal += credit;
-					
+					gainTotal += credit;
+
 					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit));
 				}
 			}

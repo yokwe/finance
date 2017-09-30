@@ -25,7 +25,7 @@ public class Report {
 
 	public static final String URL_ACTIVITY      = "file:///home/hasegawa/Dropbox/Trade/投資活動.ods";
 	public static final String URL_ACTIVITY_TEST = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
-	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/TAX_REPORT_TEMPLATE.ods";
+	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/TEMPLATE_TAX_REPORT.ods";
 	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/Report/TAX_REPORT_%s.ods", TIMESTAMP);
 
 	static class BuySell {

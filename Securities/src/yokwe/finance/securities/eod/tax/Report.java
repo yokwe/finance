@@ -16,6 +16,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.ForexUtil;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
@@ -102,8 +103,8 @@ public class Report {
 		return ret;
 	}
 	
-	static Map<String, Account> getAccountMap(List<Transaction> transactionList) {
-		Map<String, Account> ret = new TreeMap<>();
+	static List<Account> getAccountList(List<Transaction> transactionList) {
+		List<Account> ret = new ArrayList<>();
 		
 		double fundTotal  = 0;
 		double cashTotal  = 0;
@@ -120,8 +121,7 @@ public class Report {
 				fundTotal += credit;
 				cashTotal += credit;
 				
-				Account account = Account.wireIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
-				ret.put(date, account);
+				ret.add(Account.wireIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
 				break;
 			case WIRE_OUT:
@@ -130,8 +130,7 @@ public class Report {
 				fundTotal -= debit;
 				cashTotal -= debit;
 				
-				Account account = Account.wireOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit);
-				ret.put(date, account);
+				ret.add(Account.wireOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit));
 			}
 				break;
 			case ACH_IN:
@@ -140,8 +139,7 @@ public class Report {
 				fundTotal += credit;
 				cashTotal += credit;
 				
-				Account account = Account.achIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
-				ret.put(date, account);
+				ret.add(Account.achIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
 				break;
 			case ACH_OUT:
@@ -150,8 +148,7 @@ public class Report {
 				fundTotal -= debit;
 				cashTotal -= debit;
 				
-				Account account = Account.achOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit);
-				ret.put(date, account);
+				ret.add(Account.achOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit));
 			}
 				break;
 			case INTEREST:
@@ -159,8 +156,7 @@ public class Report {
 				double credit = transaction.credit;
 				cashTotal += credit;
 				
-				Account account = Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit);
-				ret.put(date, account);
+				ret.add(Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
 				break;
 			case DIVIDEND:
@@ -170,25 +166,43 @@ public class Report {
 				double debit  = transaction.debit;
 				double credit = transaction.credit;
 				
-				if (debit != 0) {
+				if (!DoubleUtil.isAlmostZero(debit)) {
 					cashTotal -= debit;
 					
-					Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
-					ret.put(date, account);
+					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, -debit));
 				}
-				if (credit != 0) {
+				if (!DoubleUtil.isAlmostZero(credit)) {
 					cashTotal += credit;
 					
-					Account account = Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit - debit);
-					ret.put(date, account);
+					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit));
 				}
 			}
 				break;
 			case BUY:
-				// FIXME
+			{
+				String symbol     = transaction.symbol;
+				Transfer transfer = Transfer.getByID(transaction.id);
+				double   buy      = Transaction.roundPrice(transfer.buy.buy + transfer.buy.fee);
+
+				cashTotal  -= buy;
+				stockTotal += buy;
+				ret.add(Account.buy(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, buy));
+			}
 				break;
 			case SELL:
-				// FIXME
+			{
+				String symbol     = transaction.symbol;
+				Transfer transfer = Transfer.getByID(transaction.id);
+				double sell       = Transaction.roundPrice(transfer.sell.sell - transfer.sell.fee);
+				double sellCost   = transfer.sell.cost;
+				double sellGain   = Transaction.roundPrice(sell - sellCost);
+				
+				cashTotal  += sell;
+				stockTotal -= sellCost;
+				gainTotal  += sellGain;
+
+				ret.add(Account.sell(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, sell, sellCost, sellGain));
+			}
 				break;
 			case CHANGE:
 				break;
@@ -224,16 +238,33 @@ public class Report {
 			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
 			
 			// key is date
-			Map<String, Account> accountMap = getAccountMap(transactionList);
+			List<Account> accountList = getAccountList(transactionList);
 
 			SortedSet<String> yearSet = new TreeSet<>();
 
 			yearSet.addAll(detailMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 			yearSet.addAll(dividendMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 			yearSet.addAll(interestMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
-			yearSet.addAll(accountMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
 
 			for(String targetYear: yearSet) {
+				// Account
+				{
+					List<Account> myList = new ArrayList<>();
+					for(Account account: accountList) {
+						if (account.date.startsWith(targetYear)) myList.add(account);
+					}
+
+					if (!myList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(Account.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.fillSheet(docSave, myList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
+
 				// Detail
 				{
 					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
@@ -314,24 +345,6 @@ public class Report {
 						String sheetName = Sheet.getSheetName(Interest.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 						Sheet.fillSheet(docSave, interestList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
-				
-				// Account
-				{
-					List<Account> accountList = new ArrayList<>();
-					for(String key: accountMap.keySet()) {
-						if (key.startsWith(targetYear)) accountList.add(accountMap.get(key));
-					}
-
-					if (!accountList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Account.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, accountList);
 						
 						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
 						logger.info("sheet {}", newSheetName);

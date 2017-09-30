@@ -1,8 +1,16 @@
 package yokwe.finance.securities.eod.tax;
 
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class Transfer {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transfer.class);
+
 	// Provide class that contains enough information to spread sheet 譲渡明細 and 譲渡計算明細書
 	public static class Buy {
 		public final String date;
@@ -99,21 +107,41 @@ public class Transfer {
 		}
 	}
 	
-	public Transfer(Buy buy) {
+	private static Map<Integer, Transfer> all = new TreeMap<>();
+	public static Transfer getByID(int id) {
+		if (all.containsKey(id)) {
+			return all.get(id);
+		} else {
+			logger.error("Unknown id  {}", id);
+			throw new SecuritiesException("Unexpected");
+		}
+	}
+	
+	public Transfer(int id, Buy buy) {
+		this.id   = id;
 		this.buy  = buy;
 		this.sell = null;
+		
+		all.put(this.id, this);
 	}
 	
-	public Transfer(Sell sell) {
+	public Transfer(int id, Sell sell) {
+		this.id   = id;
 		this.buy  = null;
 		this.sell = sell;
+		
+		all.put(this.id, this);
 	}
 	
-	public Transfer(Buy buy, Sell sell) {
+	public Transfer(int id, Buy buy, Sell sell) {
+		this.id   = id;
 		this.buy  = buy;
 		this.sell = sell;
+		
+		all.put(this.id, this);
 	}
 	
+	public final int  id;
 	public final Buy  buy;
 	public final Sell sell;
 }

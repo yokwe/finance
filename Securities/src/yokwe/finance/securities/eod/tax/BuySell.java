@@ -54,31 +54,31 @@ public class BuySell {
 		return DoubleUtil.isAlmostZero(totalQuantity);
 	}
 
-	void buy(Transaction tansaction) {
-		double fxRate = tansaction.fxRate;
+	void buy(Transaction transaction) {
+		double fxRate = transaction.fxRate;
 		buyCount++;
 		if (buyCount == 1) {
-			dateBuyFirst = tansaction.date;
+			dateBuyFirst = transaction.date;
 		} else {
-			dateBuyLast  = tansaction.date;
+			dateBuyLast  = transaction.date;
 		}
 		
 		// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-		double costPrice = Transaction.roundPrice(tansaction.quantity * tansaction.price);
-		double costFee   = tansaction.fee;
+		double costPrice = Transaction.roundPrice(transaction.quantity * transaction.price);
+		double costFee   = transaction.fee;
 		double cost      = costPrice + costFee;
 		int    costJPY   = (int)Math.floor(costPrice * fxRate) + (int)Math.floor(costFee * fxRate);
 		
-		totalQuantity += tansaction.quantity;
+		totalQuantity += transaction.quantity;
 		totalCost     += cost;
 		totalCostJPY  += costJPY;
 
 		Transfer.Buy buy = new Transfer.Buy(
-			tansaction.date, tansaction.symbol, tansaction.name,
-			tansaction.quantity, tansaction.price, tansaction.fee, fxRate,
+			transaction.date, transaction.symbol, transaction.name,
+			transaction.quantity, transaction.price, transaction.fee, fxRate,
 			totalQuantity, totalCost, totalCostJPY
 			);
-		current.add(new Transfer(buy));
+		current.add(new Transfer(transaction.id, buy));
 	}
 	void sell(Transaction transaction) {
 		double fxRate  = transaction.fxRate;
@@ -127,9 +127,9 @@ public class BuySell {
 		if (buyCount == 1 && current.size() == 1 && isAlmostZero()) {
 			// Special case buy one time and sell whole
 			Transfer.Buy transferBuy = current.remove(0).buy;
-			current.add(new Transfer(transferBuy, transferSell));
+			current.add(new Transfer(transaction.id, transferBuy, transferSell));
 		} else {
-			current.add(new Transfer(transferSell));
+			current.add(new Transfer(transaction.id, transferSell));
 		}
 		past.add(current);
 		current = new ArrayList<>();

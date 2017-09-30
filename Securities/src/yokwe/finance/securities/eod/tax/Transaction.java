@@ -24,6 +24,9 @@ public class Transaction {
 
 	public  static final String         FILLER = "*NA*";
 	
+	private static       int    nextId = 1;
+	
+	public final int            id;
 	public final Type           type;
 	public final String         date;
 	public final String         symbol;
@@ -47,6 +50,7 @@ public class Transaction {
 			String newSymbol, String newName, double newQuantity) {
 		double fxRate = ForexUtil.getUSD(date);
 		
+		this.id           = nextId++;
 		this.type         = type;
 		this.date         = date;
 		this.symbol       = symbol;

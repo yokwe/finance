@@ -174,10 +174,15 @@ public class BuySell {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
+	void dividend(Transaction transaction) {
+		totalDividend -= transaction.debit;
+		totalDividend += transaction.credit;
+	}
 	
 	
 	public static Map<String, BuySell>  getBuySellMap(List<Transaction> transactionList) {
-		Map<String, BuySell> ret = new TreeMap<>();
+		Map<String, BuySell> ret       = new TreeMap<>();
+		Map<String, String>  changeMap = new TreeMap<>();
 		
 		for(Transaction transaction: transactionList) {
 			if (transaction.type == Transaction.Type.BUY) {
@@ -217,6 +222,27 @@ public class BuySell {
 				
 				buySell.change(transaction);
 				ret.put(buySell.symbol, buySell);
+				
+				// build change map for NRA that can use old name
+				changeMap.put(transaction.symbol, transaction.newSymbol);
+			}
+			if (transaction.type == Transaction.Type.DIVIDEND) {
+				String key = transaction.symbol;
+				// Check changeMap to convert new symbol
+				// NRA transaction can use old name
+				//   See 2017-03-24 NRA transaction of TAL
+				if (changeMap.containsKey(key)) {
+					key = changeMap.get(key);
+				}
+				
+				BuySell buySell;
+				if (ret.containsKey(key)) {
+					buySell = ret.get(key);
+				} else {
+					logger.error("Unknonw symbol {}", key);
+					throw new SecuritiesException("Unexpected");
+				}
+				buySell.dividend(transaction);
 			}
 		}
 		

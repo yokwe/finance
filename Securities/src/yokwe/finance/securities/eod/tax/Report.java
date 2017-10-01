@@ -3,11 +3,10 @@ package yokwe.finance.securities.eod.tax;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
@@ -240,16 +239,15 @@ public class Report {
 			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
 			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
 			
-			// key is date
+			// account activity list
 			List<Account> accountList = getAccountList(transactionList);
 
-			SortedSet<String> yearSet = new TreeSet<>();
+			// Build yearList from accountList
+			List<String> yearList = new ArrayList<>();
+			yearList.addAll(accountList.stream().map(e -> e.date.substring(0, 4)).collect(Collectors.toSet()));
+			Collections.sort(yearList);
 
-			yearSet.addAll(detailMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
-			yearSet.addAll(dividendMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
-			yearSet.addAll(interestMap.keySet().stream().map(date -> date.substring(0, 4)).collect(Collectors.toSet()));
-
-			for(String targetYear: yearSet) {
+			for(String targetYear: yearList) {
 				// Account
 				{
 					List<Account> myList = new ArrayList<>();

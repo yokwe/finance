@@ -25,7 +25,6 @@ public class BuySell {
 	double totalQuantity;
 	double totalCost;
 	int    totalCostJPY;
-	double totalDividend;
 	
 	List<Transfer>       current;
 	List<List<Transfer>> past;
@@ -121,7 +120,7 @@ public class BuySell {
 			transaction.date, transaction.symbol, transaction.name,
 			transaction.quantity, transaction.price, transaction.fee, fxRate,
 			cost, costJPY,
-			dateBuyFirst, dateBuyLast, totalDividend,
+			dateBuyFirst, dateBuyLast,
 			totalQuantity, totalCost, totalCostJPY
 			);
 		if (buyCount == 1 && current.size() == 1 && isAlmostZero()) {
@@ -174,15 +173,10 @@ public class BuySell {
 			throw new SecuritiesException("Unexpected");
 		}
 	}
-	void dividend(Transaction transaction) {
-		totalDividend -= transaction.debit;
-		totalDividend += transaction.credit;
-	}
 	
 	
 	public static Map<String, BuySell>  getBuySellMap(List<Transaction> transactionList) {
-		Map<String, BuySell> ret       = new TreeMap<>();
-		Map<String, String>  changeMap = new TreeMap<>();
+		Map<String, BuySell> ret = new TreeMap<>();
 		
 		for(Transaction transaction: transactionList) {
 			if (transaction.type == Transaction.Type.BUY) {
@@ -222,27 +216,6 @@ public class BuySell {
 				
 				buySell.change(transaction);
 				ret.put(buySell.symbol, buySell);
-				
-				// build change map for NRA that can use old name
-				changeMap.put(transaction.symbol, transaction.newSymbol);
-			}
-			if (transaction.type == Transaction.Type.DIVIDEND) {
-				String key = transaction.symbol;
-				// Check changeMap to convert new symbol
-				// NRA transaction can use old name
-				//   See 2017-03-24 NRA transaction of TAL
-				if (changeMap.containsKey(key)) {
-					key = changeMap.get(key);
-				}
-				
-				BuySell buySell;
-				if (ret.containsKey(key)) {
-					buySell = ret.get(key);
-				} else {
-					logger.error("Unknonw symbol {}", key);
-					throw new SecuritiesException("Unexpected");
-				}
-				buySell.dividend(transaction);
 			}
 		}
 		

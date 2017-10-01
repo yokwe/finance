@@ -69,8 +69,6 @@ public class Transfer {
 		public final String dateFirst;
 		public final String dateLast;
 		
-		public final double dividend;
-
 		public final double totalQuantity;
 		public final double totalCost;
 		public final int    totalCostJPY;
@@ -79,7 +77,6 @@ public class Transfer {
 			double quantity, double price, double fee, double fxRate,
 			double cost, int costJPY,
 			String dateFirst, String dateLast,
-			double dividend,
 			double totalQuantity, double totalCost, int totalCostJPY) {
 			this.date          = date;
 			this.symbol        = symbol;
@@ -98,8 +95,6 @@ public class Transfer {
 			
 			this.dateFirst     = dateFirst;
 			this.dateLast      = dateLast;
-			
-			this.dividend      = dividend;
 			
 			this.totalQuantity = totalQuantity;
 			this.totalCost     = totalCost;

@@ -13,45 +13,45 @@ public class Account extends Sheet implements Comparable<Account> {
 	
 	// summary
 	@ColumnName("資金累計")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double fundTotal;  // total wire or ach money in this account
 	
 	@ColumnName("現金累計")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double cashTotal;  // cash available
 	
 	@ColumnName("株式累計")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double stockTotal; // unrealized gain or loss
 	
 	@ColumnName("損益累計")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double gainTotal;  // cash + stock - fund
 	
 	// detail of fund
 	@ColumnName("送金入金")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double wireIn;     // wired money deposit for this month
 	
 	@ColumnName("送金出金")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double wireOut;    // wired money withdraw for this month
 	
 	@ColumnName("ACH入金")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double achIn;      // ACH money deposit for this month
 	
 	@ColumnName("ACH出金")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double achOut;     // ACH money withdraw for this month
 
 	// detail of cash
 	@ColumnName("利息")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double interest;   // interest for this month
 	
 	@ColumnName("配当")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double dividend;   // dividend for this month
 
 	// detail of stock
@@ -60,19 +60,19 @@ public class Account extends Sheet implements Comparable<Account> {
 	public String symbol;     // symbol of stock
 	
 	@ColumnName("購入")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double buy;        // buy for this month
 	
 	@ColumnName("売却")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sell;       // sell for this month
 	
 	@ColumnName("売却原価")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sellCost;   // sell cost for this month
 	
 	@ColumnName("売却損益")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2_BLANK)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sellGain;   // sell gain for this month
 	
 

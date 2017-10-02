@@ -24,18 +24,18 @@ public class TransferSummary extends Sheet {
 	public final double quantity;
 
 	@ColumnName("譲渡金額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final double sellJPY;
 	
 	@ColumnName("取得費")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final double costJPY;
 	
 	@ColumnName("譲渡手数料")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final double feeJPY;
 	
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	@ColumnName("利益")
 	public final double profitJPY;
 	
@@ -48,23 +48,23 @@ public class TransferSummary extends Sheet {
 	public final String dateBuyLast;
 
 	@ColumnName("Buy")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final double buy;
 	
 	@ColumnName("Sell")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final double sell;
 	
 	@ColumnName("Profit")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final double profit;
 	
 	@ColumnName("Dividend")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public final double dividend;
 	
 	@ColumnName("Total Profit")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final double totalProfit;
 	
 	

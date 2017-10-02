@@ -29,11 +29,11 @@ public class TransferDetail extends Sheet {
 	public final Double quantitySell;
 	
 	@ColumnName("売値")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER5)
+	@NumberFormat(SpreadSheet.FORMAT_USD5)
 	public final Double priceSell;
 	
 	@ColumnName("売手数料")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final Double feeSell;
 	
 	@ColumnName("売レート")
@@ -41,15 +41,15 @@ public class TransferDetail extends Sheet {
 	public final Double fxRateSell;
 	
 	@ColumnName("譲渡金額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final Integer sellJPY;
 	
 	@ColumnName("取得費")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final Integer costJPY;
 	
 	@ColumnName("譲渡手数料")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final Integer feeSellJPY;
 	
 	@ColumnName("取得日最初")
@@ -69,11 +69,11 @@ public class TransferDetail extends Sheet {
 	public final Double quantityBuy;
 	
 	@ColumnName("買値")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER5)
+	@NumberFormat(SpreadSheet.FORMAT_USD5)
 	public final Double priceBuy;
 	
 	@ColumnName("買手数料")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final Double feeBuy;
 	
 	@ColumnName("買レート")
@@ -81,7 +81,7 @@ public class TransferDetail extends Sheet {
 	public final Double fxRateBuy;
 	
 	@ColumnName("取得価格")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final Integer buyJPY;
 	
 	@ColumnName("総数量")
@@ -89,7 +89,7 @@ public class TransferDetail extends Sheet {
 	public final Double totalQuantity;
 	
 	@ColumnName("総取得価格")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final Integer totalCostJPY;
 	
 	

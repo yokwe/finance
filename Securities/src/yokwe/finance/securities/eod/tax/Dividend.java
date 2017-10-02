@@ -24,11 +24,11 @@ public class Dividend extends Sheet {
 	public double quantity;
 
 	@ColumnName("配当金額")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double dividend;
 	
 	@ColumnName("外国源泉額")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double taxWithholding;
 	
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
@@ -36,15 +36,15 @@ public class Dividend extends Sheet {
 	public double fxRate;
 	
 	@ColumnName("邦貨配当金額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public int dividendJPY;
 	
 	@ColumnName("邦貨外国源泉額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public int taxWithholdingJPY;
 	
 	@ColumnName("邦貨収入金額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public int incomeJPY;
 
 	

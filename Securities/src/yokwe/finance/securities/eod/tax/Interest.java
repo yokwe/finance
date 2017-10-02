@@ -12,7 +12,7 @@ public class Interest extends Sheet {
 	public final String date;
 	
 	@ColumnName("利子金額")
-	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
+	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final double interest;
 	
 	@ColumnName("為替レート")
@@ -20,7 +20,7 @@ public class Interest extends Sheet {
 	public final double fxRate;
 	
 	@ColumnName("邦貨利子金額")
-	@NumberFormat(SpreadSheet.FORMAT_INTEGER)
+	@NumberFormat(SpreadSheet.FORMAT_JPY)
 	public final int interestJPY;
 	
 	

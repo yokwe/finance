@@ -189,6 +189,7 @@ public class BuySell {
 					ret.put(key, buySell);
 				}
 				buySell.buy(transaction);
+				Position.buy(transaction.date, transaction.symbol, transaction.quantity);
 			}
 			if (transaction.type == Transaction.Type.SELL) {
 				String key = transaction.symbol;
@@ -201,10 +202,10 @@ public class BuySell {
 				}
 				
 				buySell.sell(transaction);
+				Position.sell(transaction.date, transaction.symbol, transaction.quantity);
 			}
 			if (transaction.type == Transaction.Type.CHANGE) {
 				String key = transaction.symbol;
-				
 				BuySell buySell;
 				if (ret.containsKey(key)) {
 					buySell = ret.get(key);
@@ -216,6 +217,7 @@ public class BuySell {
 				
 				buySell.change(transaction);
 				ret.put(buySell.symbol, buySell);
+				Position.change(transaction.date, transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
 			}
 		}
 		
@@ -241,6 +243,7 @@ public class BuySell {
 			// Add dummy sell record
 			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, Transaction.roundPrice(quantity * price.close));	
 			buySell.sell(transaction);
+			Position.sell(transaction.date, transaction.symbol, transaction.quantity);
 		}
 	}
 

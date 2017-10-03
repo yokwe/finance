@@ -249,6 +249,8 @@ public class Report {
 			// Build yearList from accountList
 			List<String> yearList = new ArrayList<>();
 			yearList.addAll(accountList.stream().map(e -> e.date.substring(0, 4)).collect(Collectors.toSet()));
+			// Add dummy date used in BuySell.addDummySell
+			yearList.add(BuySell.DUMMY_DATE.substring(0, 4));
 			Collections.sort(yearList);
 
 			for(String targetYear: yearList) {

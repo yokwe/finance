@@ -19,11 +19,11 @@ public class Position {
 	public static final double NO_VALUE   = -1;
 
 	public final String symbol;
-	public       double quantity;
+	public final double quantity;
 	
 	public Position(String symbol, double quantity) {
 		this.symbol   = symbol;
-		this.quantity = quantity;
+		this.quantity = DoubleUtil.isAlmostZero(quantity) ? 0 : quantity;
 	}
 	public Position(String symbol) {
 		this(symbol, 0);
@@ -37,20 +37,6 @@ public class Position {
 		return String.format("[%s %.5f]", symbol, quantity);
 	}
 	
-	private void buy(double quantity) {
-		this.quantity = Transaction.roundQuantity(this.quantity + quantity);
-		if (DoubleUtil.isAlmostZero(this.quantity)) this.quantity = 0;
-	}
-	private void sell(double quantity) {
-		this.quantity = Transaction.roundQuantity(this.quantity - quantity);
-		if (DoubleUtil.isAlmostZero(this.quantity)) this.quantity = 0;
-	}
-	private void change(double newQuantity) {
-		this.quantity = Transaction.roundQuantity(newQuantity);
-		if (DoubleUtil.isAlmostZero(this.quantity)) this.quantity = 0;
-	}
-		
-	
 	private static Map<String, Position>   positionMap = new TreeMap<>();
 	public static void buy(String date, String symbol, double quantity) {
 		Position position;
@@ -60,7 +46,8 @@ public class Position {
 			position = new Position(symbol);
 			positionMap.put(symbol, position);
 		}
-		position.buy(quantity);
+		// Replace with new value
+		positionMap.put(symbol, new Position(symbol, position.quantity + quantity));
 		// Update dateMap
 		dateMap.put(date, getPositionList());
 	}
@@ -72,7 +59,8 @@ public class Position {
 			logger.error("Unknown symbol  {}", symbol);
 			throw new SecuritiesException("Unexpected");
 		}
-		position.sell(quantity);
+		// Replace with new value
+		positionMap.put(symbol, new Position(symbol, position.quantity - quantity));
 		// Update dateMap
 		dateMap.put(date, getPositionList());
 	}
@@ -84,13 +72,14 @@ public class Position {
 			logger.error("Unknown symbol  {}", symbol);
 			throw new SecuritiesException("Unexpected");
 		}
+		// Sanity check
 		if (-position.quantity != quantity) {
 			logger.error("Unexpected quantity {}  {} != {}", symbol, quantity, position.quantity);
 			throw new SecuritiesException("Unexpected");
 		}
+		// Replace with new value
 		positionMap.remove(symbol);
 		positionMap.put(newSymbol, new Position(newSymbol, newQuantity));
-		position.change(newQuantity);
 		// Update dateMap
 		dateMap.put(date, getPositionList());
 	}

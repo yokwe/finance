@@ -94,11 +94,11 @@ public class UpdateStats {
 			ret.sma50  = DoubleUtil.round(MA.sma( 50, priceArray).getValue(), 2);
 			ret.sma200 = DoubleUtil.round(MA.sma(200, priceArray).getValue(), 2);
 			
-			ret.lastpct   = DoubleUtil.round((ret.price - ret.last)   / ret.price, 3);
-			ret.sma5pct   = DoubleUtil.round((ret.price - ret.sma5)   / ret.price, 3);
-			ret.sma20pct  = DoubleUtil.round((ret.price - ret.sma20)  / ret.price, 3);
-			ret.sma50pct  = DoubleUtil.round((ret.price - ret.sma50)  / ret.price, 3);
-			ret.sma200pct = DoubleUtil.round((ret.price - ret.sma200) / ret.price, 3);
+			ret.lastpct   = DoubleUtil.round((ret.price - ret.last)   / ret.last,   3);
+			ret.sma5pct   = DoubleUtil.round((ret.price - ret.sma5)   / ret.sma5,   3);
+			ret.sma20pct  = DoubleUtil.round((ret.price - ret.sma20)  / ret.sma20,  3);
+			ret.sma50pct  = DoubleUtil.round((ret.price - ret.sma50)  / ret.sma50,  3);
+			ret.sma200pct = DoubleUtil.round((ret.price - ret.sma200) / ret.sma200, 3);
 		}
 		
 		// dividend

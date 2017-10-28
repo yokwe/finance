@@ -105,15 +105,16 @@ public class Position {
 
 	// This method is used to get unrealized value of stocks. Value is not accurate. Because commission is fixed values.
 	private static double getUnrealizedValue(String date, List<Position> positionList) {
+		boolean noValue = false;
 		double ret = 0;
 		
 		for(Position position: positionList) {
 			double value = getUnrealizedValue(date, position);
-			if (value == NO_VALUE) return NO_VALUE;
+			if (value == NO_VALUE) noValue = true;
 			
 			ret = Transaction.roundPrice(ret + value);
 		}
-		return ret;
+		return noValue ? NO_VALUE : ret;
 	}
 	
 	private static DateMap<List<Position>> dateMap     = new DateMap<>();

@@ -38,7 +38,7 @@ public class PriceUtil {
 		if (map.containsKey(date)) {
 			return true;
 		} else {
-			logger.warn("no data in map  {}  {}", symbol, date);
+			logger.warn("no data in map  {}  {}", date, symbol);
 			return false;
 		}
 	}

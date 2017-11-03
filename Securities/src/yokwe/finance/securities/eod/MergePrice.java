@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -128,6 +130,32 @@ public class MergePrice {
 			
 			if (priceList != null) {
 				if (showOutput) logger.info("{}  save  {}", String.format("%4d / %4d",  count, total), symbol);
+				// If there is a hole in priceList, supply value from existing price.
+				if (file.exists()) {
+					String dateFirst = UpdateProvider.DATE_FIRST.toString();
+					
+					SortedMap<String, Price> newPriceMap = new TreeMap<>();
+					priceList.stream().forEach(o -> newPriceMap.put(o.date, o));
+					
+					List<Price> newPriceList = new ArrayList<>();
+					for(Price price: Price.load(file)) {
+						String date = price.date;
+						
+						// Too early for now
+						if (date.compareTo(dateFirst) < 0) continue;
+						
+						if (newPriceMap.containsKey(date)) {
+							// exist in newPriceMap
+							newPriceList.add(newPriceMap.get(date));
+						} else {
+							// not exist in priceList, but exist in price file
+							newPriceList.add(price);
+							logger.info("Use existing  {}  {}", symbol, date);
+						}
+					}
+					priceList = newPriceList;
+				}
+
 				Price.save(priceList, file);
 			}
 		}

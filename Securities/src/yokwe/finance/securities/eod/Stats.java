@@ -167,8 +167,8 @@ public class Stats extends Sheet {
 		logger.info("START");
 		final String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
 
-		final String urlTemplate      = "file:///home/hasegawa/Dropbox/Trade/STATS_REPORT_TEMPLATE.ods";
-		final String urlReport        = String.format("file:///home/hasegawa/Dropbox/Trade/Report/STATS_REPORT_%s.ods", timeStamp);
+		final String urlTemplate      = "file:///home/hasegawa/Dropbox/Trade/TEMPLATE_EOD_STATS.ods";
+		final String urlReport        = String.format("file:///home/hasegawa/Dropbox/Trade/Report/EOD_STATS_%s.ods", timeStamp);
 
 		SpreadSheet docLoad = new SpreadSheet(urlTemplate, true);
 		SpreadSheet docSave = new SpreadSheet();

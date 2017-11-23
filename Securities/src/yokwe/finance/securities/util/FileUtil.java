@@ -42,12 +42,13 @@ public class FileUtil {
 	}
 	
 	public static void write(File file, String content) {
-		// Make parent directory if necessary.
-		file.getParentFile().mkdirs();
-		
 		char[] buffer = new char[65536];
 		
 		try (BufferedWriter bw = new BufferedWriter(new FileWriter(file), buffer.length)) {
+			// Make parent directory if necessary.
+			file.getParentFile().mkdirs();
+			file.createNewFile();
+			
 			bw.append(content);
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());

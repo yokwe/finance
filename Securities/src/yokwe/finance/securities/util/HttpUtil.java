@@ -18,6 +18,8 @@ import yokwe.finance.securities.SecuritiesException;
 
 public class HttpUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
+	
+	private static final String USER_AGENT = "Mozilla";
 
 	public static String downloadAsString(String url) {
 		return downloadAsString(url, null);
@@ -25,7 +27,7 @@ public class HttpUtil {
 	
 	public static String downloadAsString(String url, String cookie) {
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setHeader("User-Agent", "Mozilla");
+		httpGet.setHeader("User-Agent", USER_AGENT);
 		if (cookie != null) {
 			httpGet.setHeader("Cookie", cookie);
 		}
@@ -77,6 +79,19 @@ public class HttpUtil {
 					logger.error("statusLine = {}", response.getStatusLine().toString());
 					logger.error("url {}", url);
 					logger.error("code {}", code);
+				    HttpEntity entity = response.getEntity();
+				    if (entity != null) {
+						StringBuilder ret = new StringBuilder();
+				    	char[] cbuf = new char[1024 * 64];
+				    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
+				    		for(;;) {
+				    			int len = isr.read(cbuf);
+				    			if (len == -1) break;
+				    			ret.append(cbuf, 0, len);
+				    		}
+				    	}
+				    	logger.error("entity {}", ret);
+				    }
 					throw new SecuritiesException("download");
 
 				} catch (UnsupportedOperationException e) {
@@ -94,7 +109,7 @@ public class HttpUtil {
 	
 	public static byte[] downloadAsByteArray(String url) {
 		HttpGet httpGet = new HttpGet(url);
-		httpGet.setHeader("User-Agent", "Mozilla");
+		httpGet.setHeader("User-Agent", USER_AGENT);
 		try (CloseableHttpClient httpClient = HttpClients.createDefault();
 			CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			final int code = response.getStatusLine().getStatusCode();

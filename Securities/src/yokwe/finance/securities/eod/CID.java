@@ -4,7 +4,7 @@ import java.util.List;
 
 import yokwe.finance.securities.util.CSVUtil;
 
-public class CID {
+public class CID implements Comparable<CID> {
 	public String symbol;
 	public String exchange;
 	public String name;
@@ -20,6 +20,18 @@ public class CID {
 	@Override
 	public String toString() {
 		return String.format("%8s %8s  %s  %s", symbol, exchange, name, cid);
+	}
+	
+	@Override
+	public int compareTo(CID that) {
+		int ret = this.symbol.compareTo(that.symbol);
+		if (ret == 0) {
+			ret = this.exchange.compareTo(that.exchange);
+			if (ret == 0) {
+				ret = this.cid.compareTo(that.cid);
+			}
+		}
+		return ret;
 	}
 	
 	public boolean isEqual(CID that) {

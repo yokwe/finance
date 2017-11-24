@@ -54,6 +54,12 @@ public class UpdatePrice {
 			String dateTo   = dateLast.format(DATE_FORMAT_URL).replace(" ", "%20").replace(",", "%2C");
 			
 			// http://www.google.com/finance/historical?q=NASDAQ:ACGLP&startdate=Mar%2027%2C%202016&enddate=Mar+27,+2017&output=csv
+			// TODO need to update for new URL
+			//   1)Retrieve stock page
+			//     https://finance.google.com/finance?q=NYSE:PCI
+			//   2)Find character sequence "_chartConfigObject.companyId = '702671128483068';" from stock page and extract companyId and use as cid.
+			//   3)Generate URL below
+			//     http://finance.google.com/finance/historical?cid=702671128483068&startdate=Nov+22%2C+2016&enddate=Nov+21%2C+2017&output=csv
 			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
 
 			String content = HttpUtil.downloadAsString(url);

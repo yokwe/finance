@@ -378,7 +378,8 @@ public class UpdateStock {
 			stock.sector    = e.sector.equals("n/a")   ? "*NA*" : e.sector;
 			stock.industry  = e.industry.equals("n/a") ? "*NA*" : e.industry;
 			
-			if (e.name.length() < stock.name.length()) {
+			// Use longer name for stock
+			if (stock.name.length() < e.name.length()) {
 				stock.name = e.name;
 			}
 			if (stock.name.contains("&#")) {

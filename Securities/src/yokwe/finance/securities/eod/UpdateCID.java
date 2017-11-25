@@ -23,6 +23,8 @@ public class UpdateCID {
 	public static final String PATH_CID = "tmp/eod/cid.csv";
 	public static final String PATH_DIR = "tmp/eod/cid";
 	
+	private static final long MIN_SLEEP_INTERVAL = 1_000; // 1000 milliseconds = 1 sec
+	
 	private static String getURL(String exchange, String symbolGoogle) {
 		// https://finance.google.com/finance?q=NYSE%3AESV
 		return String.format("https://finance.google.com/finance?q=%s:%s", exchange, symbolGoogle);
@@ -144,7 +146,6 @@ public class UpdateCID {
 		
 		showInterval = 1;
 		
-		final long MIN_SLEEP_INTERVAL = 100; // 100 milliseconds = 0.1 sec
 		long lastSleepTime = System.currentTimeMillis();
 		
 		for(Stock stock: stockList) {
@@ -164,8 +165,13 @@ public class UpdateCID {
 				if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);				
 			} else {
 				try {
-					Thread.sleep(Math.min(MIN_SLEEP_INTERVAL, System.currentTimeMillis() - lastSleepTime));
-					lastSleepTime = System.currentTimeMillis();
+					long expectedStartTime = lastSleepTime + MIN_SLEEP_INTERVAL;
+					long currentTime = System.currentTimeMillis();
+					if (currentTime < expectedStartTime) {
+						Thread.sleep(Math.min(MIN_SLEEP_INTERVAL, expectedStartTime - currentTime));
+						currentTime = System.currentTimeMillis();
+					}
+					lastSleepTime = currentTime;
 				} catch (InterruptedException e) {
 					logger.error("InterruptedException {}", e.toString());
 					throw new SecuritiesException("InterruptedException");
@@ -187,6 +193,7 @@ public class UpdateCID {
 					if (showOutput) logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);
 					if (contents.contains("produced no matches.")) {
 						// XXAA
+						logger.debug("produced no matches.", key);
 					} else if (!contents.contains("Error 404 (Not Found)")) {
 						// Error 404 (Not Found)
 						logger.error("Error 404 (Not Found)", key);
@@ -196,7 +203,7 @@ public class UpdateCID {
 						logger.debug("No 52 week", contents);
 						logger.debug("getContents {}", contents);
 					} else {
-						logger.debug("getContents {}", contents);
+						logger.error("getContents {}", contents);
 						
 						logger.error("Unexpected {}", key);
 						throw new SecuritiesException("Unexpected");

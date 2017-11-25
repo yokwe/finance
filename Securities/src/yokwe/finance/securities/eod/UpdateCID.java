@@ -19,6 +19,63 @@ import yokwe.finance.securities.util.HttpUtil;
 
 public class UpdateCID {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateCID.class);
+
+// *First time no cookie*
+//GET https://finance.google.com/finance?q=NYSE:IBM HTTP/1.1
+//Host: finance.google.com
+//User-Agent: Mozilla
+//Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+//Accept-Language: en
+//Accept-Encoding: gzip, deflate, br
+//DNT: 1
+//Connection: keep-alive
+//Upgrade-Insecure-Requests: 1
+	
+//HTTP/1.1 200 OK
+//Content-Type: text/html; charset=utf-8
+//Content-Encoding: gzip
+//P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+//Date: Sat, 25 Nov 2017 08:53:20 GMT
+//Expires: Sat, 25 Nov 2017 08:53:20 GMT
+//Cache-Control: private, max-age=0
+//X-Content-Type-Options: nosniff
+//X-Frame-Options: SAMEORIGIN
+//X-XSS-Protection: 1; mode=block
+//Server: GSE
+//Set-Cookie: NID=118=kNgg26Qv-9yZN4GVTaOiyCldnNcJf4dZI3yDKFGkZDoEM01nWDM-LjaOkBpxgKnYZ5v_G2BVqcis0EvMRT-g35oAN2MVOqI8Og4Id1ioQdpkh_SMeK8gkWB-rg5_w78k;Domain=.google.com;Path=/;Expires=Sun, 27-May-2018 08:53:20 GMT;HttpOnly
+//Alt-Svc: hq=":443"; ma=2592000; quic=51303431; quic=51303339; quic=51303338; quic=51303337; quic=51303335,quic=":443"; ma=2592000; v="41,39,38,37,35"
+//Transfer-Encoding: chunked
+	
+	
+// *Second time have cookie*
+//GET https://finance.google.com/finance?q=NYSE:IBM HTTP/1.1
+//Host: finance.google.com
+//User-Agent: Mozilla
+//Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+//Accept-Language: en
+//Accept-Encoding: gzip, deflate, br
+//Cookie: NID=118=kNgg26Qv-9yZN4GVTaOiyCldnNcJf4dZI3yDKFGkZDoEM01nWDM-LjaOkBpxgKnYZ5v_G2BVqcis0EvMRT-g35oAN2MVOqI8Og4Id1ioQdpkh_SMeK8gkWB-rg5_w78k; S=quotestreamer=Akapc7PiKPenEimepM8Bk9MBjeqBlDjS; 1P_JAR=2017-11-25-8
+//DNT: 1
+//Connection: keep-alive
+//Upgrade-Insecure-Requests: 1
+//Cache-Control: max-age=0
+
+//HTTP/1.1 200 OK
+//Content-Type: text/html; charset=utf-8
+//Content-Encoding: gzip
+//Date: Sat, 25 Nov 2017 08:53:32 GMT
+//Expires: Sat, 25 Nov 2017 08:53:32 GMT
+//Cache-Control: private, max-age=0
+//X-Content-Type-Options: nosniff
+//X-Frame-Options: SAMEORIGIN
+//X-XSS-Protection: 1; mode=block
+//Server: GSE
+//Alt-Svc: hq=":443"; ma=2592000; quic=51303431; quic=51303339; quic=51303338; quic=51303337; quic=51303335,quic=":443"; ma=2592000; v="41,39,38,37,35"
+//Transfer-Encoding: chunked
+
+
+
+
 	
 	public static final String PATH_CID = "tmp/eod/cid.csv";
 	public static final String PATH_DIR = "tmp/eod/cid";

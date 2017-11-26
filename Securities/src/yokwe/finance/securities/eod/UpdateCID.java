@@ -255,7 +255,7 @@ public class UpdateCID {
 				
 				if (cid != null) {
 					if (!stock.symbolGoogle.equals(cid.symbol) || !stock.exchange.equals(cid.exchange)) {
-						logger.info("{}  error  {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);
+						logger.warn("{}  error  {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);
 						logger.warn("NOT SAME   {}:{} - {}:{}", stock.exchange, stock.symbolGoogle, cid.exchange, cid.symbol);
 					} else {
 						logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);

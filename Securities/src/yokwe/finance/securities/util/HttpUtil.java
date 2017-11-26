@@ -34,7 +34,7 @@ public class HttpUtil {
 
 		int retryCount = 0;
 		for(;;) {
-			try (CloseableHttpClient httpClient = HttpClients.createDefault();
+			try (CloseableHttpClient httpClient = HttpClients.createSystem();
 					CloseableHttpResponse response = httpClient.execute(httpGet)) {
 					final int code = response.getStatusLine().getStatusCode();
 					final String reasonPhrase = response.getStatusLine().getReasonPhrase();

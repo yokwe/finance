@@ -140,9 +140,19 @@ public class UpdateCID {
 		return String.format("%s:%s", stock.exchange, stock.symbolGoogle);
 	}
 	
+	private static class CIDFile {
+		final CID  cid;
+		final File file;
+		
+		public CIDFile(CID cid, File file) {
+			this.cid  = cid;
+			this.file = file;
+		}
+	}
+	
 	public static List<CID> getCIDList() {
 		// key is getKey(cid)
-		Map<String, CID> map = new TreeMap<>();
+		Map<String, CIDFile> map = new TreeMap<>();
 		
 		int countFile = 0;
 		int countDup  = 0;
@@ -150,28 +160,30 @@ public class UpdateCID {
 		for(File file: dir.listFiles()) {
 			countFile++;
 			String contents = FileUtil.read(file);
-			CID cid = getCID(contents);
+			CIDFile cidFile = new CIDFile(getCID(contents), file);
 			
-			String key = getKey(cid);
+			String key = getKey(cidFile.cid);
 			if (map.containsKey(key)) {
 				countDup++;
-				CID oldCID = map.get(key);
+				CIDFile oldCIDFile = map.get(key);
 				
-				if (cid.isEqual(oldCID)) {
-					logger.warn("DUPLICATE SAME {}", file.getPath());
+				if (cidFile.cid.isEqual(oldCIDFile.cid)) {
+					logger.warn("DUPLICATE SAME");
+					logger.warn("  OLD {} {}", oldCIDFile.file.getPath(), oldCIDFile.cid);
+					logger.warn("  NEW {} {}", cidFile.file.getPath(),    cidFile.cid);
 				} else {
 					logger.warn("DUPLICATE DIFF");
-					logger.warn("  OLD {}", oldCID);
-					logger.warn("  NEW {}", cid);
+					logger.warn("  OLD {} {}", oldCIDFile.file.getPath(), oldCIDFile.cid);
+					logger.warn("  NEW {} {}", cidFile.file.getPath(),    cidFile.cid);
 				}
 			} else {
-				map.put(key, cid);
+				map.put(key, cidFile);
 			}
 		}
 		
 		List<CID> ret = new ArrayList<>();
 		for(String key: map.keySet()) {
-			ret.add(map.get(key));
+			ret.add(map.get(key).cid);
 		}			
 
 		// Sort before returns
@@ -201,7 +213,7 @@ public class UpdateCID {
 		int count = 0;
 		int lastOutputCount = -1;
 		
-		showInterval = 1;
+		showInterval = 100;
 		
 		long lastSleepTime = System.currentTimeMillis();
 		
@@ -216,6 +228,10 @@ public class UpdateCID {
 			}
 			count++;
 			
+			if (stock.symbolGoogle.equals("???")) {
+				/*if (showOutput)*/ logger.info("{}  ???    {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);				
+				continue;
+			}
 			String key = getKey(stock);
 			
 			if (cidMap.containsKey(key)) {
@@ -238,26 +254,28 @@ public class UpdateCID {
 				CID cid = getCID(contents);
 				
 				if (cid != null) {
-					String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
-
-					File cidFile = new File(String.format("%s/%s-%s", PATH_DIR, timeStamp, cid.symbol));
-					// create new cid file
-					FileUtil.write(cidFile, contents);
-					
-					/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);
+					if (!stock.symbolGoogle.equals(cid.symbol) || !stock.exchange.equals(cid.exchange)) {
+						logger.info("{}  error  {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);
+						logger.warn("NOT SAME   {}:{} - {}:{}", stock.exchange, stock.symbolGoogle, cid.exchange, cid.symbol);
+					} else {
+						logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);
+						String timeStamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+						File cidFile = new File(String.format("%s/%s-%s", PATH_DIR, timeStamp, stock.symbolGoogle));
+						FileUtil.write(cidFile, contents);
+					}
 				} else {
 					// no data in google
-					if (showOutput) logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);
-					if (contents.contains("produced no matches.")) {
+					if (showOutput) logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbolGoogle);
+					if (contents.contains("Error 404 (Not Found)")) {
+						// Error 404 (Not Found)
+						logger.error("Error 404 (Not Found)", key);
+						throw new SecuritiesException("Error 404 (Not Found)");
+					} else if (contents.contains("produced no matches.")) {
 						// XXAA
 						logger.warn("produced no matches.", key);
 					} else if (!contents.contains("Prices are not from all markets")) {
 						// NASDAQ:AHPAU
 						logger.warn("Prices are not from all markets", contents);
-					} else if (contents.contains("Error 404 (Not Found)")) {
-						// Error 404 (Not Found)
-						logger.error("Error 404 (Not Found)", key);
-						throw new SecuritiesException("Error 404 (Not Found)");
 					} else {
 						logger.error("getContents {}", contents);
 						

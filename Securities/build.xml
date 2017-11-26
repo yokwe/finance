@@ -303,6 +303,12 @@
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+<!--
+                        <sysproperty key="https.proxyHost" value="192.168.1.14"/>
+                        <sysproperty key="https.proxyPort" value="8080"/>
+                        <sysproperty key="http.proxyHost"  value="192.168.1.14"/>
+                        <sysproperty key="http.proxyPort"  value="8080"/>
+-->
                 </java>
         </target>
 

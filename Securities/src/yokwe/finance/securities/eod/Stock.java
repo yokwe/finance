@@ -20,7 +20,7 @@ public class Stock {
 		
 	@Override
 	public String toString() {
-		return String.format("%s %s", exchange, name);
+		return String.format("%s %s %s", exchange, symbol, name);
 	}
 	
 	public static void save(List<Stock> stockList) {

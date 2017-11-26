@@ -250,15 +250,14 @@ public class UpdateCID {
 					if (showOutput) logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);
 					if (contents.contains("produced no matches.")) {
 						// XXAA
-						logger.debug("produced no matches.", key);
-					} else if (!contents.contains("Error 404 (Not Found)")) {
+						logger.warn("produced no matches.", key);
+					} else if (!contents.contains("Prices are not from all markets")) {
+						// NASDAQ:AHPAU
+						logger.warn("Prices are not from all markets", contents);
+					} else if (contents.contains("Error 404 (Not Found)")) {
 						// Error 404 (Not Found)
 						logger.error("Error 404 (Not Found)", key);
 						throw new SecuritiesException("Error 404 (Not Found)");
-					} else if (!contents.contains("52 week")) {
-						// NASDAQ:AHPAU
-						logger.debug("No 52 week", contents);
-						logger.debug("getContents {}", contents);
 					} else {
 						logger.error("getContents {}", contents);
 						

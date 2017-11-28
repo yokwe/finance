@@ -17,6 +17,13 @@ public class CID implements Comparable<CID> {
 		this.cid      = cid;
 	}
 	
+	public CID() {
+		this.symbol   = "";
+		this.exchange = "";
+		this.name     = "";
+		this.cid      = "";
+	}
+	
 	@Override
 	public String toString() {
 		return String.format("%8s %8s  %s  %s", symbol, exchange, name, cid);

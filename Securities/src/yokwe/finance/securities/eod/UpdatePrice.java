@@ -47,6 +47,9 @@ public class UpdatePrice {
 			return updateFile(stock.exchange, stock.symbol, stock.symbolGoogle, newFile, dateFirst, dateLast);
 		}
 		
+		private static final long MIN_SLEEP_INTERVAL = 1_000; // 1000 milliseconds = 1 sec
+		private long lastSleepTime = System.currentTimeMillis();
+
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
@@ -60,7 +63,20 @@ public class UpdatePrice {
 			//   2)Find character sequence "_chartConfigObject.companyId = '702671128483068';" from stock page and extract companyId and use as cid.
 			//   3)Generate URL below
 			//     http://finance.google.com/finance/historical?cid=702671128483068&startdate=Nov+22%2C+2016&enddate=Nov+21%2C+2017&output=csv
-			String url = String.format("http://www.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
+			String url = String.format("https://finance.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
+
+			try {
+				long expectedStartTime = lastSleepTime + MIN_SLEEP_INTERVAL;
+				long currentTime = System.currentTimeMillis();
+				if (currentTime < expectedStartTime) {
+					Thread.sleep(Math.min(MIN_SLEEP_INTERVAL, expectedStartTime - currentTime));
+					currentTime = System.currentTimeMillis();
+				}
+				lastSleepTime = currentTime;
+			} catch (InterruptedException e) {
+				logger.error("InterruptedException {}", e.toString());
+				throw new SecuritiesException("InterruptedException");
+			}
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
@@ -82,9 +98,11 @@ public class UpdatePrice {
 			String header = lines[0];
 			if (!header.equals(GOOGLE_PRICE_HEADER)) {
 				logger.error("Unexpected header  symbol {}", symbol);
-				logger.error("Unexpected header  url    {}", url);
-				logger.error("Unexpected header  header {}", header);
-				throw new SecuritiesException("Unexpected header");
+//				logger.error("Unexpected header  url    {}", url);
+//				logger.error("Unexpected header  header {}", header);
+//				throw new SecuritiesException("Unexpected header");
+				file.delete();
+				return false;
 			}
 
 			String      targetDate  = DATE_LAST.toString();

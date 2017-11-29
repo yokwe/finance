@@ -328,15 +328,17 @@ public class Transaction implements Comparable<Transaction> {
 						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.price == 0) {
-						logger.error("price == 0  {}", activity.price);
-						throw new SecuritiesException("Unexpected");
+						// Allow price 0 for rights offer
+						logger.warn("price == 0  {}", activity.price);
+//						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.commission < 0) {
 						logger.error("commission < 0  {}", activity.commission);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (activity.debit <= 0) {
-						logger.error("debit <= 0  {}", activity.debit);
+					if (activity.debit < 0) {
+						// Allow debit 0 for rights offer
+						logger.error("debit < 0  {}", activity.debit);
 						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.credit != 0) {

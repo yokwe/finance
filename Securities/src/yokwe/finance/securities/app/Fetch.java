@@ -29,8 +29,9 @@ public class Fetch {
 	protected static final CloseableHttpClient httpClient = HttpClients.createDefault();
 	
 	public static void download(String url, String fileName, List<String> messageList) {
-		// Encode special char in URL
-		String encodedURL = url.replace("^", "%5E");
+		// In case url contains special char, replace like URL encoding.
+		String encodedURL = url;
+		encodedURL = encodedURL.replace("^", "%5E");
 		encodedURL = encodedURL.replace("+", "%2B");
 		
 		HttpGet httpGet = new HttpGet(encodedURL);
@@ -128,7 +129,7 @@ public class Fetch {
 		try {
 			int totalCount = entryList.size();
 			int count = 0;
-			long lastDownload = 0;
+			long lastDownload = System.currentTimeMillis();
 			for(Entry entry: entryList) {				
 				count++;
 				{

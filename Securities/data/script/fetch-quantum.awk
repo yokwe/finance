@@ -3,20 +3,33 @@
 BEGIN {
   FS = ","
   RS = "[\r\n]+"
+  
+  for (i = 0; i <= 255; i++) {
+	ord[sprintf("%c", i)] = i
+  }
+}
+
+function escape(str, c, len, res) {
+    len = length(str)
+    res = ""
+    for (i = 1; i <= len; i++) {
+	c = substr(str, i, 1);
+	if (c ~ /[0-9A-Za-z]/)
+	    res = res c
+	else
+	    res = res "%" sprintf("%02X", ord[c])
+    }
+    return res
 }
 
 # http://www.quantumonline.com/search.cfm?tickersymbol=NRF-A&sopt=symbol
 {
-  ETF           = $1
-  EXCH          = $2
-  SYMBOL        = $3
-  BASE_SYMBOL   = $4
-  YAHOO_SYMBOL  = $5
-  GOOGLE_SYMBOL = $6
-  NASDAQ_SYMBOL = $7
+# symbol,rate,name,price,pricec,sd,hv,rsi,divc,vol5,vol30
+  SYMBOL = $1
   
-#  if (index(SYMBOL, "-") == 0) next;
+  if (SYMBOL=="symbol") next;
   
-  printf("%s/%-10s http://www.quantumonline.com/search.cfm?sopt=symbol&tickersymbol=%s\n",
-    DIR_OUTPUT, (SYMBOL ".html"), SYMBOL)
+  escapedSymbol = escape(SYMBOL)
+  printf("%s/%-12s http://www.quantumonline.com/search.cfm?sopt=symbol&tickersymbol=%s\n",
+    DIR_OUTPUT, (SYMBOL ".html"), escapedSymbol)
 }

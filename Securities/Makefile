@@ -174,7 +174,7 @@ update-mizuho:
 fetch-quantum:
 	mkdir -p ${DIR_FETCH_QUANTUM}
 	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	  tmp/eod/stock.csv >tmp/fetch.list
 	ant run-fetch
 
 update-quantum:

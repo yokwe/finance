@@ -29,7 +29,11 @@ public class Fetch {
 	protected static final CloseableHttpClient httpClient = HttpClients.createDefault();
 	
 	public static void download(String url, String fileName, List<String> messageList) {
-		HttpGet httpGet = new HttpGet(url);
+		// Encode special char in URL
+		String encodedURL = url.replace("^", "%5E");
+		encodedURL = encodedURL.replace("+", "%2B");
+		
+		HttpGet httpGet = new HttpGet(encodedURL);
 		httpGet.setHeader("User-Agent", "Mozilla");
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			final int code = response.getStatusLine().getStatusCode();

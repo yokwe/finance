@@ -10,8 +10,10 @@ public class Preferred {
 	public String parent;
 	public String country;
 	
+	public String cpnRate;
 	public String annAmt;
 	public String liqPref;
+	public String remark;
 	public String callPrice;
 	public String callDate;
 	public String maturDate;
@@ -19,7 +21,7 @@ public class Preferred {
 	public String name;
 	
 	public Preferred(String symbol, String type, String parent, String country, String name,
-			String annAmt, String liqPref, String callPrice, String callDate, String maturDate
+			String cpnRate, String annAmt, String liqPref, String remark, String callPrice, String callDate, String maturDate
 			) {
 		this.symbol  = symbol;
 		this.type    = type;
@@ -27,8 +29,10 @@ public class Preferred {
 		this.country = country;
 		this.name    = name;
 		
+		this.cpnRate   = cpnRate;
 		this.annAmt    = annAmt;
 		this.liqPref   = liqPref;
+		this.remark    = remark;
 		this.callPrice = callPrice;
 		this.callDate  = callDate;
 		this.maturDate = maturDate;

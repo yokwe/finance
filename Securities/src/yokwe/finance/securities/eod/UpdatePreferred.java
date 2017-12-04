@@ -198,6 +198,43 @@ public class UpdatePreferred {
 			token = token.replaceAll("&nbsp;", " ");
 			token = token.replaceAll("\\p{javaWhitespace}+", " ");
 			token = token.trim();
+			
+			// mm/dd/yyyy
+			if (token.matches("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})$")) {
+				String mdy[] = token.split("\\/");
+				if (mdy[0].length() == 1) mdy[0] = "0" + mdy[0];
+				if (mdy[1].length() == 1) mdy[1] = "0" + mdy[1];
+				token = String.format("%s-%s-%s", mdy[2], mdy[0], mdy[1]);
+			}
+
+			// mm/dd/yy
+			if (token.matches("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{2})$")) {
+				String mdy[] = token.split("\\/");
+				if (mdy[0].length() == 1) mdy[0] = "0" + mdy[0];
+				if (mdy[1].length() == 1) mdy[1] = "0" + mdy[1];
+				token = String.format("20%s-%s-%s", mdy[2], mdy[0], mdy[1]);
+			}
+			
+			// $[0-5].[0-9]+
+			if (token.matches("^\\$[0-9]{1,2}(\\.[0-9]+)?$")) {
+				token = String.format("%.5f", Double.valueOf(token.substring(1)));
+			}
+			// $.[0-9]+
+			if (token.matches("^\\$(\\.[0-9]+)?$")) {
+				token = String.format("%.2f", Double.valueOf("0" + token.substring(1)));
+			}
+			
+			// $[0-9,]{2,5}.00
+			if (token.matches("^\\$([0-9,]{2,5}\\.[0-9]{2})?$")) {
+				token = String.format("%.2f", Double.valueOf(token.substring(1).replace(",", "")));
+			}
+			
+			// 9.99%
+			if (token.matches("^[0-9]+\\.[0-9]+%$")) {
+				token = String.format("%.5f", Double.valueOf(token.substring(0, token.length() - 1)) * 0.01);
+			}
+
+
 			if (0 < token.length()) {
 				ret.append("=").append(token);
 			}
@@ -249,9 +286,11 @@ public class UpdatePreferred {
 
 			String name      = NAME.getValue(content);
 			
+			final String cpnRate;
 			final String annAmt;
 			final String liqPref;
 			final String callPrice;
+			final String remark;
 			final String callDate;
 			final String maturDate;
 
@@ -321,7 +360,8 @@ public class UpdatePreferred {
 //					String[] t8 = normalize(matcher.group(8)).split("=");
 					
 					if (t2.length == 2) {
-						annAmt    = t2[1];
+						cpnRate = t2[0];
+						annAmt  = t2[1];
 					} else {
 						logger.error("Unexpected");
 						throw new SecuritiesException("Unexpected");
@@ -334,13 +374,16 @@ public class UpdatePreferred {
 						throw new SecuritiesException("Unexpected");
 					}
 					if (t4.length == 2) {
+						remark    = "";
 						callDate  = t4[0];
 						maturDate = t4[1];
 					} else if (t4.length == 3) {
 						if (t4[0].equals("Called for")) {
+							remark    = "CALLED";
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else if (t4[0].equals("Partial Call")) {
+							remark    = "PARTIAL CALL";
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else {
@@ -413,7 +456,8 @@ public class UpdatePreferred {
 //					String[] t7 = normalize(matcher.group(7)).split("=");
 					
 					if (t2.length == 2) {
-						annAmt    = t2[1];
+						cpnRate = t2[0];
+						annAmt  = t2[1];
 					} else {
 						logger.error("Unexpected");
 						throw new SecuritiesException("Unexpected");
@@ -428,11 +472,14 @@ public class UpdatePreferred {
 					if (t4.length == 2) {
 						callDate  = t4[0];
 						maturDate = t4[1];
+						remark = "";
 					} else if (t4.length == 3) {
 						if (t4[0].equals("Called for")) {
+							remark    = "CALLED";
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else if (t4[0].equals("Partial Call")) {
+							remark    = "PARTIAL CALL";
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else {
@@ -447,7 +494,7 @@ public class UpdatePreferred {
 			}
 
 			preferredList.add(
-				new Preferred(symbol, type, parent, country, name, annAmt, liqPref, callPrice, callDate, maturDate));
+				new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref, remark, callPrice, callDate, maturDate));
 		}
 		
 		Preferred.save(preferredList);

@@ -320,9 +320,19 @@ public class UpdatePreferred {
 //					String[] t7 = normalize(matcher.group(7)).split("=");
 //					String[] t8 = normalize(matcher.group(8)).split("=");
 					
-					annAmt    = t2[1];
-					liqPref   = t3[0];
-					callPrice = t3[1];
+					if (t2.length == 2) {
+						annAmt    = t2[1];
+					} else {
+						logger.error("Unexpected");
+						throw new SecuritiesException("Unexpected");
+					}
+					if (t3.length == 2) {
+						liqPref   = t3[0];
+						callPrice = t3[1];
+					} else {
+						logger.error("Unexpected");
+						throw new SecuritiesException("Unexpected");
+					}
 					if (t4.length == 2) {
 						callDate  = t4[0];
 						maturDate = t4[1];
@@ -402,9 +412,19 @@ public class UpdatePreferred {
 //					String[] t6 = normalize(matcher.group(6)).split("=");
 //					String[] t7 = normalize(matcher.group(7)).split("=");
 					
-					annAmt    = t2[1];
-					liqPref   = t3[0];
-					callPrice = t3[1];
+					if (t2.length == 2) {
+						annAmt    = t2[1];
+					} else {
+						logger.error("Unexpected");
+						throw new SecuritiesException("Unexpected");
+					}
+					if (t3.length == 2) {
+						liqPref   = t3[0];
+						callPrice = t3[1];
+					} else {
+						logger.error("Unexpected");
+						throw new SecuritiesException("Unexpected");
+					}
 					if (t4.length == 2) {
 						callDate  = t4[0];
 						maturDate = t4[1];

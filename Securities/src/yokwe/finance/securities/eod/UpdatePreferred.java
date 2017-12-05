@@ -142,6 +142,8 @@ public class UpdatePreferred {
 
 	private static final Pattern USA_ZIPCODE = Pattern.compile("[A-Za-z]{2} [0-9]{5}(-[0-9]{4})?$");
 
+	private static final Pattern DATE_PATTERN = Pattern.compile("(1?[0-9]/[0-3][0-9])");
+
 	private static String[][] addressContryArray = {
 			{"BERMUDA",     "Bermuda"},
 			
@@ -273,16 +275,13 @@ public class UpdatePreferred {
 				continue;
 			}
 
-			String symbol    = SYMBOL.getValue(content);
+			String symbol  = SYMBOL.getValue(content);
+			String parent  = content.contains("Goto Parent Company") ? PARENT.getValue(content) : "*NA*";
+			String country = content.contains("<b>Address:</b>") ? toCountry(ADDRESS.getValue(content)) : "*NA*";
+			String type    = content.contains("Security Type:") ? TYPE.getValue(content) : "Common";
 
-			String type      = content.contains("Security Type:") ? TYPE.getValue(content) : "Common";
-			
-			String parent    = content.contains("Goto Parent Company") ? PARENT.getValue(content) : "*NA*";
-			String address   = content.contains("<b>Address:</b>") ? ADDRESS.getValue(content) : "*NA*";
-			
-			String country = toCountry(address);
-
-			logger.debug("{}", String.format("%4d %-8s %-6s %-12s %s", count, symbol, parent, country, type));
+//			logger.debug("{}", String.format("%4d %-8s %-6s %-12s %s", count, symbol, parent, country, type));
+			logger.debug("{}", String.format("%4d %-8s", count, symbol));
 
 			String name      = NAME.getValue(content);
 			
@@ -290,9 +289,11 @@ public class UpdatePreferred {
 			final String annAmt;
 			final String liqPref;
 			final String callPrice;
-			final String remark;
 			final String callDate;
 			final String maturDate;
+			final String distDates;
+
+			final StringBuffer remark = new StringBuffer();
 
 			if (TABLE_HEADER8.matcher(content).find()) {
 				{
@@ -356,7 +357,7 @@ public class UpdatePreferred {
 					String[] t4 = normalize(matcher.group(4)).split("=");
 //					String[] t5 = normalize(matcher.group(5)).split("=");
 //					String[] t6 = normalize(matcher.group(6)).split("=");
-//					String[] t7 = normalize(matcher.group(7)).split("=");
+					String[] t7 = normalize(matcher.group(7)).split("=");
 //					String[] t8 = normalize(matcher.group(8)).split("=");
 					
 					if (t2.length == 2) {
@@ -374,16 +375,15 @@ public class UpdatePreferred {
 						throw new SecuritiesException("Unexpected");
 					}
 					if (t4.length == 2) {
-						remark    = "";
 						callDate  = t4[0];
 						maturDate = t4[1];
 					} else if (t4.length == 3) {
 						if (t4[0].equals("Called for")) {
-							remark    = "CALLED";
+							remark.append("/CALLED");
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else if (t4[0].equals("Partial Call")) {
-							remark    = "PARTIAL CALL";
+							remark.append("/PARTIAL CALL");
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else {
@@ -392,6 +392,62 @@ public class UpdatePreferred {
 						}
 					} else {
 						logger.error("Unexpected");
+						throw new SecuritiesException("Unexpected");
+					}
+					if (t7.length == 3) {
+						if (t7[0].toLowerCase().contains("1st") && t7[0].contains("each month")) {
+							distDates = "?/1";
+						} else if (t7[0].toLowerCase().contains("last") && t7[0].contains("each month")) {
+							distDates = "?/end";
+						} else if (t7[0].contains("of each month")) {
+							Matcher dayMatcher = Pattern.compile("^([0-9]+)").matcher(t7[0]);
+							if (dayMatcher.find()) {
+								String day = dayMatcher.group();
+								distDates = String.format("?/%s", day);
+							} else {
+								logger.error("Unexpected {}", t7[0]);
+								throw new SecuritiesException("Unexpected");
+							}	
+						} else {
+							StringBuffer dateList = new StringBuffer();
+							Matcher dateMatcher = DATE_PATTERN.matcher(t7[0]);
+							for(;;) {
+								if (!dateMatcher.find()) break;
+								dateList.append(" ").append(dateMatcher.group());
+							}
+							distDates = dateList.length() != 0 ? dateList.substring(1) : "";
+						}
+					} else if (t7.length == 4) {
+						if (t7[0].equals("Suspended!")) {
+							remark.append("/SUSPENDED");
+						} else {
+							logger.error("Unexpected t7[0] = {}", t7[0]);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (t7[1].toLowerCase().contains("1st") && t7[1].contains("each month")) {
+							distDates = "?/1";
+						} else if (t7[1].toLowerCase().contains("last") && t7[1].contains("each month")) {
+							distDates = "?/end";
+						} else if (t7[1].contains("of each month")) {
+							Matcher dayMatcher = Pattern.compile("^([0-9]+)").matcher(t7[1]);
+							if (dayMatcher.find()) {
+								String day = dayMatcher.group();
+								distDates = String.format("?/%s", day);
+							} else {
+								logger.error("Unexpected {}", t7[1]);
+								throw new SecuritiesException("Unexpected");
+							}	
+						} else {
+							StringBuffer dateList = new StringBuffer();
+							Matcher dateMatcher = DATE_PATTERN.matcher(t7[1]);
+							for(;;) {
+								if (!dateMatcher.find()) break;
+								dateList.append(" ").append(dateMatcher.group());
+							}
+							distDates = dateList.length() != 0 ? dateList.substring(1) : "";
+						}
+					} else {
+						logger.error("Unexpected {}", symbol);
 						throw new SecuritiesException("Unexpected");
 					}
 				}
@@ -452,7 +508,7 @@ public class UpdatePreferred {
 					String[] t3 = normalize(matcher.group(3)).split("=");
 					String[] t4 = normalize(matcher.group(4)).split("=");
 //					String[] t5 = normalize(matcher.group(5)).split("=");
-//					String[] t6 = normalize(matcher.group(6)).split("=");
+					String[] t6 = normalize(matcher.group(6)).split("=");
 //					String[] t7 = normalize(matcher.group(7)).split("=");
 					
 					if (t2.length == 2) {
@@ -472,14 +528,13 @@ public class UpdatePreferred {
 					if (t4.length == 2) {
 						callDate  = t4[0];
 						maturDate = t4[1];
-						remark = "";
 					} else if (t4.length == 3) {
 						if (t4[0].equals("Called for")) {
-							remark    = "CALLED";
+							remark.append("/CALLED");
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else if (t4[0].equals("Partial Call")) {
-							remark    = "PARTIAL CALL";
+							remark.append("/PARTIAL CALL");
 							callDate  = t4[1];
 							maturDate = t4[2];
 						} else {
@@ -490,11 +545,69 @@ public class UpdatePreferred {
 						logger.error("Unexpected");
 						throw new SecuritiesException("Unexpected");
 					}
+					if (t6.length == 3) {
+						if (t6[0].toLowerCase().contains("1st") && t6[0].contains("each month")) {
+							distDates = "?/1";
+						} else if (t6[0].toLowerCase().contains("last") && t6[0].contains("each month")) {
+							distDates = "?/end";
+						} else if (t6[0].contains("of each month")) {
+							Matcher dayMatcher = Pattern.compile("^([0-9]+)").matcher(t6[0]);
+							if (dayMatcher.find()) {
+								String day = dayMatcher.group();
+								distDates = String.format("?/%s", day);
+							} else {
+								logger.error("Unexpected {}", t6[0]);
+								throw new SecuritiesException("Unexpected");
+							}	
+						} else {
+							StringBuffer dateList = new StringBuffer();
+							Matcher dateMatcher = DATE_PATTERN.matcher(t6[0]);
+							for(;;) {
+								if (!dateMatcher.find()) break;
+								dateList.append(" ").append(dateMatcher.group());
+							}
+							distDates = dateList.length() != 0 ? dateList.substring(1) : "";
+						}
+					} else if (t6.length == 4) {
+						if (t6[0].equals("Suspended!")) {
+							remark.append("/SUSPENDED");
+						} else {
+							logger.error("Unexpected t6[0] = {}", t6[0]);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (t6[1].toLowerCase().contains("1st") && t6[1].contains("each month")) {
+							distDates = "?/1";
+						} else if (t6[1].toLowerCase().contains("last") && t6[1].contains("each month")) {
+							distDates = "?/end";
+						} else if (t6[1].contains("of each month")) {
+							Matcher dayMatcher = Pattern.compile("^([0-9]+)").matcher(t6[1]);
+							if (dayMatcher.find()) {
+								String day = dayMatcher.group();
+								distDates = String.format("?/%s", day);
+							} else {
+								logger.error("Unexpected {}", t6[1]);
+								throw new SecuritiesException("Unexpected");
+							}	
+						} else {
+							StringBuffer dateList = new StringBuffer();
+							Matcher dateMatcher = DATE_PATTERN.matcher(t6[1]);
+							for(;;) {
+								if (!dateMatcher.find()) break;
+								dateList.append(" ").append(dateMatcher.group());
+							}
+							distDates = dateList.length() != 0 ? dateList.substring(1) : "";
+						}
+					} else {
+						logger.error("Unexpected {}", symbol);
+						throw new SecuritiesException("Unexpected");
+					}
 				}
 			}
 
 			preferredList.add(
-				new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref, remark, callPrice, callDate, maturDate));
+				new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref,
+					(0 < remark.length()) ? remark.substring(1) : "",
+					callPrice, callDate, maturDate, distDates));
 		}
 		
 		Preferred.save(preferredList);

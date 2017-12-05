@@ -327,18 +327,16 @@ public class Transaction implements Comparable<Transaction> {
 						logger.error("quantity <= 0  {}", activity.quantity);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (activity.price == 0) {
-						// Allow price 0 for rights offer
-						logger.warn("price == 0  {}", activity.price);
-//						throw new SecuritiesException("Unexpected");
+					if (activity.price <= 0) {
+						logger.warn("price <= 0  {}", activity.price);
+						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.commission < 0) {
 						logger.error("commission < 0  {}", activity.commission);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (activity.debit < 0) {
-						// Allow debit 0 for rights offer
-						logger.error("debit < 0  {}", activity.debit);
+					if (activity.debit <= 0) {
+						logger.error("debit <= 0  {}", activity.debit);
 						throw new SecuritiesException("Unexpected");
 					}
 					if (activity.credit != 0) {
@@ -354,6 +352,60 @@ public class Transaction implements Comparable<Transaction> {
 					double price    = roundQuantity(activity.price);
 					double fee      = roundPrice(activity.commission);
 					double debit    = roundPrice(activity.price * activity.quantity);
+					
+					// Sanity check
+					{
+						double roundDebit = roundPrice(activity.debit);
+						if (!DoubleUtil.isAlmostEqual((debit + fee), roundDebit)) {
+							logger.error("Not equal  debit {}  {}", (debit + fee), roundDebit);
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+					
+					Transaction transaction = Transaction.buy(date, symbol, name, quantity, price, fee, debit);
+					logger.info("transaction {}", transaction);
+					transactionList.add(transaction);
+					break;
+				}
+				case "DISTRIB": {
+					// Sanity check
+					if (activity.date == null) {
+						logger.error("date == null");
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.tradeDate != null) {
+						logger.error("tradeDate != null");
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.quantity <= 0) {
+						logger.error("quantity <= 0  {}", activity.quantity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.price != 0) {
+						logger.warn("price != 0  {}", activity.price);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.commission != 0) {
+						logger.error("commission != 0  {}", activity.commission);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.debit != 0) {
+						logger.error("debit != 0  {}", activity.debit);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.credit != 0) {
+						logger.error("credit != 0  {}", activity.credit);
+						throw new SecuritiesException("Unexpected");
+					}
+
+					//					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
+					String date     = activity.date; // use date. not tradeDate.
+					String symbol   = activity.symbol;
+					String name     = activity.name;
+					double quantity = roundQuantity(activity.quantity);
+					double price    = 0;
+					double fee      = 0;
+					double debit    = 0;
 					
 					// Sanity check
 					{
@@ -473,7 +525,8 @@ public class Transaction implements Comparable<Transaction> {
 				case "ADR":
 				case "MLP":
 				case "NRA":
-				case "CAP GAIN": {
+				case "CAP GAIN": 
+				case "JOURNAL": {
 					// Sanity check
 					if (activity.date == null) {
 						logger.error("date == null");

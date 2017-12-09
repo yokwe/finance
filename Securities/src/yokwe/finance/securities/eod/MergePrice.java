@@ -165,21 +165,48 @@ public class MergePrice {
 		logger.info("yahoo  {}", String.format("%4d", countYahoo));
 		logger.info("google {}", String.format("%4d", countGoogle));
 		
-		// Copy delisted files
-		for(Delisted delisted: Delisted.load()) {
-			String symbol = delisted.symbol;
-			logger.info("delisted  {}", symbol);
-			File delistedFile = Delisted.getFile(symbol);
-			if (delistedFile.exists()) {
+		// Copy delisted files from UpdateDelisted.PATH_DIR
+		{
+			File dir = new File(UpdateDelisted.PATH_DIR);
+			for(File file: dir.listFiles()) {
+				String name = file.getName();
+				// Sanity checks
+				if (!name.endsWith(".csv")) {
+					logger.warn("Not CSV file {}", file.getPath());
+					continue;
+				}
+				if (file.length() == 0) {
+					logger.warn("Empty file {}", file.getPath());
+					continue;
+				}
+				
+				String symbol = name.substring(0, name.length() - 4); // minus 4 for ".csv"
+				logger.info("delisted  {}", symbol);
+
 				try {
 					File priceFile = Price.getFile(symbol);
-					Files.copy(delistedFile.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(file.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					logger.info("IOException {}", e.getMessage());
 					throw new SecuritiesException("IOException");
 				}
 			}
 		}
+		// Copy delisted files using Delisted.load()
+//		for(Delisted delisted: Delisted.load()) {
+//			String symbol = delisted.symbol;
+//			logger.info("delisted  {}", symbol);
+//			File delistedFile = Delisted.getFile(symbol);
+//			if (delistedFile.exists()) {
+//				try {
+//					File priceFile = Price.getFile(symbol);
+//					Files.copy(delistedFile.toPath(), priceFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+//				} catch (IOException e) {
+//					logger.info("IOException {}", e.getMessage());
+//					throw new SecuritiesException("IOException");
+//				}
+//			}
+//		}
 
 		
 		logger.info("STOP");

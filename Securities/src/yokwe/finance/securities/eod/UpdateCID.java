@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.FileUtil;
 import yokwe.finance.securities.util.HttpUtil;
+import yokwe.finance.securities.util.Pause;
 
 public class UpdateCID {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateCID.class);
@@ -81,6 +82,7 @@ public class UpdateCID {
 	public static final String PATH_DIR = "tmp/eod/cid";
 	
 	private static final long MIN_SLEEP_INTERVAL = 1_000; // 1000 milliseconds = 1 sec
+	private static final Pause PAUSE = Pause.getInstance(MIN_SLEEP_INTERVAL);
 	
 	private static String getURL(String exchange, String symbolGoogle) {
 		// https://finance.google.com/finance?q=NYSE%3AESV
@@ -215,8 +217,6 @@ public class UpdateCID {
 		
 		showInterval = 100;
 		
-		long lastSleepTime = System.currentTimeMillis();
-		
 		for(Stock stock: stockList) {
 			int outputCount = count / showInterval;
 			boolean showOutput;
@@ -237,19 +237,7 @@ public class UpdateCID {
 			if (cidMap.containsKey(key)) {
 				if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, symbolSize), stock.symbol);				
 			} else {
-				try {
-					long expectedStartTime = lastSleepTime + MIN_SLEEP_INTERVAL;
-					long currentTime = System.currentTimeMillis();
-					if (currentTime < expectedStartTime) {
-						Thread.sleep(Math.min(MIN_SLEEP_INTERVAL, expectedStartTime - currentTime));
-						currentTime = System.currentTimeMillis();
-					}
-					lastSleepTime = currentTime;
-				} catch (InterruptedException e) {
-					logger.error("InterruptedException {}", e.toString());
-					throw new SecuritiesException("InterruptedException");
-				}
-				
+				PAUSE.sleep();
 				String contents = getContents(stock.exchange, stock.symbolGoogle);
 				CID cid = getCID(contents);
 				

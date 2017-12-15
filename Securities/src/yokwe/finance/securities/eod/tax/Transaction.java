@@ -151,13 +151,16 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	
 	public static double roundPrice(double value) {
-		return DoubleUtil.round(value, 2);
+		return DoubleUtil.round(String.format("%.4f", value), 2);
 	}
 	public static double roundQuantity(double value) {
-		return DoubleUtil.round(value, 5);
+		return DoubleUtil.round(String.format("%.7f", value), 5);
 	}
 	
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
+		return getTransactionList(docActivity, true);
+	}
+	public static List<Transaction> getTransactionList(SpreadSheet docActivity, boolean useTradeDate) {
 		List<Transaction> transactionList = new ArrayList<>();
 		
 		List<String> sheetNameList = docActivity.getSheetNameList();
@@ -345,7 +348,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					//					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-					String date     = activity.tradeDate;
+					String date     = useTradeDate ? activity.tradeDate : activity.date;
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = roundQuantity(activity.quantity);
@@ -454,7 +457,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 //					logger.info("activity {} {} {} {} {}", sheetName, activity.date, activity.transaction, activity.symbol, activity.quantity);
-					String date     = activity.tradeDate;
+					String date     = useTradeDate ? activity.tradeDate : activity.date;
 					String symbol   = activity.symbol;
 					String name     = activity.name;
 					double quantity = roundQuantity(activity.quantity);

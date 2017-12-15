@@ -64,8 +64,10 @@ public class BuySell {
 	void sell(Transaction transaction) {
 		double sell    = Transaction.roundPrice(transaction.price * transaction.quantity);
 
-		double sellRatio = transaction.quantity / totalQuantity;
-		double cost      = Transaction.roundPrice(totalCost * sellRatio);
+//		double sellRatio = transaction.quantity / totalQuantity;
+//		double cost      = Transaction.roundPrice(totalCost * sellRatio);
+		double cost      = Position.cost(transaction);
+
 		
 		if (buyCount == 1) {
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
@@ -156,7 +158,8 @@ public class BuySell {
 					ret.put(key, buySell);
 				}
 				buySell.buy(transaction);
-				Position.buy(transaction.date, transaction.symbol, transaction.quantity);
+				// another for build positionMap
+				Position.buy(transaction);
 			}
 			if (transaction.type == Transaction.Type.SELL) {
 				String key = transaction.symbol;
@@ -169,7 +172,7 @@ public class BuySell {
 				}
 				
 				buySell.sell(transaction);
-				Position.sell(transaction.date, transaction.symbol, transaction.quantity);
+				Position.sell(transaction);
 			}
 			if (transaction.type == Transaction.Type.CHANGE) {
 				String key = transaction.symbol;
@@ -184,7 +187,7 @@ public class BuySell {
 				
 				buySell.change(transaction);
 				ret.put(buySell.symbol, buySell);
-				Position.change(transaction.date, transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
+				Position.change(transaction);
 			}
 		}
 		
@@ -210,7 +213,7 @@ public class BuySell {
 			// Add dummy sell record
 			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, Transaction.roundPrice(quantity * price.close));	
 			buySell.sell(transaction);
-			Position.sell(transaction.date, transaction.symbol, transaction.quantity);
+			Position.sell(transaction);
 		}
 	}
 

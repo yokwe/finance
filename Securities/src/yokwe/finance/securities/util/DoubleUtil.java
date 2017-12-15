@@ -33,6 +33,13 @@ public final class DoubleUtil {
 	    return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
 	}
 	
+	public static double round(String value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
+	}
+	
 	
 
 	public static final double CONFIDENCE_95_PERCENT = 1.65;

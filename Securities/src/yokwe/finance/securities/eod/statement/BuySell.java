@@ -52,7 +52,7 @@ public class BuySell {
 		buyCount++;
 		
 		totalQuantity += transaction.quantity;
-		totalCost     += transaction.debit;
+		totalCost     += Transaction.roundPrice(transaction.quantity * transaction.price);
 
 		Transfer.Buy buy = new Transfer.Buy(
 			transaction.date, transaction.symbol, transaction.name,
@@ -62,12 +62,8 @@ public class BuySell {
 		current.add(new Transfer(transaction.id, buy));
 	}
 	void sell(Transaction transaction) {
-		double sell    = Transaction.roundPrice(transaction.price * transaction.quantity);
-
-//		double sellRatio = transaction.quantity / totalQuantity;
-//		double cost      = Transaction.roundPrice(totalCost * sellRatio);
-		double cost      = Position.cost(transaction);
-
+		double sell = Transaction.roundPrice(transaction.price * transaction.quantity);
+		double cost = Position.cost(transaction);
 		
 		if (buyCount == 1) {
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY

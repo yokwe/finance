@@ -50,20 +50,11 @@ public class UpdateStats {
 				DoubleStreamUtil.Stats stats = new DoubleStreamUtil.Stats(logReturn);
 				
 				double sd = stats.getStandardDeviation();
-				if (Double.isInfinite(sd)) {
-					logger.warn("sd is infinite  {}", ret.symbol);
-					return null;
-				}
-				if (Double.isNaN(sd)) {
-					logger.warn("sd is Nan  {}", ret.symbol);
-					return null;
-				}
-				
-				ret.sd = DoubleUtil.round(stats.getStandardDeviation(), 4);
+				ret.sd = Double.isNaN(sd) ? -1 : DoubleUtil.round(sd, 4);
 			}
 			
 			HV hv = new HV(priceArray);
-			ret.hv = DoubleUtil.round(hv.getValue(), 4);
+			ret.hv = Double.isNaN(hv.getValue()) ? -1 : DoubleUtil.round(hv.getValue(), 4);
 			
 			if (RSI.DEFAULT_PERIDO < priceArray.length) {
 				RSI rsi = new RSI();
@@ -88,7 +79,7 @@ public class UpdateStats {
 			
 			
 			// price change detection
-			ret.last   = priceArray[priceArray.length - 2];
+			ret.last   = (priceArray.length < 2) ? -1 : priceArray[priceArray.length - 2];
 			ret.sma5   = DoubleUtil.round(MA.sma(  5, priceArray).getValue(), 2);
 			ret.sma20  = DoubleUtil.round(MA.sma( 20, priceArray).getValue(), 2);
 			ret.sma50  = DoubleUtil.round(MA.sma( 50, priceArray).getValue(), 2);
@@ -216,10 +207,10 @@ public class UpdateStats {
 //			}
 			
 			// Ignore too small sample stock to prevent error and prevent get abnormal statistics value
-			if (priceList.size() <= 5) {
-				logger.warn("{}  small  {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
-				continue;
-			}
+//			if (priceList.size() <= 5) {
+//				logger.warn("{}  small  {}", String.format("%4d / %4d",  count, total), String.format("%-8s %2d", symbol, priceList.size()));
+//				continue;
+//			}
 			
 			if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 			

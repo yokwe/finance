@@ -65,16 +65,17 @@ public class Report {
 	
 	static Map<String, TransferSummary> getSummaryMap(Map<String, BuySell> buySellMap) {
 		Map<String, TransferSummary> ret = new TreeMap<>();
+		// Add sequence to distinguish record for same day transaction
+		int sequence = 1;
 		
 		for(BuySell buySell: buySellMap.values()) {
-			String symbol = buySell.symbol;
 			for(List<Transfer> pastTransferList: buySell.past) {
 				Transfer lastTransfer = pastTransferList.get(pastTransferList.size() - 1);
 				if (lastTransfer.sell == null) {
 					logger.error("lastTransfer is null");
 					throw new SecuritiesException("lastTransfer is null");
 				}
-				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
+				String key = String.format("%s-%05d", lastTransfer.sell.date, sequence++);
 				ret.put(key, new TransferSummary(lastTransfer.sell));
 			}
 		}
@@ -93,11 +94,16 @@ public class Report {
 				}
 				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
 				
-				List<TransferDetail> detailList = new ArrayList<>();
+				List<TransferDetail> detailList;
+				if (ret.containsKey(key)) {
+					detailList = ret.get(key);
+				} else {
+					detailList = new ArrayList<>();
+					ret.put(key, detailList);
+				}
 				for(Transfer transfer: pastTransferList) {
 					detailList.add(TransferDetail.getInstance(transfer));
 				}
-				ret.put(key, detailList);
 			}
 		}
 		return ret;

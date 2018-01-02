@@ -40,13 +40,13 @@ public class UpdatePreferred {
 			ret = ret.replaceAll("\\p{javaWhitespace}+", " ");
 			ret = ret.trim();
 			
-//			// mm/dd/yyyy
-//			if (ret.matches("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})$")) {
-//				String mdy[] = ret.split("\\/");
-//				if (mdy[0].length() == 1) mdy[0] = "0" + mdy[0];
-//				if (mdy[1].length() == 1) mdy[1] = "0" + mdy[1];
-//				ret = String.format("%s-%s-%s", mdy[2], mdy[0], mdy[1]);
-//			}
+			// mm/dd/yyyy
+			if (ret.matches("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{4})$")) {
+				String mdy[] = ret.split("\\/");
+				if (mdy[0].length() == 1) mdy[0] = "0" + mdy[0];
+				if (mdy[1].length() == 1) mdy[1] = "0" + mdy[1];
+				ret = String.format("%s-%s-%s", mdy[2], mdy[0], mdy[1]);
+			}
 //			
 //			// mm/dd/yyyy?
 //			if (ret.matches("^([0-9]{1,2})/([0-9]{1,2})/([0-9]{2,4})\\?$")) {
@@ -98,6 +98,8 @@ public class UpdatePreferred {
 	private static final Match ADDRESS  = new Match("<b>Address:</b>(.+?)</font>", Pattern.DOTALL);
 
 	private static final Match NAME     = new Match("<font size=\"\\+1\"><center><b>(.+?)<", Pattern.DOTALL);
+	
+	private static final Match IPO      = new Match("<b>IPO</b> - ([0-9/]+)");
 
 	private static final Pattern TABLE_HEADER7 = Pattern.compile("<tr bgcolor=\"FFEFB5\">" +
 			"\\p{javaWhitespace}+<th>(.+?)</th>" +
@@ -142,7 +144,7 @@ public class UpdatePreferred {
 
 	private static final Pattern USA_ZIPCODE = Pattern.compile("[A-Za-z]{2} [0-9]{5}(-[0-9]{4})?$");
 
-	private static final Pattern DATE_PATTERN = Pattern.compile("(1?[0-9]/[0-3][0-9])");
+	private static final Pattern DATE_PATTERN = Pattern.compile("(1?[0-9]/[0-3]?[0-9])");
 
 	private static String[][] addressContryArray = {
 			{"BERMUDA",     "Bermuda"},
@@ -283,7 +285,8 @@ public class UpdatePreferred {
 //			logger.debug("{}", String.format("%4d %-8s %-6s %-12s %s", count, symbol, parent, country, type));
 			logger.debug("{}", String.format("%4d %-8s", count, symbol));
 
-			String name      = NAME.getValue(content);
+			String name    = NAME.getValue(content);
+			String ipo     = content.contains("<b>IPO</b>") ? IPO.getValue(content) : "*NA*";
 			
 			final String cpnRate;
 			final String annAmt;
@@ -607,7 +610,7 @@ public class UpdatePreferred {
 			preferredList.add(
 				new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref,
 					(0 < remark.length()) ? remark.substring(1) : "",
-					callPrice, callDate, maturDate, distDates));
+					callPrice, callDate, maturDate, distDates, ipo));
 		}
 		
 		Preferred.save(preferredList);

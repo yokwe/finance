@@ -18,11 +18,12 @@ public class Preferred {
 	public String callDate;
 	public String maturDate;
 	public String distDates;
+	public String ipo;
 	
 	public String name;
 	
 	public Preferred(String symbol, String type, String parent, String country, String name,
-			String cpnRate, String annAmt, String liqPref, String remark, String callPrice, String callDate, String maturDate, String distDates
+			String cpnRate, String annAmt, String liqPref, String remark, String callPrice, String callDate, String maturDate, String distDates, String ipo
 			) {
 		this.symbol  = symbol;
 		this.type    = type;
@@ -38,6 +39,7 @@ public class Preferred {
 		this.callDate  = callDate;
 		this.maturDate = maturDate;
 		this.distDates = distDates;
+		this.ipo       = ipo;
 	}
 	
 	@Override

@@ -11,6 +11,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.PriceUtil;
 import yokwe.finance.securities.eod.tax.Transaction;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class Position {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Position.class);
@@ -178,9 +179,7 @@ public class Position {
 		return ret;
 	}
 	//Position.change(transaction.date, transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
-	public static void change(Transaction transaction) {
-		String symbol = transaction.symbol;
-		
+	public static void change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {
 		Position position;
 		if (positionMap.containsKey(symbol)) {
 			position = positionMap.get(symbol);
@@ -189,22 +188,50 @@ public class Position {
 			throw new SecuritiesException("Unexpected");
 		}
 		// Sanity check
-		if (position.getQuantity() != -transaction.quantity) {
-			logger.error("Unexpected quantity pos {}  {} != {}", symbol, transaction.quantity, position.getQuantity());
+		if (position.getQuantity() != -quantity) {
+			logger.error("Unexpected quantity pos {}  {} != {}", symbol, quantity, position.getQuantity());
 			throw new SecuritiesException("Unexpected");
 		}
-		if (transaction.newQuantity != -transaction.quantity) {
-			// We can handle *ONLY* same quantity for change for now
-			logger.error("Unexpected quantity new {}  {} != {}", symbol, transaction.newQuantity, transaction.quantity);
-			throw new SecuritiesException("Unexpected");
+		// Adjust lot if necessary
+		List<Lot> newLotList;
+		if (newQuantity == -quantity) {
+			newLotList = position.lotList;
+		} else {
+			double qRatio = newQuantity / -quantity;
+			double pRatio = -quantity / newQuantity;
+			double qNew = 0;
+			
+			newLotList = new ArrayList<>();
+			for(Lot lot: position.lotList) {
+				if (lot.remain == 0) continue;
+				
+				double q = Transaction.roundQuantity(lot.remain * qRatio);
+				double p = Transaction.roundQuantity(lot.price * pRatio);
+				
+				double oldCost = Transaction.roundPrice(lot.price * lot.remain);
+				double newCost = Transaction.roundPrice(p * q);
+				
+				if (!DoubleUtil.isAlmostEqual(oldCost, newCost)) {
+					logger.error("change {} {} {} {} {}", date, symbol, quantity, newSymbol, newQuantity);
+					logger.error("old  {}  =  {} * {}", oldCost, lot.price, lot.remain);
+					logger.error("new  {}  =  {} * {}", newCost, p, q);
+					throw new SecuritiesException("Unexpected");
+				}
+				
+				qNew = Transaction.roundQuantity(qNew + q);
+				newLotList.add(new Lot(lot.date, p, q));
+			}
+			if (!DoubleUtil.isAlmostEqual(qNew, newQuantity)) {
+				logger.error("change {} {} {} {} {}", date, symbol, quantity, newSymbol, newQuantity);
+				logger.error("quantity  {}  !=  {}", qNew, newQuantity);
+				throw new SecuritiesException("Unexpected");
+			}
 		}
-		// Delete old symbol
+		// Replace with new value
 		positionMap.remove(symbol);
-		// Add new symbol
-		positionMap.put(transaction.newSymbol, new Position(transaction.newSymbol, position.lotList));
-		
+		positionMap.put(newSymbol, new Position(newSymbol, newLotList));
 		// Update dateMap
-		dateMap.put(transaction.date, getPositionList());
+		dateMap.put(date, getPositionList());
 	}
 
 	

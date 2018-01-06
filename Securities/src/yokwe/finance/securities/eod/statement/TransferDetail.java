@@ -82,9 +82,15 @@ public class TransferDetail extends Sheet {
 		this.profitLoss    = null;
 
 		this.dateBuy       = buy.date;
-		this.quantityBuy   = buy.quantity;
-		this.priceBuy      = buy.price;
-		this.buy           = buy.buy;
+		if (buy.quantity == 0) {
+			this.quantityBuy   = null;
+			this.priceBuy      = null;
+			this.buy           = null;
+		} else {
+			this.quantityBuy   = buy.quantity;
+			this.priceBuy      = buy.price;
+			this.buy           = buy.buy;
+		}
 		this.totalQuantity = buy.totalQuantity;
 		this.totalCost     = buy.totalCost;
 	}

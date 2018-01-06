@@ -103,40 +103,36 @@ public class BuySell {
 		}
 	}
 	void change(Transaction transaction) {
-		if (-transaction.quantity == transaction.newQuantity) {
-			// rename symbol with newSymbol
-			String newSymbol = transaction.newSymbol;
-			String newName   = transaction.newName;
-			
-			this.symbol = newSymbol;
-			this.name   = newName;
-			
-//			for(Transfer transfer: current) {
-//				if (transfer.buy != null) {
-//					transfer.buy.symbol = newSymbol;
-//					transfer.buy.name = newName;
-//				}
-//				if (transfer.sell != null) {
-//					transfer.sell.symbol = newSymbol;
-//					transfer.sell.name = newName;
-//				}
-//			}
-//			for(List<Transfer> transferList: past) {
-//				for(Transfer transfer: transferList) {
-//					if (transfer.buy != null) {
-//						transfer.buy.symbol = newSymbol;
-//						transfer.buy.name = newName;
-//					}
-//					if (transfer.sell != null) {
-//						transfer.sell.symbol = newSymbol;
-//						transfer.sell.name = newName;
-//					}
-//				}
-//			}
-		} else {
-			logger.error("quantity  {}  {}", transaction.quantity, transaction.newQuantity);
+		// Sanity check
+		if (!DoubleUtil.isAlmostEqual(this.totalQuantity, -transaction.quantity)) {
+			logger.error("change {}  {} -> {}  {}", transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
+			logger.error("Quantity mismatch  {}  {}", this.totalQuantity, transaction.quantity);
 			throw new SecuritiesException("Unexpected");
 		}
+		
+		String newSymbol = transaction.newSymbol;
+		String newName   = transaction.newName;
+		double oldQuantity = -transaction.quantity;
+		double newQuantity = transaction.newQuantity;
+		
+		this.symbol = newSymbol;
+		this.name   = newName;
+
+		if (oldQuantity == newQuantity) {
+			// no need to update toatlQuantiy
+			// no need to update symbol and name in current
+		} else {
+			// Adjust totalQuantity
+			totalQuantity = transaction.newQuantity;
+
+			// no need to update symbol and name in current
+		}
+		
+		Transfer.Buy buy = new Transfer.Buy(
+			transaction.date, newSymbol, transaction.newName,
+			totalQuantity, totalCost
+			);
+		current.add(new Transfer(transaction.id, buy));
 	}
 	
 	
@@ -183,7 +179,7 @@ public class BuySell {
 				
 				buySell.change(transaction);
 				ret.put(buySell.symbol, buySell);
-				Position.change(transaction);
+				Position.change(transaction.date, transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
 			}
 		}
 		

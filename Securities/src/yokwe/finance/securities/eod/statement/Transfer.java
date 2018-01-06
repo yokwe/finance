@@ -39,6 +39,18 @@ public class Transfer {
 			this.totalQuantity = totalQuantity;
 			this.totalCost     = totalCost;
 		}
+		public Buy(String date, String symbol, String name,
+				double totalQuantity, double totalCost) {
+			this.date          = date;
+			this.symbol        = symbol;
+			this.name          = name;
+			this.quantity      = 0;
+			this.price         = 0;
+			this.fee           = 0;
+			this.buy           = 0;
+			this.totalQuantity = totalQuantity;
+			this.totalCost     = totalCost;
+		}
 	}
 	
 	public static class Sell {

@@ -109,13 +109,23 @@ public class TransferDetail extends Sheet {
 		this.dateBuyLast   = null;
 
 		this.dateBuy       = buy.date;
-		this.quantityBuy   = buy.quantity;
-		this.priceBuy      = buy.price;
-		this.feeBuy        = buy.fee;
-		this.fxRateBuy     = buy.fxRate;
-		this.buyJPY        = buy.buyJPY + buy.feeJPY;
-		this.totalQuantity = buy.totalQuantity;
-		this.totalCostJPY  = buy.totalCostJPY;
+		if (buy.quantity == 0) {
+			this.quantityBuy   = null;
+			this.priceBuy      = null;
+			this.feeBuy        = null;
+			this.fxRateBuy     = null;
+			this.buyJPY        = null;
+			this.totalQuantity = buy.totalQuantity;
+			this.totalCostJPY  = buy.totalCostJPY;
+		} else {
+			this.quantityBuy   = buy.quantity;
+			this.priceBuy      = buy.price;
+			this.feeBuy        = buy.fee;
+			this.fxRateBuy     = buy.fxRate;
+			this.buyJPY        = buy.buyJPY + buy.feeJPY;
+			this.totalQuantity = buy.totalQuantity;
+			this.totalCostJPY  = buy.totalCostJPY;
+		}
 	}
 	public TransferDetail(Transfer.Sell sell) {
 		this.symbol        = sell.symbol;

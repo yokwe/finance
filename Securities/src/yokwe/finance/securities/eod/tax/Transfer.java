@@ -47,6 +47,22 @@ public class Transfer {
 			this.totalCost     = totalCost;
 			this.totalCostJPY  = totalCostJPY;
 		}
+		public Buy(String date, String symbol, String name,
+				double totalQuantity, double totalCost, int totalCostJPY) {
+			this.date          = date;
+			this.symbol        = symbol;
+			this.name          = name;
+			this.quantity      = 0;
+			this.price         = 0;
+			this.fee           = 0;
+			this.fxRate        = 0;
+			this.buy           = 0;
+			this.buyJPY        = 0;
+			this.feeJPY        = 0;
+			this.totalQuantity = totalQuantity;
+			this.totalCost     = totalCost;
+			this.totalCostJPY  = totalCostJPY;
+		}
 	}
 	
 	public static class Sell {

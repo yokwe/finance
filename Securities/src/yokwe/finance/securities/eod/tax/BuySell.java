@@ -65,12 +65,12 @@ public class BuySell {
 		// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
 		double costPrice = Transaction.roundPrice(transaction.quantity * transaction.price);
 		double costFee   = transaction.fee;
-		double cost      = costPrice + costFee;
+		double cost      = Transaction.roundPrice(costPrice + costFee);
 		int    costJPY   = (int)Math.floor(costPrice * fxRate) + (int)Math.floor(costFee * fxRate);
 		
-		totalQuantity += transaction.quantity;
-		totalCost     += cost;
-		totalCostJPY  += costJPY;
+		totalQuantity = Transaction.roundQuantity(totalQuantity + transaction.quantity);
+		totalCost     = Transaction.roundPrice(totalCost + cost);
+		totalCostJPY  = totalCostJPY + costJPY;
 
 		Transfer.Buy buy = new Transfer.Buy(
 			transaction.date, transaction.symbol, transaction.name,
@@ -93,9 +93,9 @@ public class BuySell {
 			costJPY = (int)Math.floor(totalCostJPY * sellRatio);
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			totalQuantity -= transaction.quantity;
-			totalCost     -= cost;
-			totalCostJPY  -= costJPY;
+			totalQuantity = Transaction.roundQuantity(totalQuantity - transaction.quantity);
+			totalCost     = Transaction.roundPrice(totalCost - cost);
+			totalCostJPY  = totalCostJPY - costJPY;
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 			logger.info("SELL {}", String.format("%s %-9s %9.5f %7d %7d %7d %s %s",
@@ -103,13 +103,11 @@ public class BuySell {
 		} else {
 			double unitCostJPY = Math.ceil(totalCostJPY / totalQuantity); // need to be round up. See https://www.nta.go.jp/taxanswer/shotoku/1466.htm
 			costJPY = (int)Math.floor(unitCostJPY * transaction.quantity);
-			// need to adjust totalAcquisitionCostJPY
-			totalCostJPY = (int)Math.floor(unitCostJPY * totalQuantity);
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			totalQuantity -= transaction.quantity;
-			totalCost     -= cost;
-			totalCostJPY  -= costJPY;
+			totalQuantity = Transaction.roundQuantity(totalQuantity - transaction.quantity);
+			totalCost     = Transaction.roundPrice(totalCost - cost);
+			totalCostJPY  = (int)Math.floor(unitCostJPY * totalQuantity); // totalCostJPY is calculated with unitCostJPY
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
 			logger.info("SELL*{}", String.format("%s %-9s %9.5f %7d %7d %7d %s %s",

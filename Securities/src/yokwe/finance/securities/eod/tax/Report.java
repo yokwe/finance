@@ -84,8 +84,8 @@ public class Report {
 		}
 		return ret;
 	}
-	static Map<String, List<TransferDetail>> getDetailMap(Map<String, BuySell> buySellMap) {
-		Map<String, List<TransferDetail>> ret = new TreeMap<>();
+	static Map<String, List<TransferDetail2>> getDetailMap(Map<String, BuySell> buySellMap) {
+		Map<String, List<TransferDetail2>> ret = new TreeMap<>();
 		
 		for(BuySell buySell: buySellMap.values()) {
 			String symbol = buySell.symbol;
@@ -97,7 +97,7 @@ public class Report {
 				}
 				String key = String.format("%s-%s", lastTransfer.sell.date, symbol);
 				
-				List<TransferDetail> detailList;
+				List<TransferDetail2> detailList;
 				if (ret.containsKey(key)) {
 					detailList = ret.get(key);
 				} else {
@@ -105,7 +105,12 @@ public class Report {
 					ret.put(key, detailList);
 				}
 				for(Transfer transfer: pastTransferList) {
-					detailList.add(TransferDetail.getInstance(transfer));
+					if (transfer.buy != null) {
+						detailList.add(new TransferDetail2(transfer.buy));
+					}
+					if (transfer.sell != null) {
+						detailList.add(new TransferDetail2(transfer.sell));
+					}
 				}
 			}
 		}
@@ -246,8 +251,8 @@ public class Report {
 			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
 			
 			// key is date-symbol
-			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
-			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
+//			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
+			Map<String, List<TransferDetail2>> detailMap = getDetailMap(buySellMap);
 			
 			// account activity list
 			List<Account> accountList = getAccountList(transactionList);
@@ -280,11 +285,11 @@ public class Report {
 
 				// Detail
 				{
-					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
+					Map<String, List<TransferDetail2>> workMap = new TreeMap<>();
 					for(String key: detailMap.keySet()) {
 						if (!key.startsWith(targetYear)) continue;
 						
-						List<TransferDetail> aList = detailMap.get(key);
+						List<TransferDetail2> aList = detailMap.get(key);
 						if (aList.isEmpty()) continue;
 						
 						String symbol = aList.get(0).symbol;
@@ -294,13 +299,25 @@ public class Report {
 						workMap.get(symbol).addAll(aList);
 					}
 					
-					List<TransferDetail> transferList = new ArrayList<>();
+					List<TransferDetail2> transferList = new ArrayList<>();
 					for(String key: workMap.keySet()) {
-						transferList.addAll(workMap.get(key));
+						List<TransferDetail2> workList = workMap.get(key);
+						int listCount = workList.size();
+						int count = 0;
+						for(TransferDetail2 work: workList) {
+							count++;
+							transferList.add(work);
+							if (count != listCount && Transaction.roundQuantity(work.totalQuantity) == 0) {
+								// Add break
+								transferList.add(new TransferDetail2());
+							}
+						}
+						// Add break
+						transferList.add(new TransferDetail2());
 					}
 					
 					if (!transferList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(TransferDetail.class);
+						String sheetName = Sheet.getSheetName(TransferDetail2.class);
 						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
 						Sheet.fillSheet(docSave, transferList);
 						
@@ -311,23 +328,23 @@ public class Report {
 				}
 
 				// Summary
-				{
-					List<TransferSummary> summaryList = new ArrayList<>();
-					for(String key: summaryMap.keySet()) {
-						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
-					}
-					// Sort with symbol name and dateSell
-					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
-					if (!summaryList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(TransferSummary.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, summaryList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
+//				{
+//					List<TransferSummary> summaryList = new ArrayList<>();
+//					for(String key: summaryMap.keySet()) {
+//						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
+//					}
+//					// Sort with symbol name and dateSell
+//					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
+//					if (!summaryList.isEmpty()) {
+//						String sheetName = Sheet.getSheetName(TransferSummary.class);
+//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+//						Sheet.fillSheet(docSave, summaryList);
+//						
+//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+//						logger.info("sheet {}", newSheetName);
+//						docSave.renameSheet(sheetName, newSheetName);
+//					}
+//				}
 				
 				// Dividend
 				{

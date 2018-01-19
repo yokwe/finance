@@ -354,7 +354,7 @@ public class Transaction implements Comparable<Transaction> {
 					double quantity = roundQuantity(activity.quantity);
 					double price    = roundQuantity(activity.price);
 					double fee      = roundPrice(activity.commission);
-					double debit    = roundPrice(activity.price * activity.quantity);
+					double debit    = roundPrice(price * quantity);
 					
 					// Sanity check
 					{
@@ -463,7 +463,7 @@ public class Transaction implements Comparable<Transaction> {
 					double quantity = roundQuantity(activity.quantity);
 					double price    = roundQuantity(activity.price);
 					double fee      = roundPrice(activity.commission);
-					double credit   = roundPrice(activity.price * activity.quantity);
+					double credit   = roundPrice(price * quantity);
 					
 					// Sanity check
 					{

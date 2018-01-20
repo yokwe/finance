@@ -251,7 +251,7 @@ public class Report {
 			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
 			
 			// key is date-symbol
-//			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
+			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
 			Map<String, List<TransferDetail2>> detailMap = getDetailMap(buySellMap);
 			
 			// account activity list
@@ -328,23 +328,23 @@ public class Report {
 				}
 
 				// Summary
-//				{
-//					List<TransferSummary> summaryList = new ArrayList<>();
-//					for(String key: summaryMap.keySet()) {
-//						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
-//					}
-//					// Sort with symbol name and dateSell
-//					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
-//					if (!summaryList.isEmpty()) {
-//						String sheetName = Sheet.getSheetName(TransferSummary.class);
-//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-//						Sheet.fillSheet(docSave, summaryList);
-//						
-//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-//						logger.info("sheet {}", newSheetName);
-//						docSave.renameSheet(sheetName, newSheetName);
-//					}
-//				}
+				{
+					List<TransferSummary> summaryList = new ArrayList<>();
+					for(String key: summaryMap.keySet()) {
+						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
+					}
+					// Sort with symbol name and dateSell
+					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
+					if (!summaryList.isEmpty()) {
+						String sheetName = Sheet.getSheetName(TransferSummary.class);
+						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+						Sheet.fillSheet(docSave, summaryList);
+						
+						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+						logger.info("sheet {}", newSheetName);
+						docSave.renameSheet(sheetName, newSheetName);
+					}
+				}
 				
 				// Dividend
 				{

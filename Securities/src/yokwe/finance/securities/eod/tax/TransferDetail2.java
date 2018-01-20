@@ -31,7 +31,7 @@ public class TransferDetail2 extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public final Double fee;
 	
-	@ColumnName("レート")
+	@ColumnName("為替レート")
 	@NumberFormat(SpreadSheet.FORMAT_NUMBER2)
 	public final Double fxRate;
 	

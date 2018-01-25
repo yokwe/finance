@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
 
@@ -41,22 +43,14 @@ public class HistoricalQuotes {
 		return CSVUtil.loadWithHeader(path, HistoricalQuotes.class);
 	}
 	
-	public static void main(String[] args) {
+	private static void process(String symbol, String path) {
 		final org.slf4j.Logger logger = LoggerFactory.getLogger(HistoricalQuotes.class);
 		
 		DateTimeFormatter DATE_FORMAT_PARSE  = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 						
-		String PATH_INPUT  = "tmp/eod/HistoricalQuotes.csv";
-		
-		String symbol = "SSWA";
+		String PATH_OUTPUT = String.format("tmp/eod/%s.csv", symbol);
 
-		logger.info("START");
-		
-		String PATH_OUTPUT = String.format("tmp/eod/HistoricalQuotes-%s.csv", symbol);
-
-		logger.info("SYMBOL      {}", symbol);
-
-		logger.info("PATH_INPUT  {}", PATH_INPUT);
+		logger.info("PATH_INPUT  {}", path);
 		logger.info("PATH_OUTPUT {}", PATH_OUTPUT);
 		
 		LocalDate DATE_LAST = Market.getLastTradingDate();
@@ -64,7 +58,7 @@ public class HistoricalQuotes {
 		
 		List<Price> priceList = new ArrayList<>();
 		
-		List<HistoricalQuotes> hitoricalQuoteList = load(PATH_INPUT);
+		List<HistoricalQuotes> hitoricalQuoteList = load(path);
 		for(HistoricalQuotes hitoricalQuote: hitoricalQuoteList) {
 			LocalDate date;
 			long volume;
@@ -87,6 +81,26 @@ public class HistoricalQuotes {
 		
 		// save
 		Price.save(priceList, new File(PATH_OUTPUT));
+	}
+	
+	public static void main(String[] args) {
+		final org.slf4j.Logger logger = LoggerFactory.getLogger(HistoricalQuotes.class);
+		
+		String PATH_DIR  = "tmp/eod/";
+		Matcher matcher = Pattern.compile("HistoricalQuotes-([A-Z]+).csv").matcher("");
+		
+		logger.info("START");
+		
+		for(File file: new File(PATH_DIR).listFiles()) {
+			String name = file.getName();
+			boolean found = matcher.reset(name).find();
+			if (found) {
+				String symbol = matcher.group(1);
+				String path   = file.getPath();
+				
+				process(symbol, path);
+			}
+		}
 		
 		logger.info("STOP");
 	}

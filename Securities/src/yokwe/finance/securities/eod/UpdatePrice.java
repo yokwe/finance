@@ -48,7 +48,7 @@ public class UpdatePrice {
 			return updateFile(stock.exchange, stock.symbol, stock.symbolGoogle, newFile, dateFirst, dateLast);
 		}
 		
-		private static final long MIN_SLEEP_INTERVAL = 1_000; // 1000 milliseconds = 1 sec
+		private static final long MIN_SLEEP_INTERVAL = 500; // 500 milliseconds = 0.5 sec
 		private static final Pause PAUSE = Pause.getInstance(MIN_SLEEP_INTERVAL);
 
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {

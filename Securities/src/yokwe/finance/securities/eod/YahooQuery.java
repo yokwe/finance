@@ -37,7 +37,7 @@ public class YahooQuery {
 	private static final String HEADER_SET_COOKIE = "Set-Cookie";
 	private static final String PATTERN_CRUMB     = "CrumbStore\\\":\\{\"crumb\":\\\"([^\"]+)\\\"\\}";
 	
-	private static final long   MIN_SLEEP_INTERVAL = 500; // 500 milliseconds = 0.5 sec
+	private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
 	private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
 
 	

@@ -3,6 +3,8 @@ package yokwe.finance.securities.eod;
 import java.io.File;
 import java.time.LocalDate;
 
+import yokwe.finance.securities.util.Pause;
+
 public interface UpdateProvider {
 	public static final LocalDate DATE_LAST     = Market.getLastTradingDate();
 	public static final LocalDate DATE_FIRST    = DATE_LAST.minusYears(1);
@@ -24,4 +26,6 @@ public interface UpdateProvider {
 	public default boolean updateFile(String symbol, boolean newFile) {
 		return updateFile(symbol, newFile, DATE_FIRST, DATE_LAST);
 	}
+	
+	public Pause getPause();
 }

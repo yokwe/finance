@@ -11,21 +11,37 @@ public class Pause {
 	private long nextPause;
 	
 	private Pause(long pauseTime) {
+		long time = System.currentTimeMillis();
+
 		this.pauseTime = pauseTime;
-		this.nextPause = System.currentTimeMillis() + pauseTime;
+		this.nextPause = time + pauseTime;
 	}
 	
+	public void reset() {
+		long time = System.currentTimeMillis();
+		
+		nextPause = time + pauseTime;
+	}
 	public void sleep() {
 		long time = System.currentTimeMillis();
-		if (time < nextPause) {
+		long waitTime = nextPause - time;
+		
+		if (0 < waitTime) {
+//			logger.debug("sleep waitTime = {}", waitTime);
 			try {
-				Thread.sleep(nextPause - time);
+				Thread.sleep(waitTime);
 			} catch (InterruptedException e) {
 				logger.error("InterruptedException {}", e.toString());
 				throw new SecuritiesException("InterruptedException");
 			}
+			nextPause = nextPause + pauseTime;
+		} else if (-waitTime < pauseTime) {
+//			logger.debug("skip  waitTime = {}", waitTime);
+			nextPause = nextPause + pauseTime;
+		} else {
+			logger.debug("reset waitTime = {}", waitTime);
+			reset();
 		}
-		nextPause = time + pauseTime;
 	}
 	
 	public static Pause getInstance(long pauseTime) {

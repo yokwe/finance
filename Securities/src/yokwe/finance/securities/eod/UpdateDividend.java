@@ -13,11 +13,19 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.DoubleUtil;
 import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.Pause;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
 	
 	public static class UpdateProviderYahoo implements UpdateProvider {
+		private static final long   MIN_SLEEP_INTERVAL = 800; // 800 milliseconds = 0.8 sec
+		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
+
+		public Pause getPause() {
+			return PAUSE;
+		}
+
 		private static final String PATH_DIR      = "tmp/eod/dividend";
 		public String getName() {
 			return YAHOO;

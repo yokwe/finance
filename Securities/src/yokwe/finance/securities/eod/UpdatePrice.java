@@ -24,10 +24,14 @@ public class UpdatePrice {
 	
 	public static final String PATH_DIR = "tmp/eod/price";
 	
-	private static final long   MIN_SLEEP_INTERVAL = 800; // 800 milliseconds = 0.8 sec
-	private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
-
 	public static final class UpdateProviderGoogle implements UpdateProvider {
+		private static final long   MIN_SLEEP_INTERVAL = 600; // 600 milliseconds = 0.6 sec
+		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
+
+		public Pause getPause() {
+			return PAUSE;
+		}
+		
 		public String getRootPath() {
 			return PATH_DIR;
 		}
@@ -155,6 +159,13 @@ public class UpdatePrice {
 	}
 	
 	public static final class UpdateProviderYahoo implements UpdateProvider {
+		private static final long   MIN_SLEEP_INTERVAL = 600; // 600 milliseconds = 0.6 sec
+		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
+
+		public Pause getPause() {
+			return PAUSE;
+		}
+
 		public String getName() {
 			return YAHOO;
 		}
@@ -337,7 +348,9 @@ public class UpdatePrice {
 			int symbolSetSize = symbolSet.size();
 			int showInterval = (symbolSetSize < 100) ? 1 : 100;
 			
-			PAUSE.reset();
+			Pause pause = updateProvider.getPause();
+			logger.info("{}", pause);
+			pause.reset();
 						
 			for(String symbol: symbolSet) {
 				int outputCount = count / showInterval;
@@ -354,7 +367,7 @@ public class UpdatePrice {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
-						PAUSE.sleep();
+						pause.sleep();
 						if (updateProvider.updateFile(symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 							countUpdate++;
@@ -368,7 +381,7 @@ public class UpdatePrice {
 						countSkip++;
 					}
 				} else {
-					PAUSE.sleep();
+					pause.sleep();
 					if (updateProvider.updateFile(symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 						countNew++;

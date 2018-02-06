@@ -24,6 +24,9 @@ public class UpdatePrice {
 	
 	public static final String PATH_DIR = "tmp/eod/price";
 	
+	private static final long   MIN_SLEEP_INTERVAL = 800; // 800 milliseconds = 0.8 sec
+	private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
+
 	public static final class UpdateProviderGoogle implements UpdateProvider {
 		public String getRootPath() {
 			return PATH_DIR;
@@ -48,9 +51,6 @@ public class UpdatePrice {
 			return updateFile(stock.exchange, stock.symbol, stock.symbolGoogle, newFile, dateFirst, dateLast);
 		}
 		
-		private static final long MIN_SLEEP_INTERVAL = 500; // 500 milliseconds = 0.5 sec
-		private static final Pause PAUSE = Pause.getInstance(MIN_SLEEP_INTERVAL);
-
 		public boolean updateFile(String exch, String symbol, String symbolURL, boolean newFile, LocalDate dateFirst, LocalDate dateLast) {
 			File file = getFile(symbol);
 			
@@ -66,7 +66,6 @@ public class UpdatePrice {
 			//     http://finance.google.com/finance/historical?cid=702671128483068&startdate=Nov+22%2C+2016&enddate=Nov+21%2C+2017&output=csv
 			String url = String.format("https://finance.google.com/finance/historical?q=%s:%s&startdate=%s&enddate=%s&output=csv", exch, symbolURL, dateFrom, dateTo);
 
-			PAUSE.sleep();
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {
 				// cannot get content
@@ -338,6 +337,8 @@ public class UpdatePrice {
 			int symbolSetSize = symbolSet.size();
 			int showInterval = (symbolSetSize < 100) ? 1 : 100;
 			
+			PAUSE.reset();
+						
 			for(String symbol: symbolSet) {
 				int outputCount = count / showInterval;
 				boolean showOutput;
@@ -353,6 +354,7 @@ public class UpdatePrice {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
+						PAUSE.sleep();
 						if (updateProvider.updateFile(symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 							countUpdate++;
@@ -366,6 +368,7 @@ public class UpdatePrice {
 						countSkip++;
 					}
 				} else {
+					PAUSE.sleep();
 					if (updateProvider.updateFile(symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
 						countNew++;

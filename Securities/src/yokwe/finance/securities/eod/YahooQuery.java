@@ -18,7 +18,6 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.Pause;
 
 public class YahooQuery {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(YahooQuery.class);
@@ -36,11 +35,7 @@ public class YahooQuery {
 	private static final int    MAX_RETRY_COUNT   = 10;
 	private static final String HEADER_SET_COOKIE = "Set-Cookie";
 	private static final String PATTERN_CRUMB     = "CrumbStore\\\":\\{\"crumb\":\\\"([^\"]+)\\\"\\}";
-	
-	private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
-	private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
-
-	
+		
 	private String cookie;
 	private String crumb;
 	
@@ -69,7 +64,6 @@ public class YahooQuery {
 			httpGet.setHeader("User-Agent", "Mozilla");
 			httpGet.setHeader("Cookie", cookie);
 			
-			PAUSE.sleep();
 			try (CloseableHttpClient httpClient = HttpClients.createDefault();
 				CloseableHttpResponse response = httpClient.execute(httpGet)) {
 				final int code = response.getStatusLine().getStatusCode();

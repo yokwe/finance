@@ -17,6 +17,11 @@ public class Pause {
 		this.nextPause = time + pauseTime;
 	}
 	
+	@Override
+	public String toString() {
+		return String.format("Pause %d", pauseTime);
+	}
+	
 	public void reset() {
 		long time = System.currentTimeMillis();
 		

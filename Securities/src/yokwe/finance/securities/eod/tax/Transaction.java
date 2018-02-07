@@ -215,7 +215,8 @@ public class Transaction implements Comparable<Transaction> {
 				}
 				// TODO use "NAME CHG" and "MERGER" after everything works as expected.
 				case "*NAME CHG":
-				case "*MERGER": {
+				case "*MERGER":
+				case "*REV SPLIT": {
 					Activity nextActivity = iterator.next();
 
 					// Sanity check

@@ -40,6 +40,9 @@ public class UnrealizedGain extends Sheet {
 	@NumberFormat(SpreadSheet.FORMAT_USD)
 	public double unrealizedGain; // unrealized gain or loss
 	
+	@ColumnName("時価総額")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
+	public double unrealizedValue;   // cash + stockValue
 
 	public UnrealizedGain(String date, double fund, double cash, double realizedGain,
 			double stockCost, double stockValue, double stockUnrealizedGain, double unrealizedGain) {
@@ -52,6 +55,8 @@ public class UnrealizedGain extends Sheet {
 		this.stockValue          = stockValue;
 		this.stockUnrealizedGain = stockUnrealizedGain;
 		this.unrealizedGain      = unrealizedGain;
+		
+		this.unrealizedValue     = cash + stockValue;
 	}
 
 	@Override

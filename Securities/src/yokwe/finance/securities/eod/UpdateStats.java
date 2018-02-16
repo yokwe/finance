@@ -190,6 +190,34 @@ public class UpdateStats {
 					logger.warn("{}  old    {}", String.format("%4d / %4d",  count, total), String.format("%-8s %s", symbol, date));
 				}
 			}
+			
+			// Ignore very small price stock
+			{
+				double minimumPrice = 0.01;
+				boolean tooSmall = false;
+				for(Price price: priceList) {
+					if (price.open <= minimumPrice) {
+						tooSmall = true;
+						break;
+					}
+					if (price.high <= minimumPrice) {
+						tooSmall = true;
+						break;
+					}
+					if (price.low <= minimumPrice) {
+						tooSmall = true;
+						break;
+					}
+					if (price.close <= minimumPrice) {
+						tooSmall = true;
+						break;
+					}
+				}
+				if (tooSmall) {
+					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE", symbol));
+					continue;
+				}
+			}
 						
 			// Ignore penny stock
 //			{

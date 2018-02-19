@@ -238,17 +238,18 @@ public class Report {
 			List<Transaction> transactionList = Transaction.getTransactionList(docActivity, false);
 			
 			// key is date
-			Map<String, Dividend> dividendMap = getDividendMap(transactionList);
+//			Map<String, Dividend> dividendMap = getDividendMap(transactionList);
 
 			// key is date
-			Map<String, Interest> interestMap = getInterestMap(transactionList);
+//			Map<String, Interest> interestMap = getInterestMap(transactionList);
 			
 			// key is symbol
-			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
+//			Map<String, BuySell> buySellMap = BuySell.getBuySellMap(transactionList);
+			BuySell.getBuySellMap(transactionList); // Need to call getBuySellMap to build Transfer record
 			
 			// key is date-symbol
-			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
-			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
+//			Map<String, TransferSummary> summaryMap = getSummaryMap(buySellMap);
+//			Map<String, List<TransferDetail>> detailMap = getDetailMap(buySellMap);
 			
 			// account activity list
 			List<Account> accountList = getAccountList(transactionList);
@@ -279,92 +280,92 @@ public class Report {
 					}
 				}
 
-				// Detail
-				{
-					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
-					for(String key: detailMap.keySet()) {
-						if (!key.startsWith(targetYear)) continue;
-						
-						List<TransferDetail> aList = detailMap.get(key);
-						if (aList.isEmpty()) continue;
-						
-						String symbol = aList.get(0).symbol;
-						if (!workMap.containsKey(symbol)) {
-							workMap.put(symbol, new ArrayList<>());
-						}
-						workMap.get(symbol).addAll(aList);
-					}
-					
-					List<TransferDetail> transferList = new ArrayList<>();
-					for(String key: workMap.keySet()) {
-						transferList.addAll(workMap.get(key));
-					}
-					
-					if (!transferList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(TransferDetail.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, transferList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
+//				// Detail
+//				{
+//					Map<String, List<TransferDetail>> workMap = new TreeMap<>();
+//					for(String key: detailMap.keySet()) {
+//						if (!key.startsWith(targetYear)) continue;
+//						
+//						List<TransferDetail> aList = detailMap.get(key);
+//						if (aList.isEmpty()) continue;
+//						
+//						String symbol = aList.get(0).symbol;
+//						if (!workMap.containsKey(symbol)) {
+//							workMap.put(symbol, new ArrayList<>());
+//						}
+//						workMap.get(symbol).addAll(aList);
+//					}
+//					
+//					List<TransferDetail> transferList = new ArrayList<>();
+//					for(String key: workMap.keySet()) {
+//						transferList.addAll(workMap.get(key));
+//					}
+//					
+//					if (!transferList.isEmpty()) {
+//						String sheetName = Sheet.getSheetName(TransferDetail.class);
+//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+//						Sheet.fillSheet(docSave, transferList);
+//						
+//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+//						logger.info("sheet {}", newSheetName);
+//						docSave.renameSheet(sheetName, newSheetName);
+//					}
+//				}
 
-				// Summary
-				{
-					List<TransferSummary> summaryList = new ArrayList<>();
-					for(String key: summaryMap.keySet()) {
-						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
-					}
-					// Sort with symbol name and dateSell
-					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
-					if (!summaryList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(TransferSummary.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, summaryList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
+//				// Summary
+//				{
+//					List<TransferSummary> summaryList = new ArrayList<>();
+//					for(String key: summaryMap.keySet()) {
+//						if (key.startsWith(targetYear)) summaryList.add(summaryMap.get(key));
+//					}
+//					// Sort with symbol name and dateSell
+//					summaryList.sort((a, b) -> (a.symbol.equals(b.symbol)) ? a.dateSell.compareTo(b.dateSell) : a.symbol.compareTo(b.symbol));
+//					if (!summaryList.isEmpty()) {
+//						String sheetName = Sheet.getSheetName(TransferSummary.class);
+//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+//						Sheet.fillSheet(docSave, summaryList);
+//						
+//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+//						logger.info("sheet {}", newSheetName);
+//						docSave.renameSheet(sheetName, newSheetName);
+//					}
+//				}
 				
-				// Dividend
-				{
-					List<Dividend> dividendList = new ArrayList<>();
-					for(String key: dividendMap.keySet()) {
-						if (key.startsWith(targetYear)) dividendList.add(dividendMap.get(key));
-					}
-
-					if (!dividendList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Dividend.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, dividendList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
+//				// Dividend
+//				{
+//					List<Dividend> dividendList = new ArrayList<>();
+//					for(String key: dividendMap.keySet()) {
+//						if (key.startsWith(targetYear)) dividendList.add(dividendMap.get(key));
+//					}
+//
+//					if (!dividendList.isEmpty()) {
+//						String sheetName = Sheet.getSheetName(Dividend.class);
+//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+//						Sheet.fillSheet(docSave, dividendList);
+//						
+//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+//						logger.info("sheet {}", newSheetName);
+//						docSave.renameSheet(sheetName, newSheetName);
+//					}
+//				}
 				
-				// Interest
-				{
-					List<Interest> interestList = new ArrayList<>();
-					for(String key: interestMap.keySet()) {
-						if (key.startsWith(targetYear)) interestList.add(interestMap.get(key));
-					}
-
-					if (!interestList.isEmpty()) {
-						String sheetName = Sheet.getSheetName(Interest.class);
-						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-						Sheet.fillSheet(docSave, interestList);
-						
-						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
-						logger.info("sheet {}", newSheetName);
-						docSave.renameSheet(sheetName, newSheetName);
-					}
-				}
+//				// Interest
+//				{
+//					List<Interest> interestList = new ArrayList<>();
+//					for(String key: interestMap.keySet()) {
+//						if (key.startsWith(targetYear)) interestList.add(interestMap.get(key));
+//					}
+//
+//					if (!interestList.isEmpty()) {
+//						String sheetName = Sheet.getSheetName(Interest.class);
+//						docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+//						Sheet.fillSheet(docSave, interestList);
+//						
+//						String newSheetName = String.format("%s-%s",  targetYear, sheetName);
+//						logger.info("sheet {}", newSheetName);
+//						docSave.renameSheet(sheetName, newSheetName);
+//					}
+//				}
 			}
 			
 			{

@@ -159,7 +159,7 @@ public class UpdatePrice {
 	}
 	
 	public static final class UpdateProviderYahoo implements UpdateProvider {
-		private static final long   MIN_SLEEP_INTERVAL = 600; // 600 milliseconds = 0.6 sec
+		private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
 		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
 
 		public Pause getPause() {

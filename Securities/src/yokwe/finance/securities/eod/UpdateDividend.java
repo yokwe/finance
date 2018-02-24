@@ -19,7 +19,7 @@ public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
 	
 	public static class UpdateProviderYahoo implements UpdateProvider {
-		private static final long   MIN_SLEEP_INTERVAL = 800; // 800 milliseconds = 0.8 sec
+		private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
 		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
 
 		public Pause getPause() {
@@ -205,6 +205,11 @@ public class UpdateDividend {
 			int showInterval = 100;
 			boolean showOutput;
 			int lastOutputCount = -1;
+			
+			Pause pause = updateProvider.getPause();
+			logger.info("{}", pause);
+			pause.reset();
+
 			for(Stock stock: stockCollection) {
 				String symbol = stock.symbol;
 
@@ -221,6 +226,7 @@ public class UpdateDividend {
 				File file = updateProvider.getFile(symbol);
 				if (file.exists()) {
 					if (needUpdate(file)) {
+						pause.sleep();
 						if (updateProvider.updateFile(symbol, false)) {
 							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, total), symbol);
 							countUpdate++;
@@ -233,6 +239,7 @@ public class UpdateDividend {
 						countSkip++;
 					}
 				} else {
+					pause.sleep();
 					if (updateProvider.updateFile(symbol, true)) {
 						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, total), symbol);
 						countNew++;

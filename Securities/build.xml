@@ -182,14 +182,6 @@
 		</java>
 	</target>
 	
-        <target name="run-tax-report">
-                <java classname="yokwe.finance.securities.tax.Report" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                </java>
-        </target>
-
 	<!-- Quand -->
         <target name="run-databaseList">
                 <java classname="yokwe.finance.securities.quandl.DatabaseList" fork="true">

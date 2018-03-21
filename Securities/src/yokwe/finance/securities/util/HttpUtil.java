@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -20,6 +22,8 @@ public class HttpUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 	
 	private static final String USER_AGENT = "Mozilla";
+	
+	private static final CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build()).build();
 
 	public static String downloadAsString(String url) {
 		return downloadAsString(url, null);
@@ -34,8 +38,7 @@ public class HttpUtil {
 
 		int retryCount = 0;
 		for(;;) {
-			try (CloseableHttpClient httpClient = HttpClients.createSystem();
-					CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 					final int code = response.getStatusLine().getStatusCode();
 					final String reasonPhrase = response.getStatusLine().getReasonPhrase();
 					

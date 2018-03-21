@@ -126,8 +126,11 @@ public class Position {
 		}
 		return ret;
 	}
+	public static List<Position> getPositionList(String date) {
+		return dateMap.get(date);
+	}
 	public static double getUnrealizedValue(String date) {
-		return getUnrealizedValue(date, dateMap.get(date));
+		return getUnrealizedValue(date, getPositionList(date));
 	}
 
 }

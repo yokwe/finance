@@ -1,5 +1,7 @@
 package yokwe.finance.securities.util;
 
+import java.util.Random;
+
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
@@ -10,11 +12,18 @@ public class Pause {
 	private long pauseTime;
 	private long nextPause;
 	
-	private Pause(long pauseTime) {
+	private Random random = new Random();
+	private double jitter; // jitter is ratio [0..1) to waitTime
+	
+	private Pause(long pauseTime, double jitter) {
 		long time = System.currentTimeMillis();
 
 		this.pauseTime = pauseTime;
 		this.nextPause = time + pauseTime;
+		this.jitter = jitter;
+	}
+	private Pause(long pauseTime) {
+		this(pauseTime, 0);
 	}
 	
 	@Override
@@ -30,6 +39,7 @@ public class Pause {
 	public void sleep() {
 		long time = System.currentTimeMillis();
 		long waitTime = nextPause - time;
+		waitTime = Math.round(waitTime * jitter * (random.nextDouble() - 0.5));
 		
 		if (0 < waitTime) {
 //			logger.debug("sleep waitTime = {}", waitTime);
@@ -51,5 +61,8 @@ public class Pause {
 	
 	public static Pause getInstance(long pauseTime) {
 		return new Pause(pauseTime);
+	}
+	public static Pause getInstance(long pauseTime, double displacement) {
+		return new Pause(pauseTime, displacement);
 	}
 }

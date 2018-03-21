@@ -6,6 +6,7 @@ import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -161,8 +162,9 @@ public class UpdatePrice {
 	}
 	
 	public static final class UpdateProviderYahoo implements UpdateProvider {
-		private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
-		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL);
+		private static final long   PAUSE_INTERVAL = 1000; // 1000 milliseconds = 1 sec
+		private static final double PAUSE_JITTER   = 0.2;  // 0.2 = 20%
+		private static final Pause  PAUSE          = Pause.getInstance(PAUSE_INTERVAL, PAUSE_JITTER);
 
 		public Pause getPause() {
 			return PAUSE;
@@ -252,9 +254,9 @@ public class UpdatePrice {
 	}
 	
 	public static final class UpdateProviderIEX implements UpdateProvider {
-		private static final long   MIN_SLEEP_INTERVAL = 1000; // 1000 milliseconds = 1 sec
-		private static final Pause  PAUSE              = Pause.getInstance(MIN_SLEEP_INTERVAL, 0.2);
-		
+		private static final long   PAUSE_INTERVAL = 1000; // 1000 milliseconds = 1 sec
+		private static final double PAUSE_JITTER   = 0.2;  // 0.2 = 20%
+		private static final Pause  PAUSE          = Pause.getInstance(PAUSE_INTERVAL, PAUSE_JITTER);
 		
 		private static interface UpdatePriceList {
 			public void update(List<Price> priceList, String symbol, String line);
@@ -670,6 +672,9 @@ public class UpdatePrice {
 		UpdateProvider updateProvider = getProvider(providerName);
 		logger.info("UpdateProvider {}", updateProvider.getName());
 		
+		int countUnknown    = 0;
+		int countNoDateLast = 0;
+		
 		{
 			File dir = updateProvider.getFile("DUMMY").getParentFile();
 			if (!dir.exists()) {
@@ -682,16 +687,44 @@ public class UpdatePrice {
 			}
 			
 			// Remove unknown file
-			File[] fileList = dir.listFiles();
-			for(File file: fileList) {
-				String name = file.getName();
-				if (name.endsWith(".csv")) {
+			{
+				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
+				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
+				for(File file: fileList) {
+					String name = file.getName();
 					String symbol = name.replace(".csv", "");
 					if (StockUtil.contains(symbol)) continue;
+					
+					countUnknown++;
+					logger.info("{}  delete unknown file {}", String.format("%4d",  countUnknown), name);
+					file.delete();
 				}
+
+			}
+			
+			// Remove file that contains no DATE_LAST
+			{
+				String dateLast = UpdateProvider.DATE_LAST.toString();
+				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
+				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
 				
-				logger.info("delete unknown file {}", name);
-				file.delete();
+				for(File file: fileList) {
+					String name = file.getName();
+
+					boolean hasDateLast = false;
+					List<Price> priceList = Price.load(file);
+					for(Price price: priceList) {
+						if (price.date.equals(dateLast)) {
+							hasDateLast = true;
+							break;
+						}
+					}
+					if (hasDateLast) continue;
+					
+					countNoDateLast++;
+					logger.info("{} delete file contains no {}  {}", String.format("%4d",  countNoDateLast), dateLast, name);
+					file.delete();
+				}
 			}
 		}
 		
@@ -700,6 +733,10 @@ public class UpdatePrice {
 			StockUtil.getAll().stream().forEach(e -> stockMap.put(e.symbol, e));
 			updateFile(updateProvider, stockMap);
 		}
+		
+		logger.info("===========");
+		logger.info("unknown    {}", String.format("%4d", countUnknown));
+		logger.info("noDateLast {}", String.format("%4d", countNoDateLast));
 		
 		logger.info("STOP");
 	}

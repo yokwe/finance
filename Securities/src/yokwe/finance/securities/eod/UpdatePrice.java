@@ -1,6 +1,8 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -431,7 +433,14 @@ public class UpdatePrice {
 			
 			// FIXME Assume period is 1 year
 			// https://api.iextrading.com/1.0/stock/AA/chart/1y?format=csv
-			String url = String.format("https://api.iextrading.com/1.0/stock/%s/chart/1y?format=csv",symbol);
+			String encodedSymbol;
+			try {
+				encodedSymbol = URLEncoder.encode(symbol, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				logger.error("UnsupportedEncodingException {}", e.toString());
+				throw new SecuritiesException("UnsupportedEncodingException");
+			}
+			String url = String.format("https://api.iextrading.com/1.0/stock/%s/chart/1y?format=csv",encodedSymbol);
 
 			String content = HttpUtil.downloadAsString(url);
 			if (content == null) {

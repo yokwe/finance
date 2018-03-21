@@ -62,7 +62,7 @@ public class Pause {
 	public static Pause getInstance(long pauseTime) {
 		return new Pause(pauseTime);
 	}
-	public static Pause getInstance(long pauseTime, double displacement) {
-		return new Pause(pauseTime, displacement);
+	public static Pause getInstance(long pauseTime, double jitter) {
+		return new Pause(pauseTime, jitter);
 	}
 }

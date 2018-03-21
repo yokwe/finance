@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -137,6 +139,7 @@ public class YahooQuery {
 		}
 	}
 
+	private static final CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build()).build();
 	
 	private void init() {
 		final String urlHistoryYahoo = "https://finance.yahoo.com/lookup?s=YHOO";
@@ -144,8 +147,7 @@ public class YahooQuery {
 		HttpGet httpGet = new HttpGet(urlHistoryYahoo);
 		httpGet.setHeader("User-Agent", "Mozilla");
 		
-		try (CloseableHttpClient httpClient = HttpClients.createDefault();
-			CloseableHttpResponse response = httpClient.execute(httpGet)) {
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			final int code = response.getStatusLine().getStatusCode();
 //			logger.info("code {}", code);
 			

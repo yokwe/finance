@@ -67,24 +67,24 @@ public class MergePrice {
 			
 			File file = Price.getFile(symbol);
 			
-			File priceIEX   = priceIEXProvider.getFile(symbol);
-			File priceYahoo = priceYahooProvider.getFile(symbol);
+			File priceIEX      = priceIEXProvider.getFile(symbol);
+			File priceYahoo    = priceYahooProvider.getFile(symbol);
 			
 			List<Price> priceList = null;
 			
 			if (priceIEX.exists() && priceYahoo.exists()) {
 				// both
-				List<Price> priceListIEX   = Price.load(priceIEX);
-				List<Price> priceListYahoo = Price.load(priceYahoo);
+				List<Price> priceListIEX    = Price.load(priceIEX);
+				List<Price> priceListYahoo  = Price.load(priceYahoo);
 				
 				// First record is latest.
-				String dateIEX   = priceListIEX.get(0).date;
-				String dateYahoo = priceListYahoo.get(0).date;
+				String dateIEX    = priceListIEX.get(0).date;
+				String dateYahoo  = priceListYahoo.get(0).date;
 				
 				if (dateIEX.equals(dateLast) && dateYahoo.equals(dateLast)) {
 					// both
-					int priceIEXSize   = priceListIEX.size();
-					int priceYahooSize = priceListYahoo.size();
+					int priceIEXSize    = priceListIEX.size();
+					int priceYahooSize  = priceListYahoo.size();
 					
 					if (priceYahooSize <= priceIEXSize) { // prefer yahoo over iex
 						priceList = priceListIEX;

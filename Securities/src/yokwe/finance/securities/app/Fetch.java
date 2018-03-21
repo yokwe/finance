@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.CookieSpecs;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -26,7 +28,7 @@ import yokwe.finance.securities.SecuritiesException;
 public class Fetch {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Fetch.class);
 
-	protected static final CloseableHttpClient httpClient = HttpClients.createDefault();
+	protected static final CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build()).build();
 	
 	public static void download(String url, String fileName, List<String> messageList) {
 		// In case url contains special char, replace like URL encoding.

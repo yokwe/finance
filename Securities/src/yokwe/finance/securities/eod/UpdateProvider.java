@@ -16,6 +16,7 @@ public interface UpdateProvider {
 	
 	public static final String    GOOGLE        = "google";
 	public static final String    YAHOO         = "yahoo";
+	public static final String    IEX           = "iex";
 
 	public String  getName();
 	public File    getFile(String symbol);

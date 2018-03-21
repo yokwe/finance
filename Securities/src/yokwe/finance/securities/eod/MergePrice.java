@@ -39,15 +39,15 @@ public class MergePrice {
 			}
 		}
 
-		UpdateProvider priceGoogleProvider   = UpdatePrice.getProvider(UpdateProvider.GOOGLE);
-		UpdateProvider priceYahooProvider    = UpdatePrice.getProvider(UpdateProvider.YAHOO);
+		UpdateProvider priceIEXProvider   = UpdatePrice.getProvider(UpdateProvider.IEX);
+		UpdateProvider priceYahooProvider = UpdatePrice.getProvider(UpdateProvider.YAHOO);
 		
 		// Create price file for delisted stock
 		List<String> symbolList = new ArrayList<>(StockUtil.getSymbolList());		
 		
 		int total       = symbolList.size();
 		int count       = 0;
-		int countGoogle = 0;
+		int countIEX    = 0;
 		int countYahoo  = 0;
 		
 		int lastOutputCount = -1;
@@ -67,57 +67,57 @@ public class MergePrice {
 			
 			File file = Price.getFile(symbol);
 			
-			File priceGoogle   = priceGoogleProvider.getFile(symbol);
-			File priceYahoo    = priceYahooProvider.getFile(symbol);
+			File priceIEX   = priceIEXProvider.getFile(symbol);
+			File priceYahoo = priceYahooProvider.getFile(symbol);
 			
 			List<Price> priceList = null;
 			
-			if (priceGoogle.exists() && priceYahoo.exists()) {
+			if (priceIEX.exists() && priceYahoo.exists()) {
 				// both
-				List<Price> priceListGoogle = Price.load(priceGoogle);
-				List<Price> priceListYahoo  = Price.load(priceYahoo);
+				List<Price> priceListIEX   = Price.load(priceIEX);
+				List<Price> priceListYahoo = Price.load(priceYahoo);
 				
 				// First record is latest.
-				String dateGoogle = priceListGoogle.get(0).date;
-				String dateYahoo  = priceListYahoo.get(0).date;
+				String dateIEX   = priceListIEX.get(0).date;
+				String dateYahoo = priceListYahoo.get(0).date;
 				
-				if (dateGoogle.equals(dateLast) && dateYahoo.equals(dateLast)) {
+				if (dateIEX.equals(dateLast) && dateYahoo.equals(dateLast)) {
 					// both
-					int priceGoogleSize = priceListGoogle.size();
-					int priceYahooSize  = priceListYahoo.size();
+					int priceIEXSize   = priceListIEX.size();
+					int priceYahooSize = priceListYahoo.size();
 					
-					if (priceYahooSize <= priceGoogleSize) { // prefer google over google
-						priceList = priceListGoogle;
-						countGoogle++;
+					if (priceYahooSize <= priceIEXSize) { // prefer yahoo over iex
+						priceList = priceListIEX;
+						countIEX++;
 					} else {
 						priceList = priceListYahoo;
 						countYahoo++;
 					}
-				} else if (dateGoogle.equals(dateLast)) {
-					// google
-					priceList = priceListGoogle;
-					countGoogle++;
+				} else if (dateIEX.equals(dateLast)) {
+					// iex
+					priceList = priceListIEX;
+					countIEX++;
 				} else if (dateYahoo.equals(dateLast)) {
 					// yahoo
 					priceList = priceListYahoo;
 					countYahoo++;
 				} else {
 					// none -- could be happen for discontinued stock
-					int priceGoogleSize = priceListGoogle.size();
+					int priceIEXSize = priceListIEX.size();
 					int priceYahooSize  = priceListYahoo.size();
 					
-					if (priceGoogleSize < priceYahooSize) {
+					if (priceIEXSize < priceYahooSize) {
 						priceList = priceListYahoo;
 						countYahoo++;
 					} else {
-						priceList = priceListGoogle;
-						countGoogle++;
+						priceList = priceListIEX;
+						countIEX++;
 					}
 				}
-			} else if (priceGoogle.exists()) {
-				// only google
-				priceList = Price.load(priceGoogle);
-				countGoogle++;
+			} else if (priceIEX.exists()) {
+				// only iex
+				priceList = Price.load(priceIEX);
+				countIEX++;
 			} else if (priceYahoo.exists()) {
 				// only yahoo
 				priceList = Price.load(priceYahoo);
@@ -162,8 +162,8 @@ public class MergePrice {
 		
 		logger.info("total  {}", String.format("%4d", total));
 		logger.info("count  {}", String.format("%4d", count));
+		logger.info("iex    {}", String.format("%4d", countIEX));
 		logger.info("yahoo  {}", String.format("%4d", countYahoo));
-		logger.info("google {}", String.format("%4d", countGoogle));
 		
 		// Copy delisted files from UpdateDelisted.PATH_DIR
 		{

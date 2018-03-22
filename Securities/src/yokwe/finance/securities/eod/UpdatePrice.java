@@ -519,10 +519,10 @@ public class UpdatePrice {
 
 	private static boolean needUpdate(File file) {
 		// Don't update file after gracePeriod
-		if (UpdateProvider.GRACE_PERIOD < file.lastModified()) {
+//		if (UpdateProvider.GRACE_PERIOD < file.lastModified()) {
 //			logger.info("Recently updated {}", file.getName());
-			return false;
-		}
+//			return false;
+//		}
 			
 		String content = FileUtil.read(file);
 		String[] lines = content.split("\n");
@@ -673,7 +673,7 @@ public class UpdatePrice {
 		logger.info("UpdateProvider {}", updateProvider.getName());
 		
 		int countUnknown    = 0;
-		int countNoDateLast = 0;
+//		int countNoDateLast = 0;
 		
 		{
 			File dir = updateProvider.getFile("DUMMY").getParentFile();
@@ -702,30 +702,30 @@ public class UpdatePrice {
 
 			}
 			
-			// Remove file that contains no DATE_LAST
-			{
-				String dateLast = UpdateProvider.DATE_LAST.toString();
-				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
-				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
-				
-				for(File file: fileList) {
-					String name = file.getName();
-
-					boolean hasDateLast = false;
-					List<Price> priceList = Price.load(file);
-					for(Price price: priceList) {
-						if (price.date.equals(dateLast)) {
-							hasDateLast = true;
-							break;
-						}
-					}
-					if (hasDateLast) continue;
-					
-					countNoDateLast++;
-					logger.info("{} delete file contains no {}  {}", String.format("%4d",  countNoDateLast), dateLast, name);
-					file.delete();
-				}
-			}
+//			// Remove file that contains no DATE_LAST
+//			{
+//				String dateLast = UpdateProvider.DATE_LAST.toString();
+//				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
+//				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
+//				
+//				for(File file: fileList) {
+//					String name = file.getName();
+//
+//					boolean hasDateLast = false;
+//					List<Price> priceList = Price.load(file);
+//					for(Price price: priceList) {
+//						if (price.date.equals(dateLast)) {
+//							hasDateLast = true;
+//							break;
+//						}
+//					}
+//					if (hasDateLast) continue;
+//					
+//					countNoDateLast++;
+//					logger.info("{} delete file contains no {}  {}", String.format("%4d",  countNoDateLast), dateLast, name);
+//					file.delete();
+//				}
+//			}
 		}
 		
 		{
@@ -736,7 +736,7 @@ public class UpdatePrice {
 		
 		logger.info("===========");
 		logger.info("unknown    {}", String.format("%4d", countUnknown));
-		logger.info("noDateLast {}", String.format("%4d", countNoDateLast));
+//		logger.info("noDateLast {}", String.format("%4d", countNoDateLast));
 		
 		logger.info("STOP");
 	}

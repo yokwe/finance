@@ -161,7 +161,10 @@ update-yahoo-dividend: prepare-update
 fetch-mizuho:
 	mkdir -p ${DIR_FETCH_MIZUHO}
 	rm    -f ${DIR_FETCH_MIZUHO}/*
-	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+# OLD-URL
+#	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+# NEW-URL
+	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate_fee/market/csv/quote.csv
 	
 update-mizuho:
 	echo "DATE,USD,GBP,EUR,AUD,NZD" >${DIR_DATABASE}/mizuho-header.csv
@@ -223,7 +226,10 @@ update-stock:
 fetch-forex:
 	mkdir -p ${DIR_FETCH_MIZUHO}
 	rm    -f ${DIR_FETCH_MIZUHO}/*
-	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+# OLD-URL
+#	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
+# NEW-URL
+	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate_fee/market/csv/quote.csv
 
 update-forex:
 	ant run-eod-update-forex

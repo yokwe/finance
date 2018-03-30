@@ -87,7 +87,7 @@ fetch-nasdaq:
 	mkdir -p ${DIR_FETCH_NASDAQ}
 	rm    -f ${DIR_FETCH_NASDAQ}/*
 	wget            -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt        ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
-	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'http://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
+	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'https://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
 	
 update-nasdaq:
 	ant run-update-nasdaq
@@ -212,9 +212,9 @@ fetch-sp500:
 
 fetch-stock:
 	mkdir -p ${DIR_FETCH_NASDAQ}
-	rm    -f ${DIR_FETCH_NASDAQ}/*
+#	rm    -f ${DIR_FETCH_NASDAQ}/*
 	wget            -nv -O ${DIR_FETCH_NASDAQ}/nasdaqtraded.txt        ftp://ftp.nasdaqtrader.com/SymbolDirectory/nasdaqtraded.txt
-	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'http://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
+#	wget -U Firefox -nv -O ${DIR_FETCH_NASDAQ}/companies-by-region.csv 'https://www.nasdaq.com/screening/companies-by-region.aspx?&render=download'
 
 update-stock:
 	ant run-eod-update-stock
@@ -225,7 +225,7 @@ update-stock:
 #
 fetch-forex:
 	mkdir -p ${DIR_FETCH_MIZUHO}
-	rm    -f ${DIR_FETCH_MIZUHO}/*
+#	rm    -f ${DIR_FETCH_MIZUHO}/*
 # OLD-URL
 #	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
 # NEW-URL

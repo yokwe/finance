@@ -187,6 +187,9 @@ public class Transaction implements Comparable<Transaction> {
 						logger.error("Market is closed - date -  {}", activity);
 						throw new SecuritiesException("Market is closed");
 					}
+				} else {
+					logger.error("Null date - {}", activity);
+					throw new SecuritiesException("Null date");
 				}
 				if (activity.tradeDate != null && 0 < activity.tradeDate.length()) {
 					String date = activity.tradeDate;
@@ -327,6 +330,10 @@ public class Transaction implements Comparable<Transaction> {
 						logger.error("tradeDate == null");
 						throw new SecuritiesException("Unexpected");
 					}
+					if (activity.date.compareTo(activity.tradeDate) <= 0) {
+						logger.error("Wrong tradeDate  {}", activity);
+						throw new SecuritiesException("Wrong tradeDate");
+					}
 					if (activity.quantity <= 0) {
 						logger.error("quantity <= 0  {}", activity.quantity);
 						throw new SecuritiesException("Unexpected");
@@ -435,6 +442,23 @@ public class Transaction implements Comparable<Transaction> {
 					if (activity.tradeDate == null) {
 						logger.error("tradeDate == null");
 						throw new SecuritiesException("Unexpected");
+					}
+					switch (activity.transaction) {
+					case "SOLD":
+						if (activity.date.compareTo(activity.tradeDate) <= 0) {
+							logger.error("Wrong tradeDate  {}", activity);
+							throw new SecuritiesException("Wrong tradeDate");
+						}
+						break;
+					case "REDEEMED":
+						if (activity.date.compareTo(activity.tradeDate) != 0) {
+							logger.error("Wrong tradeDate  {}", activity);
+							throw new SecuritiesException("Wrong tradeDate");
+						}
+						break;
+					default:
+						logger.error("Unexpected - transaction {}", activity);
+						throw new SecuritiesException("Unexpected - transaction");
 					}
 					if (activity.quantity <= 0) {
 						logger.error("quantity <= 0  {}", activity.quantity);

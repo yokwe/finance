@@ -5,9 +5,9 @@
 LOGBACK_VERSION=1.1.3
 SLF4J_VERSION=1.7.12
 SQLITE_JDBC_VERSION=3.8.11.1
-COMMONS_CSV_VERSION=1.4
-HTTPCOMPONENTS_CLIENT_VERSION=4.5
-COMMONS_MATH3_VERSION=3.5
+COMMONS_CSV_VERSION=1.5
+HTTPCOMPONENTS_CLIENT_VERSION=4.5.5
+COMMONS_MATH3_VERSION=3.6.1
 
 
 all: fetch update
@@ -84,7 +84,7 @@ update-httpcomponents-client:
 	cd tmp/httpcomponents-client-${HTTPCOMPONENTS_CLIENT_VERSION}; \
 	  cp -p \
 	    lib/httpclient-${HTTPCOMPONENTS_CLIENT_VERSION}.jar \
-	    lib/httpcore-4.4.1.jar \
+	    lib/httpcore-4.4.9.jar \
 	    lib/commons-logging-1.2.jar \
 	    ../../jar
 
@@ -92,15 +92,15 @@ update-commons-math3:
 	rm -rf tmp/commons-math3-${COMMONS_MATH3_VERSION}
 	rm -rf jar/commons-math3-*
 	cd tmp; unzip commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
-	cd tmp/commons-math3-${COMMONS_MATH3_VERSION}; cp -p commons-math3-3.5.jar ../../jar
+	cd tmp/commons-math3-${COMMONS_MATH3_VERSION}; cp -p commons-math3-${COMMONS_MATH3_VERSION}.jar ../../jar
 
 update-gson:
 	cd tmp/gson; mvn package source:jar javadoc:jar
 	cd tmp/gson; \
 	  cp -p  \
-	    gson/target/gson-2.8.1-SNAPSHOT.jar \
-	    gson/target/gson-2.8.1-SNAPSHOT-javadoc.jar \
-	    gson/target/gson-2.8.1-SNAPSHOT-sources.jar \
+	    gson/target/gson-2.8.5-SNAPSHOT.jar \
+	    gson/target/gson-2.8.5-SNAPSHOT-javadoc.jar \
+	    gson/target/gson-2.8.5-SNAPSHOT-sources.jar \
 	    ../../jar
 
 update-jsonp:

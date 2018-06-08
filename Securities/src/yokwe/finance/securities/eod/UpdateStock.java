@@ -329,7 +329,8 @@ public class UpdateStock {
 			if (status.length() == 0) {
 				status = "N";
 			}
-			if (!status.equals("N")) {
+			// Accept when status is D, E, Q or N
+			if (!(status.equals("D") || status.equals("E") || status.equals("Q") || status.equals("N"))) {
 				logger.info("SKIP status {} {}", status, e.symbol);
 				continue;
 			}

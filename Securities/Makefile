@@ -226,10 +226,9 @@ update-stock:
 fetch-forex:
 	mkdir -p ${DIR_FETCH_MIZUHO}
 #	rm    -f ${DIR_FETCH_MIZUHO}/*
-# OLD-URL
-#	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate/market/csv/quote.csv
-# NEW-URL
-	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv http://www.mizuhobank.co.jp/rate_fee/market/csv/quote.csv
+# From https://www.mizuhobank.co.jp/market/historical.html at 2018-06-19
+# Daily data from 2002-04-01
+	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv https://www.mizuhobank.co.jp/market/csv/quote.csv
 
 update-forex:
 	ant run-eod-update-forex

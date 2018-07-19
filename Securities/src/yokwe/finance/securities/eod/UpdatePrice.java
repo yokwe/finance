@@ -1,6 +1,10 @@
 package yokwe.finance.securities.eod;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +22,8 @@ public class UpdatePrice {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
 	public static final String PATH_DIR = "tmp/eod/price";
+	
+	public static final String PATH_UNKNOWN_DIR = "tmp/eod/price-unknown";
 	
 	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
 	static {
@@ -195,6 +201,7 @@ public class UpdatePrice {
 		{
 			File dir = updateProvider.getFile("DUMMY").getParentFile();
 			if (!dir.exists()) {
+				logger.info("Create directory {}", dir.getPath());
 				dir.mkdirs();
 			} else {
 				if (!dir.isDirectory()) {
@@ -203,8 +210,23 @@ public class UpdatePrice {
 				}
 			}
 			
+			{
+				File unknownDir = new File(PATH_UNKNOWN_DIR);
+				if (!unknownDir.exists()) {
+					logger.info("Create directory {}", unknownDir.getPath());
+					unknownDir.mkdirs();
+				} else {
+					if (!unknownDir.isDirectory()) {
+						logger.info("Not directory {}", unknownDir.getAbsolutePath());
+						throw new SecuritiesException("Not directory");
+					}
+				}
+			}
+			
+			
 			// Remove unknown file
 			{
+				String destFileSuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
 				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
 				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
 				for(File file: fileList) {
@@ -213,8 +235,19 @@ public class UpdatePrice {
 					if (StockUtil.contains(symbol)) continue;
 					
 					countUnknown++;
-					logger.info("{}  delete unknown file {}", String.format("%4d",  countUnknown), name);
-					file.delete();
+					
+					try {
+						File destFile = new File(PATH_UNKNOWN_DIR, String.format("%s-%s", name, destFileSuffix));
+						logger.info("{}  move unknown file {} to {}", String.format("%4d",  countUnknown), file.getPath(), destFile.getPath());
+											
+						// Copy file to new location
+						Files.copy(file.toPath(), destFile.toPath());
+						// Delete file after successful copy
+						file.delete();
+					} catch (IOException e) {
+						logger.error("IOException {}", e.toString());
+						throw new SecuritiesException("IOException");
+					}
 				}
 
 			}

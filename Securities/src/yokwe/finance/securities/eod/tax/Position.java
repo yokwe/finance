@@ -15,7 +15,7 @@ import yokwe.finance.securities.util.DoubleUtil;
 public class Position {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Position.class);
 
-	public static final double COMMISSION = 2.95;
+	public static final double COMMISSION = 3;
 
 	public final String symbol;
 	public final double quantity;

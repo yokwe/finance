@@ -15,8 +15,7 @@ import yokwe.finance.securities.util.DoubleUtil;
 public class Position {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Position.class);
 
-	public static final double COMMISSION = 3;
-	public static final double NO_VALUE   = -1;
+	public static final double COMMISSION = 2.95;
 
 	public final String symbol;
 	public final double quantity;
@@ -91,30 +90,23 @@ public class Position {
 		String symbol   = position.symbol;
 		double quantity = position.quantity;
 		
-		if (PriceUtil.contains(symbol, date)) {
-			double price = PriceUtil.getClose(symbol, date);
-			double value = (price * quantity) - COMMISSION;
-			
-			ret = Transaction.roundPrice(ret + value);
-		} else {
-			// price of symbol at the date is not available
-			return NO_VALUE;
-		}
+		double price = PriceUtil.getClose(symbol, date);
+		double value = (price * quantity) - COMMISSION;
+		
+		ret = Transaction.roundPrice(ret + value);
 		return ret;
 	}
 
 	// This method is used to get unrealized value of stocks. Value is not accurate. Because commission is fixed values.
 	private static double getUnrealizedValue(String date, List<Position> positionList) {
-		boolean noValue = false;
 		double ret = 0;
 		
 		for(Position position: positionList) {
 			double value = getUnrealizedValue(date, position);
-			if (value == NO_VALUE) noValue = true;
 			
 			ret = Transaction.roundPrice(ret + value);
 		}
-		return noValue ? NO_VALUE : ret;
+		return ret;
 	}
 	
 	private static DateMap<List<Position>> dateMap     = new DateMap<>();

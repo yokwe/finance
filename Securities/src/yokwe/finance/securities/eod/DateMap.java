@@ -69,7 +69,7 @@ public class DateMap<E> {
 	}
 	
 	public boolean isEmpty() {
-		return dateList.size() == 0;
+		return size() == 0;
 	}
 	
 	public E getLast() {

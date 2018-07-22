@@ -67,4 +67,13 @@ public class DateMap<E> {
 	public Map<String, E> getMap() {
 		return map;
 	}
+	
+	public boolean isEmpty() {
+		return dateList.size() == 0;
+	}
+	
+	public E getLast() {
+		String key = dateList.get(dateList.size() - 1);
+		return map.get(key);
+	}
 }

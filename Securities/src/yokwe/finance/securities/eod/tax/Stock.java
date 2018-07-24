@@ -1,0 +1,284 @@
+package yokwe.finance.securities.eod.tax;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.DoubleUtil;
+
+public class Stock implements Comparable<Stock> {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
+
+	// One record for one stock per day
+	public String date;
+	public String symbol;
+	
+	// Dividend detail
+	public double dividend;
+	public double dividendFee;
+	
+	// Buy detail
+	public double buyQuantity;
+	public double buyFee;
+	public double buy;
+	
+	// Sell detail
+	public double sellQuantity;
+	public double sellFee;
+	public double sell;
+	public double sellCost;
+	public double sellProfit;
+	
+	// Value of the date
+	public double totalQuantity;
+	public double totalCost;
+	public double totalValue;
+	
+	public double totalDividend; // from dividend
+	public double totalProfit;   // from buy and sell
+	
+	private Stock(String date, String symbol,
+		double dividend, double dividendFee,
+		double buyQuantity, double buyFee, double buy,
+		double sellQuantity, double sellFee, double sell, double sellCost, double sellProfit,
+		double totalQuantity, double totalCost, double totalValue, double totalDividend, double totalProfit) {
+		this.date   = date;
+		this.symbol = symbol;
+				
+		// Dividend detail
+		this.dividend    = dividend;
+		this.dividendFee = dividendFee;
+				
+		// Buy detail
+		this.buyQuantity = buyQuantity;
+		this.buyFee      = buyFee;
+		this.buy         = buy;
+				
+		// Sell detail
+		this.sellQuantity = sellQuantity;
+		this.sellFee      = sellFee;
+		this.sell         = sell;
+		this.sellCost     = sellCost;
+		this.sellProfit   = sellProfit;
+				
+		// Value of the date
+		this.totalQuantity = totalQuantity;
+		this.totalCost     = totalCost;
+		this.totalValue    = totalValue; // unrealized gain = totalValue - totalCost 
+		
+		// Realized gain
+		this.totalDividend = totalDividend;
+		this.totalProfit   = totalProfit;
+	}
+	private Stock(String date, String symbol) {
+		this(date, symbol,
+			0, 0,
+			0, 0, 0,
+			0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0);
+	}
+	private Stock(Stock that) {
+		this.date   = that.date;
+		this.symbol = that.symbol;
+				
+		// Dividend detail
+		this.dividend    = that.dividend;
+		this.dividendFee = that.dividendFee;
+				
+		// Buy detail
+		this.buyQuantity = that.buyQuantity;
+		this.buyFee      = that.buyFee;
+		this.buy         = that.buy;
+				
+		// Sell detail
+		this.sellQuantity = that.sellQuantity;
+		this.sellFee      = that.sellFee;
+		this.sell         = that.sell;
+		this.sellCost     = that.sellCost;
+		this.sellProfit   = that.sellProfit;
+				
+		// Value of the date
+		this.totalQuantity = that.totalQuantity;
+		this.totalCost     = that.totalCost;
+		this.totalValue    = that.totalValue;
+				
+		this.totalDividend = that.totalDividend;
+		this.totalProfit   = that.totalProfit;
+	}
+	
+	@Override
+	public int compareTo(Stock that) {
+		if (this.symbol.equals(that.symbol)) {
+			return this.date.compareTo(that.date);
+		} else {
+			return this.symbol.compareTo(that.symbol);
+		}
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("%s %-9s %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f",
+				date, symbol, dividend, dividendFee,
+				buyQuantity, buyFee, buy,
+				sellQuantity, sellFee, sell, sellCost, sellProfit,
+				totalQuantity, totalCost, totalValue,
+				totalDividend, totalProfit
+				);
+	}
+
+	// key     symbol      date
+	static Map<String, NavigableMap<String, Stock>> allStockMap = new TreeMap<>();
+	static NavigableMap<String, Stock> getStockMap(String symbol) {
+		if (!allStockMap.containsKey(symbol)) {
+			allStockMap.put(symbol, new TreeMap<>());
+		}
+		return allStockMap.get(symbol);
+	}
+	static Stock getStock(String date, String symbol) {
+		NavigableMap<String, Stock> stockMap = getStockMap(symbol);
+		
+		if (stockMap.containsKey(date)) {
+			// Entry is already exists. use the entry.
+		} else {
+			Stock stock;
+			Map.Entry<String, Stock>prevEntry = stockMap.lowerEntry(date);
+			if (prevEntry == null) {
+				// Add new entry
+				stock = new Stock(date, symbol);
+			} else {
+				// Add new entry using prev
+				stock = new Stock(date, symbol);
+
+				Stock prev = prevEntry.getValue();
+				if (prev.totalQuantity != 0) {
+					// Copy totalXXX from previous entry
+					stock.totalQuantity = prev.totalQuantity;
+					stock.totalCost     = prev.totalCost;
+					stock.totalValue    = prev.totalValue;
+							
+					stock.totalDividend = prev.totalDividend;
+					stock.totalProfit   = prev.totalProfit;
+				}
+			}
+			stockMap.put(date, stock);
+		}
+		
+		Stock ret = stockMap.get(date);
+		return ret;
+	}
+	public static List<String> getSymbolList() {
+		List<String> ret = allStockMap.keySet().stream().collect(Collectors.toList());
+		Collections.sort(ret);
+		return ret;
+	}
+	public static List<Stock> getStockList(String symbol) {
+		if (!allStockMap.containsKey(symbol)) {
+			logger.error("No such symbol  {}", symbol);
+			throw new SecuritiesException("No such stock");
+		}
+		NavigableMap<String, Stock> stockMap = allStockMap.get(symbol);
+		List<Stock> ret = stockMap.values().stream().collect(Collectors.toList());
+		Collections.sort(ret);
+		return ret;
+	}
+	
+	public static void dividend(String date, String symbol, double dividend, double dividendFee) {
+		Stock stock = getStock(date, symbol);
+		
+		stock.dividend      = Transaction.roundPrice(stock.dividend      + dividend);
+		stock.dividendFee   = Transaction.roundPrice(stock.dividendFee   + dividendFee);
+		stock.totalDividend = Transaction.roundPrice(stock.totalDividend + dividend - dividendFee);
+	}
+
+	public static void buy(String date, String symbol, double buyQuantity, double buy, double buyFee) {
+		logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
+		Stock stock = getStock(date, symbol);
+		
+		stock.buyQuantity = Transaction.roundQuantity(stock.buyQuantity + buyQuantity);
+		stock.buyFee      = Transaction.roundPrice(stock.buyFee + buyFee);
+		stock.buy         = Transaction.roundPrice(stock.buy    + buy);
+		
+		stock.totalQuantity = Transaction.roundQuantity(stock.totalQuantity + buyQuantity);
+		stock.totalCost     = Transaction.roundPrice(stock.totalCost + buy + buyFee);
+	}
+	
+	public static void sell(String date, String symbol, double sellQuantity, double sell, double sellFee) {
+		logger.info("{}", String.format("sellQuantity = %8.2f  sell = %8.2f  sellFee = %8.2f", sellQuantity, sell, sellFee));
+		Stock stock = getStock(date, symbol);
+		
+		double sellCost   = Transaction.roundPrice((stock.totalCost / stock.totalQuantity) * sellQuantity);
+		double sellProfit = Transaction.roundPrice(sell - sellFee - sellCost);
+		logger.info("{}", String.format("sellCost = %8.2f  sellProfit = %8.2f", sellCost, sellProfit));
+		
+		stock.sellQuantity = Transaction.roundQuantity(stock.sellQuantity + sellQuantity);
+		stock.sellFee      = Transaction.roundPrice(stock.sellFee    + sellFee);
+		stock.sell         = Transaction.roundPrice(stock.sell       + sell);
+		
+		stock.sellCost     = Transaction.roundPrice(stock.sellCost   + sellCost);
+		stock.sellProfit   = Transaction.roundPrice(stock.sellProfit + sellProfit);
+		
+		stock.totalQuantity = Transaction.roundQuantity(stock.totalQuantity - sellQuantity);
+		stock.totalCost     = Transaction.roundPrice(stock.totalCost - sellCost);
+		
+		stock.totalProfit = Transaction.roundPrice(stock.totalProfit   + sellProfit);
+		
+		if (DoubleUtil.isAlmostZero(stock.totalQuantity)) {
+			stock.totalQuantity = 0;
+		}
+	}
+
+	public static void change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {
+		// Sanity check
+		if (!allStockMap.containsKey(symbol)) {
+			logger.error("No such symbol  {} {}", date, symbol);
+			throw new SecuritiesException("No such symbol");
+		}
+		if ((!symbol.equals(newSymbol)) && allStockMap.containsKey(newSymbol)) {
+			logger.error("Duplicate symbol  {}", newSymbol);
+			throw new SecuritiesException("Duplicate symbol");
+		}
+		
+		NavigableMap<String, Stock> stockMap = allStockMap.get(symbol);
+		if (stockMap.containsKey(date)) {
+			logger.error("Already entry exists.  {}  {}", date, symbol);
+			throw new SecuritiesException("Already entry exists");
+		}
+
+		allStockMap.remove(symbol);
+		
+		Stock lastStock = stockMap.lastEntry().getValue();
+		Stock newStock = new Stock(lastStock);
+		newStock.date = date;
+		newStock.symbol = newSymbol;
+		newStock.totalQuantity = newQuantity;
+		stockMap.put(newStock.date, newStock);
+		
+		allStockMap.put(newSymbol, stockMap);
+	}
+
+	public static void updateTotalValue(String date, String symbol, double price) {
+		NavigableMap<String, Stock> stockMap = allStockMap.get(symbol);
+		if (stockMap.containsKey(date)) {
+			Stock stock = stockMap.get(date);
+			stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
+		} else {
+			Map.Entry<String, Stock> entry = stockMap.lowerEntry(date);
+			if (entry == null) {
+				logger.error("No lowerEntry.  {}  {}", date, symbol);
+				throw new SecuritiesException("No lowerEntry");
+			}
+			Stock stock = new Stock(entry.getValue());
+			
+			stock.date = date;
+			stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
+			
+			stockMap.put(date, stock);
+		}
+	}
+}

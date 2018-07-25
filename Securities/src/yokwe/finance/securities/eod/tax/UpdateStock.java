@@ -85,15 +85,12 @@ public class UpdateStock {
 			}
 			
 			logger.info("");
-			int stockCount = 0;
-			for(String symbol: Stock.getSymbolList()) {
-				for(Stock stock: Stock.getStockList(symbol)) {
-					stockCount++;
-					logger.info("Stock {}", String.format("%-9s %s", symbol, stock.toString()));
-				}
+			List<Stock> stockList = Stock.getStockList();
+			for(Stock stock: stockList) {
+				logger.info("{}", stock);
 			}
 			logger.info("transactionList = {}", transactionList.size());
-			logger.info("stockCount      = {}", stockCount);
+			logger.info("stockList       = {}", stockList.size());
 		}
 	}
 		

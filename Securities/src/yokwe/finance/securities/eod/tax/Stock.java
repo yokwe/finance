@@ -1,5 +1,6 @@
 package yokwe.finance.securities.eod.tax;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ import yokwe.finance.securities.util.DoubleUtil;
 
 public class Stock implements Comparable<Stock> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
+	
+	public final String group;
 
 	// One record for one stock per day
 	public final String date;
@@ -43,11 +46,13 @@ public class Stock implements Comparable<Stock> {
 	public double totalDividend; // from dividend
 	public double totalProfit;   // from buy and sell
 	
-	private Stock(String date, String symbol,
+	private Stock(String group, String date, String symbol,
 		double dividend, double dividendFee,
 		double buyQuantity, double buyFee, double buy,
 		double sellQuantity, double sellFee, double sell, double sellCost, double sellProfit,
 		double totalQuantity, double totalCost, double totalValue, double totalDividend, double totalProfit) {
+		this.group = group;
+		
 		this.date   = date;
 		this.symbol = symbol;
 				
@@ -77,22 +82,32 @@ public class Stock implements Comparable<Stock> {
 		this.totalProfit   = totalProfit;
 	}
 	private Stock(String date, String symbol) {
-		this(date, symbol,
+		this(symbol, date, symbol,
 			0, 0,
 			0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0);
 	}
+	private Stock(String group, Stock stock) {
+		this(group, stock.date, stock.symbol,
+			stock.dividend, stock.dividendFee,
+			stock.buyQuantity, stock.buyFee, stock.buy,
+			stock.sellQuantity, stock.sellFee, stock.sell, stock.sellCost, stock.sellProfit,
+			stock.totalQuantity, stock.totalCost, stock.totalValue,
+			stock.totalDividend, stock.totalProfit);
+	}
 	
 	@Override
 	public int compareTo(Stock that) {
-		return this.date.compareTo(that.date);
+		int ret = this.group.compareTo(that.group);
+		if (ret == 0) ret = this.date.compareTo(that.date);
+		return ret;
 	}
 	
 	@Override
 	public String toString() {
-		return String.format("%s %-9s %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f",
-				date, symbol, dividend, dividendFee,
+		return String.format("%-9s %s %-9s %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f",
+				group, date, symbol, dividend, dividendFee,
 				buyQuantity, buyFee, buy,
 				sellQuantity, sellFee, sell, sellCost, sellProfit,
 				totalQuantity, totalCost, totalValue,
@@ -102,6 +117,12 @@ public class Stock implements Comparable<Stock> {
 
 	// key     symbol      date
 	static Map<String, NavigableMap<String, Stock>> allStockMap = new TreeMap<>();
+	static List<Stock> getStockList() {
+		List<Stock> ret = new ArrayList<>();
+		allStockMap.values().stream().forEach(map -> ret.addAll(map.values()));		
+		Collections.sort(ret);
+		return ret;
+	}
 	static NavigableMap<String, Stock> getStockMap(String symbol) {
 		if (!allStockMap.containsKey(symbol)) {
 			allStockMap.put(symbol, new TreeMap<>());
@@ -221,16 +242,21 @@ public class Stock implements Comparable<Stock> {
 			logger.error("Already entry exists.  {}  {}", date, symbol);
 			throw new SecuritiesException("Already entry exists");
 		}
+		NavigableMap<String, Stock> newStockMap = new TreeMap<>();
+		for(Stock stock: stockMap.values()) {
+			Stock newStock = new Stock(newSymbol, stock);
+			newStockMap.put(stock.date, newStock);
+		}
 		
 		allStockMap.remove(symbol);
-		allStockMap.put(newSymbol, stockMap);
+		allStockMap.put(newSymbol, newStockMap);
 
 		Stock stock = getStock(date, newSymbol);
 		
 		// Change totalQuantity of newSymbol
 		stock.totalQuantity = newQuantity;
 
-		stockMap.put(date, stock);
+		newStockMap.put(date, stock);
 	}
 
 	public static void updateTotalValue(String date, String symbol, double price) {

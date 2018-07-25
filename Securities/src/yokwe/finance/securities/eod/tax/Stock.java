@@ -197,7 +197,7 @@ public class Stock implements Comparable<Stock> {
 	}
 
 	public static void buy(String date, String symbol, double buyQuantity, double buy, double buyFee) {
-		logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
+//		logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
 		Stock stock = getStock(date, symbol);
 		
 		stock.buyQuantity = Transaction.roundQuantity(stock.buyQuantity + buyQuantity);
@@ -209,12 +209,12 @@ public class Stock implements Comparable<Stock> {
 	}
 	
 	public static void sell(String date, String symbol, double sellQuantity, double sell, double sellFee) {
-		logger.info("{}", String.format("sellQuantity = %8.2f  sell = %8.2f  sellFee = %8.2f", sellQuantity, sell, sellFee));
+//		logger.info("{}", String.format("sellQuantity = %8.2f  sell = %8.2f  sellFee = %8.2f", sellQuantity, sell, sellFee));
 		Stock stock = getStock(date, symbol);
 		
 		double sellCost   = Transaction.roundPrice((stock.totalCost / stock.totalQuantity) * sellQuantity);
 		double sellProfit = Transaction.roundPrice(sell - sellFee - sellCost);
-		logger.info("{}", String.format("sellCost = %8.2f  sellProfit = %8.2f", sellCost, sellProfit));
+//		logger.info("{}", String.format("sellCost = %8.2f  sellProfit = %8.2f", sellCost, sellProfit));
 		
 		stock.sellQuantity = Transaction.roundQuantity(stock.sellQuantity + sellQuantity);
 		stock.sellFee      = Transaction.roundPrice(stock.sellFee    + sellFee);

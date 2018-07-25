@@ -114,25 +114,19 @@ public class Stock implements Comparable<Stock> {
 		if (stockMap.containsKey(date)) {
 			// Entry is already exists. use the entry.
 		} else {
-			Stock stock;
-			Map.Entry<String, Stock>prevEntry = stockMap.lowerEntry(date);
-			if (prevEntry == null) {
-				// Add new entry
-				stock = new Stock(date, symbol);
-			} else {
-				// Add new entry using prev
-				stock = new Stock(date, symbol);
-
-				Stock prev = prevEntry.getValue();
-				if (prev.totalQuantity != 0) {
-					// Copy totalXXX from previous entry
-					stock.totalQuantity = prev.totalQuantity;
-					stock.totalCost     = prev.totalCost;
-					stock.totalValue    = prev.totalValue;
-							
-					stock.totalDividend = prev.totalDividend;
-					stock.totalProfit   = prev.totalProfit;
-				}
+			Stock stock = new Stock(date, symbol);
+			
+			Map.Entry<String, Stock>entry = stockMap.lowerEntry(date);
+			if (entry != null) {
+				Stock lastStock = entry.getValue();
+				
+				// Copy totalXXX from lastStcok
+				stock.totalQuantity = lastStock.totalQuantity;
+				stock.totalCost     = lastStock.totalCost;
+				stock.totalValue    = lastStock.totalValue;
+				
+				stock.totalDividend = lastStock.totalDividend;
+				stock.totalProfit   = lastStock.totalProfit;
 			}
 			stockMap.put(date, stock);
 		}
@@ -167,6 +161,16 @@ public class Stock implements Comparable<Stock> {
 	public static void buy(String date, String symbol, double buyQuantity, double buy, double buyFee) {
 //		logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
 		Stock stock = getStock(date, symbol);
+		
+		// If this is first buy for the stock, clear totalXXX
+		if (stock.totalQuantity == 0) {
+//			stock.totalQuantity = 0;
+			stock.totalCost     = 0;
+			stock.totalValue    = 0;
+					
+			stock.totalDividend = 0;
+			stock.totalProfit   = 0;
+		}
 		
 		stock.buyQuantity = Transaction.roundQuantity(stock.buyQuantity + buyQuantity);
 		stock.buyFee      = Transaction.roundPrice(stock.buyFee + buyFee);
@@ -218,52 +222,26 @@ public class Stock implements Comparable<Stock> {
 			throw new SecuritiesException("Already entry exists");
 		}
 		
-		Map.Entry<String, Stock>entry = stockMap.lowerEntry(date);
-		if (entry == null) {
-			logger.error("No lowerEntry.  {}  {}", date, symbol);
-			throw new SecuritiesException("No lowerEntry");
-		}
-		
-		Stock lastStock = entry.getValue();
-		Stock newStock = new Stock(date, newSymbol);
-		
-		// Value of the date
-		newStock.totalQuantity = newQuantity;
-		newStock.totalCost     = lastStock.totalCost;
-		newStock.totalValue    = lastStock.totalValue;
-				
-		newStock.totalDividend = lastStock.totalDividend;
-		newStock.totalProfit   = lastStock.totalProfit;
-
-		stockMap.put(newStock.date, newStock);
-		
 		allStockMap.remove(symbol);
 		allStockMap.put(newSymbol, stockMap);
+
+		Stock stock = getStock(date, newSymbol);
+		
+		// Change totalQuantity of newSymbol
+		stock.totalQuantity = newQuantity;
+
+		stockMap.put(date, stock);
 	}
 
 	public static void updateTotalValue(String date, String symbol, double price) {
 		NavigableMap<String, Stock> stockMap = allStockMap.get(symbol);
 		if (stockMap.containsKey(date)) {
-			Stock stock = stockMap.get(date);
-			stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
+			// Entry is already exists. use the entry.
 		} else {
-			Map.Entry<String, Stock> entry = stockMap.lowerEntry(date);
-			if (entry == null) {
-				logger.error("No lowerEntry.  {}  {}", date, symbol);
-				throw new SecuritiesException("No lowerEntry");
-			}
-			Stock lastStock = entry.getValue();
-			Stock newStock = new Stock(date, symbol);
-			
-			// Value of the date
-			newStock.totalQuantity = lastStock.totalQuantity;
-			newStock.totalCost     = lastStock.totalCost;
-			newStock.totalValue    = Transaction.roundPrice(lastStock.totalQuantity * price);
-					
-			newStock.totalDividend = lastStock.totalDividend;
-			newStock.totalProfit   = lastStock.totalProfit;
-
-			stockMap.put(date, newStock);
+			Stock stock = getStock(date, symbol);
+			stockMap.put(date, stock);
 		}
+		Stock stock = stockMap.get(date);
+		stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
 	}
 }

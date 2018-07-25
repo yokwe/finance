@@ -16,8 +16,8 @@ public class Stock implements Comparable<Stock> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Stock.class);
 
 	// One record for one stock per day
-	public String date;
-	public String symbol;
+	public final String date;
+	public final String symbol;
 	
 	// Dividend detail
 	public double dividend;
@@ -83,42 +83,10 @@ public class Stock implements Comparable<Stock> {
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0);
 	}
-	private Stock(Stock that) {
-		this.date   = that.date;
-		this.symbol = that.symbol;
-				
-		// Dividend detail
-		this.dividend    = that.dividend;
-		this.dividendFee = that.dividendFee;
-				
-		// Buy detail
-		this.buyQuantity = that.buyQuantity;
-		this.buyFee      = that.buyFee;
-		this.buy         = that.buy;
-				
-		// Sell detail
-		this.sellQuantity = that.sellQuantity;
-		this.sellFee      = that.sellFee;
-		this.sell         = that.sell;
-		this.sellCost     = that.sellCost;
-		this.sellProfit   = that.sellProfit;
-				
-		// Value of the date
-		this.totalQuantity = that.totalQuantity;
-		this.totalCost     = that.totalCost;
-		this.totalValue    = that.totalValue;
-				
-		this.totalDividend = that.totalDividend;
-		this.totalProfit   = that.totalProfit;
-	}
 	
 	@Override
 	public int compareTo(Stock that) {
-		if (this.symbol.equals(that.symbol)) {
-			return this.date.compareTo(that.date);
-		} else {
-			return this.symbol.compareTo(that.symbol);
-		}
+		return this.date.compareTo(that.date);
 	}
 	
 	@Override
@@ -249,16 +217,27 @@ public class Stock implements Comparable<Stock> {
 			logger.error("Already entry exists.  {}  {}", date, symbol);
 			throw new SecuritiesException("Already entry exists");
 		}
-
-		allStockMap.remove(symbol);
 		
-		Stock lastStock = stockMap.lastEntry().getValue();
-		Stock newStock = new Stock(lastStock);
-		newStock.date = date;
-		newStock.symbol = newSymbol;
+		Map.Entry<String, Stock>entry = stockMap.lowerEntry(date);
+		if (entry == null) {
+			logger.error("No lowerEntry.  {}  {}", date, symbol);
+			throw new SecuritiesException("No lowerEntry");
+		}
+		
+		Stock lastStock = entry.getValue();
+		Stock newStock = new Stock(date, newSymbol);
+		
+		// Value of the date
 		newStock.totalQuantity = newQuantity;
+		newStock.totalCost     = lastStock.totalCost;
+		newStock.totalValue    = lastStock.totalValue;
+				
+		newStock.totalDividend = lastStock.totalDividend;
+		newStock.totalProfit   = lastStock.totalProfit;
+
 		stockMap.put(newStock.date, newStock);
 		
+		allStockMap.remove(symbol);
 		allStockMap.put(newSymbol, stockMap);
 	}
 
@@ -273,12 +252,18 @@ public class Stock implements Comparable<Stock> {
 				logger.error("No lowerEntry.  {}  {}", date, symbol);
 				throw new SecuritiesException("No lowerEntry");
 			}
-			Stock stock = new Stock(entry.getValue());
+			Stock lastStock = entry.getValue();
+			Stock newStock = new Stock(date, symbol);
 			
-			stock.date = date;
-			stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
-			
-			stockMap.put(date, stock);
+			// Value of the date
+			newStock.totalQuantity = lastStock.totalQuantity;
+			newStock.totalCost     = lastStock.totalCost;
+			newStock.totalValue    = Transaction.roundPrice(lastStock.totalQuantity * price);
+					
+			newStock.totalDividend = lastStock.totalDividend;
+			newStock.totalProfit   = lastStock.totalProfit;
+
+			stockMap.put(date, newStock);
 		}
 	}
 }

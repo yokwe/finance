@@ -157,7 +157,13 @@ public class CSVUtil {
 	
 	public static <E> void saveWithHeader(List<E> dataList, String path) {
 		Object o = dataList.get(0);
-		Field[] fields = o.getClass().getDeclaredFields();
+		List<Field> fieldList = new ArrayList<>();
+		for(Field field: o.getClass().getDeclaredFields()) {
+			// Skip static field
+			if (Modifier.isStatic(field.getModifiers())) continue;
+			fieldList.add(field);
+		}
+		Field[] fields = fieldList.toArray(new Field[0]);
 		String[] names = new String[fields.length];
 		for(int i = 0; i < names.length; i++) {
 			names[i] = fields[i].getName();
@@ -189,7 +195,13 @@ public class CSVUtil {
 
 	public static <E> void save(List<E> dataList, String path) {
 		Object o = dataList.get(0);
-		Field[] fields = o.getClass().getDeclaredFields();
+		List<Field> fieldList = new ArrayList<>();
+		for(Field field: o.getClass().getDeclaredFields()) {
+			// Skip static field
+			if (Modifier.isStatic(field.getModifiers())) continue;
+			fieldList.add(field);
+		}
+		Field[] fields = fieldList.toArray(new Field[0]);
 		String[] names = new String[fields.length];
 		for(int i = 0; i < names.length; i++) {
 			names[i] = fields[i].getName();

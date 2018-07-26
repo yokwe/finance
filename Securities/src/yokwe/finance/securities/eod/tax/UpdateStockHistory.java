@@ -6,10 +6,13 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;
 
-public class UpdateStock {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStock.class);
+public class UpdateStockHistory {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStockHistory.class);
+
+	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history.csv";
 
 	public static void generateReport(String url) {
 		logger.info("url        {}", url);		
@@ -33,7 +36,7 @@ public class UpdateStock {
 						throw new SecuritiesException("Unexpected");
 					}
 					
-					Stock.dividend(date, symbol, credit, debit);
+					StockHistory.dividend(date, symbol, credit, debit);
 				}
 					break;
 				case BUY:
@@ -49,7 +52,7 @@ public class UpdateStock {
 						throw new SecuritiesException("Unexpected");
 					}
 					
-					Stock.buy(date, symbol, quantity, buy, buyFee);
+					StockHistory.buy(date, symbol, quantity, buy, buyFee);
 				}
 					break;
 				case SELL:
@@ -65,7 +68,7 @@ public class UpdateStock {
 						throw new SecuritiesException("Unexpected");
 					}
 					
-					Stock.sell(date, symbol, quantity, sell, sellFee);
+					StockHistory.sell(date, symbol, quantity, sell, sellFee);
 				}
 					break;
 				case CHANGE:
@@ -76,7 +79,7 @@ public class UpdateStock {
 					String newSymbol   = transaction.newSymbol;
 					double newQuantity = transaction.newQuantity;
 					
-					Stock.change(date, symbol, -quantity, newSymbol, newQuantity);
+					StockHistory.change(date, symbol, -quantity, newSymbol, newQuantity);
 				}
 					break;
 				default:
@@ -85,12 +88,15 @@ public class UpdateStock {
 			}
 			
 			logger.info("");
-			List<Stock> stockList = Stock.getStockList();
-			for(Stock stock: stockList) {
-				logger.info("{}", stock);
+			List<StockHistory> stockHistoryList = StockHistory.getStockList();
+			for(StockHistory stockHistory: stockHistoryList) {
+				logger.info("{}", stockHistory);
 			}
-			logger.info("transactionList = {}", transactionList.size());
-			logger.info("stockList       = {}", stockList.size());
+			logger.info("transactionList  = {}", transactionList.size());
+			logger.info("stockHistoryList = {}", stockHistoryList.size());
+			
+			logger.info("save stockHistoryList as {}", PATH_STOCK_HISTORY);
+			CSVUtil.saveWithHeader(stockHistoryList, PATH_STOCK_HISTORY);
 		}
 	}
 		

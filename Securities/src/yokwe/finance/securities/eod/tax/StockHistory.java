@@ -18,8 +18,8 @@ public class StockHistory implements Comparable<StockHistory> {
 	
 	private static int nextSession = 1;
 	
-	public final String group;
-	public       int    session;
+	public String group;
+	public int    session;
 
 	// One record for one stock per day
 	public final String date;
@@ -91,14 +91,6 @@ public class StockHistory implements Comparable<StockHistory> {
 			0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0);
-	}
-	private StockHistory(String group, StockHistory stock) {
-		this(group, stock.session, stock.date, stock.symbol,
-			stock.dividend, stock.dividendFee,
-			stock.buyQuantity, stock.buyFee, stock.buy,
-			stock.sellQuantity, stock.sellFee, stock.sell, stock.sellCost, stock.sellProfit,
-			stock.totalQuantity, stock.totalCost, stock.totalValue,
-			stock.totalDividend, stock.totalProfit);
 	}
 	
 	@Override
@@ -253,21 +245,20 @@ public class StockHistory implements Comparable<StockHistory> {
 			logger.error("Already entry exists.  {}  {}", date, symbol);
 			throw new SecuritiesException("Already entry exists");
 		}
-		NavigableMap<String, StockHistory> newStockMap = new TreeMap<>();
+		// Change group of stock in existing map
 		for(StockHistory stock: stockMap.values()) {
-			StockHistory newStock = new StockHistory(newSymbol, stock);
-			newStockMap.put(stock.date, newStock);
+			stock.group = newSymbol;
 		}
 		
+		// Remove symbol in allStockMap
 		allStockMap.remove(symbol);
-		allStockMap.put(newSymbol, newStockMap);
+		// Add stockMap with newSymbol in allStockMap
+		allStockMap.put(newSymbol, stockMap);
 
+		// Add entry for change of quantity
 		StockHistory stock = getStock(date, newSymbol);
-		
-		// Change totalQuantity of newSymbol
 		stock.totalQuantity = newQuantity;
-
-		newStockMap.put(date, stock);
+		stockMap.put(date, stock);
 	}
 
 	public static void updateTotalValue(String date, String symbol, double price) {

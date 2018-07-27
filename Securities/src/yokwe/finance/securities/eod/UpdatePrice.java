@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.FileUtil;
-import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.Pause;
 
 public class UpdatePrice {
@@ -100,10 +99,6 @@ public class UpdatePrice {
 		
 		int retryCount  = 0;
 		boolean needSleep = false;
-		
-		if (updateProvider.getName() == UpdateProvider.IEX) {
-			HttpUtil.setEndPoint("https://api.iextrading.com/");
-		}
 
 		for(;;) {
 			retryCount++;

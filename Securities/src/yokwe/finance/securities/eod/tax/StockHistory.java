@@ -16,7 +16,10 @@ import yokwe.finance.securities.util.DoubleUtil;
 public class StockHistory implements Comparable<StockHistory> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockHistory.class);
 	
+	private static int nextSession = 1;
+	
 	public final String group;
+	public       int    session;
 
 	// One record for one stock per day
 	public final String date;
@@ -46,12 +49,13 @@ public class StockHistory implements Comparable<StockHistory> {
 	public double totalDividend; // from dividend
 	public double totalProfit;   // from buy and sell
 	
-	private StockHistory(String group, String date, String symbol,
+	private StockHistory(String group, int session, String date, String symbol,
 		double dividend, double dividendFee,
 		double buyQuantity, double buyFee, double buy,
 		double sellQuantity, double sellFee, double sell, double sellCost, double sellProfit,
 		double totalQuantity, double totalCost, double totalValue, double totalDividend, double totalProfit) {
-		this.group = group;
+		this.group   = group;
+		this.session = session;
 		
 		this.date   = date;
 		this.symbol = symbol;
@@ -81,15 +85,15 @@ public class StockHistory implements Comparable<StockHistory> {
 		this.totalDividend = totalDividend;
 		this.totalProfit   = totalProfit;
 	}
-	private StockHistory(String date, String symbol) {
-		this(symbol, date, symbol,
+	private StockHistory(int session, String date, String symbol) {
+		this(symbol, session, date, symbol,
 			0, 0,
 			0, 0, 0,
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0);
 	}
 	private StockHistory(String group, StockHistory stock) {
-		this(group, stock.date, stock.symbol,
+		this(group, stock.session, stock.date, stock.symbol,
 			stock.dividend, stock.dividendFee,
 			stock.buyQuantity, stock.buyFee, stock.buy,
 			stock.sellQuantity, stock.sellFee, stock.sell, stock.sellCost, stock.sellProfit,
@@ -106,8 +110,8 @@ public class StockHistory implements Comparable<StockHistory> {
 	
 	@Override
 	public String toString() {
-		return String.format("%-9s %s %-9s %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f",
-				group, date, symbol, dividend, dividendFee,
+		return String.format("%-9s %4d %s %-9s %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f %8.2f %8.2f   %8.2f %8.2f %8.2f   %8.2f %8.2f",
+				group, session, date, symbol, dividend, dividendFee,
 				buyQuantity, buyFee, buy,
 				sellQuantity, sellFee, sell, sellCost, sellProfit,
 				totalQuantity, totalCost, totalValue,
@@ -135,11 +139,14 @@ public class StockHistory implements Comparable<StockHistory> {
 		if (stockMap.containsKey(date)) {
 			// Entry is already exists. use the entry.
 		} else {
-			StockHistory stock = new StockHistory(date, symbol);
-			
 			Map.Entry<String, StockHistory>entry = stockMap.lowerEntry(date);
-			if (entry != null) {
+			StockHistory stock;
+			if (entry == null) {
+				stock = new StockHistory(nextSession++, date, symbol);
+			} else {
 				StockHistory lastStock = entry.getValue();
+				// Use session in lastStock
+				stock = new StockHistory(lastStock.session, date, symbol);
 				
 				// Copy totalXXX from lastStcok
 				stock.totalQuantity = lastStock.totalQuantity;
@@ -183,9 +190,13 @@ public class StockHistory implements Comparable<StockHistory> {
 //		logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
 		StockHistory stock = getStock(date, symbol);
 		
-		// If this is first buy for the stock, clear totalXXX
-		if (stock.totalQuantity == 0) {
-//			stock.totalQuantity = 0;
+		// If this is first buy for the stock and used before
+		if (stock.totalQuantity == 0 && (stock.totalDividend != 0 || stock.totalProfit != 0)) {
+			// Change session number
+			stock.session       = nextSession++;
+			
+			// clear totalXXX
+			stock.totalQuantity = 0;
 			stock.totalCost     = 0;
 			stock.totalValue    = 0;
 					

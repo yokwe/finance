@@ -1,10 +1,7 @@
 package yokwe.finance.securities.app;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,84 +9,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.config.CookieSpecs;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.HttpUtil;
 
 
 public class Fetch {
 	static final org.slf4j.Logger logger = LoggerFactory.getLogger(Fetch.class);
 
-	protected static final CloseableHttpClient httpClient = HttpClients.custom().setDefaultRequestConfig(RequestConfig.custom().setCookieSpec(CookieSpecs.STANDARD).build()).build();
-	
-	public static void download(String url, String fileName, List<String> messageList) {
-		// In case url contains special char, replace like URL encoding.
-		String encodedURL = url;
-		encodedURL = encodedURL.replace("^", "%5E");
-		encodedURL = encodedURL.replace("+", "%2B");
-		
-		HttpGet httpGet = new HttpGet(encodedURL);
-		httpGet.setHeader("User-Agent", "Mozilla");
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			final int code = response.getStatusLine().getStatusCode();
-			final String reasonPhrase = response.getStatusLine().getReasonPhrase();
-			
-			if (code == HttpStatus.SC_NOT_FOUND) { // 404
-				String message = String.format("%d %s - %s", code, reasonPhrase, url);
-//				logger.warn("               " + message);
-				messageList.add(message);
-				new File(fileName).createNewFile(); // create empty file to prevent process again
-				return;
-			}
-			if (code == HttpStatus.SC_BAD_REQUEST) { // 400
-				String message = String.format("%d %s - %s", code, reasonPhrase, url);
-//				logger.warn("               " + message);
-				messageList.add(message);
-				new File(fileName).createNewFile(); // create empty file to prevent process again
-				return;
-			}
-			if (code != HttpStatus.SC_OK) { // 200
-				logger.debug("statusLine = {}", response.getStatusLine().toString());
-				logger.error("url {}", url);
-				logger.error("code {}", code);
-				throw new RuntimeException();
-			}
-			
-		    HttpEntity entity = response.getEntity();
-		    if (entity != null) {
-//		    	int fileSize = 0;
-	    		byte[] buffer = new byte[65536 * 2];
-		    	try (BufferedInputStream bis = new BufferedInputStream(entity.getContent(), buffer.length);
-		    			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fileName), buffer.length)) {
-		    		for(;;) {
-			    		int len = bis.read(buffer);
-			    		if (len == -1) break;
-			    		bos.write(buffer, 0, len);
-//			    		fileSize += len;
-		    		}
-		    	}
-//				if (fileSize == 0) {
-//					logger.debug("statusLine = {}", response.getStatusLine().toString());
-//					logger.error("url {}", url);
-//					logger.error("code {}", code);
-//					throw new RuntimeException();
-//				}
-		    }
-		} catch (UnsupportedOperationException e) {
-			logger.info("UnsupportedOperationException {}", e.toString());
-		} catch (IOException e) {
-			logger.info("IOException {}", e.toString());
-		}
-	}
-	
 	private static final Matcher matcherParam = Pattern.compile("^([^ ]+) +([^ ]+)$").matcher("");
 	private static final Matcher matcherComment = Pattern.compile("^#.+$").matcher("");
 	
@@ -143,12 +71,13 @@ public class Fetch {
 				long waitTime = waitPeriod - (now - lastDownload);
 				if (0 < waitTime) Thread.sleep(waitTime);
 				
-				String url = entry.url;
+				String url  = entry.url;
 				String file = entry.file;
 				
 				lastDownload = System.currentTimeMillis();
 				logger.info("{}", String.format("%5d / %5d  %s", count, totalCount, file));
-				download(url, file, messageList);
+				
+				HttpUtil.download(url, file);
 			}
 		} catch (InterruptedException e) {
 			logger.info("InterruptedException {}", e.toString());

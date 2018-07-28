@@ -80,7 +80,7 @@
 			<classpath location="${jar.yokwe}" />
 			<classpath refid="ext.jar" />
                         <sysproperty key="waitPeriod" value="1000"/>
-			<arg value="tmp/fetch.list"/>
+			<arg value="tmp/fetch/fetch.list"/>
 		</java>
 	</target>
 

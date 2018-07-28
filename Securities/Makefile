@@ -20,6 +20,9 @@ DIR_FETCH_QUANTUM		=tmp/fetch/quantum
 DIR_SCRIPT			=data/script
 DIR_DATABASE			=tmp/database
 
+FETCH_LIST			=tmp/fetch/fetch.list
+
+
 all:
 	@echo all
 
@@ -102,13 +105,13 @@ update-nasdaq:
 fetch-google-getprices-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_GETPRICES}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_GETPRICES}"   -f ${DIR_SCRIPT}/fetch-google-getprices.awk  -v P="40Y" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	  ${DIR_DATABASE}/nasdaq.csv >${FETCH_LIST}
 	ant run-fetch
 
 fetch-google-historical-40y:
 	mkdir -p ${DIR_FETCH_GOOGLE_HISTORICAL}
 	awk -v DIR_OUTPUT="${DIR_FETCH_GOOGLE_HISTORICAL}"  -f ${DIR_SCRIPT}/fetch-google-historical.awk  -v P="-40 years" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	  ${DIR_DATABASE}/nasdaq.csv >${FETCH_LIST}
 	ant run-fetch
 	
 
@@ -119,13 +122,13 @@ fetch-google-historical-40y:
 fetch-yahoo-daily-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DAILY}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DAILY}"        -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="d"  -v P="-40 years" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	  ${DIR_DATABASE}/nasdaq.csv >${FETCH_LIST}
 	ant run-fetch
 
 fetch-yahoo-dividend-40y:
 	mkdir -p ${DIR_FETCH_YAHOO_DIVIDEND}
 	awk -v DIR_OUTPUT="${DIR_FETCH_YAHOO_DIVIDEND}"     -f ${DIR_SCRIPT}/fetch-yahoo-table.awk -v G="v"  -v P="-40 years" \
-	  ${DIR_DATABASE}/nasdaq.csv >tmp/fetch.list
+	  ${DIR_DATABASE}/nasdaq.csv >${FETCH_LIST}
 	ant run-fetch
 
 
@@ -177,7 +180,7 @@ update-mizuho:
 fetch-quantum:
 	mkdir -p ${DIR_FETCH_QUANTUM}
 	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
-	  tmp/eod/stock.csv >tmp/fetch.list
+	  tmp/eod/stock.csv >${FETCH_LIST}
 	ant run-fetch
 
 update-quantum:

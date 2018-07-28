@@ -1,6 +1,7 @@
 package yokwe.finance.securities.util;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -122,6 +123,19 @@ public class HttpUtil {
 					logger.error("InterruptedException {}", e.toString());
 					throw new SecuritiesException("InterruptedException");
 				}
+		}
+	}
+	
+	public static void download(String url, String path) {
+		String content = downloadAsString(url);
+		
+		if (content != null) {
+			File file = new File(path);
+			
+			File fileParent = file.getParentFile();
+			if (!fileParent.exists()) fileParent.mkdirs();
+			
+			FileUtil.write(file, content);
 		}
 	}
 	

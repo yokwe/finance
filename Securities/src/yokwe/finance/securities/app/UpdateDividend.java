@@ -19,6 +19,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.DividendTable;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.update.YahooDividend;
+import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
 
 public final class UpdateDividend {
@@ -103,7 +104,7 @@ public final class UpdateDividend {
 					lastTime = thisTime;
 					if (0 < sleepTime) Thread.sleep(sleepTime);
 
-					Fetch.download(pathURL.url, pathURL.path, new ArrayList<>());
+					HttpUtil.download(pathURL.url, pathURL.path);
 				}
 			}
 		}

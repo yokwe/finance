@@ -23,6 +23,7 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.database.NasdaqTable;
 import yokwe.finance.securities.database.PriceTable;
 import yokwe.finance.securities.update.GoogleHistorical;
+import yokwe.finance.securities.util.HttpUtil;
 import yokwe.finance.securities.util.NasdaqUtil;
 
 public final class UpdatePrice {
@@ -148,7 +149,7 @@ public final class UpdatePrice {
 					if (0 < sleepTime) Thread.sleep(sleepTime);
 
 					if (!googleFile.exists()) {
-						Fetch.download(googlePathURL.url, googlePathURL.path, new ArrayList<>());
+						HttpUtil.download(googlePathURL.url, googlePathURL.path);
 					}
 				}
 			}

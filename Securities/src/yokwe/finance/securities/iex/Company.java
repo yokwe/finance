@@ -82,6 +82,4 @@ public class Company extends IEXBase {
 
 		logger.info("STOP");
 	}
-
-	
 }

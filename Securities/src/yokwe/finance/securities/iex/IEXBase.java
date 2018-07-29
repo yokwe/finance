@@ -1,5 +1,9 @@
 package yokwe.finance.securities.iex;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -29,6 +33,12 @@ import yokwe.finance.securities.SecuritiesException;
 
 public class IEXBase {
 	private static final Logger logger = LoggerFactory.getLogger(IEXBase.class);
+	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface JSONName {
+		String value();
+	}
 
 	// Use New York time in LocalDateTime
 	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");
@@ -55,14 +65,6 @@ public class IEXBase {
 		public final String[] names;
 		public final int      size;
 		
-		ClassInfo(String clazzName, Field[] fields, String[] types, String[] names, int size) {
-			this.clazzName = clazzName;
-			this.fields    = fields;
-			this.types     = types;
-			this.names     = names;
-			this.size      = size;
-		}
-		
 		ClassInfo(Class<? extends Object> clazz) {
 			List<Field>  fieldList = new ArrayList<>();
 			List<String> typeList  = new ArrayList<>();
@@ -74,7 +76,10 @@ public class IEXBase {
 
 				fieldList.add(field);
 				typeList.add(field.getType().getName());
-				nameList.add(field.getName());
+				
+				// Use JSONName if exists.
+				JSONName jsonName = field.getDeclaredAnnotation(JSONName.class);
+				nameList.add((jsonName == null) ? field.getName() : jsonName.value());
 			}
 			
 			this.clazzName = clazz.getName();

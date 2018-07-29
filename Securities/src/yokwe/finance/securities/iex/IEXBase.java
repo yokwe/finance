@@ -223,6 +223,10 @@ public class IEXBase {
 					case "java.math.BigDecimal":
 						field.set(this, jsonNumber.bigDecimalValue());
 						break;
+					case "java.lang.String":
+						// To handle irregular case in Symbols, add this code. Value of iexId in Symbols can be number or String.
+						field.set(this, jsonNumber.toString());
+						break;
 					case "java.time.LocalDateTime":
 						field.set(this, LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID));
 						break;
@@ -238,6 +242,31 @@ public class IEXBase {
 					switch(type) {
 					case "java.lang.String":
 						field.set(this, jsonString.getString());
+						break;
+					default:
+						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("jsonObject {}!", jsonObject.toString());
+						throw new SecuritiesException("Unexptected type");
+					}
+				}
+					break;
+				case TRUE:
+				{
+					switch(type) {
+					case "boolean":
+						field.set(this, true);
+						break;
+					default:
+						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						throw new SecuritiesException("Unexptected type");
+					}
+				}
+					break;
+				case FALSE:
+				{
+					switch(type) {
+					case "boolean":
+						field.set(this, false);
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);

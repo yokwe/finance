@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.util.FileUtil;
 
-public class Quote {
+public class Quote extends JSONBase {
 	public String        symbol;                // refers to the stock ticker.
 	public String        companyName;           // refers to the company name.
 	public String        primaryExchange;       // refers to the primary listings exchange.
@@ -97,9 +97,8 @@ public class Quote {
 		ytdChange             = 0;
 	}
 	
-	@Override
-	public String toString() {
-		return JSONUtil.toString(this);
+	Quote(JsonObject jsonObject) {
+		super(jsonObject);
 	}
 	
 	public static void main(String[] args) {
@@ -110,8 +109,7 @@ public class Quote {
 		
 		try (JsonReader reader = Json.createReader(new StringReader(content))) {
 			JsonObject jsonObject = reader.readObject();
-			Quote quote = JSONUtil.parse(jsonObject, Quote.class);
-			logger.info("symbol {}", quote.symbol);
+			Quote quote = new Quote(jsonObject);
 			logger.info("quote {}", quote.toString());
 		}
 

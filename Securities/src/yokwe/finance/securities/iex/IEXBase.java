@@ -1,5 +1,6 @@
 package yokwe.finance.securities.iex;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -14,9 +15,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
 import org.slf4j.Logger;
@@ -96,71 +99,68 @@ public class IEXBase {
 		try {
 			ClassInfo classInfo = ClassInfo.get(o);
 
-			StringBuilder ret = new StringBuilder();
+			List<String> result = new ArrayList<>();
+			StringBuilder line = new StringBuilder();
+			
 			for(int i = 0; i < classInfo.size; i++) {
 				String name  = classInfo.names[i];
 				String type  = classInfo.types[i];
 				Field  field = classInfo.fields[i];
 				
+				line.setLength(0);
+				line.append(name).append(": ");
+				
 				switch(type) {
 				case "double":
-				{
-					double value = field.getDouble(o);
-					ret.append(String.format(", %s: %s", name, Double.toString(value)));
-				}
+					line.append(field.getDouble(o));
 					break;
 				case "float":
-				{
-					float value = field.getFloat(o);
-					ret.append(String.format(", %s: %s", name, Float.toString(value)));
-				}
+					line.append(field.getFloat(o));
 					break;
 				case "long":
-				{
-					long value = field.getLong(o);
-					ret.append(String.format(", %s: %s", name, Long.toString(value)));
-				}
+					line.append(field.getLong(o));
 					break;
 				case "int":
-				{
-					int value = field.getInt(o);
-					ret.append(String.format(", %s: %s", name, Integer.toString(value)));
-				}
+					line.append(field.getInt(o));
 					break;
 				case "short":
-				{
-					short value = field.getShort(o);
-					ret.append(String.format(", %s: %s", name, Short.toString(value)));
-				}
+					line.append(field.getShort(o));
 					break;
 				case "byte":
-				{
-					byte value = field.getByte(o);
-					ret.append(String.format(", %s: %s", name, Byte.toString(value)));
-				}
+					line.append(field.getByte(o));
 					break;
 				case "char":
-				{
-					char value = field.getChar(o);
-					ret.append(String.format(", %s: %s", name, Character.toString(value)));
-				}
+					line.append(String.format("'%c'", field.getChar(o)));
 					break;
 				default:
 				{
 					Object value = field.get(o);
 					if (value == null) {
-						ret.append(String.format(", %s: null", name));
+						line.append("null");
 					} else if (value instanceof IEXBase) {
-						ret.append(String.format(", %s: %s", name, value.toString()));
+						line.append(value.toString());
+					} else if (field.getType().isArray()) {
+						List<String> arrayElement = new ArrayList<>();
+						int length = Array.getLength(value);
+						for(int j = 0; j < length; j++) {
+							Object element = Array.get(value, j);
+							if (element instanceof String) {
+								arrayElement.add(String.format("\"%s\"", element.toString()));
+							} else {
+								arrayElement.add(String.format("%s", element.toString()));
+							}
+						}						
+						line.append("[").append(String.join(", ", arrayElement)).append("]");
 					} else {
-						ret.append(String.format(", %s: \"%s\"", name, value.toString()));
+						line.append("\"").append(value.toString()).append("\"");
 					}
 				}
 					break;
 				}
+				result.add(line.toString());
 			}
 			
-			return String.format("{%s}", ret.substring(2));
+			return String.format("{%s}", String.join(", ", result));
 		} catch (IllegalAccessException e) {
 			logger.error("IllegalAccessException {}", e.toString());
 			throw new SecuritiesException("IllegalAccessException");
@@ -283,6 +283,43 @@ public class IEXBase {
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
 						logger.error("fieldType {}", fieldType.getName());
 						throw new SecuritiesException("Unexptected type");
+					}
+				}
+					break;
+				case ARRAY:
+				{					
+					Class<?> fieldType = field.getType();
+					if (fieldType.isArray()) {
+						JsonArray childJson = jsonObject.get(name).asJsonArray();
+
+						Class<?> componentType = fieldType.getComponentType();
+						String componentTypeName = componentType.getName();
+						switch(componentTypeName) {
+						case "java.lang.String":
+						{
+							int childJsonArraySize = childJson.size();
+							String[] value = new String[childJson.size()];
+							
+							for(int j = 0; j < childJsonArraySize; j++) {
+								JsonValue childJsonValue = childJson.get(j);
+								switch(childJsonValue.getValueType()) {
+								case STRING:
+									value[j] = childJson.getString(j);
+									break;
+								default:
+									logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+									logger.error("childJsonValue {}", childJsonValue.getValueType().toString());
+									throw new SecuritiesException("Unexptected type");
+								}
+							}
+							field.set(this, value);
+						}
+							break;
+						default:
+							logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+							logger.error("componentTypeName {}", componentTypeName);
+							throw new SecuritiesException("Unexptected type");
+						}
 					}
 				}
 					break;

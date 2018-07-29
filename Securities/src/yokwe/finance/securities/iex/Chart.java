@@ -19,7 +19,7 @@ public class Chart extends IEXBase {
 	public double high;             // is available on all charts.
 	public double low;              // is available on all charts.
 	public long   volume;           // is available on all charts.
-	public String label;            // is available on all charts. A variable formatted version of the date depending on the range. Optional convienience field.
+	public String label;            // is available on all charts. A variable formatted version of the date depending on the range. Optional convenience field.
 	public double changeOverTime;   // is available on all charts. Percent change of each interval relative to first value. Useful for comparing multiple stocks.
 	public String date;             // is available on all charts.
 	public double open;             // is available on all charts.

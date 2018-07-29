@@ -127,15 +127,10 @@ public class Quote extends JSONBase {
 		
 		test(logger);
 		
-//		{
-//			Quote quote = Quote.get("ibm");
-//			logger.info("quote {}", quote.toString());
-//		}
-//
-//		{
-//			Quote quote = Quote.get("nyt");
-//			logger.info("quote {}", quote.toString());
-//		}
+		{
+			Quote quote = Quote.get("ibm");
+			logger.info("quote {}", quote.toString());
+		}
 
 		logger.info("STOP");
 	}

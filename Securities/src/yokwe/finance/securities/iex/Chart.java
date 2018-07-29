@@ -2,6 +2,7 @@ package yokwe.finance.securities.iex;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.json.Json;
@@ -15,6 +16,21 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Chart extends IEXBase {
+	public static enum Range {
+		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
+		M6("6m"), M3("3m"), M1("1m");
+		
+		private final String value;
+		Range(String value) {
+			this.value = value;
+		}
+		
+		@Override
+		public String toString() {
+			return value;
+		}
+	}
+
 	// Support all charts except 1d
 	public double high;             // is available on all charts.
 	public double low;              // is available on all charts.
@@ -47,9 +63,14 @@ public class Chart extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static Chart[] getStock(String symbol, String period) {
-		String url = String.format("%s/stock/%s/chart/%s", END_POINT, symbol, period);
+	public static Chart[] getStock(String symbol, Range range) {
+		Logger logger = LoggerFactory.getLogger(Chart.class);
+
+		String url = String.format("%s/stock/%s/chart/%s", END_POINT, symbol, range.toString());
 		String jsonString = HttpUtil.downloadAsString(url);
+		
+		logger.info("url {}", url);
+		logger.info("jsonString {}", jsonString);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			JsonArray jsonArray = reader.readArray();
@@ -91,10 +112,11 @@ public class Chart extends IEXBase {
 		
 		test(logger);
 		
-//		{
-//			Chart[] chart = Chart.getStock("ibm", "1m");
-//			logger.info("Chart {}", Arrays.asList(chart).toString());
-//		}
+		{
+			Chart[] chart = Chart.getStock("ibm", Range.M1);
+			logger.info("chart {}", chart.length);
+			logger.info("chart {}", Arrays.asList(chart).toString());
+		}
 
 		logger.info("STOP");
 	}

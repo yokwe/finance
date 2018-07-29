@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,10 +23,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.Market;
 
-public class JSONBase {
-	private static final Logger logger = LoggerFactory.getLogger(JSONBase.class);
+public class IEXBase {
+	private static final Logger logger = LoggerFactory.getLogger(IEXBase.class);
+
+	// Use New York time in LocalDateTime
+	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");
+	
+	public static final String END_POINT = "https://api.iextrading.com/1.0";
 
 	public static class ClassInfo {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
@@ -145,7 +150,7 @@ public class JSONBase {
 					Object value = field.get(o);
 					if (value == null) {
 						ret.append(String.format(", %s: null", name));
-					} else if (value instanceof JSONBase) {
+					} else if (value instanceof IEXBase) {
 						ret.append(String.format(", %s: %s", name, value.toString()));
 					} else {
 						ret.append(String.format(", %s: \"%s\"", name, value.toString()));
@@ -162,10 +167,10 @@ public class JSONBase {
 		}
 	}
 
-	public JSONBase() {
+	public IEXBase() {
 		//
 	}
-	public JSONBase(JsonObject jsonObject) {
+	public IEXBase(JsonObject jsonObject) {
 		try {
 			ClassInfo classInfo = ClassInfo.get(this);
 			{
@@ -218,7 +223,7 @@ public class JSONBase {
 						break;
 					case "java.time.LocalDateTime":
 					{
-						LocalDateTime value = LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), Market.ZONE_ID);
+						LocalDateTime value = LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID);
 						field.set(this, value);
 					}
 						break;
@@ -266,11 +271,11 @@ public class JSONBase {
 				{
 					Class<?> fieldType = field.getType();
 					
-					if (JSONBase.class.isAssignableFrom(fieldType)) {
+					if (IEXBase.class.isAssignableFrom(fieldType)) {
 						JsonObject childJson = jsonObject.get(name).asJsonObject();
 //						logger.info("childJson {}", childJson.toString());
 						
-						JSONBase child = (JSONBase)fieldType.getDeclaredConstructor(JsonObject.class).newInstance(childJson);
+						IEXBase child = (IEXBase)fieldType.getDeclaredConstructor(JsonObject.class).newInstance(childJson);
 //						logger.info("child {}", child.toString());
 						
 						field.set(this, child);

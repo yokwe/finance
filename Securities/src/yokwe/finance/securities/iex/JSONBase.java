@@ -1,6 +1,7 @@
 package yokwe.finance.securities.iex;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -26,12 +27,25 @@ import yokwe.finance.securities.eod.Market;
 public class JSONBase {
 	private static final Logger logger = LoggerFactory.getLogger(JSONBase.class);
 
-	private static class ClassInfo {
-		final String   clazzName;
-		final Field[]  fields;
-		final String[] types;
-		final String[] names;
-		final int      size;
+	public static class ClassInfo {
+		private static Map<String, ClassInfo> map = new TreeMap<>();
+		
+		public static ClassInfo get(Object o) {
+			Class<? extends Object> clazz = o.getClass();
+			String key = clazz.getName();
+			
+			if (!map.containsKey(key)) {
+				ClassInfo classInfo = new ClassInfo(clazz);
+				map.put(key, classInfo);
+			}
+			return map.get(key);
+		}
+
+		public final String   clazzName;
+		public final Field[]  fields;
+		public final String[] types;
+		public final String[] names;
+		public final int      size;
 		
 		ClassInfo(String clazzName, Field[] fields, String[] types, String[] names, int size) {
 			this.clazzName = clazzName;
@@ -39,6 +53,27 @@ public class JSONBase {
 			this.types     = types;
 			this.names     = names;
 			this.size      = size;
+		}
+		
+		ClassInfo(Class<? extends Object> clazz) {
+			List<Field>  fieldList = new ArrayList<>();
+			List<String> typeList  = new ArrayList<>();
+			List<String> nameList  = new ArrayList<>();
+
+			for(Field field: clazz.getDeclaredFields()) {
+				// Skip static field
+				if (Modifier.isStatic(field.getModifiers())) continue;
+
+				fieldList.add(field);
+				typeList.add(field.getType().getName());
+				nameList.add(field.getName());
+			}
+			
+			this.clazzName = clazz.getName();
+			this.fields    = fieldList.toArray(new Field[0]);
+			this.types     = typeList.toArray(new String[0]);
+			this.names     = nameList.toArray(new String[0]);
+			this.size      = fieldList.size();
 		}
 		
 		@Override
@@ -49,42 +84,12 @@ public class JSONBase {
 			return String.format("%s %s %s", clazzName, nameList, typeList);
 		}
 	}
-	private static Map<String, ClassInfo> classInfoMap = new TreeMap<>();
 
 	@Override
 	public String toString() {
 		Object o = this;
 		try {
-			Class<? extends Object> clazz = o.getClass();
-			String clazzName = o.getClass().getName();
-			
-			logger.info("o {}", o.getClass().getName());
-
-			ClassInfo classInfo;
-			if (classInfoMap.containsKey(clazzName)) {
-				classInfo = classInfoMap.get(clazzName);
-			} else {
-				List<Field>  fieldList = new ArrayList<>();
-				List<String> typeList  = new ArrayList<>();
-				List<String> nameList  = new ArrayList<>();
-
-				for(Field field: clazz.getDeclaredFields()) {
-					// Skip static field
-					if (Modifier.isStatic(field.getModifiers())) continue;
-
-					fieldList.add(field);
-					typeList.add(field.getType().getName());
-					nameList.add(field.getName());
-				}
-				
-				Field[] fields = fieldList.toArray(new Field[0]);
-				String[] types  = typeList.toArray(new String[0]);
-				String[] names  = nameList.toArray(new String[0]);
-				int size   = fieldList.size();
-				
-				classInfo = new ClassInfo(clazzName, fields, types, names, size);
-				classInfoMap.put(clazzName, classInfo);
-			}
+			ClassInfo classInfo = ClassInfo.get(o);
 
 			StringBuilder ret = new StringBuilder();
 			for(int i = 0; i < classInfo.size; i++) {
@@ -140,6 +145,8 @@ public class JSONBase {
 					Object value = field.get(o);
 					if (value == null) {
 						ret.append(String.format(", %s: null", name));
+					} else if (value instanceof JSONBase) {
+						ret.append(String.format(", %s: %s", name, value.toString()));
 					} else {
 						ret.append(String.format(", %s: \"%s\"", name, value.toString()));
 					}
@@ -159,36 +166,8 @@ public class JSONBase {
 		//
 	}
 	public JSONBase(JsonObject jsonObject) {
-		Class<? extends Object> clazz = this.getClass();
 		try {
-			String clazzName = clazz.getName();
-
-			ClassInfo classInfo;
-			if (classInfoMap.containsKey(clazzName)) {
-				classInfo = classInfoMap.get(clazzName);
-			} else {
-				List<Field>  fieldList = new ArrayList<>();
-				List<String> typeList  = new ArrayList<>();
-				List<String> nameList  = new ArrayList<>();
-
-				for(Field field: clazz.getDeclaredFields()) {
-					// Skip static field
-					if (Modifier.isStatic(field.getModifiers())) continue;
-
-					fieldList.add(field);
-					typeList.add(field.getType().getName());
-					nameList.add(field.getName());
-				}
-				
-				Field[] fields = fieldList.toArray(new Field[0]);
-				String[] types  = typeList.toArray(new String[0]);
-				String[] names  = nameList.toArray(new String[0]);
-				int size   = fieldList.size();
-				
-				classInfo = new ClassInfo(clazzName, fields, types, names, size);
-				classInfoMap.put(clazzName, classInfo);
-			}
-
+			ClassInfo classInfo = ClassInfo.get(this);
 			{
 				// Sanity check
 				{
@@ -283,6 +262,25 @@ public class JSONBase {
 					}
 				}
 					break;
+				case OBJECT:
+				{
+					Class<?> fieldType = field.getType();
+					
+					if (JSONBase.class.isAssignableFrom(fieldType)) {
+						JsonObject childJson = jsonObject.get(name).asJsonObject();
+//						logger.info("childJson {}", childJson.toString());
+						
+						JSONBase child = (JSONBase)fieldType.getDeclaredConstructor(JsonObject.class).newInstance(childJson);
+//						logger.info("child {}", child.toString());
+						
+						field.set(this, child);
+					} else {
+						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("fieldType {}", fieldType.getName());
+						throw new SecuritiesException("Unexptected type");
+					}
+				}
+					break;
 				default:
 					logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
 					throw new SecuritiesException("Unexptected type");
@@ -291,6 +289,21 @@ public class JSONBase {
 		} catch (IllegalAccessException e) {
 			logger.error("IllegalAccessException {}", e.toString());
 			throw new SecuritiesException("IllegalAccessException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new SecuritiesException("InstantiationException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new SecuritiesException("IllegalArgumentException");
+		} catch (InvocationTargetException e) {
+			logger.error("InvocationTargetException {}", e.toString());
+			throw new SecuritiesException("InvocationTargetException");
+		} catch (NoSuchMethodException e) {
+			logger.error("NoSuchMethodException {}", e.toString());
+			throw new SecuritiesException("NoSuchMethodException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new SecuritiesException("SecurityException");
 		}
 	}
 }

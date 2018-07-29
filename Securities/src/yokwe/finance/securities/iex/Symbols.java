@@ -40,7 +40,7 @@ public class Symbols extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static Symbols[] getSymbols() {
+	public static Symbols[] getRefData() {
 		String url = String.format("%s/ref-data/symbols", END_POINT);
 		String jsonString = HttpUtil.downloadAsString(url);
 
@@ -85,7 +85,7 @@ public class Symbols extends IEXBase {
 		test(logger);
 		
 		{
-			Symbols[] symbols = Symbols.getSymbols();
+			Symbols[] symbols = Symbols.getRefData();
 			logger.info("symbols {}", symbols.length);
 //			logger.info("symbols {}", Arrays.asList(symbols).toString());
 		}

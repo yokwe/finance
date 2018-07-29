@@ -79,7 +79,7 @@ public class Symbols extends IEXBase {
 	}
 
 	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(Chart.class);
+		Logger logger = LoggerFactory.getLogger(Symbols.class);
 		logger.info("START");
 		
 		test(logger);

@@ -1,6 +1,5 @@
 package yokwe.finance.securities.iex;
 
-import java.io.File;
 import java.io.StringReader;
 import java.time.LocalDateTime;
 
@@ -10,8 +9,6 @@ import javax.json.JsonReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import yokwe.finance.securities.util.FileUtil;
 
 public class Quote extends JSONBase {
 	public String        symbol;                // refers to the stock ticker.
@@ -104,10 +101,11 @@ public class Quote extends JSONBase {
 	public static void main(String[] args) {
 		Logger logger = LoggerFactory.getLogger(Quote.class);
 		logger.info("START");
-		String content = FileUtil.read(new File("tmp/ibm.json"));
-		logger.info("json {}", content);
 		
-		try (JsonReader reader = Json.createReader(new StringReader(content))) {
+		String jsonString = "{\"symbol\":\"IBM\",\"companyName\":\"International Business Machines Corporation\",\"primaryExchange\":\"New York Stock Exchange\",\"sector\":\"Technology\",\"calculationPrice\":\"close\",\"open\":146.89,\"openTime\":1532698210193,\"close\":145.15,\"closeTime\":1532721693191,\"high\":147.14,\"low\":144.66,\"latestPrice\":145.15,\"latestSource\":\"Close\",\"latestTime\":\"July 27, 2018\",\"latestUpdate\":1532721693191,\"latestVolume\":3749662,\"iexRealtimePrice\":null,\"iexRealtimeSize\":null,\"iexLastUpdated\":null,\"delayedPrice\":145.15,\"delayedPriceTime\":1532721693191,\"extendedPrice\":144.99,\"extendedChange\":-0.16,\"extendedChangePercent\":-0.0011,\"extendedPriceTime\":1532724796346,\"previousClose\":146.71,\"change\":-1.56,\"changePercent\":-0.01063,\"iexMarketPercent\":null,\"iexVolume\":null,\"avgTotalVolume\":4762213,\"iexBidPrice\":null,\"iexBidSize\":null,\"iexAskPrice\":null,\"iexAskSize\":null,\"marketCap\":132521950000,\"peRatio\":10.36,\"week52High\":171.13,\"week52Low\":137.45,\"ytdChange\":-0.049811407713423766}";
+		logger.info("json {}", jsonString);
+		
+		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			JsonObject jsonObject = reader.readObject();
 			Quote quote = new Quote(jsonObject);
 			logger.info("quote {}", quote.toString());

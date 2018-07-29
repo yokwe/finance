@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -112,7 +113,7 @@ public class IEXBase {
 				
 				switch(type) {
 				case "double":
-					line.append(field.getDouble(o));
+					line.append(Double.toString(field.getDouble(o)));
 					break;
 				case "float":
 					line.append(field.getFloat(o));
@@ -137,22 +138,26 @@ public class IEXBase {
 					Object value = field.get(o);
 					if (value == null) {
 						line.append("null");
-					} else if (value instanceof IEXBase) {
-						line.append(value.toString());
+					} else if (value instanceof String) {
+						// Quote special character in string \ => \\  " => \"
+						String stringValue = value.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+						line.append("\"").append(stringValue).append("\"");
 					} else if (field.getType().isArray()) {
 						List<String> arrayElement = new ArrayList<>();
 						int length = Array.getLength(value);
 						for(int j = 0; j < length; j++) {
 							Object element = Array.get(value, j);
 							if (element instanceof String) {
-								arrayElement.add(String.format("\"%s\"", element.toString()));
+								// Quote special character in string \ => \\  " => \"
+								String stringValue = element.toString().replace("\\", "\\\\").replace("\"", "\\\"");
+								arrayElement.add(String.format("\"%s\"", stringValue));
 							} else {
 								arrayElement.add(String.format("%s", element.toString()));
 							}
 						}						
 						line.append("[").append(String.join(", ", arrayElement)).append("]");
 					} else {
-						line.append("\"").append(value.toString()).append("\"");
+						line.append(value.toString());
 					}
 				}
 					break;
@@ -224,6 +229,12 @@ public class IEXBase {
 					case "java.time.LocalDateTime":
 					{
 						LocalDateTime value = LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID);
+						field.set(this, value);
+					}
+						break;
+					case "java.math.BigDecimal":
+					{
+						BigDecimal value = jsonNumber.bigDecimalValue();
 						field.set(this, value);
 					}
 						break;

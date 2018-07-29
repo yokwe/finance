@@ -4,7 +4,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -216,27 +215,16 @@ public class IEXBase {
 					
 					switch(type) {
 					case "double":
-					{
-						double value = jsonNumber.doubleValue();
-						field.set(this, value);
-					}
-					case "long":
-					{
-						long value = jsonNumber.longValue();
-						field.set(this, value);
-					}
+						field.set(this, jsonNumber.doubleValue());
 						break;
-					case "java.time.LocalDateTime":
-					{
-						LocalDateTime value = LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID);
-						field.set(this, value);
-					}
+					case "long":
+						field.set(this, jsonNumber.longValue());
 						break;
 					case "java.math.BigDecimal":
-					{
-						BigDecimal value = jsonNumber.bigDecimalValue();
-						field.set(this, value);
-					}
+						field.set(this, jsonNumber.bigDecimalValue());
+						break;
+					case "java.time.LocalDateTime":
+						field.set(this, LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID));
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
@@ -249,10 +237,7 @@ public class IEXBase {
 					JsonString jsonString = jsonObject.getJsonString(name);
 					switch(type) {
 					case "java.lang.String":
-					{
-						String value = jsonString.getString();
-						field.set(this, value);
-					}
+						field.set(this, jsonString.getString());
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);

@@ -37,6 +37,21 @@ public class IEXBase {
 	public @interface JSONName {
 		String value();
 	}
+	
+	public static enum Range {
+		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
+		M6("6m"), M3("3m"), M1("1m");
+		
+		private final String value;
+		Range(String value) {
+			this.value = value;
+		}
+		
+		@Override
+		public String toString() {
+			return value;
+		}
+	}
 
 	// Use New York time in LocalDateTime
 	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");

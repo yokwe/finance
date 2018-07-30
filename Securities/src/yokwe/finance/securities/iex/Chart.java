@@ -16,21 +16,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Chart extends IEXBase {
-	public static enum Range {
-		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
-		M6("6m"), M3("3m"), M1("1m");
-		
-		private final String value;
-		Range(String value) {
-			this.value = value;
-		}
-		
-		@Override
-		public String toString() {
-			return value;
-		}
-	}
-
 	// Support all charts except 1d
 	public double high;             // is available on all charts.
 	public double low;              // is available on all charts.

@@ -29,8 +29,6 @@ import javax.json.JsonValue.ValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import yokwe.finance.securities.SecuritiesException;
-
 public class IEXBase {
 	private static final Logger logger = LoggerFactory.getLogger(IEXBase.class);
 	
@@ -172,7 +170,7 @@ public class IEXBase {
 			return String.format("{%s}", String.join(", ", result));
 		} catch (IllegalAccessException e) {
 			logger.error("IllegalAccessException {}", e.toString());
-			throw new SecuritiesException("IllegalAccessException");
+			throw new IEXUnexpectedError("IllegalAccessException");
 		}
 	}
 
@@ -197,9 +195,10 @@ public class IEXBase {
 					int unionSetSize     = unionSet.size();
 					
 					if (fieldNameSetSize != unionSetSize || jsonNameSetSize != unionSetSize) {
+						logger.error("Unknonw field in jsonObject");
 						logger.error("fieldNameSet = ({}){}", fieldNameSetSize, fieldNameSet);
 						logger.error("jsonNameSet  = ({}){}", jsonNameSetSize, jsonNameSet);
-						throw new SecuritiesException("Unknonw field in jsonObject");
+						throw new IEXUnexpectedError("Unknonw field in jsonObject");
 					}
 				}
 			}
@@ -237,7 +236,7 @@ public class IEXBase {
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -250,8 +249,7 @@ public class IEXBase {
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						logger.error("jsonObject {}!", jsonObject.toString());
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -263,7 +261,7 @@ public class IEXBase {
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -275,7 +273,7 @@ public class IEXBase {
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -293,7 +291,7 @@ public class IEXBase {
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -311,8 +309,7 @@ public class IEXBase {
 						field.set(this, child);
 					} else {
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-						logger.error("fieldType {}", fieldType.getName());
-						throw new SecuritiesException("Unexptected type");
+						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
@@ -337,45 +334,46 @@ public class IEXBase {
 									value[j] = childJson.getString(j);
 									break;
 								default:
-									logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-									logger.error("childJsonValue {}", childJsonValue.getValueType().toString());
-									throw new SecuritiesException("Unexptected type");
+									logger.error("Unexpected json array element type {} {}", name, childJsonValue.getValueType().toString());
+									throw new IEXUnexpectedError("Unexpected json array element type");
 								}
 							}
 							field.set(this, value);
 						}
 							break;
 						default:
-							logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-							logger.error("componentTypeName {}", componentTypeName);
-							throw new SecuritiesException("Unexptected type");
+							logger.error("Unexpected array component type {} {}", name, componentTypeName);
+							throw new IEXUnexpectedError("Unexpected array component type");
 						}
+					} else {
+						logger.error("Unexptected field is not Array {} {}", name, type);
+						throw new IEXUnexpectedError("Unexptected field is not Array");
 					}
 				}
 					break;
 				default:
-					logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
-					throw new SecuritiesException("Unexptected type");
+					logger.error("Unknown valueType {} {}", name, valueType.toString());
+					throw new IEXUnexpectedError("Unknown valueType");
 				}
 			}
 		} catch (IllegalAccessException e) {
 			logger.error("IllegalAccessException {}", e.toString());
-			throw new SecuritiesException("IllegalAccessException");
+			throw new IEXUnexpectedError("IllegalAccessException");
 		} catch (InstantiationException e) {
 			logger.error("InstantiationException {}", e.toString());
-			throw new SecuritiesException("InstantiationException");
+			throw new IEXUnexpectedError("InstantiationException");
 		} catch (IllegalArgumentException e) {
 			logger.error("IllegalArgumentException {}", e.toString());
-			throw new SecuritiesException("IllegalArgumentException");
+			throw new IEXUnexpectedError("IllegalArgumentException");
 		} catch (InvocationTargetException e) {
 			logger.error("InvocationTargetException {}", e.toString());
-			throw new SecuritiesException("InvocationTargetException");
+			throw new IEXUnexpectedError("InvocationTargetException");
 		} catch (NoSuchMethodException e) {
 			logger.error("NoSuchMethodException {}", e.toString());
-			throw new SecuritiesException("NoSuchMethodException");
+			throw new IEXUnexpectedError("NoSuchMethodException");
 		} catch (SecurityException e) {
 			logger.error("SecurityException {}", e.toString());
-			throw new SecuritiesException("SecurityException");
+			throw new IEXUnexpectedError("SecurityException");
 		}
 	}
 }

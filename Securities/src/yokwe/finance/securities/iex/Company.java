@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Company extends IEXBase {
+	public static final String TYPE = "company";
+
 	public String symbol;
 	public String companyName;
 	public String exchange;
@@ -50,7 +52,7 @@ public class Company extends IEXBase {
 	}
 	
 	public static Company getStock(String symbol) {
-		String url = String.format("%s/stock/%s/company", END_POINT, symbol);
+		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Quote extends IEXBase {
+	public static final String TYPE = "quote";
+
 	public String        symbol;                // refers to the stock ticker.
 	public String        companyName;           // refers to the company name.
 	public String        primaryExchange;       // refers to the primary listings exchange.
@@ -101,7 +103,7 @@ public class Quote extends IEXBase {
 	}
 	
 	public static Quote getStock(String symbol) {
-		String url = String.format("%s/stock/%s/quote", END_POINT, symbol);
+		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

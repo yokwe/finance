@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class OHLC extends IEXBase {
+	public static final String TYPE = "ohlc";
+
 	public static class Pair extends IEXBase {
 		public double        price; // refers to the official open or close price
 		public LocalDateTime time;  // refers to the official listing exchange time for the open or close
@@ -42,7 +44,7 @@ public class OHLC extends IEXBase {
 	}
 	
 	public static OHLC getStock(String symbol) {
-		String url = String.format("%s/stock/%s/ohlc", END_POINT, symbol);
+		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

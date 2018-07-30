@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Chart extends IEXBase {
+	public static final String TYPE = "chart";
+
 	// Support all charts except 1d
 	public double high;             // is available on all charts.
 	public double low;              // is available on all charts.
@@ -51,7 +53,7 @@ public class Chart extends IEXBase {
 	public static Chart[] getStock(String symbol, Range range) {
 		Logger logger = LoggerFactory.getLogger(Chart.class);
 
-		String url = String.format("%s/stock/%s/chart/%s", END_POINT, symbol, range.toString());
+		String url = String.format("%s/stock/%s/%s/%s", END_POINT, symbol, TYPE, range.toString());
 		String jsonString = HttpUtil.downloadAsString(url);
 		
 		logger.info("url {}", url);

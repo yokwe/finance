@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Dividends extends IEXBase {
+	public static final String TYPE = "dividends";
+
 	public String exDate;       // refers to the dividend ex-date
 	public String paymentDate;  // refers to the payment date
 	public String recordDate;   // refers to the dividend record date
@@ -56,7 +58,7 @@ public class Dividends extends IEXBase {
 	}
 	
 	public static Dividends[] getStock(String symbol, Range range) {
-		String url = String.format("%s/stock/%s/dividends/%s", END_POINT, symbol, range.toString());
+		String url = String.format("%s/stock/%s/%s/%s", END_POINT, symbol, TYPE, range.toString());
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

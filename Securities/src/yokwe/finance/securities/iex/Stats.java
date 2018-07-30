@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Stats extends IEXBase {
+	public static final String TYPE = "stats";
+
 	public String companyName;
 	public double marketcap;          // is not calculated in real time.
 	public double beta;
@@ -122,7 +124,7 @@ public class Stats extends IEXBase {
 	}
 	
 	public static Stats getStock(String symbol) {
-		String url = String.format("%s/stock/%s/stats", END_POINT, symbol);
+		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

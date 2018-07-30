@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Price extends IEXBase {
+	public static final String TYPE = "price";
+	
 	public double current; // A single number, being the IEX real time price, the 15 minute delayed market price, or the previous close price, is returned.
 	
 	Price(String current) {
@@ -13,7 +15,7 @@ public class Price extends IEXBase {
 	}
 	
 	public static Price getStock(String symbol) {
-		String url = String.format("%s/stock/%s/price", END_POINT, symbol);
+		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 		
 		return new Price(jsonString);

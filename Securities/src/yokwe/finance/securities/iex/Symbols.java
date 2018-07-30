@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class Symbols extends IEXBase {
+	public static final String TYPE = "symbols";
+
 	String  symbol;    // refers to the symbol represented in Nasdaq Integrated symbology (INET).
 	String  name;      // refers to the name of the company or security.
 	String  date;      // refers to the date the symbol reference data was generated.
@@ -41,7 +43,7 @@ public class Symbols extends IEXBase {
 	}
 	
 	public static Symbols[] getRefData() {
-		String url = String.format("%s/ref-data/symbols", END_POINT);
+		String url = String.format("%s/ref-data/%s", END_POINT, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);
 
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {

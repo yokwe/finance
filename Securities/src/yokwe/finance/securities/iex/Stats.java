@@ -1,15 +1,8 @@
 package yokwe.finance.securities.iex;
 
-import java.io.StringReader;
+import java.util.Map;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yokwe.finance.securities.util.HttpUtil;
 
 public class Stats extends IEXBase {
 	public static final String TYPE = "stats";
@@ -123,37 +116,41 @@ public class Stats extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static Stats getStock(String symbol) {
-		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
-		String jsonString = HttpUtil.downloadAsString(url);
-
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			return new Stats(jsonObject);
-		}
+	public static Map<String, Stats> getStock(String... symbols) {
+		return IEXBase.getStock(Stats.class, symbols);
 	}
 
-	static void test(Logger logger) {
-		String jsonString = "{\"companyName\":\"International Business Machines Corporation\",\"marketcap\":132521950000,\"beta\":0.906157,\"week52high\":171.13,\"week52low\":137.45,\"week52change\":4.2732,\"shortInterest\":15164536,\"shortDate\":\"2018-07-13\",\"dividendRate\":6.28,\"dividendYield\":4.3265586,\"exDividendDate\":\"2018-05-09 00:00:00.0\",\"latestEPS\":6.15,\"latestEPSDate\":\"2017-12-31\",\"sharesOutstanding\":913000000,\"float\":911022243,\"returnOnEquity\":31.16,\"consensusEPS\":3.03,\"numberOfEstimates\":8,\"EPSSurpriseDollar\":null,\"EPSSurprisePercent\":1.6502,\"symbol\":\"IBM\",\"EBITDA\":10192000000,\"revenue\":41696000000,\"grossProfit\":19662000000,\"cash\":11515000000,\"debt\":45626000000,\"ttmEPS\":14.010000000000002,\"revenuePerShare\":46,\"revenuePerEmployee\":104816,\"peRatioHigh\":15,\"peRatioLow\":8.7,\"returnOnAssets\":4.75,\"returnOnCapital\":null,\"profitMargin\":7.13,\"priceToSales\":1.6588593,\"priceToBook\":7.3,\"day200MovingAvg\":149.46599,\"day50MovingAvg\":143.9004,\"institutionPercent\":59.4,\"insiderPercent\":0.2,\"shortRatio\":3.5121515,\"year5ChangePercent\":-0.12947989497383333,\"year2ChangePercent\":-0.024449585248252872,\"year1ChangePercent\":0.045615187677660936,\"ytdChangePercent\":-0.039181407713423766,\"month6ChangePercent\":-0.11147322819558969,\"month3ChangePercent\":0.012426021057624193,\"month1ChangePercent\":0.0390121689334289,\"day5ChangePercent\":-0.0037748798901851956,\"day30ChangePercent\":-0.0016507325125523125}";
-		logger.info("json {}", jsonString);
-		
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			Stats stats = new Stats(jsonObject);
-			logger.info("stats {}", stats.toString());
-		}
-	}
-	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(Stats.class);
-		logger.info("START");
-		
-		test(logger);
-		
-		{
-			Stats stats = Stats.getStock("ibm");
-			logger.info("stats {}", stats.toString());
-		}
-
-		logger.info("STOP");
-	}
+//	public static Stats getStock(String symbol) {
+//		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
+//		String jsonString = HttpUtil.downloadAsString(url);
+//
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			return new Stats(jsonObject);
+//		}
+//	}
+//
+//	static void test(Logger logger) {
+//		String jsonString = "{\"companyName\":\"International Business Machines Corporation\",\"marketcap\":132521950000,\"beta\":0.906157,\"week52high\":171.13,\"week52low\":137.45,\"week52change\":4.2732,\"shortInterest\":15164536,\"shortDate\":\"2018-07-13\",\"dividendRate\":6.28,\"dividendYield\":4.3265586,\"exDividendDate\":\"2018-05-09 00:00:00.0\",\"latestEPS\":6.15,\"latestEPSDate\":\"2017-12-31\",\"sharesOutstanding\":913000000,\"float\":911022243,\"returnOnEquity\":31.16,\"consensusEPS\":3.03,\"numberOfEstimates\":8,\"EPSSurpriseDollar\":null,\"EPSSurprisePercent\":1.6502,\"symbol\":\"IBM\",\"EBITDA\":10192000000,\"revenue\":41696000000,\"grossProfit\":19662000000,\"cash\":11515000000,\"debt\":45626000000,\"ttmEPS\":14.010000000000002,\"revenuePerShare\":46,\"revenuePerEmployee\":104816,\"peRatioHigh\":15,\"peRatioLow\":8.7,\"returnOnAssets\":4.75,\"returnOnCapital\":null,\"profitMargin\":7.13,\"priceToSales\":1.6588593,\"priceToBook\":7.3,\"day200MovingAvg\":149.46599,\"day50MovingAvg\":143.9004,\"institutionPercent\":59.4,\"insiderPercent\":0.2,\"shortRatio\":3.5121515,\"year5ChangePercent\":-0.12947989497383333,\"year2ChangePercent\":-0.024449585248252872,\"year1ChangePercent\":0.045615187677660936,\"ytdChangePercent\":-0.039181407713423766,\"month6ChangePercent\":-0.11147322819558969,\"month3ChangePercent\":0.012426021057624193,\"month1ChangePercent\":0.0390121689334289,\"day5ChangePercent\":-0.0037748798901851956,\"day30ChangePercent\":-0.0016507325125523125}";
+//		logger.info("json {}", jsonString);
+//		
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			Stats stats = new Stats(jsonObject);
+//			logger.info("stats {}", stats.toString());
+//		}
+//	}
+//	public static void main(String[] args) {
+//		Logger logger = LoggerFactory.getLogger(Stats.class);
+//		logger.info("START");
+//		
+//		test(logger);
+//		
+//		{
+//			Stats stats = Stats.getStock("ibm");
+//			logger.info("stats {}", stats.toString());
+//		}
+//
+//		logger.info("STOP");
+//	}
 }

@@ -46,16 +46,11 @@ public class IEXBase {
 	public static enum Range {
 		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
 		M6("6m"), M3("3m"), M1("1m"),
-		LAST("1y?chartLast=1"); // Use 1y in LAST for annually dividend
+		LAST("1y&chartLast=1"); // Use 1y in LAST for annually dividend
 		
-		private final String value;
+		public final String value;
 		Range(String value) {
 			this.value = value;
-		}
-		
-		@Override
-		public String toString() {
-			return value;
 		}
 	}
 
@@ -64,7 +59,7 @@ public class IEXBase {
 	
 	public static final String END_POINT = "https://api.iextrading.com/1.0";
 
-	public static class ClassInfo {
+	private static class ClassInfo {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
 		
 		public static ClassInfo get(Object o) {
@@ -195,10 +190,10 @@ public class IEXBase {
 		}
 	}
 
-	public IEXBase() {
+	protected IEXBase() {
 		//
 	}
-	public IEXBase(JsonObject jsonObject) {
+	protected IEXBase(JsonObject jsonObject) {
 		try {
 			ClassInfo classInfo = ClassInfo.get(this);
 			{
@@ -399,7 +394,7 @@ public class IEXBase {
 	}
 
 	private static Map<String, String> typeMap = new TreeMap<>();
-	protected static String getType(Class<? extends IEXBase> clazz) {
+	private static String getType(Class<? extends IEXBase> clazz) {
 		try {
 			String clazzName = clazz.getName();
 			if (typeMap.containsKey(clazzName)) {
@@ -435,7 +430,8 @@ public class IEXBase {
 		}
 	}
 	
-	public static <E extends IEXBase> Map<String, E> getStock(Class<E> clazz, String ... symbols) {
+	// For Company, OHLC, Price, Quote, Stats
+	protected static <E extends IEXBase> Map<String, E> getStock(Class<E> clazz, String ... symbols) {
 		// Sanity check
 		if (symbols.length == 0) {
 			logger.error("symbols.length == 0");
@@ -520,19 +516,160 @@ public class IEXBase {
 		}
 	}
 	
+	// For Chart and Dividends
+	protected static <E extends IEXBase> Map<String, E[]> getStock(Class<E> clazz, Range range, String ... symbols) {
+		// Sanity check
+		if (symbols.length == 0) {
+			logger.error("symbols.length == 0");
+			throw new IEXUnexpectedError("symbols.length == 0");
+		}
+		String type = getType(clazz);
+		// https://api.iextrading.com/1.0/stock/market/batch?symbols=ibm,bt&types=dividends&range=1y&chartLast=1
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, type, String.join(",", symbols), range.value);
+		String jsonString = HttpUtil.downloadAsString(url);
+		if (jsonString == null) {
+			logger.error("jsonString == null");
+			throw new IEXUnexpectedError("jsonString == null");
+		}
+		
+		// {"IBM":{"dividends":[{"exDate":"2017-05-08","paymentDate":"2017-06-10","recordDate":"2017-05-10","declaredDate":"2017-04-25","amount":1.5,"flag":"","type":"Dividend income","qualified":"Q","indicated":""}]}}
+		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+			Map<String, E[]> ret = new TreeMap<>();
+
+			// Assume result is only one object
+			JsonObject result = reader.readObject();
+			for(String resultKey: result.keySet()) {
+				JsonValue resultChild = result.get(resultKey);
+				ValueType resultChildValueType = resultChild.getValueType();
+				// Sanity check
+				if (resultChildValueType != ValueType.OBJECT) {
+					logger.error("Unexpected resultChildValueType {}", resultChildValueType.toString());
+					throw new IEXUnexpectedError("Unexpected resultChildValueType");
+				}
+				JsonObject element = resultChild.asJsonObject();
+				String[] elementKeys = element.keySet().toArray(new String[0]);
+				// Sanity check
+				if (elementKeys.length != 1) {
+					logger.error("elementKeys.length {}", element.keySet().toString());
+					throw new IEXUnexpectedError("elementKeys.length");
+				}
+				String elementKey = elementKeys[0];
+				JsonValue elementValue = element.get(elementKey);
+				ValueType elementValueType = elementValue.getValueType();
+				
+				// Sanity check
+				if (!elementKey.equals(type)) {
+					logger.error("Unexpected elementKey {} {}", type, elementKey);
+					throw new IEXUnexpectedError("Unexpected elementKey");
+				}
+				switch(elementValueType) {
+				case ARRAY:
+				{
+					JsonArray jsonArray = elementValue.asJsonArray();
+					int jsonArraySize = jsonArray.size();
+					
+					Object child = Array.newInstance(clazz, jsonArraySize);
+					@SuppressWarnings("unchecked")
+					E[] childArray = (E[])child;
+					
+					for(int i = 0; i < jsonArraySize; i++) {
+						JsonObject jsonArrayElement = jsonArray.getJsonObject(i);
+						childArray[i] = clazz.getDeclaredConstructor(JsonObject.class).newInstance(jsonArrayElement);
+					}
+					ret.put(resultKey, childArray);
+				}
+					break;
+				default:
+					logger.error("Unexpected elementValueType {}", elementValueType);
+					throw new IEXUnexpectedError("Unexpected elementValueType");
+				}
+			}
+			return ret;
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalAccessException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new IEXUnexpectedError("InstantiationException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalArgumentException");
+		} catch (InvocationTargetException e) {
+			logger.error("InvocationTargetException {}", e.toString());
+			throw new IEXUnexpectedError("InvocationTargetException");
+		} catch (NoSuchMethodException e) {
+			logger.error("NoSuchMethodException {}", e.toString());
+			throw new IEXUnexpectedError("NoSuchMethodException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new IEXUnexpectedError("SecurityException");
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 		
 		{
-			Map<String, OHLC> result = getStock(OHLC.class, "ibm", "bt");
-			logger.info("result {}", result.toString());
+			Map<String, Chart[]> map = Chart.getStock(Range.M1, "ibm", "bt");
+			logger.info("chart {}", map.size());
+			for(Map.Entry<String, Chart[]> entry: map.entrySet()) {
+				logger.info("  {} {} {}", entry.getKey(), entry.getValue().length, Arrays.asList(entry.getValue()).toString());
+			}
+		}
+	
+		{
+			Map<String, Company> map = Company.getStock("ibm", "bt");
+			logger.info("company {}", map.size());
+			for(Map.Entry<String, Company> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
+		}
+
+		{
+			Map<String, Dividends[]> map = Dividends.getStock(Range.Y1, "ibm", "bt");
+			logger.info("dividends {}", map.size());
+			for(Map.Entry<String, Dividends[]> entry: map.entrySet()) {
+				logger.info("  {} {} {}", entry.getKey(), entry.getValue().length, Arrays.asList(entry.getValue()).toString());
+			}
+		}
+
+		{
+			Map<String, OHLC> map = OHLC.getStock("ibm", "bt");
+			logger.info("ohlc {}", map.size());
+			for(Map.Entry<String, OHLC> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
+		}
+
+		{
+			Map<String, Price> map = Price.getStock("ibm", "bt");
+			logger.info("price {}", map.size());
+			for(Map.Entry<String, Price> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
 		}
 		
 		{
-			Map<String, Price> result = getStock(Price.class, "ibm", "bt");
-			logger.info("result {}", result.toString());
+			Map<String, Quote> map = Quote.getStock("ibm", "bt");
+			logger.info("quote {}", map.size());
+			for(Map.Entry<String, Quote> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
 		}
 		
+		{
+			Map<String, Stats> map = Stats.getStock("ibm");
+			logger.info("stats {}", map.size());
+			for(Map.Entry<String, Stats> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
+		}
+		
+		{
+			Symbols[] symbols = Symbols.getRefData();
+			logger.info("symbols {}", symbols.length);
+//			logger.info("symbols {}", Arrays.asList(symbols).toString());
+		}
 		
 		logger.info("STOP");
 	}

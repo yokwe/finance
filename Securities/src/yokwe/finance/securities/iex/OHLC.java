@@ -1,16 +1,9 @@
 package yokwe.finance.securities.iex;
 
-import java.io.StringReader;
 import java.time.LocalDateTime;
+import java.util.Map;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yokwe.finance.securities.util.HttpUtil;
 
 public class OHLC extends IEXBase {
 	public static final String TYPE = "ohlc";
@@ -43,37 +36,41 @@ public class OHLC extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static OHLC getStock(String symbol) {
-		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
-		String jsonString = HttpUtil.downloadAsString(url);
-
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			return new OHLC(jsonObject);
-		}
+	public static Map<String, OHLC> getStock(String... symbols) {
+		return IEXBase.getStock(OHLC.class, symbols);
 	}
 
-	static void test(Logger logger) {
-		String jsonString = "{\"open\":{\"price\":146.89,\"time\":1532698210193},\"close\":{\"price\":145.15,\"time\":1532721693191},\"high\":147.14,\"low\":144.66}";
-		logger.info("json {}", jsonString);
-		
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			OHLC ohlc = new OHLC(jsonObject);
-			logger.info("ohlc {}", ohlc.toString());
-		}
-	}
-	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(OHLC.class);
-		logger.info("START");
-		
-		test(logger);
-		
-		{
-			OHLC ohlc = OHLC.getStock("ibm");
-			logger.info("ohlc {}", ohlc.toString());
-		}
-
-		logger.info("STOP");
-	}
+//	public static OHLC getStock(String symbol) {
+//		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
+//		String jsonString = HttpUtil.downloadAsString(url);
+//
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			return new OHLC(jsonObject);
+//		}
+//	}
+//
+//	static void test(Logger logger) {
+//		String jsonString = "{\"open\":{\"price\":146.89,\"time\":1532698210193},\"close\":{\"price\":145.15,\"time\":1532721693191},\"high\":147.14,\"low\":144.66}";
+//		logger.info("json {}", jsonString);
+//		
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			OHLC ohlc = new OHLC(jsonObject);
+//			logger.info("ohlc {}", ohlc.toString());
+//		}
+//	}
+//	public static void main(String[] args) {
+//		Logger logger = LoggerFactory.getLogger(OHLC.class);
+//		logger.info("START");
+//		
+//		test(logger);
+//		
+//		{
+//			OHLC ohlc = OHLC.getStock("ibm");
+//			logger.info("ohlc {}", ohlc.toString());
+//		}
+//
+//		logger.info("STOP");
+//	}
 }

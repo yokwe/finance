@@ -1,19 +1,8 @@
 package yokwe.finance.securities.iex;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yokwe.finance.securities.util.HttpUtil;
 
 public class Dividends extends IEXBase {
 	public static final String TYPE = "dividends";
@@ -57,64 +46,66 @@ public class Dividends extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static Dividends[] getStock(String symbol, Range range) {
-		String url = String.format("%s/stock/%s/%s/%s", END_POINT, symbol, TYPE, range.toString());
-		String jsonString = HttpUtil.downloadAsString(url);
-
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonArray jsonArray = reader.readArray();
-			int jsonArraySize = jsonArray.size();
-			
-			Dividends[] ret = new Dividends[jsonArraySize];
-			for(int i = 0; i < jsonArraySize; i++) {
-				JsonObject element = jsonArray.getJsonObject(i);
-				ret[i] = new Dividends(element);
-			}
-			
-			return ret;
-		}
+	public static Map<String, Dividends[]> getStock(Range range, String... symbols) {
+		return IEXBase.getStock(Dividends.class, range, symbols);
 	}
 
-	static void test(Logger logger) {
-		String jsonString = "[{\"exDate\":\"2018-02-08\",\"paymentDate\":\"2018-03-10\",\"recordDate\":\"2018-02-09\",\"declaredDate\":\"2018-01-30\",\"amount\":1.5,\"flag\":\"FI\",\"type\":\"Dividend income\",\"qualified\":\"\",\"indicated\":\"\"},{\"exDate\":\"2017-11-09\",\"paymentDate\":\"2017-12-09\",\"recordDate\":\"2017-11-10\",\"declaredDate\":\"2017-10-31\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"\",\"indicated\":\"\"},{\"exDate\":\"2017-08-08\",\"paymentDate\":\"2017-09-09\",\"recordDate\":\"2017-08-10\",\"declaredDate\":\"2017-07-25\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"Q\",\"indicated\":\"\"},{\"exDate\":\"2017-05-08\",\"paymentDate\":\"2017-06-10\",\"recordDate\":\"2017-05-10\",\"declaredDate\":\"2017-04-25\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"Q\",\"indicated\":\"\"}]";
-		logger.info("json {}", jsonString);
-		
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonArray jsonArray = reader.readArray();
-			int jsonArraySize = jsonArray.size();
-			logger.info("jsonArraySize = {}", jsonArraySize);
-			
-			List<Dividends> result = new ArrayList<>();
-			for(int i = 0; i < jsonArraySize; i++) {
-				JsonObject element = jsonArray.getJsonObject(i);
-				Dividends dividends = new Dividends(element);
-				result.add(dividends);
-			}
-
-			logger.info("result ({}){}", result.size(), result.toString());
-		}
-	}
-
-	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(Dividends.class);
-		logger.info("START");
-		
-		test(logger);
-		
-		{
-			Dividends[] dividends = Dividends.getStock("ibm", Range.Y1);
-			logger.info("dividends {}", dividends.length);
-			logger.info("dividends {}", Arrays.asList(dividends).toString());
-		}
-
-		{
-			Dividends[] dividends = Dividends.getStock("ibm", Range.LAST);
-			logger.info("dividends {}", dividends.length);
-			logger.info("dividends {}", Arrays.asList(dividends).toString());
-		}
-
-		logger.info("STOP");
-	}
-
-	
+//	public static Dividends[] getStock(String symbol, Range range) {
+//		String url = String.format("%s/stock/%s/%s/%s", END_POINT, symbol, TYPE, range.toString());
+//		String jsonString = HttpUtil.downloadAsString(url);
+//
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonArray jsonArray = reader.readArray();
+//			int jsonArraySize = jsonArray.size();
+//			
+//			Dividends[] ret = new Dividends[jsonArraySize];
+//			for(int i = 0; i < jsonArraySize; i++) {
+//				JsonObject element = jsonArray.getJsonObject(i);
+//				ret[i] = new Dividends(element);
+//			}
+//			
+//			return ret;
+//		}
+//	}
+//
+//	static void test(Logger logger) {
+//		String jsonString = "[{\"exDate\":\"2018-02-08\",\"paymentDate\":\"2018-03-10\",\"recordDate\":\"2018-02-09\",\"declaredDate\":\"2018-01-30\",\"amount\":1.5,\"flag\":\"FI\",\"type\":\"Dividend income\",\"qualified\":\"\",\"indicated\":\"\"},{\"exDate\":\"2017-11-09\",\"paymentDate\":\"2017-12-09\",\"recordDate\":\"2017-11-10\",\"declaredDate\":\"2017-10-31\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"\",\"indicated\":\"\"},{\"exDate\":\"2017-08-08\",\"paymentDate\":\"2017-09-09\",\"recordDate\":\"2017-08-10\",\"declaredDate\":\"2017-07-25\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"Q\",\"indicated\":\"\"},{\"exDate\":\"2017-05-08\",\"paymentDate\":\"2017-06-10\",\"recordDate\":\"2017-05-10\",\"declaredDate\":\"2017-04-25\",\"amount\":1.5,\"flag\":\"\",\"type\":\"Dividend income\",\"qualified\":\"Q\",\"indicated\":\"\"}]";
+//		logger.info("json {}", jsonString);
+//		
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonArray jsonArray = reader.readArray();
+//			int jsonArraySize = jsonArray.size();
+//			logger.info("jsonArraySize = {}", jsonArraySize);
+//			
+//			List<Dividends> result = new ArrayList<>();
+//			for(int i = 0; i < jsonArraySize; i++) {
+//				JsonObject element = jsonArray.getJsonObject(i);
+//				Dividends dividends = new Dividends(element);
+//				result.add(dividends);
+//			}
+//
+//			logger.info("result ({}){}", result.size(), result.toString());
+//		}
+//	}
+//
+//	public static void main(String[] args) {
+//		Logger logger = LoggerFactory.getLogger(Dividends.class);
+//		logger.info("START");
+//		
+//		test(logger);
+//		
+//		{
+//			Dividends[] dividends = Dividends.getStock("ibm", Range.Y1);
+//			logger.info("dividends {}", dividends.length);
+//			logger.info("dividends {}", Arrays.asList(dividends).toString());
+//		}
+//
+//		{
+//			Dividends[] dividends = Dividends.getStock("ibm", Range.LAST);
+//			logger.info("dividends {}", dividends.length);
+//			logger.info("dividends {}", Arrays.asList(dividends).toString());
+//		}
+//
+//		logger.info("STOP");
+//	}
 }

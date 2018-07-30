@@ -1,15 +1,8 @@
 package yokwe.finance.securities.iex;
 
-import java.io.StringReader;
+import java.util.Map;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import yokwe.finance.securities.util.HttpUtil;
 
 public class Company extends IEXBase {
 	public static final String TYPE = "company";
@@ -51,37 +44,41 @@ public class Company extends IEXBase {
 		super(jsonObject);
 	}
 	
-	public static Company getStock(String symbol) {
-		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
-		String jsonString = HttpUtil.downloadAsString(url);
-
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			return new Company(jsonObject);
-		}
+	public static Map<String, Company> getStock(String... symbols) {
+		return IEXBase.getStock(Company.class, symbols);
 	}
-
-	static void test(Logger logger) {
-		String jsonString = "{\"symbol\":\"IBM\",\"companyName\":\"International Business Machines Corporation\",\"exchange\":\"New York Stock Exchange\",\"industry\":\"Application Software\",\"website\":\"http://www.ibm.com\",\"description\":\"International Business Machines Corp offers a variety of IT services along with software, and hardware. It has operations in over 170 countries and provides planning, build, manage, and maintain IT infrastructure, platforms, applications, and services.\",\"CEO\":\"Virginia M. Rometty\",\"issueType\":\"cs\",\"sector\":\"Technology\",\"tags\":[\"Technology\",\"Information Technology Services\",\"Application Software\"]}";
-		logger.info("json {}", jsonString);
-		
-		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
-			JsonObject jsonObject = reader.readObject();
-			Company Company = new Company(jsonObject);
-			logger.info("Company {}", Company.toString());
-		}
-	}
-	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(Company.class);
-		logger.info("START");
-		
-		test(logger);
-		
-		{
-			Company company = Company.getStock("ibm");
-			logger.info("Company {}", company.toString());
-		}
-
-		logger.info("STOP");
-	}
+	
+//	public static Company getStock(String symbol) {
+//		String url = String.format("%s/stock/%s/%s", END_POINT, symbol, TYPE);
+//		String jsonString = HttpUtil.downloadAsString(url);
+//
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			return new Company(jsonObject);
+//		}
+//	}
+//
+//	static void test(Logger logger) {
+//		String jsonString = "{\"symbol\":\"IBM\",\"companyName\":\"International Business Machines Corporation\",\"exchange\":\"New York Stock Exchange\",\"industry\":\"Application Software\",\"website\":\"http://www.ibm.com\",\"description\":\"International Business Machines Corp offers a variety of IT services along with software, and hardware. It has operations in over 170 countries and provides planning, build, manage, and maintain IT infrastructure, platforms, applications, and services.\",\"CEO\":\"Virginia M. Rometty\",\"issueType\":\"cs\",\"sector\":\"Technology\",\"tags\":[\"Technology\",\"Information Technology Services\",\"Application Software\"]}";
+//		logger.info("json {}", jsonString);
+//		
+//		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+//			JsonObject jsonObject = reader.readObject();
+//			Company Company = new Company(jsonObject);
+//			logger.info("Company {}", Company.toString());
+//		}
+//	}
+//	public static void main(String[] args) {
+//		Logger logger = LoggerFactory.getLogger(Company.class);
+//		logger.info("START");
+//		
+//		test(logger);
+//		
+//		{
+//			Company company = Company.getStock("ibm");
+//			logger.info("Company {}", company.toString());
+//		}
+//
+//		logger.info("STOP");
+//	}
 }

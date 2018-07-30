@@ -105,6 +105,12 @@ public class Dividends extends IEXBase {
 			logger.info("dividends {}", Arrays.asList(dividends).toString());
 		}
 
+		{
+			Dividends[] dividends = Dividends.getStock("ibm", Range.LAST);
+			logger.info("dividends {}", dividends.length);
+			logger.info("dividends {}", Arrays.asList(dividends).toString());
+		}
+
 		logger.info("STOP");
 	}
 

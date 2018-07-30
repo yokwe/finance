@@ -103,6 +103,12 @@ public class Chart extends IEXBase {
 			logger.info("chart {}", Arrays.asList(chart).toString());
 		}
 
+		{
+			Chart[] chart = Chart.getStock("ibm", Range.LAST);
+			logger.info("chart {}", chart.length);
+			logger.info("chart {}", Arrays.asList(chart).toString());
+		}
+
 		logger.info("STOP");
 	}
 }

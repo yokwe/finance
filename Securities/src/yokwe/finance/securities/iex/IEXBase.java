@@ -1,5 +1,6 @@
 package yokwe.finance.securities.iex;
 
+import java.io.StringReader;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,15 +20,19 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import yokwe.finance.securities.util.HttpUtil;
 
 public class IEXBase {
 	private static final Logger logger = LoggerFactory.getLogger(IEXBase.class);
@@ -40,7 +45,8 @@ public class IEXBase {
 	
 	public static enum Range {
 		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
-		M6("6m"), M3("3m"), M1("1m");
+		M6("6m"), M3("3m"), M1("1m"),
+		LAST("1y?chartLast=1"); // Use 1y in LAST for annually dividend
 		
 		private final String value;
 		Range(String value) {
@@ -390,5 +396,144 @@ public class IEXBase {
 			logger.error("SecurityException {}", e.toString());
 			throw new IEXUnexpectedError("SecurityException");
 		}
+	}
+
+	private static Map<String, String> typeMap = new TreeMap<>();
+	protected static String getType(Class<? extends IEXBase> clazz) {
+		try {
+			String clazzName = clazz.getName();
+			if (typeMap.containsKey(clazzName)) {
+				return typeMap.get(clazzName);
+			}
+
+			Field field = clazz.getDeclaredField("TYPE");
+			String fieldTypeName = field.getType().getName();
+			if (!fieldTypeName.equals("java.lang.String")) {
+				logger.error("Unexpected fieldTypeName {}", fieldTypeName);
+				throw new IEXUnexpectedError("Unexpected fieldTypeName");
+			}
+			Object value = field.get(null);
+			if (value instanceof String) {
+				typeMap.put(clazzName, (String)value);
+				return (String)value;
+			} else {
+				logger.error("Unexpected value {}", value.getClass().getName());
+				throw new IEXUnexpectedError("Unexpected value");
+			}
+		} catch (NoSuchFieldException e) {
+			logger.error("NoSuchFieldException {}", e.toString());
+			throw new IEXUnexpectedError("NoSuchFieldException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new IEXUnexpectedError("SecurityException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalArgumentException");
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalAccessException");
+		}
+	}
+	
+	public static <E extends IEXBase> Map<String, E> getStock(Class<E> clazz, String ... symbols) {
+		// Sanity check
+		if (symbols.length == 0) {
+			logger.error("symbols.length == 0");
+			throw new IEXUnexpectedError("symbols.length == 0");
+		}
+		String type = getType(clazz);
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", symbols));
+		String jsonString = HttpUtil.downloadAsString(url);
+		if (jsonString == null) {
+			logger.error("jsonString == null");
+			throw new IEXUnexpectedError("jsonString == null");
+		}
+		
+		// {"IBM":{"price":145.15},"BT":{"price":15.48}}
+		// {"IBM":{"ohlc":{"open":{"price":146.89,"time":1532698210193},"close":{"price":145.15,"time":1532721693191},"high":147.14,"low":144.66}},"BT":{"ohlc":{"open":{"price":15.44,"time":1532698504567},"close":{"price":15.48,"time":1532721721103},"high":15.75,"low":15.405}}}
+		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+			Map<String, E> ret = new TreeMap<>();
+
+			// Assume result is only one object
+			JsonObject result = reader.readObject();
+			for(String resultKey: result.keySet()) {
+				JsonValue resultChild = result.get(resultKey);
+				ValueType resultChildValueType = resultChild.getValueType();
+				// Sanity check
+				if (resultChildValueType != ValueType.OBJECT) {
+					logger.error("Unexpected resultChildValueType {}", resultChildValueType.toString());
+					throw new IEXUnexpectedError("Unexpected resultChildValueType");
+				}
+				JsonObject element = resultChild.asJsonObject();
+				String[] elementKeys = element.keySet().toArray(new String[0]);
+				// Sanity check
+				if (elementKeys.length != 1) {
+					logger.error("elementKeys.length {}", element.keySet().toString());
+					throw new IEXUnexpectedError("elementKeys.length");
+				}
+				String elementKey = elementKeys[0];
+				JsonValue elementValue = element.get(elementKey);
+				ValueType elementValueType = elementValue.getValueType();
+				
+				// Sanity check
+				if (!elementKey.equals(type)) {
+					logger.error("Unexpected elementKey {} {}", type, elementKey);
+					throw new IEXUnexpectedError("Unexpected elementKey");
+				}
+				switch(elementValueType) {
+				case OBJECT:
+				{
+					E child = (E)clazz.getDeclaredConstructor(JsonObject.class).newInstance(elementValue.asJsonObject());
+					ret.put(resultKey, child);
+				}
+					break;
+				case NUMBER:
+				{
+					E child = (E)clazz.getDeclaredConstructor(String.class).newInstance(elementValue.toString());
+					ret.put(resultKey, child);
+				}
+					break;
+				default:
+					logger.error("Unexpected elementValueType {}", elementValueType);
+					throw new IEXUnexpectedError("Unexpected elementValueType");
+				}
+			}
+			return ret;
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalAccessException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new IEXUnexpectedError("InstantiationException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalArgumentException");
+		} catch (InvocationTargetException e) {
+			logger.error("InvocationTargetException {}", e.toString());
+			throw new IEXUnexpectedError("InvocationTargetException");
+		} catch (NoSuchMethodException e) {
+			logger.error("NoSuchMethodException {}", e.toString());
+			throw new IEXUnexpectedError("NoSuchMethodException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new IEXUnexpectedError("SecurityException");
+		}
+	}
+	
+	public static void main(String[] args) {
+		logger.info("START");
+		
+		{
+			Map<String, OHLC> result = getStock(OHLC.class, "ibm", "bt");
+			logger.info("result {}", result.toString());
+		}
+		
+		{
+			Map<String, Price> result = getStock(Price.class, "ibm", "bt");
+			logger.info("result {}", result.toString());
+		}
+		
+		
+		logger.info("STOP");
 	}
 }

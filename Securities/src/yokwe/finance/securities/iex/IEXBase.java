@@ -202,33 +202,13 @@ public class IEXBase {
 	protected IEXBase(JsonObject jsonObject) {
 		try {
 			ClassInfo classInfo = ClassInfo.get(this);
-			{
-				// Sanity check
-				{
-					Set<String> fieldNameSet = new TreeSet<>(Arrays.asList(classInfo.names));
-					Set<String> jsonNameSet  = new TreeSet<>(jsonObject.keySet());
-					
-					Set<String> unionSet = new TreeSet<>();
-					unionSet.addAll(fieldNameSet);
-					unionSet.addAll(jsonNameSet);
-					
-					int fieldNameSetSize = fieldNameSet.size();
-					int jsonNameSetSize  = jsonNameSet.size();
-					int unionSetSize     = unionSet.size();
-					
-					if (fieldNameSetSize != unionSetSize || jsonNameSetSize != unionSetSize) {
-						logger.error("Unknonw field in jsonObject");
-						logger.error("fieldNameSet = ({}){}", fieldNameSetSize, fieldNameSet);
-						logger.error("jsonNameSet  = ({}){}", jsonNameSetSize, jsonNameSet);
-						throw new IEXUnexpectedError("Unknonw field in jsonObject");
-					}
-				}
-			}
-			
 			for(int i = 0; i < classInfo.size; i++) {
 				String name  = classInfo.names[i];
 				String type  = classInfo.types[i];
 				Field  field = classInfo.fields[i];
+				
+				// Skip field if name is not exist in jsonObject
+				if (!jsonObject.containsKey(name))continue;
 				
 				ValueType valueType = jsonObject.get(name).getValueType();
 				
@@ -682,14 +662,26 @@ public class IEXBase {
 					
 					for(int i = 0; i < jsonArraySize; i++) {
 						JsonObject arg = jsonArray.getJsonObject(i);
+						E e = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
 						
-						// Sanity check
-						if (classInfo.size != arg.size()) {
-							logger.warn("Unexpected resultChild {} {} {}", resultKey, classInfo.size, arg.size());
-							continue;
+						// Assign default value, if field value is null)
+						for(int j = 0; j < classInfo.size; j++) {
+							Object o = classInfo.fields[j].get(e);
+							// If field is null, assign default value
+							if (o == null) {
+								switch(classInfo.types[j]) {
+								case "double":
+									logger.warn("Assign defautl value  {} {} {}", classInfo.clazzName, classInfo.names[j], classInfo.types[j]);
+									classInfo.fields[j].setDouble(o, 0);
+									break;
+								default:
+									logger.error("Unexpected field type {} {} {}", classInfo.clazzName, classInfo.names[i], classInfo.types[i]);
+									throw new IEXUnexpectedError("Unexpected field type");
+								}
+							}
 						}
 
-						childArray[i] = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
+						childArray[i] = e;
 					}
 					ret.put(resultKey, childArray);
 				}

@@ -4,8 +4,66 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
-public class Company extends IEXBase {
+public class Company extends IEXBase implements Comparable<Company> {
 	public static final String TYPE = "company";
+	
+	public static class CSV implements Comparable<CSV> {
+		public String symbol;
+		public String companyName;
+		public String exchange;
+		public String industry;
+		public String website;
+		public String description;
+		public String CEO;
+		public String issueType;
+		public String sector;
+		public String tags;
+
+		CSV() {
+			this.symbol      = null;
+			this.companyName = null;
+			this.exchange    = null;
+			this.industry    = null;
+			this.website     = null;
+			this.description = null;
+			this.CEO         = null;
+			this.issueType   = null;
+			this.sector      = null;
+			this.tags        = null;
+		}
+		CSV(Company company) {
+			this.symbol      = company.symbol;
+			this.companyName = company.companyName;
+			this.exchange    = company.exchange;
+			this.industry    = company.industry;
+			this.website     = company.website;
+			this.description = company.description;
+			this.CEO         = company.CEO;
+			this.issueType   = company.issueType;
+			this.sector      = company.sector;
+			this.tags        = String.join(" ", company.tags);
+		}
+		
+		Company toCompany() {
+			Company company = new Company();
+			
+			company.symbol      = this.symbol;
+			company.companyName = this.companyName;
+			company.exchange    = this.exchange;
+			company.industry    = this.industry;
+			company.website     = this.website;
+			company.description = this.description;
+			company.CEO         = this.CEO;
+			company.tags        = this.tags.split(" ");
+
+			return company;
+		}
+		
+		@Override
+		public int compareTo(CSV that) {
+			return this.symbol.compareTo(that.symbol);
+		}
+	}
 
 	public String symbol;
 	public String companyName;
@@ -44,6 +102,11 @@ public class Company extends IEXBase {
 		super(jsonObject);
 	}
 	
+	@Override
+	public int compareTo(Company that) {
+		return this.symbol.compareTo(that.symbol);
+	}
+
 	public static Map<String, Company> getStock(String... symbols) {
 		return IEXBase.getStockObject(Company.class, symbols);
 	}

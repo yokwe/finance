@@ -37,7 +37,7 @@ public class OHLC extends IEXBase {
 	}
 	
 	public static Map<String, OHLC> getStock(String... symbols) {
-		return IEXBase.getStock(OHLC.class, symbols);
+		return IEXBase.getStockObject(OHLC.class, symbols);
 	}
 
 //	public static OHLC getStock(String symbol) {

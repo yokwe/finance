@@ -40,7 +40,7 @@ public class Chart extends IEXBase {
 	}
 	
 	public static Map<String, Chart[]> getStock(Range range, String... symbols) {
-		return IEXBase.getStock(Chart.class, range, symbols);
+		return IEXBase.getStockArray(Chart.class, range, symbols);
 	}
 	
 //	public static Chart[] getStock(String symbol, Range range) {

@@ -117,7 +117,7 @@ public class Stats extends IEXBase {
 	}
 	
 	public static Map<String, Stats> getStock(String... symbols) {
-		return IEXBase.getStock(Stats.class, symbols);
+		return IEXBase.getStockObject(Stats.class, symbols);
 	}
 
 //	public static Stats getStock(String symbol) {

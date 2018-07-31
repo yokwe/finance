@@ -45,7 +45,7 @@ public class Company extends IEXBase {
 	}
 	
 	public static Map<String, Company> getStock(String... symbols) {
-		return IEXBase.getStock(Company.class, symbols);
+		return IEXBase.getStockObject(Company.class, symbols);
 	}
 	
 //	public static Company getStock(String symbol) {

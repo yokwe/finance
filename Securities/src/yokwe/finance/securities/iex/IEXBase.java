@@ -430,8 +430,8 @@ public class IEXBase {
 		}
 	}
 	
-	// For Company, OHLC, Price, Quote, Stats
-	protected static <E extends IEXBase> Map<String, E> getStock(Class<E> clazz, String ... symbols) {
+	// For Company, OHLC, Quote and Stats
+	protected static <E extends IEXBase> Map<String, E> getStockObject(Class<E> clazz, String ... symbols) {
 		// Sanity check
 		if (symbols.length == 0) {
 			logger.error("symbols.length == 0");
@@ -445,7 +445,6 @@ public class IEXBase {
 			throw new IEXUnexpectedError("jsonString == null");
 		}
 		
-		// {"IBM":{"price":145.15},"BT":{"price":15.48}}
 		// {"IBM":{"ohlc":{"open":{"price":146.89,"time":1532698210193},"close":{"price":145.15,"time":1532721693191},"high":147.14,"low":144.66}},"BT":{"ohlc":{"open":{"price":15.44,"time":1532698504567},"close":{"price":15.48,"time":1532721721103},"high":15.75,"low":15.405}}}
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			Map<String, E> ret = new TreeMap<>();
@@ -516,8 +515,87 @@ public class IEXBase {
 		}
 	}
 	
+	// For Price
+	protected static <E extends IEXBase> Map<String, E> getStockNumber(Class<E> clazz, String ... symbols) {
+		// Sanity check
+		if (symbols.length == 0) {
+			logger.error("symbols.length == 0");
+			throw new IEXUnexpectedError("symbols.length == 0");
+		}
+		String type = getType(clazz);
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", symbols));
+		String jsonString = HttpUtil.downloadAsString(url);
+		if (jsonString == null) {
+			logger.error("jsonString == null");
+			throw new IEXUnexpectedError("jsonString == null");
+		}
+		
+		// {"IBM":{"price":145.15},"BT":{"price":15.48}}
+		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+			Map<String, E> ret = new TreeMap<>();
+
+			// Assume result is only one object
+			JsonObject result = reader.readObject();
+			for(String resultKey: result.keySet()) {
+				JsonValue resultChild = result.get(resultKey);
+				ValueType resultChildValueType = resultChild.getValueType();
+				// Sanity check
+				if (resultChildValueType != ValueType.OBJECT) {
+					logger.error("Unexpected resultChildValueType {}", resultChildValueType.toString());
+					throw new IEXUnexpectedError("Unexpected resultChildValueType");
+				}
+				JsonObject element = resultChild.asJsonObject();
+				String[] elementKeys = element.keySet().toArray(new String[0]);
+				// Sanity check
+				if (elementKeys.length != 1) {
+					logger.error("elementKeys.length {}", element.keySet().toString());
+					throw new IEXUnexpectedError("elementKeys.length");
+				}
+				String elementKey = elementKeys[0];
+				JsonValue elementValue = element.get(elementKey);
+				ValueType elementValueType = elementValue.getValueType();
+				
+				// Sanity check
+				if (!elementKey.equals(type)) {
+					logger.error("Unexpected elementKey {} {}", type, elementKey);
+					throw new IEXUnexpectedError("Unexpected elementKey");
+				}
+				switch(elementValueType) {
+				case NUMBER:
+				{
+					E child = (E)clazz.getDeclaredConstructor(String.class).newInstance(elementValue.toString());
+					ret.put(resultKey, child);
+				}
+					break;
+				default:
+					logger.error("Unexpected elementValueType {}", elementValueType);
+					throw new IEXUnexpectedError("Unexpected elementValueType");
+				}
+			}
+			return ret;
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalAccessException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new IEXUnexpectedError("InstantiationException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalArgumentException");
+		} catch (InvocationTargetException e) {
+			logger.error("InvocationTargetException {}", e.toString());
+			throw new IEXUnexpectedError("InvocationTargetException");
+		} catch (NoSuchMethodException e) {
+			logger.error("NoSuchMethodException {}", e.toString());
+			throw new IEXUnexpectedError("NoSuchMethodException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new IEXUnexpectedError("SecurityException");
+		}
+	}
+	
 	// For Chart and Dividends
-	protected static <E extends IEXBase> Map<String, E[]> getStock(Class<E> clazz, Range range, String ... symbols) {
+	protected static <E extends IEXBase> Map<String, E[]> getStockArray(Class<E> clazz, Range range, String ... symbols) {
 		// Sanity check
 		if (symbols.length == 0) {
 			logger.error("symbols.length == 0");

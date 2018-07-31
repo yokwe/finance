@@ -47,7 +47,7 @@ public class Dividends extends IEXBase {
 	}
 	
 	public static Map<String, Dividends[]> getStock(Range range, String... symbols) {
-		return IEXBase.getStock(Dividends.class, range, symbols);
+		return IEXBase.getStockArray(Dividends.class, range, symbols);
 	}
 
 //	public static Dividends[] getStock(String symbol, Range range) {

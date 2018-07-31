@@ -12,7 +12,7 @@ public class Price extends IEXBase {
 	}
 	
 	public static Map<String, Price> getStock(String... symbols) {
-		return IEXBase.getStock(Price.class, symbols);
+		return IEXBase.getStockNumber(Price.class, symbols);
 	}
 
 //	public static Price getStock(String symbol) {

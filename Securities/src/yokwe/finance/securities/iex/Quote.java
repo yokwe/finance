@@ -96,7 +96,7 @@ public class Quote extends IEXBase {
 	}
 	
 	public static Map<String, Quote> getStock(String... symbols) {
-		return IEXBase.getStock(Quote.class, symbols);
+		return IEXBase.getStockObject(Quote.class, symbols);
 	}
 
 //	public static Quote getStock(String symbol) {

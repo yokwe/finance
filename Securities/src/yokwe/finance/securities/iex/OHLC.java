@@ -32,7 +32,7 @@ public class OHLC extends IEXBase {
 		high  = 0;
 		low   = 0;
 	}
-	OHLC(JsonObject jsonObject) {
+	public OHLC(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

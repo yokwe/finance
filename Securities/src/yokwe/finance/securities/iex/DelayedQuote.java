@@ -16,14 +16,14 @@ public class DelayedQuote extends IEXBase {
 	public LocalDateTime delayedPriceTime; // refers to the time of the delayed market price.
 	public LocalDateTime processedTime;    // refers to when IEX processed the SIP price.
 
-	DelayedQuote() {
+	public DelayedQuote() {
 		symbol           = null;
 		delayedPrice     = 0;
 		delayedSize      = 0;
 		delayedPriceTime = null;
 		processedTime    = null;
 	}
-	DelayedQuote(JsonObject jsonObject) {
+	public DelayedQuote(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 

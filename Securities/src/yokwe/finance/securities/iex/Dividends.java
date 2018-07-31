@@ -32,7 +32,7 @@ public class Dividends extends IEXBase {
 								// null = N/A or unknown
 	public String indicated; 	// refers to the indicated rate of the dividend
 	
-	Dividends() {
+	public Dividends() {
 		exDate       = null;
 		paymentDate  = null;
 		recordDate   = null;
@@ -42,7 +42,7 @@ public class Dividends extends IEXBase {
 		type         = null;
 		indicated    = null;
 	}
-	Dividends(JsonObject jsonObject) {
+	public Dividends(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

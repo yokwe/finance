@@ -12,20 +12,20 @@ import yokwe.finance.securities.util.HttpUtil;
 public class Symbols extends IEXBase {
 	public static final String TYPE = "symbols";
 
-	String  symbol;    // refers to the symbol represented in Nasdaq Integrated symbology (INET).
-	String  name;      // refers to the name of the company or security.
-	String  date;      // refers to the date the symbol reference data was generated.
-	boolean isEnabled; // will be true if the symbol is enabled for trading on IEX.
-	String  type;      // refers to the common issue type (AD - ADR
+	public String  symbol;    // refers to the symbol represented in Nasdaq Integrated symbology (INET).
+	public String  name;      // refers to the name of the company or security.
+	public String  date;      // refers to the date the symbol reference data was generated.
+	public boolean isEnabled; // will be true if the symbol is enabled for trading on IEX.
+	public String  type;      // refers to the common issue type (AD - ADR
 	                   // RE - REIT
 				       // CE - Closed end fund
 				       // SI - Secondary Issue
 				       // LP - Limited Partnerships
 				       // CS - Common Stock
 				       // ET - ETF)
-	String  iexId;     // unique ID applied by IEX to track securities through symbol changes.
+	public String  iexId;     // unique ID applied by IEX to track securities through symbol changes.
 
-	Symbols() {
+	public Symbols() {
 		symbol    = null;
 		name      = null;
 		date      = null;
@@ -33,7 +33,7 @@ public class Symbols extends IEXBase {
 		type      = null;
 		iexId     = null;
 	}
-	Symbols(JsonObject jsonObject) {
+	public Symbols(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

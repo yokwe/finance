@@ -60,7 +60,7 @@ public class Stats extends IEXBase {
 	public double day5ChangePercent;
 	public double day30ChangePercent;
 	
-	Stats() {
+	public Stats() {
 		companyName         = null;
 		marketcap           = 0;
 		beta                = 0;
@@ -112,7 +112,7 @@ public class Stats extends IEXBase {
 		day5ChangePercent   = 0;
 		day30ChangePercent  = 0;
 	}
-	Stats(JsonObject jsonObject) {
+	public Stats(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

@@ -35,7 +35,7 @@ public class Chart extends IEXBase {
 		changePercent    = 0;
 		vwap             = 0;
 	}
-	Chart(JsonObject jsonObject) {
+	public Chart(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

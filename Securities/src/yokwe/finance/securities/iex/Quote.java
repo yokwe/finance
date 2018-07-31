@@ -91,7 +91,7 @@ public class Quote extends IEXBase {
 		ytdChange             = 0;
 	}
 	
-	Quote(JsonObject jsonObject) {
+	public Quote(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

@@ -40,7 +40,7 @@ public class Company extends IEXBase {
 		issueType   = null;
 		sector      = null;
 	}
-	Company(JsonObject jsonObject) {
+	public Company(JsonObject jsonObject) {
 		super(jsonObject);
 	}
 	

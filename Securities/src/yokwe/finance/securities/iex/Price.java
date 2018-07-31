@@ -7,7 +7,7 @@ public class Price extends IEXBase {
 	
 	public double current; // A single number, being the IEX real time price, the 15 minute delayed market price, or the previous close price, is returned.
 	
-	Price(String current) {
+	public Price(String current) {
 		this.current = Double.valueOf(current);
 	}
 	

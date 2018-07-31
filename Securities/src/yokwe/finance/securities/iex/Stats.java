@@ -4,7 +4,7 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
-public class Stats extends IEXBase {
+public class Stats extends IEXBase implements Comparable<Stats> {
 	public static final String TYPE = "stats";
 
 	public String companyName;
@@ -116,6 +116,11 @@ public class Stats extends IEXBase {
 		super(jsonObject);
 	}
 	
+	@Override
+	public int compareTo(Stats that) {
+		return this.symbol.compareTo(that.symbol);
+	}
+
 	public static Map<String, Stats> getStock(String... symbols) {
 		return IEXBase.getStockObject(Stats.class, symbols);
 	}

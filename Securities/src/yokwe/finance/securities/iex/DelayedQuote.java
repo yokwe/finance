@@ -5,7 +5,7 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
-public class DelayedQuote extends IEXBase {
+public class DelayedQuote extends IEXBase implements Comparable<DelayedQuote> {
 	public static final String TYPE = "delayed-quote";
 
 	public String        symbol;           // refers to the stock ticker.
@@ -25,6 +25,11 @@ public class DelayedQuote extends IEXBase {
 	}
 	public DelayedQuote(JsonObject jsonObject) {
 		super(jsonObject);
+	}
+
+	@Override
+	public int compareTo(DelayedQuote that) {
+		return this.symbol.compareTo(that.symbol);
 	}
 
 	public static Map<String, DelayedQuote> getStock(String... symbols) {

@@ -9,7 +9,7 @@ import javax.json.JsonReader;
 
 import yokwe.finance.securities.util.HttpUtil;
 
-public class Symbols extends IEXBase {
+public class Symbols extends IEXBase implements Comparable<Symbols> {
 	public static final String TYPE = "symbols";
 
 	public String  symbol;    // refers to the symbol represented in Nasdaq Integrated symbology (INET).
@@ -37,6 +37,11 @@ public class Symbols extends IEXBase {
 		super(jsonObject);
 	}
 	
+	@Override
+	public int compareTo(Symbols that) {
+		return this.symbol.compareTo(that.symbol);
+	}
+
 	public static Symbols[] getRefData() {
 		String url = String.format("%s/ref-data/%s", END_POINT, TYPE);
 		String jsonString = HttpUtil.downloadAsString(url);

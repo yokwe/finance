@@ -193,7 +193,12 @@ public class CSVUtil {
 		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {
 			for(E entry: dataList) {
 				for(int i = 0; i < fields.length; i++) {
-					values[i] = fields[i].get(entry).toString();
+					Object value = fields[i].get(entry);
+					if (value == null) {
+						logger.error("value is null.  {} {} {}", o.getClass().getName(), fields[i].getName(), fields[i].getType().getName());
+						throw new SecuritiesException("value is null");
+					}
+					values[i] = value.toString();
 				}
 				csvPrint.printRecord(values);
 			}

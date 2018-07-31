@@ -329,4 +329,53 @@
                 </java>
         </target>
 
+	
+        <target name="run-iex-update-symbols">
+                <java classname="yokwe.finance.securities.iex.UpdateSymbols" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-iex-update-chart">
+                <java classname="yokwe.finance.securities.iex.UpdateChart" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-iex-update-company">
+                <java classname="yokwe.finance.securities.iex.UpdateCompany" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-iex-update-dividends">
+                <java classname="yokwe.finance.securities.iex.UpdateDividends" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-iex-update-quote">
+                <java classname="yokwe.finance.securities.iex.UpdateQuote" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-iex-update-stats">
+                <java classname="yokwe.finance.securities.iex.UpdateStats" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
 </project>

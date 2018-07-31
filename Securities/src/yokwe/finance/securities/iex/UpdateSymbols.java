@@ -21,7 +21,8 @@ public class UpdateSymbols {
 			List<Symbols> symbolsList = CSVUtil.loadWithHeader(UpdateSymbols.PATH_SYMBOLS, Symbols.class);
 			logger.info("symbolsList {}", symbolsList.size());
 			
-			symbolList = symbolsList.stream().filter(o -> o.isEnabled).map(o -> o.symbol).collect(Collectors.toList());
+			// Exclude not enabled and crypto
+			symbolList = symbolsList.stream().filter(o -> o.isEnabled).filter(o -> !o.type.equals("crypto")).map(o -> o.symbol).collect(Collectors.toList());
 			Collections.sort(symbolList);
 			logger.info("symbolList {}", symbolList.size());
 		}

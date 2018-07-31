@@ -8,6 +8,8 @@ public class Company extends IEXBase implements Comparable<Company> {
 	public static final String TYPE = "company";
 	
 	public static class CSV implements Comparable<CSV> {
+		private static final String CHAR_SPLIT_JOIN = ",";
+		
 		public String symbol;
 		public String companyName;
 		public String exchange;
@@ -41,7 +43,7 @@ public class Company extends IEXBase implements Comparable<Company> {
 			this.CEO         = company.CEO;
 			this.issueType   = company.issueType;
 			this.sector      = company.sector;
-			this.tags        = String.join(" ", company.tags);
+			this.tags        = String.join(CHAR_SPLIT_JOIN, company.tags);
 		}
 		
 		Company toCompany() {
@@ -54,7 +56,7 @@ public class Company extends IEXBase implements Comparable<Company> {
 			company.website     = this.website;
 			company.description = this.description;
 			company.CEO         = this.CEO;
-			company.tags        = this.tags.split(" ");
+			company.tags        = this.tags.split(CHAR_SPLIT_JOIN);
 
 			return company;
 		}

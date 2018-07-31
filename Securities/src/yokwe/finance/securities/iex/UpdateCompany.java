@@ -24,10 +24,8 @@ public class UpdateCompany {
 		for(int i = 0; i < symbolListSize; i += IEXBase.MAX_PARAM) {
 			int fromIndex = i;
 			int toIndex = Math.min(fromIndex + IEXBase.MAX_PARAM, symbolListSize);
-			logger.info("  {}", fromIndex);
-			
 			List<String> getList = symbolList.subList(fromIndex, toIndex);
-//			logger.info("getList {}", getList.toString());
+			logger.info("  {} {}", fromIndex, getList.toString());
 			
 			Map<String, Company> companyMap = Company.getStock(getList.toArray(new String[0]));
 			companyMap.values().stream().forEach(o -> companyList.add(new Company.CSV(o)));

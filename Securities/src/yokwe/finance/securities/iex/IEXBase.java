@@ -270,7 +270,7 @@ public class IEXBase {
 						field.set(this, jsonString.getString());
 						break;
 					case "double":
-						field.set(this, Double.valueOf(jsonString.getString()));
+						field.set(this, Double.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
@@ -442,6 +442,18 @@ public class IEXBase {
 		}
 	}
 	
+	private static String[] encodeSymbol(String[] symbols) {
+		try {
+			String[] ret = new String[symbols.length];
+			for(int i = 0; i < symbols.length; i++) {
+				ret[i] = URLEncoder.encode(symbols[i], "UTF-8");
+			}
+			return ret;
+		} catch (UnsupportedEncodingException e) {
+			logger.error("UnsupportedEncodingException {}", e.toString());
+			throw new IEXUnexpectedError("UnsupportedEncodingException");
+		}
+	}
 	// For Company, DelayedQuote, OHLC, Quote and Stats
 	protected static <E extends IEXBase> Map<String, E> getStockObject(Class<E> clazz, String ... symbols) {
 		// Sanity check
@@ -450,19 +462,8 @@ public class IEXBase {
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
 		
-		// encode symbols
-		String[] encodedSymbols = new String[symbols.length];
-		try {
-			for(int i = 0; i < symbols.length; i++) {
-				encodedSymbols[i] = URLEncoder.encode(symbols[i], "UTF-8");
-			}
-		} catch (UnsupportedEncodingException e) {
-			logger.error("UnsupportedEncodingException {}", e.toString());
-			throw new IEXUnexpectedError("UnsupportedEncodingException");
-		}
-		
 		String type = getType(clazz);
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodedSymbols));
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)));
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -550,7 +551,7 @@ public class IEXBase {
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
 		String type = getType(clazz);
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", symbols));
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)));
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -630,7 +631,7 @@ public class IEXBase {
 		}
 		String type = getType(clazz);
 		// https://api.iextrading.com/1.0/stock/market/batch?symbols=ibm,bt&types=dividends&range=1y&chartLast=1
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, type, String.join(",", symbols), range.value);
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)), range.value);
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");

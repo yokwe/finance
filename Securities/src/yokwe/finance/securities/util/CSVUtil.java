@@ -2,6 +2,7 @@ package yokwe.finance.securities.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -169,6 +170,24 @@ public class CSVUtil {
 			names[i] = fields[i].getName();
 		}
 		Object[] values = new Object[fields.length];
+		
+		// Create parent dirs and file if not exists.
+		{
+			File file = new File(path);
+			
+			File fileParent = file.getParentFile();
+			if (!fileParent.exists()) {
+				fileParent.mkdirs();
+			}
+			if (!file.exists()) {
+				try {
+					file.createNewFile();
+				} catch (IOException e) {
+					logger.error("IOException {}", e.toString());
+					throw new SecuritiesException("IOException");
+				}
+			}
+		}
 
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
 		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {
@@ -207,6 +226,24 @@ public class CSVUtil {
 			names[i] = fields[i].getName();
 		}
 		Object[] values = new Object[fields.length];
+
+		// Create parent dirs and file if not exists.
+		{
+			File file = new File(path);
+			
+			File fileParent = file.getParentFile();
+			if (!fileParent.exists()) {
+				fileParent.mkdirs();
+			}
+			if (!file.exists()) {
+				try {
+					file.createNewFile();
+				} catch (IOException e) {
+					logger.error("IOException {}", e.toString());
+					throw new SecuritiesException("IOException");
+				}
+			}
+		}
 
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withRecordSeparator("\n");
 		try (CSVPrinter csvPrint = new CSVPrinter(new BufferedWriter(new FileWriter(path), BUFFER_SIZE), csvFormat)) {

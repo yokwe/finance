@@ -1,6 +1,7 @@
 package yokwe.finance.securities.iex;
 
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,6 +10,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -58,6 +60,8 @@ public class IEXBase {
 	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");
 	
 	public static final String END_POINT = "https://api.iextrading.com/1.0";
+	
+	public static final int MAX_PARAM = 100;
 
 	private static class ClassInfo {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
@@ -305,6 +309,9 @@ public class IEXBase {
 					case "java.time.LocalDateTime":
 						field.set(this, null);
 						break;
+					case "java.lang.String":
+						field.set(this, "");
+						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
 						throw new IEXUnexpectedError("Unexptected type");
@@ -437,8 +444,20 @@ public class IEXBase {
 			logger.error("symbols.length == 0");
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
+		
+		// encode symbols
+		String[] encodedSymbols = new String[symbols.length];
+		try {
+			for(int i = 0; i < symbols.length; i++) {
+				encodedSymbols[i] = URLEncoder.encode(symbols[i], "UTF-8");
+			}
+		} catch (UnsupportedEncodingException e) {
+			logger.error("UnsupportedEncodingException {}", e.toString());
+			throw new IEXUnexpectedError("UnsupportedEncodingException");
+		}
+		
 		String type = getType(clazz);
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", symbols));
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodedSymbols));
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");

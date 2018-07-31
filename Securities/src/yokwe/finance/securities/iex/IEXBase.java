@@ -67,7 +67,9 @@ public class IEXBase {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
 		
 		public static ClassInfo get(Object o) {
-			Class<? extends Object> clazz = o.getClass();
+			return get(o.getClass());
+		}
+		public static ClassInfo get(Class<? extends Object> clazz) {
 			String key = clazz.getName();
 			
 			if (!map.containsKey(key)) {
@@ -266,6 +268,9 @@ public class IEXBase {
 					switch(type) {
 					case "java.lang.String":
 						field.set(this, jsonString.getString());
+						break;
+					case "double":
+						field.set(this, Double.valueOf(jsonString.getString()));
 						break;
 					default:
 						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
@@ -468,6 +473,8 @@ public class IEXBase {
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			Map<String, E> ret = new TreeMap<>();
 
+			ClassInfo classInfo = ClassInfo.get(clazz);
+
 			// Assume result is only one object
 			JsonObject result = reader.readObject();
 			for(String resultKey: result.keySet()) {
@@ -491,19 +498,20 @@ public class IEXBase {
 				
 				// Sanity check
 				if (!elementKey.equals(type)) {
-					logger.error("Unexpected elementKey {} {}", type, elementKey);
+					logger.error("Unexpected elementKey {} {} {}", resultKey, type, elementKey);
 					throw new IEXUnexpectedError("Unexpected elementKey");
 				}
 				switch(elementValueType) {
 				case OBJECT:
 				{
-					E child = (E)clazz.getDeclaredConstructor(JsonObject.class).newInstance(elementValue.asJsonObject());
-					ret.put(resultKey, child);
-				}
-					break;
-				case NUMBER:
-				{
-					E child = (E)clazz.getDeclaredConstructor(String.class).newInstance(elementValue.toString());
+					JsonObject arg = elementValue.asJsonObject();
+					// Sanity check
+					if (classInfo.size != arg.size()) {
+						logger.warn("Unexpected resultChild {} {} {}", resultKey, classInfo.size, arg.size());
+						continue;
+					}
+
+					E child = (E)clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
 					ret.put(resultKey, child);
 				}
 					break;
@@ -633,6 +641,8 @@ public class IEXBase {
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			Map<String, E[]> ret = new TreeMap<>();
 
+			ClassInfo classInfo = ClassInfo.get(clazz);
+
 			// Assume result is only one object
 			JsonObject result = reader.readObject();
 			for(String resultKey: result.keySet()) {
@@ -670,8 +680,15 @@ public class IEXBase {
 					E[] childArray = (E[])child;
 					
 					for(int i = 0; i < jsonArraySize; i++) {
-						JsonObject jsonArrayElement = jsonArray.getJsonObject(i);
-						childArray[i] = clazz.getDeclaredConstructor(JsonObject.class).newInstance(jsonArrayElement);
+						JsonObject arg = jsonArray.getJsonObject(i);
+						
+						// Sanity check
+						if (classInfo.size != arg.size()) {
+							logger.warn("Unexpected resultChild {} {} {}", resultKey, classInfo.size, arg.size());
+							continue;
+						}
+
+						childArray[i] = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
 					}
 					ret.put(resultKey, childArray);
 				}

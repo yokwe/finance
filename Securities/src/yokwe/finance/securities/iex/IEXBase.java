@@ -18,9 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -62,6 +60,8 @@ public class IEXBase {
 	public static final String END_POINT = "https://api.iextrading.com/1.0";
 	
 	public static final int MAX_PARAM = 100;
+	
+	public static final LocalDateTime DEFAULT_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
 
 	private static class ClassInfo {
 		private static Map<String, ClassInfo> map = new TreeMap<>();
@@ -292,7 +292,7 @@ public class IEXBase {
 						field.set(this, 0);
 						break;
 					case "java.time.LocalDateTime":
-						field.set(this, null);
+						field.set(this, DEFAULT_LOCAL_DATE_TIME);
 						break;
 					case "java.lang.String":
 						field.set(this, "");

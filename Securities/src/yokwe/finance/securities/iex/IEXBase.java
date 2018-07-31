@@ -430,7 +430,7 @@ public class IEXBase {
 		}
 	}
 	
-	// For Company, OHLC, Quote and Stats
+	// For Company, DelayedQuote, OHLC, Quote and Stats
 	protected static <E extends IEXBase> Map<String, E> getStockObject(Class<E> clazz, String ... symbols) {
 		// Sanity check
 		if (symbols.length == 0) {
@@ -699,6 +699,14 @@ public class IEXBase {
 			Map<String, Company> map = Company.getStock("ibm", "bt");
 			logger.info("company {}", map.size());
 			for(Map.Entry<String, Company> entry: map.entrySet()) {
+				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
+			}
+		}
+
+		{
+			Map<String, DelayedQuote> map = DelayedQuote.getStock("ibm", "bt");
+			logger.info("delayedQuote {}", map.size());
+			for(Map.Entry<String, DelayedQuote> entry: map.entrySet()) {
 				logger.info("  {} {}", entry.getKey(), entry.getValue().toString());
 			}
 		}

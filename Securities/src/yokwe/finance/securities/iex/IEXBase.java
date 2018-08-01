@@ -44,6 +44,11 @@ public class IEXBase {
 		String value();
 	}
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public @interface IgnoreField {
+	}
+	
 	public static enum Range {
 		Y1("1y"), Y2("2y"), Y5("5y"), YTD("ytd"),
 		M6("6m"), M3("3m"), M1("1m"),
@@ -83,24 +88,30 @@ public class IEXBase {
 		public static class FieldInfo {
 			public final Field   field;
 			public final String  name;
+			public final String  jsonName;
 			public final String  type;
 			public final boolean isArray;
+			public final boolean ignoreField;
 			
 			FieldInfo(Field field) {
 				this.field = field;
 				
+				this.name  = field.getName();
+
 				// Use JSONName if exists.
 				JSONName jsonName = field.getDeclaredAnnotation(JSONName.class);
-				this.name  = (jsonName == null) ? field.getName() : jsonName.value();
+				this.jsonName = (jsonName == null) ? field.getName() : jsonName.value();
 				
 				Class<?> type = field.getType();
 				this.type     = type.getName();
 				this.isArray  = type.isArray();
+				
+				this.ignoreField = field.getDeclaredAnnotation(IgnoreField.class) != null;
 			}
 			
 			@Override
 			public String toString() {
-				return String.format("[%s %s %s]", name, type, isArray);
+				return String.format("{%s %s %s %s}", name, type, isArray, ignoreField);
 			}
 		}
 		
@@ -265,16 +276,16 @@ public class IEXBase {
 			IEXInfo iexInfo = IEXInfo.get(this);
 			for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
 				// Skip field if name is not exist in jsonObject
-				if (!jsonObject.containsKey(fieldInfo.name))continue;
+				if (!jsonObject.containsKey(fieldInfo.jsonName))continue;
 				
-				ValueType valueType = jsonObject.get(fieldInfo.name).getValueType();
+				ValueType valueType = jsonObject.get(fieldInfo.jsonName).getValueType();
 				
 //				logger.debug("parse {} {} {}", name, valueType.toString(), type);
 				
 				switch(valueType) {
 				case NUMBER:
 				{
-					JsonNumber jsonNumber = jsonObject.getJsonNumber(fieldInfo.name);
+					JsonNumber jsonNumber = jsonObject.getJsonNumber(fieldInfo.jsonName);
 					
 					switch(fieldInfo.type) {
 					case "double":
@@ -294,14 +305,14 @@ public class IEXBase {
 						fieldInfo.field.set(this, LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID));
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case STRING:
 				{
-					JsonString jsonString = jsonObject.getJsonString(fieldInfo.name);
+					JsonString jsonString = jsonObject.getJsonString(fieldInfo.jsonName);
 					switch(fieldInfo.type) {
 					case "java.lang.String":
 						fieldInfo.field.set(this, jsonString.getString());
@@ -310,7 +321,7 @@ public class IEXBase {
 						fieldInfo.field.set(this, Double.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
@@ -322,7 +333,7 @@ public class IEXBase {
 						fieldInfo.field.set(this, true);
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
@@ -334,7 +345,7 @@ public class IEXBase {
 						fieldInfo.field.set(this, false);
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
@@ -355,7 +366,7 @@ public class IEXBase {
 						fieldInfo.field.set(this, "");
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
@@ -365,7 +376,7 @@ public class IEXBase {
 					Class<?> fieldType = fieldInfo.field.getType();
 					
 					if (IEXBase.class.isAssignableFrom(fieldType)) {
-						JsonObject childJson = jsonObject.get(fieldInfo.name).asJsonObject();
+						JsonObject childJson = jsonObject.get(fieldInfo.jsonName).asJsonObject();
 //						logger.info("childJson {}", childJson.toString());
 						
 						IEXBase child = (IEXBase)fieldType.getDeclaredConstructor(JsonObject.class).newInstance(childJson);
@@ -373,7 +384,7 @@ public class IEXBase {
 						
 						fieldInfo.field.set(this, child);
 					} else {
-						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
+						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
@@ -381,7 +392,7 @@ public class IEXBase {
 				case ARRAY:
 				{					
 					if (fieldInfo.isArray) {
-						JsonArray childJson = jsonObject.get(fieldInfo.name).asJsonArray();
+						JsonArray childJson = jsonObject.get(fieldInfo.jsonName).asJsonArray();
 
 						Class<?> componentType = fieldInfo.field.getType().getComponentType();
 						String componentTypeName = componentType.getName();
@@ -398,7 +409,7 @@ public class IEXBase {
 									value[j] = childJson.getString(j);
 									break;
 								default:
-									logger.error("Unexpected json array element type {} {}", fieldInfo.name, childJsonValue.getValueType().toString());
+									logger.error("Unexpected json array element type {} {}", childJsonValue.getValueType().toString(), fieldInfo.toString());
 									throw new IEXUnexpectedError("Unexpected json array element type");
 								}
 							}
@@ -406,17 +417,17 @@ public class IEXBase {
 						}
 							break;
 						default:
-							logger.error("Unexpected array component type {} {}", fieldInfo.name, componentTypeName);
+							logger.error("Unexpected array component type {} {}", componentTypeName, fieldInfo.toString());
 							throw new IEXUnexpectedError("Unexpected array component type");
 						}
 					} else {
-						logger.error("Unexptected field is not Array {} {}", fieldInfo.name, fieldInfo.type);
+						logger.error("Unexptected field is not Array {}", fieldInfo.toString());
 						throw new IEXUnexpectedError("Unexptected field is not Array");
 					}
 				}
 					break;
 				default:
-					logger.error("Unknown valueType {} {}", fieldInfo.name, valueType.toString());
+					logger.error("Unknown valueType {} {}", valueType.toString(), fieldInfo.toString());
 					throw new IEXUnexpectedError("Unknown valueType");
 				}
 			}
@@ -691,11 +702,19 @@ public class IEXBase {
 							if (o == null) {
 								switch(fieldInfo.type) {
 								case "double":
-									logger.warn("Assign defautl value  {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
-									fieldInfo.field.setDouble(o, 0);
+									if (!fieldInfo.ignoreField) {
+										logger.warn("Assign defautl value  {} {}", iexInfo.clazzName, fieldInfo.toString());
+									}
+									fieldInfo.field.setDouble(e, 0);
+									break;
+								case "java.lang.String":
+									if (!fieldInfo.ignoreField) {
+										logger.warn("Assign defautl value  {} {}", iexInfo.clazzName, fieldInfo.toString());
+									}
+									fieldInfo.field.set(e, "");
 									break;
 								default:
-									logger.error("Unexpected field type {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
+									logger.error("Unexpected field type {} {}", iexInfo.clazzName, fieldInfo.toString());
 									throw new IEXUnexpectedError("Unexpected field type");
 								}
 							}

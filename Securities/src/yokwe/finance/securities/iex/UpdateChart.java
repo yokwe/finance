@@ -21,14 +21,14 @@ import yokwe.finance.securities.util.CSVUtil;
 public class UpdateChart {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateChart.class);
 	
-	public static final String PATH_DIR          = "tmp/iex/chart";
-	public static final String PATH_DELISTED_DIR = "tmp/iex/chart-delisted";
-	
-	private static String getFilePath(String symbol) {
-		return String.format("%s/%s.csv", PATH_DIR, symbol);
-	}
-	
 	private static final int DELTA = 10;
+	
+	public static String getCSVPath(String symbol) {
+		return IEXBase.getCSVPath(Chart.class, symbol);
+	}
+	public static String getDelistedCSVPath(String symbol, String suffix) {
+		return IEXBase.getDelistedCSVPath(Chart.class, symbol, suffix);
+	}
 	
 	public static void main (String[] args) {
 		logger.info("START");
@@ -39,10 +39,19 @@ public class UpdateChart {
 		
 		// Remove unknown file
 		{
-			File dir = new File(PATH_DIR);
+			
+			File dir;
+			{
+				File csvFile = new File(getCSVPath("A"));
+				dir = csvFile.getParentFile();
+			}
 			Set<String> symbolSet = new TreeSet<>(symbolList);
 			
-			File dirDelisted = new File(PATH_DELISTED_DIR);
+			File dirDelisted;
+			{
+				File delistedFile = new File(getDelistedCSVPath("A", "000"));
+				dirDelisted = delistedFile.getParentFile();
+			}
 			if (!dirDelisted.exists()) {
 				dirDelisted.mkdirs();
 			}
@@ -56,13 +65,13 @@ public class UpdateChart {
 					String symbol = name.replace(".csv", "");
 					if (symbolSet.contains(symbol)) continue;
 					
-						File destFile = new File(PATH_DELISTED_DIR, String.format("%s-%s", name, destFileSuffix));
-						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
-											
-						// Copy file to new location
-						Files.copy(file.toPath(), destFile.toPath());
-						// Delete file after successful copy
-						file.delete();
+					File destFile = new File(getDelistedCSVPath(name, destFileSuffix));
+					logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
+										
+					// Copy file to new location
+					Files.copy(file.toPath(), destFile.toPath());
+					// Delete file after successful copy
+					file.delete();
 				}
 			} catch (IOException e) {
 				logger.error("IOException {}", e.toString());
@@ -78,7 +87,7 @@ public class UpdateChart {
 			
 			List<String> getList = new ArrayList<>();
 			for(String symbol: symbolList.subList(fromIndex, toIndex)) {
-				File file = new File(getFilePath(symbol));
+				File file = new File(IEXBase.getCSVPath(Chart.class, symbol));
 				if (file.exists()) continue;
 				getList.add(symbol);
 			}
@@ -90,7 +99,7 @@ public class UpdateChart {
 			for(Map.Entry<String, Chart[]>entry: chartMap.entrySet()) {
 				List<Chart> dataList = Arrays.asList(entry.getValue());
 				if (dataList.size() == 0) continue;
-				CSVUtil.saveWithHeader(dataList, getFilePath(entry.getKey()));
+				CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
 				countData++;
 			}
 		}

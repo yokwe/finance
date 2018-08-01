@@ -11,8 +11,10 @@ import yokwe.finance.securities.util.CSVUtil;
 public class UpdateCompany {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateCompany.class);
 	
-	public static final String PATH_COMPANY = "tmp/iex/company.csv";
-	
+	public static String getCSVPath() {
+		return IEXBase.getCSVPath(Company.class);
+	}
+
 	public static void main (String[] args) {
 		logger.info("START");
 		
@@ -31,7 +33,11 @@ public class UpdateCompany {
 			companyMap.values().stream().forEach(o -> companyList.add(new Company.CSV(o)));
 		}
 		logger.info("companyList {}", companyList.size());
-		CSVUtil.saveWithHeader(companyList, PATH_COMPANY);
+		
+		String csvPath = getCSVPath();
+		logger.info("csvPath {}", csvPath);
+		
+		CSVUtil.saveWithHeader(companyList, csvPath);
 
 		logger.info("STOP");
 	}

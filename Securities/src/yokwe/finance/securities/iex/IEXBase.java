@@ -32,6 +32,7 @@ import javax.json.JsonValue.ValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.HttpUtil;
 
 public class IEXBase {
@@ -62,6 +63,19 @@ public class IEXBase {
 	public static final int MAX_PARAM = 100;
 	
 	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
+	
+	public static final String PATH_DATA_DIR = "tmp/iex";
+
+	public static final String getCSVPath(Class<? extends IEXBase> clazz) {
+		return String.format("%s/%s.csv", PATH_DATA_DIR, IEXInfo.get(clazz).type);
+	}
+	public static final String getCSVPath(Class<? extends IEXBase> clazz, String symbol) {
+		return String.format("%s/%s/%s.csv", PATH_DATA_DIR, IEXInfo.get(clazz).type, symbol);
+	}
+	public static final String getDelistedCSVPath(Class<? extends IEXBase> clazz, String symbol, String suffix) {
+		return String.format("%s/%s-delisted/%s.csv-%s", PATH_DATA_DIR, IEXInfo.get(clazz).type, symbol, suffix);
+	}
+	
 
 	public static class IEXInfo {
 		private static Map<String, IEXInfo> map = new TreeMap<>();
@@ -168,7 +182,6 @@ public class IEXBase {
 			return String.format("%s %s %s", clazzName, Arrays.asList(this.fieldInfos));
 		}
 	}
-
 
 	@Override
 	public String toString() {
@@ -718,6 +731,29 @@ public class IEXBase {
 			logger.error("SecurityException {}", e.toString());
 			throw new IEXUnexpectedError("SecurityException");
 		}
+	}
+	
+	public static <E extends IEXBase> void updateCSV(Class<E> clazz) {
+		List<String> symbolList = UpdateSymbols.getSymbolList();
+		int symbolListSize = symbolList.size();
+		logger.info("symbolList {}", symbolList.size());
+		
+		List<E> dataList = new ArrayList<>();
+		for(int i = 0; i < symbolListSize; i += IEXBase.MAX_PARAM) {
+			int fromIndex = i;
+			int toIndex = Math.min(fromIndex + IEXBase.MAX_PARAM, symbolListSize);
+			List<String> getList = symbolList.subList(fromIndex, toIndex);
+			logger.info("  {} {}", fromIndex, getList.toString());
+			
+			Map<String, E> dataMap = getStockObject(clazz, getList.toArray(new String[0]));
+			dataMap.values().stream().forEach(o -> dataList.add(o));
+		}
+		logger.info("dataList {}", dataList.size());
+		
+		String csvPath = getCSVPath(clazz);
+		logger.info("csvPath {}", csvPath);
+		
+		CSVUtil.saveWithHeader(dataList, csvPath);
 	}
 	
 	public static void main(String[] args) {

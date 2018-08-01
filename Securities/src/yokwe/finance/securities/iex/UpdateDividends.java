@@ -21,13 +21,13 @@ import yokwe.finance.securities.util.CSVUtil;
 public class UpdateDividends {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividends.class);
 	
-	public static final String PATH_DIR         = "tmp/iex/dividends";
-	public static final String PATH_DELISTED_DIR = "tmp/iex/dividends-delisted";
-	
-	private static String getFilePath(String symbol) {
-		return String.format("%s/%s.csv", PATH_DIR, symbol);
+	public static String getCSVPath(String symbol) {
+		return IEXBase.getCSVPath(Dividends.class, symbol);
 	}
-	
+	public static String getDelistedCSVPath(String symbol, String suffix) {
+		return IEXBase.getDelistedCSVPath(Dividends.class, symbol, suffix);
+	}
+
 	public static void main (String[] args) {
 		logger.info("START");
 		
@@ -37,10 +37,18 @@ public class UpdateDividends {
 		
 		// Remove unknown file
 		{
-			File dir = new File(PATH_DIR);
+			File dir;
+			{
+				File csvFile = new File(getCSVPath("A"));
+				dir = csvFile.getParentFile();
+			}
 			Set<String> symbolSet = new TreeSet<>(symbolList);
 			
-			File dirDelisted = new File(PATH_DELISTED_DIR);
+			File dirDelisted;
+			{
+				File delistedFile = new File(getDelistedCSVPath("A", "000"));
+				dirDelisted = delistedFile.getParentFile();
+			}
 			if (!dirDelisted.exists()) {
 				dirDelisted.mkdirs();
 			}
@@ -54,7 +62,7 @@ public class UpdateDividends {
 					String symbol = name.replace(".csv", "");
 					if (symbolSet.contains(symbol)) continue;
 					
-						File destFile = new File(PATH_DELISTED_DIR, String.format("%s-%s", name, destFileSuffix));
+						File destFile = new File(getDelistedCSVPath(name, destFileSuffix));
 						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
 											
 						// Copy file to new location
@@ -76,7 +84,7 @@ public class UpdateDividends {
 			
 			List<String> getList = new ArrayList<>();
 			for(String symbol: symbolList.subList(fromIndex, toIndex)) {
-				File file = new File(getFilePath(symbol));
+				File file = new File(getCSVPath(symbol));
 				if (file.exists()) continue;
 				getList.add(symbol);
 			}
@@ -88,7 +96,7 @@ public class UpdateDividends {
 			for(Map.Entry<String, Dividends[]>entry: dividendsMap.entrySet()) {
 				List<Dividends> dataList = Arrays.asList(entry.getValue());
 				if (dataList.size() == 0) continue;
-				CSVUtil.saveWithHeader(dataList, getFilePath(entry.getKey()));
+				CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
 				countData++;
 			}
 		}

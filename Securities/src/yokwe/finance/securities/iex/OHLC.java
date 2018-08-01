@@ -9,6 +9,8 @@ public class OHLC extends IEXBase {
 	public static final String TYPE = "ohlc";
 
 	public static class Pair extends IEXBase {
+		public static final String TYPE = "pair";
+		
 		public double        price; // refers to the official open or close price
 		public LocalDateTime time;  // refers to the official listing exchange time for the open or close
 		

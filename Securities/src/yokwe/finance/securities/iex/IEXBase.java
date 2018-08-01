@@ -61,116 +61,164 @@ public class IEXBase {
 	
 	public static final int MAX_PARAM = 100;
 	
-	public static final LocalDateTime DEFAULT_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
+	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
 
-	private static class ClassInfo {
-		private static Map<String, ClassInfo> map = new TreeMap<>();
+	public static class IEXInfo {
+		private static Map<String, IEXInfo> map = new TreeMap<>();
 		
-		public static ClassInfo get(Object o) {
-			return get(o.getClass());
-		}
-		public static ClassInfo get(Class<? extends Object> clazz) {
-			String key = clazz.getName();
+		public static class FieldInfo {
+			public final Field   field;
+			public final String  name;
+			public final String  type;
+			public final boolean isArray;
 			
-			if (!map.containsKey(key)) {
-				ClassInfo classInfo = new ClassInfo(clazz);
-				map.put(key, classInfo);
-			}
-			return map.get(key);
-		}
-
-		public final String   clazzName;
-		public final Field[]  fields;
-		public final String[] types;
-		public final String[] names;
-		public final int      size;
-		
-		ClassInfo(Class<? extends Object> clazz) {
-			List<Field>  fieldList = new ArrayList<>();
-			List<String> typeList  = new ArrayList<>();
-			List<String> nameList  = new ArrayList<>();
-
-			for(Field field: clazz.getDeclaredFields()) {
-				// Skip static field
-				if (Modifier.isStatic(field.getModifiers())) continue;
-
-				fieldList.add(field);
-				typeList.add(field.getType().getName());
+			FieldInfo(Field field) {
+				this.field = field;
 				
 				// Use JSONName if exists.
 				JSONName jsonName = field.getDeclaredAnnotation(JSONName.class);
-				nameList.add((jsonName == null) ? field.getName() : jsonName.value());
+				this.name  = (jsonName == null) ? field.getName() : jsonName.value();
+				
+				Class<?> type = field.getType();
+				this.type     = type.getName();
+				this.isArray  = type.isArray();
 			}
 			
-			this.clazzName = clazz.getName();
-			this.fields    = fieldList.toArray(new Field[0]);
-			this.types     = typeList.toArray(new String[0]);
-			this.names     = nameList.toArray(new String[0]);
-			this.size      = fieldList.size();
+			@Override
+			public String toString() {
+				return String.format("[%s %s %s]", name, type, isArray);
+			}
+		}
+		
+		public static IEXInfo get(IEXBase o) {
+			return get(o.getClass());
+		}
+		public static IEXInfo get(Class<? extends IEXBase> clazz) {
+			String key = clazz.getName();
+			
+			if (map.containsKey(key)) return map.get(key);
+			
+			IEXInfo value = new IEXInfo(clazz);
+			map.put(key, value);
+			return value;
+		}
+
+		public final String      clazzName;
+		public final String      type;
+		public final FieldInfo[] fieldInfos;
+		
+		IEXInfo(Class<? extends IEXBase> clazz) {
+			try {
+				List<Field> fieldList = new ArrayList<>();
+				for(Field field: clazz.getDeclaredFields()) {
+					// Skip static field
+					if (Modifier.isStatic(field.getModifiers())) continue;
+					fieldList.add(field);
+				}
+				FieldInfo[] fieldInfos = new FieldInfo[fieldList.size()];
+				for(int i = 0; i < fieldInfos.length; i++) {
+					fieldInfos[i] = new FieldInfo(fieldList.get(i));
+				}
+				
+				String type;
+				{
+					Field field = clazz.getDeclaredField("TYPE");
+					if (field == null) {
+						logger.error("No TYPE field {}", clazz.getName());
+						throw new IEXUnexpectedError("No TYPE field");
+					}
+					if (!Modifier.isStatic(field.getModifiers())) {
+						logger.error("TYPE field is not static {}", clazz.getName());
+						throw new IEXUnexpectedError("TYPE field is not static");
+					}
+					String fieldTypeName = field.getType().getName();
+					if (!fieldTypeName.equals("java.lang.String")) {
+						logger.error("Unexpected fieldTypeName {}", fieldTypeName);
+						throw new IEXUnexpectedError("Unexpected fieldTypeName");
+					}
+					Object value = field.get(null);
+					if (value instanceof String) {
+						type = (String)value;
+					} else {
+						logger.error("Unexpected value {}", value.getClass().getName());
+						throw new IEXUnexpectedError("Unexpected value");
+					}
+				}
+				
+				this.clazzName = clazz.getName();
+				this.type       = type;
+				this.fieldInfos = fieldInfos;
+			} catch (NoSuchFieldException e) {
+				logger.error("NoSuchFieldException {}", e.toString());
+				throw new IEXUnexpectedError("NoSuchFieldException");
+			} catch (SecurityException e) {
+				logger.error("SecurityException {}", e.toString());
+				throw new IEXUnexpectedError("SecurityException");
+			} catch (IllegalArgumentException e) {
+				logger.error("IllegalArgumentException {}", e.toString());
+				throw new IEXUnexpectedError("IllegalArgumentException");
+			} catch (IllegalAccessException e) {
+				logger.error("IllegalAccessException {}", e.toString());
+				throw new IEXUnexpectedError("IllegalAccessException");
+			}
 		}
 		
 		@Override
 		public String toString() {
-			List<String> typeList  = Arrays.asList(types);
-			List<String> nameList  = Arrays.asList(names);
-			
-			return String.format("%s %s %s", clazzName, nameList, typeList);
+			return String.format("%s %s %s", clazzName, Arrays.asList(this.fieldInfos));
 		}
 	}
 
+
 	@Override
 	public String toString() {
-		Object o = this;
 		try {
-			ClassInfo classInfo = ClassInfo.get(o);
+			IEXInfo iexInfo = IEXInfo.get(this);
 
-			List<String> result = new ArrayList<>();
-			StringBuilder line = new StringBuilder();
+			List<String>  result = new ArrayList<>();
+			StringBuilder line   = new StringBuilder();
 			
-			for(int i = 0; i < classInfo.size; i++) {
-				String name  = classInfo.names[i];
-				String type  = classInfo.types[i];
-				Field  field = classInfo.fields[i];
-				
+			Object o = this;
+			for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
 				line.setLength(0);
-				line.append(name).append(": ");
+				line.append(fieldInfo.name).append(": ");
 				
-				switch(type) {
+				switch(fieldInfo.type) {
 				case "double":
-					line.append(Double.toString(field.getDouble(o)));
+					line.append(Double.toString(fieldInfo.field.getDouble(o)));
 					break;
 				case "float":
-					line.append(field.getFloat(o));
+					line.append(fieldInfo.field.getFloat(o));
 					break;
 				case "long":
-					line.append(field.getLong(o));
+					line.append(fieldInfo.field.getLong(o));
 					break;
 				case "int":
-					line.append(field.getInt(o));
+					line.append(fieldInfo.field.getInt(o));
 					break;
 				case "short":
-					line.append(field.getShort(o));
+					line.append(fieldInfo.field.getShort(o));
 					break;
 				case "byte":
-					line.append(field.getByte(o));
+					line.append(fieldInfo.field.getByte(o));
 					break;
 				case "char":
-					line.append(String.format("'%c'", field.getChar(o)));
+					line.append(String.format("'%c'", fieldInfo.field.getChar(o)));
 					break;
 				default:
 				{
-					Object value = field.get(o);
+					Object value = fieldInfo.field.get(o);
 					if (value == null) {
 						line.append("null");
 					} else if (value instanceof String) {
 						// Quote special character in string \ => \\  " => \"
 						String stringValue = value.toString().replace("\\", "\\\\").replace("\"", "\\\"");
 						line.append("\"").append(stringValue).append("\"");
-					} else if (field.getType().isArray()) {
+					} else if (fieldInfo.isArray) {
 						List<String> arrayElement = new ArrayList<>();
 						int length = Array.getLength(value);
-						for(int j = 0; j < length; j++) {
-							Object element = Array.get(value, j);
+						for(int i = 0; i < length; i++) {
+							Object element = Array.get(value, i);
 							if (element instanceof String) {
 								// Quote special character in string \ => \\  " => \"
 								String stringValue = element.toString().replace("\\", "\\\\").replace("\"", "\\\"");
@@ -201,133 +249,128 @@ public class IEXBase {
 	}
 	protected IEXBase(JsonObject jsonObject) {
 		try {
-			ClassInfo classInfo = ClassInfo.get(this);
-			for(int i = 0; i < classInfo.size; i++) {
-				String name  = classInfo.names[i];
-				String type  = classInfo.types[i];
-				Field  field = classInfo.fields[i];
-				
+			IEXInfo iexInfo = IEXInfo.get(this);
+			for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
 				// Skip field if name is not exist in jsonObject
-				if (!jsonObject.containsKey(name))continue;
+				if (!jsonObject.containsKey(fieldInfo.name))continue;
 				
-				ValueType valueType = jsonObject.get(name).getValueType();
+				ValueType valueType = jsonObject.get(fieldInfo.name).getValueType();
 				
 //				logger.debug("parse {} {} {}", name, valueType.toString(), type);
 				
 				switch(valueType) {
 				case NUMBER:
 				{
-					JsonNumber jsonNumber = jsonObject.getJsonNumber(name);
+					JsonNumber jsonNumber = jsonObject.getJsonNumber(fieldInfo.name);
 					
-					switch(type) {
+					switch(fieldInfo.type) {
 					case "double":
-						field.set(this, jsonNumber.doubleValue());
+						fieldInfo.field.set(this, jsonNumber.doubleValue());
 						break;
 					case "long":
-						field.set(this, jsonNumber.longValue());
+						fieldInfo.field.set(this, jsonNumber.longValue());
 						break;
 					case "java.math.BigDecimal":
-						field.set(this, jsonNumber.bigDecimalValue());
+						fieldInfo.field.set(this, jsonNumber.bigDecimalValue());
 						break;
 					case "java.lang.String":
 						// To handle irregular case in Symbols, add this code. Value of iexId in Symbols can be number or String.
-						field.set(this, jsonNumber.toString());
+						fieldInfo.field.set(this, jsonNumber.toString());
 						break;
 					case "java.time.LocalDateTime":
-						field.set(this, LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID));
+						fieldInfo.field.set(this, LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNumber.longValue()), ZONE_ID));
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case STRING:
 				{
-					JsonString jsonString = jsonObject.getJsonString(name);
-					switch(type) {
+					JsonString jsonString = jsonObject.getJsonString(fieldInfo.name);
+					switch(fieldInfo.type) {
 					case "java.lang.String":
-						field.set(this, jsonString.getString());
+						fieldInfo.field.set(this, jsonString.getString());
 						break;
 					case "double":
-						field.set(this, Double.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
+						fieldInfo.field.set(this, Double.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case TRUE:
 				{
-					switch(type) {
+					switch(fieldInfo.type) {
 					case "boolean":
-						field.set(this, true);
+						fieldInfo.field.set(this, true);
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case FALSE:
 				{
-					switch(type) {
+					switch(fieldInfo.type) {
 					case "boolean":
-						field.set(this, false);
+						fieldInfo.field.set(this, false);
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case NULL:
 				{
-					switch(type) {
+					switch(fieldInfo.type) {
 					case "double":
-						field.set(this, Double.NaN);
+						fieldInfo.field.set(this, 0);
 						break;
 					case "long":
-						field.set(this, 0);
+						fieldInfo.field.set(this, 0);
 						break;
 					case "java.time.LocalDateTime":
-						field.set(this, DEFAULT_LOCAL_DATE_TIME);
+						fieldInfo.field.set(this, NULL_LOCAL_DATE_TIME);
 						break;
 					case "java.lang.String":
-						field.set(this, "");
+						fieldInfo.field.set(this, "");
 						break;
 					default:
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case OBJECT:
 				{
-					Class<?> fieldType = field.getType();
+					Class<?> fieldType = fieldInfo.field.getType();
 					
 					if (IEXBase.class.isAssignableFrom(fieldType)) {
-						JsonObject childJson = jsonObject.get(name).asJsonObject();
+						JsonObject childJson = jsonObject.get(fieldInfo.name).asJsonObject();
 //						logger.info("childJson {}", childJson.toString());
 						
 						IEXBase child = (IEXBase)fieldType.getDeclaredConstructor(JsonObject.class).newInstance(childJson);
 //						logger.info("child {}", child.toString());
 						
-						field.set(this, child);
+						fieldInfo.field.set(this, child);
 					} else {
-						logger.error("Unexptected type {} {} {}", name, valueType.toString(), type);
+						logger.error("Unexptected type {} {} {}", fieldInfo.name, valueType.toString(), fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected type");
 					}
 				}
 					break;
 				case ARRAY:
 				{					
-					Class<?> fieldType = field.getType();
-					if (fieldType.isArray()) {
-						JsonArray childJson = jsonObject.get(name).asJsonArray();
+					if (fieldInfo.isArray) {
+						JsonArray childJson = jsonObject.get(fieldInfo.name).asJsonArray();
 
-						Class<?> componentType = fieldType.getComponentType();
+						Class<?> componentType = fieldInfo.field.getType().getComponentType();
 						String componentTypeName = componentType.getName();
 						switch(componentTypeName) {
 						case "java.lang.String":
@@ -342,25 +385,25 @@ public class IEXBase {
 									value[j] = childJson.getString(j);
 									break;
 								default:
-									logger.error("Unexpected json array element type {} {}", name, childJsonValue.getValueType().toString());
+									logger.error("Unexpected json array element type {} {}", fieldInfo.name, childJsonValue.getValueType().toString());
 									throw new IEXUnexpectedError("Unexpected json array element type");
 								}
 							}
-							field.set(this, value);
+							fieldInfo.field.set(this, value);
 						}
 							break;
 						default:
-							logger.error("Unexpected array component type {} {}", name, componentTypeName);
+							logger.error("Unexpected array component type {} {}", fieldInfo.name, componentTypeName);
 							throw new IEXUnexpectedError("Unexpected array component type");
 						}
 					} else {
-						logger.error("Unexptected field is not Array {} {}", name, type);
+						logger.error("Unexptected field is not Array {} {}", fieldInfo.name, fieldInfo.type);
 						throw new IEXUnexpectedError("Unexptected field is not Array");
 					}
 				}
 					break;
 				default:
-					logger.error("Unknown valueType {} {}", name, valueType.toString());
+					logger.error("Unknown valueType {} {}", fieldInfo.name, valueType.toString());
 					throw new IEXUnexpectedError("Unknown valueType");
 				}
 			}
@@ -385,43 +428,6 @@ public class IEXBase {
 		}
 	}
 
-	private static Map<String, String> typeMap = new TreeMap<>();
-	private static String getType(Class<? extends IEXBase> clazz) {
-		try {
-			String clazzName = clazz.getName();
-			if (typeMap.containsKey(clazzName)) {
-				return typeMap.get(clazzName);
-			}
-
-			Field field = clazz.getDeclaredField("TYPE");
-			String fieldTypeName = field.getType().getName();
-			if (!fieldTypeName.equals("java.lang.String")) {
-				logger.error("Unexpected fieldTypeName {}", fieldTypeName);
-				throw new IEXUnexpectedError("Unexpected fieldTypeName");
-			}
-			Object value = field.get(null);
-			if (value instanceof String) {
-				typeMap.put(clazzName, (String)value);
-				return (String)value;
-			} else {
-				logger.error("Unexpected value {}", value.getClass().getName());
-				throw new IEXUnexpectedError("Unexpected value");
-			}
-		} catch (NoSuchFieldException e) {
-			logger.error("NoSuchFieldException {}", e.toString());
-			throw new IEXUnexpectedError("NoSuchFieldException");
-		} catch (SecurityException e) {
-			logger.error("SecurityException {}", e.toString());
-			throw new IEXUnexpectedError("SecurityException");
-		} catch (IllegalArgumentException e) {
-			logger.error("IllegalArgumentException {}", e.toString());
-			throw new IEXUnexpectedError("IllegalArgumentException");
-		} catch (IllegalAccessException e) {
-			logger.error("IllegalAccessException {}", e.toString());
-			throw new IEXUnexpectedError("IllegalAccessException");
-		}
-	}
-	
 	private static String[] encodeSymbol(String[] symbols) {
 		try {
 			String[] ret = new String[symbols.length];
@@ -442,8 +448,9 @@ public class IEXBase {
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
 		
-		String type = getType(clazz);
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)));
+		IEXInfo iexInfo = IEXInfo.get(clazz);
+		
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)));
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -453,8 +460,6 @@ public class IEXBase {
 		// {"IBM":{"ohlc":{"open":{"price":146.89,"time":1532698210193},"close":{"price":145.15,"time":1532721693191},"high":147.14,"low":144.66}},"BT":{"ohlc":{"open":{"price":15.44,"time":1532698504567},"close":{"price":15.48,"time":1532721721103},"high":15.75,"low":15.405}}}
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			Map<String, E> ret = new TreeMap<>();
-
-			ClassInfo classInfo = ClassInfo.get(clazz);
 
 			// Assume result is only one object
 			JsonObject result = reader.readObject();
@@ -478,8 +483,8 @@ public class IEXBase {
 				ValueType elementValueType = elementValue.getValueType();
 				
 				// Sanity check
-				if (!elementKey.equals(type)) {
-					logger.error("Unexpected elementKey {} {} {}", resultKey, type, elementKey);
+				if (!elementKey.equals(iexInfo.type)) {
+					logger.error("Unexpected elementKey {} {} {}", resultKey, iexInfo.type, elementKey);
 					throw new IEXUnexpectedError("Unexpected elementKey");
 				}
 				switch(elementValueType) {
@@ -487,8 +492,8 @@ public class IEXBase {
 				{
 					JsonObject arg = elementValue.asJsonObject();
 					// Sanity check
-					if (classInfo.size != arg.size()) {
-						logger.warn("Unexpected resultChild {} {} {}", resultKey, classInfo.size, arg.size());
+					if (iexInfo.fieldInfos.length != arg.size()) {
+						logger.warn("Unexpected resultChild {} {} {}", resultKey, iexInfo.fieldInfos.length, arg.size());
 						continue;
 					}
 
@@ -530,8 +535,10 @@ public class IEXBase {
 			logger.error("symbols.length == 0");
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
-		String type = getType(clazz);
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)));
+		
+		IEXInfo iexInfo = IEXInfo.get(clazz);
+		
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)));
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -564,8 +571,8 @@ public class IEXBase {
 				ValueType elementValueType = elementValue.getValueType();
 				
 				// Sanity check
-				if (!elementKey.equals(type)) {
-					logger.error("Unexpected elementKey {} {}", type, elementKey);
+				if (!elementKey.equals(iexInfo.type)) {
+					logger.error("Unexpected elementKey {} {}", iexInfo.type, elementKey);
 					throw new IEXUnexpectedError("Unexpected elementKey");
 				}
 				switch(elementValueType) {
@@ -609,9 +616,11 @@ public class IEXBase {
 			logger.error("symbols.length == 0");
 			throw new IEXUnexpectedError("symbols.length == 0");
 		}
-		String type = getType(clazz);
+		
+		IEXInfo iexInfo = IEXInfo.get(clazz);
+		
 		// https://api.iextrading.com/1.0/stock/market/batch?symbols=ibm,bt&types=dividends&range=1y&chartLast=1
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, type, String.join(",", encodeSymbol(symbols)), range.value);
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)), range.value);
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -621,8 +630,6 @@ public class IEXBase {
 		// {"IBM":{"dividends":[{"exDate":"2017-05-08","paymentDate":"2017-06-10","recordDate":"2017-05-10","declaredDate":"2017-04-25","amount":1.5,"flag":"","type":"Dividend income","qualified":"Q","indicated":""}]}}
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			Map<String, E[]> ret = new TreeMap<>();
-
-			ClassInfo classInfo = ClassInfo.get(clazz);
 
 			// Assume result is only one object
 			JsonObject result = reader.readObject();
@@ -646,8 +653,8 @@ public class IEXBase {
 				ValueType elementValueType = elementValue.getValueType();
 				
 				// Sanity check
-				if (!elementKey.equals(type)) {
-					logger.error("Unexpected elementKey {} {}", type, elementKey);
+				if (!elementKey.equals(iexInfo.type)) {
+					logger.error("Unexpected elementKey {} {}", iexInfo.type, elementKey);
 					throw new IEXUnexpectedError("Unexpected elementKey");
 				}
 				switch(elementValueType) {
@@ -665,17 +672,17 @@ public class IEXBase {
 						E e = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
 						
 						// Assign default value, if field value is null)
-						for(int j = 0; j < classInfo.size; j++) {
-							Object o = classInfo.fields[j].get(e);
+						for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
+							Object o = fieldInfo.field.get(e);
 							// If field is null, assign default value
 							if (o == null) {
-								switch(classInfo.types[j]) {
+								switch(fieldInfo.type) {
 								case "double":
-									logger.warn("Assign defautl value  {} {} {}", classInfo.clazzName, classInfo.names[j], classInfo.types[j]);
-									classInfo.fields[j].setDouble(o, 0);
+									logger.warn("Assign defautl value  {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
+									fieldInfo.field.setDouble(o, 0);
 									break;
 								default:
-									logger.error("Unexpected field type {} {} {}", classInfo.clazzName, classInfo.names[i], classInfo.types[i]);
+									logger.error("Unexpected field type {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
 									throw new IEXUnexpectedError("Unexpected field type");
 								}
 							}

@@ -131,6 +131,7 @@ public class IEXBase {
 		public final String      clazzName;
 		public final String      type;
 		public final FieldInfo[] fieldInfos;
+		public final String      filter;
 		
 		IEXInfo(Class<? extends IEXBase> clazz) {
 			try {
@@ -170,9 +171,20 @@ public class IEXBase {
 					}
 				}
 				
+				String filter;
+				{
+					List<String>filterList = new ArrayList<>();
+					for(IEXInfo.FieldInfo fiedlInfo: fieldInfos) {
+						if (fiedlInfo.ignoreField) continue;
+						filterList.add(fiedlInfo.jsonName);
+					}
+					filter = String.join(",", filterList.toArray(new String[0]));
+				}
+
 				this.clazzName = clazz.getName();
 				this.type       = type;
 				this.fieldInfos = fieldInfos;
+				this.filter     = filter;
 			} catch (NoSuchFieldException e) {
 				logger.error("NoSuchFieldException {}", e.toString());
 				throw new IEXUnexpectedError("NoSuchFieldException");
@@ -474,7 +486,7 @@ public class IEXBase {
 		
 		IEXInfo iexInfo = IEXInfo.get(clazz);
 		
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)));
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&filter=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)), iexInfo.filter);
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
@@ -643,8 +655,7 @@ public class IEXBase {
 		
 		IEXInfo iexInfo = IEXInfo.get(clazz);
 		
-		// https://api.iextrading.com/1.0/stock/market/batch?symbols=ibm,bt&types=dividends&range=1y&chartLast=1
-		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&range=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)), range.value);
+		String url = String.format("%s/stock/market/batch?types=%s&symbols=%s&filter=%s&range=%s", END_POINT, iexInfo.type, String.join(",", encodeSymbol(symbols)), iexInfo.filter, range.value);
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");

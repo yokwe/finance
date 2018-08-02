@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.util.CSVUtil;
 
 public class UpdateYahooPortfolio {
@@ -31,7 +32,7 @@ public class UpdateYahooPortfolio {
 			// Change symbol style from iex to yahoo
 			String symbol        = entry.getKey().replaceAll("-", "-P");
 			double quantity      = lastStockHistory.totalQuantity;
-			double purchasePrice = lastStockHistory.totalCost / lastStockHistory.totalQuantity;
+			double purchasePrice = Transaction.roundPrice(lastStockHistory.totalCost / lastStockHistory.totalQuantity);
 			
 			yahooPortfolioList.add(new YahooPortfolio(symbol, purchasePrice, quantity));
 		}

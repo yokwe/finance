@@ -1,6 +1,10 @@
 package yokwe.finance.securities.eod;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +20,27 @@ public class UpdateStockHistory {
 
 	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history.csv";
 
+	//                group
+	public static Map<String, List<StockHistory>> getStockHistoryMap() {
+		Map<String, List<StockHistory>> ret = new TreeMap<>();
+		
+		List<StockHistory> allStockHistory = CSVUtil.loadWithHeader(PATH_STOCK_HISTORY, StockHistory.class);
+		for(StockHistory stockHistory: allStockHistory) {
+			String key = stockHistory.group;
+			if (!ret.containsKey(key)) {
+				ret.put(key, new ArrayList<>());
+			}
+			ret.get(stockHistory.group).add(stockHistory);
+		}
+		
+		for(Map.Entry<String, List<StockHistory>> entry: ret.entrySet()) {
+			Collections.sort(entry.getValue());
+		}
+		
+		return ret;
+	}
+	
+	
 	public static void generateReport(String url) {
 		logger.info("url        {}", url);		
 		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
@@ -92,8 +117,13 @@ public class UpdateStockHistory {
 			logger.info("");
 			List<StockHistory> stockHistoryList = StockHistory.getStockList();
 			for(StockHistory stockHistory: stockHistoryList) {
+				// Change symbol style
+				stockHistory.group  = stockHistory.group.replace(".PR.", "-");
+				stockHistory.symbol = stockHistory.symbol.replace(".PR.", "-");
 				logger.info("{}", stockHistory);
 			}
+			Collections.sort(stockHistoryList);
+			
 			logger.info("transactionList  = {}", transactionList.size());
 			logger.info("stockHistoryList = {}", stockHistoryList.size());
 			

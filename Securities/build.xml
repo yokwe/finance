@@ -231,6 +231,22 @@
                 </java>
         </target>
 
+        <target name="run-eod-update-stock-history">
+                <java classname="yokwe.finance.securities.eod.UpdateStockHistory" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-eod-update-yahoo-portfolio">
+                <java classname="yokwe.finance.securities.eod.UpdateYahooPortfolio" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
         <target name="run-eod-update-forex">
                 <java classname="yokwe.finance.securities.eod.UpdateForex" fork="true">
                         <classpath location="${jar.yokwe}" />

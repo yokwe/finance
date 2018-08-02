@@ -8,6 +8,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -30,6 +34,13 @@ public class CSVUtil {
 	// Save List<E> data as CSV file.
 	// Load CSV file as List<E> data.
 	
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	public static @interface ColumnName {
+		String value();
+	}
+
+	
 	private static int BUFFER_SIZE = 64 * 1024;
 
 	public static <E> List<E> loadWithHeader(String path, Class<E> clazz, String header) {
@@ -45,7 +56,8 @@ public class CSVUtil {
 				// Skip static field
 				if (Modifier.isStatic(field.getModifiers())) continue;
 				
-				nameList.add(field.getName());
+				ColumnName columnName = field.getDeclaredAnnotation(ColumnName.class);
+				nameList.add((columnName == null) ? field.getName() : columnName.value());
 			}
 			names = nameList.toArray(new String[0]);
 		}
@@ -167,7 +179,8 @@ public class CSVUtil {
 		Field[] fields = fieldList.toArray(new Field[0]);
 		String[] names = new String[fields.length];
 		for(int i = 0; i < names.length; i++) {
-			names[i] = fields[i].getName();
+			ColumnName columnName = fields[i].getDeclaredAnnotation(ColumnName.class);
+			names[i] = (columnName == null) ? fields[i].getName() : columnName.value();
 		}
 		Object[] values = new Object[fields.length];
 		
@@ -226,10 +239,11 @@ public class CSVUtil {
 			fieldList.add(field);
 		}
 		Field[] fields = fieldList.toArray(new Field[0]);
-		String[] names = new String[fields.length];
-		for(int i = 0; i < names.length; i++) {
-			names[i] = fields[i].getName();
-		}
+//		String[] names = new String[fields.length];
+//		for(int i = 0; i < names.length; i++) {
+//			ColumnName columnName = fields[i].getDeclaredAnnotation(ColumnName.class);
+//			names[i] = (columnName == null) ? fields[i].getName() : columnName.value();
+//		}
 		Object[] values = new Object[fields.length];
 
 		// Create parent dirs and file if not exists.

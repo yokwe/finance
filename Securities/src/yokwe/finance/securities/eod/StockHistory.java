@@ -23,8 +23,8 @@ public class StockHistory implements Comparable<StockHistory> {
 	public int    session;
 
 	// One record for one stock per day
-	public final String date;
-	public final String symbol;
+	public String date;
+	public String symbol;
 	
 	// Dividend detail
 	public double dividend;
@@ -93,10 +93,18 @@ public class StockHistory implements Comparable<StockHistory> {
 			0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0);
 	}
+	public StockHistory() {
+		this("", 0, "", "",
+				0, 0,
+				0, 0, 0,
+				0, 0, 0, 0, 0,
+				0, 0, 0, 0, 0);
+	}
 	
 	@Override
 	public int compareTo(StockHistory that) {
 		int ret = this.group.compareTo(that.group);
+		if (ret == 0) ret = this.session - that.session;
 		if (ret == 0) ret = this.date.compareTo(that.date);
 		return ret;
 	}
@@ -112,7 +120,7 @@ public class StockHistory implements Comparable<StockHistory> {
 				);
 	}
 
-	// key     symbol      date
+	//         key                  symbol      date
 	static Map<String, NavigableMap<String, StockHistory>> allStockMap = new TreeMap<>();
 	static List<StockHistory> getStockList() {
 		List<StockHistory> ret = new ArrayList<>();

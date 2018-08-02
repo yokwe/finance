@@ -31,7 +31,7 @@ public class Stats extends IEXBase implements Comparable<Stats> {
 	public long   ebitda;             // (Trailing twelve months)
 	public long   revenue;            // (Trailing twelve months)
 	public long   grossProfit;        // (Trailing twelve months)
-	public long   cash;               // reers to total cash. (Trailing twelve months)
+	public long   cash;               // refers to total cash. (Trailing twelve months)
 	public long   debt;               // refers to total debt. (Trailing twelve months)
 	public double ttmEPS;             // (Trailing twelve months)
 	public double revenuePerShare;    // (Trailing twelve months)

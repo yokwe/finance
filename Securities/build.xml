@@ -199,47 +199,19 @@
         </target>
 
 	<!-- eod -->
-        <target name="run-eod-update-price-google">
+        <target name="run-eod-update-price">
                 <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                	<arg value="google"/>
-                </java>
+                 </java>
         </target>
 
-        <target name="run-eod-update-price-yahoo">
-                <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                        <arg value="yahoo"/>
-                </java>
-        </target>
-
-        <target name="run-eod-update-price-iex">
-                <java classname="yokwe.finance.securities.eod.UpdatePrice" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                        <arg value="iex"/>
-                </java>
-        </target>
-
-        <target name="run-eod-merge-price">
-                <java classname="yokwe.finance.securities.eod.MergePrice" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                </java>
-        </target>
-
-        <target name="run-eod-update-dividend-yahoo">
+        <target name="run-eod-update-dividend">
                 <java classname="yokwe.finance.securities.eod.UpdateDividend" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                 	<sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                	<arg value="yahoo"/>
                 </java>
         </target>
 
@@ -261,14 +233,6 @@
 
         <target name="run-eod-update-forex">
                 <java classname="yokwe.finance.securities.eod.UpdateForex" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-                </java>
-        </target>
-
-        <target name="run-eod-update-delisted">
-                <java classname="yokwe.finance.securities.eod.UpdateDelisted" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
@@ -307,20 +271,6 @@
                 </java>
         </target>
 
-        <target name="run-eod-update-cid">
-                <java classname="yokwe.finance.securities.eod.UpdateCID" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
-<!--
-                        <sysproperty key="https.proxyHost" value="192.168.1.14"/>
-                        <sysproperty key="https.proxyPort" value="8080"/>
-                        <sysproperty key="http.proxyHost"  value="192.168.1.14"/>
-                        <sysproperty key="http.proxyPort"  value="8080"/>
--->
-                </java>
-        </target>
-
         <target name="run-eod-HistoricalQuotes">
                 <java classname="yokwe.finance.securities.eod.HistoricalQuotes" fork="true">
                         <classpath location="${jar.yokwe}" />
@@ -330,6 +280,7 @@
         </target>
 
 	
+	<!-- iex -->
         <target name="run-iex-update-symbols">
                 <java classname="yokwe.finance.securities.iex.UpdateSymbols" fork="true">
                         <classpath location="${jar.yokwe}" />

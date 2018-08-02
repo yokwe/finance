@@ -1,10 +1,12 @@
-package yokwe.finance.securities.eod.tax;
+package yokwe.finance.securities.eod;
 
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.tax.Report;
+import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.DoubleUtil;

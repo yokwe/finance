@@ -1,4 +1,4 @@
-package yokwe.finance.securities.eod.tax;
+package yokwe.finance.securities.eod;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class StockHistory implements Comparable<StockHistory> {

@@ -171,13 +171,13 @@ public class UpdateStats {
 
 			count++;
 			
-			File priceFile    = Price.getFile(symbol);
-			File dividendFile = Dividend.getFile(symbol);
+			File priceFile    = new File(UpdatePrice.getCSVPath(symbol));
+			File dividendFile = new File(UpdateDividend.getCSVPath(symbol));
 			
 			if (!priceFile.exists()) continue;
 			
 			// Filter data for last one year
-			final List<Price> priceList = Price.load(priceFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
+			final List<Price> priceList = UpdatePrice.load(symbol).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
 			if (priceList.size() == 0) continue;
 			
 			// Order of data is very important to calculate statistics number
@@ -245,7 +245,7 @@ public class UpdateStats {
 			List<Dividend> dividendList;
 			if (dividendFile.exists()) {
 				// Filter data for last one year
-				dividendList = Dividend.load(dividendFile).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());;
+				dividendList = UpdateDividend.load(symbol).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());;
 				// Order of data is very important to calculate statistics number
 				dividendList.sort((a, b) -> a.date.compareTo(b.date));
 			} else {

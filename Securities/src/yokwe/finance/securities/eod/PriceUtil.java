@@ -29,10 +29,10 @@ public class PriceUtil {
 	private static void fillMap(String symbol) {
 		if (priceMap.containsKey(symbol)) return;
 		
-		File file = Price.getFile(symbol);
+		File file = new File(UpdatePrice.getCSVPath(symbol));
 		if (file.canRead()) {
 			DateMap<Price> map = new DateMap<>();
-			for(Price price: Price.load(file)) {
+			for(Price price: UpdatePrice.load(file)) {
 				map.put(price.date, price);
 			}
 			if(map.isEmpty()) {

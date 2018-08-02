@@ -92,7 +92,7 @@ public class HistoricalQuotes {
 		logger.info("priceList first {}", priceList.get(priceList.size() - 1));
 		
 		// save
-		Price.save(priceList, new File(PATH_OUTPUT));
+		UpdatePrice.save(priceList, new File(PATH_OUTPUT));
 	}
 	
 	public static void main(String[] args) {

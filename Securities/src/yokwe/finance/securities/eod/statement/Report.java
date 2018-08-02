@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.Market;
-import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
@@ -369,16 +368,19 @@ public class Report {
 			}
 			
 			{
+				LocalDate DATE_LAST  = Market.getLastTradingDate();
+				LocalDate DATE_FIRST = DATE_LAST.minusYears(1);
+
 				// build accountMap
 				DateMap<Account> accountMap = new DateMap<>();
 				for(Account account: accountList) {
 					accountMap.put(account.date, account);
 				}
-
+				
 				// build unrealizedGainList
 				List<UnrealizedGain> unrealizedGainList = new ArrayList<>();
-				LocalDate last = UpdateProvider.DATE_LAST;
-				for(LocalDate date = UpdateProvider.DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+				LocalDate last = DATE_LAST;
+				for(LocalDate date = DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
 					if (Market.isClosed(date)) continue;
 					
 					Account account = accountMap.get(date);

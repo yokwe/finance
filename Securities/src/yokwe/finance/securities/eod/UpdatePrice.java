@@ -3,291 +3,228 @@ package yokwe.finance.securities.eod;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
+
+import javax.json.JsonObject;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.FileUtil;
-import yokwe.finance.securities.util.Pause;
+import yokwe.finance.securities.iex.Chart;
+import yokwe.finance.securities.iex.IEXBase;
+import yokwe.finance.securities.iex.IEXBase.Range;
+import yokwe.finance.securities.iex.UpdateSymbols;
+import yokwe.finance.securities.util.CSVUtil;
 
 public class UpdatePrice {
-	static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
-	public static final String PATH_DIR = "tmp/eod/price";
-	
-	public static final String PATH_UNKNOWN_DIR = "tmp/eod/price-unknown";
-	
-	private static Map<String, UpdateProvider> updateProviderMap = new TreeMap<>();
-	static {
-		updateProviderMap.put(UpdateProvider.GOOGLE, new UpdateProviderGoogle());
-		updateProviderMap.put(UpdateProvider.IEX,    new UpdateProviderIEX());
-		updateProviderMap.put(UpdateProvider.YAHOO,  new UpdateProviderYahoo());
-	}
-	public static UpdateProvider getProvider(String provider) {
-		if (updateProviderMap.containsKey(provider)) {
-			return updateProviderMap.get(provider);
-		} else {
-			logger.error("Unknonw provider = {}", provider);
-			throw new SecuritiesException("Unknonw provider");
-		}
-	}
-
-	private static boolean needUpdate(File file) {
-		// Don't update file after gracePeriod
-//		if (UpdateProvider.GRACE_PERIOD < file.lastModified()) {
-//			logger.info("Recently updated {}", file.getName());
-//			return false;
-//		}
-			
-		String content = FileUtil.read(file);
-		String[] lines = content.split("\n");
+	// Define eod.Price compatible class using IEXBase
+	public static class IEX extends IEXBase {
+		public static final String TYPE = Chart.TYPE;
 		
-		if (content.length() == 0) return true;
+		// date,symbol,open,high,low,close,volume
+		public String date;
+		@IgnoreField
+		public String symbol;
+		public double open;
+		public double high;
+		public double low;
+		public double close;
+		public long   volume;
 		
-		// Sanity check
-		if (lines.length <= 1) {
-			logger.error("Unexpected content {}", content);
-			throw new SecuritiesException("Unexpected content");
+		IEX() {
+			date   = null;
+			symbol = null;
+			open   = 0;
+			high   = 0;
+			low    = 0;
+			close  = 0;
+			volume = 0;
 		}
 		
-		// first line should be header
-		String HEADER = "date,symbol,open,high,low,close,volume";
-		String header = lines[0];
-		if (!header.equals(HEADER)) {
-			logger.error("Unexpected header  {}", header);
-			throw new SecuritiesException("Unexpected header");
+		public IEX(JsonObject jsonObject) {
+			super(jsonObject);
 		}
 		
-		// Does it contains data of DATE_LAST?
-		String  dateLastString = UpdateProvider.DATE_LAST.toString();
-		boolean needUpdate     = true;
-		for(int i = 1; i < lines.length; i++) {
-			String line = lines[i];
-			String[] values = line.split(",");
-			if (values.length != 7) {
-				logger.error("Unexpected line  {}", line);
-				throw new SecuritiesException("Unexpected header");
-			}
-			String date = values[0];
-			if (date.equals(dateLastString)) {
-				needUpdate = false;
-				break;
-			}
-		}
-		
-		return needUpdate;
-	}
-	
-	public static void updateFile(UpdateProvider updateProvider, Map<String, Stock> stockMap) {
-		Set<String> symbolSet = new TreeSet<>(stockMap.keySet());
-		logger.info("symbolSet {}", symbolSet.size());
-		
-		int total = stockMap.size();
-		int countUpdate = 0;
-		int countOld    = 0;
-		int countSkip   = 0;
-		int countNew    = 0;
-		int countNone   = 0;
-		
-		int retryCount  = 0;
-		boolean needSleep = false;
-
-		for(;;) {
-			retryCount++;
-			if (UpdateProvider.MAX_RETRY < retryCount) break;
-			logger.info("retry  {}", String.format("%4d", retryCount));
-			
-			if (needSleep) {
-				try {
-					logger.info("sleep");
-					Thread.sleep(1 * 60 * 1000); // 1 minute
-				} catch (InterruptedException e1) {
-					logger.info("InterruptedException");
+		public static Map<String, IEX[]> getStock(Range range, String... symbols) {
+			Map<String, IEX[]> ret = IEXBase.getStockArray(IEX.class, range, symbols);
+			for(Map.Entry<String, IEX[]> entry: ret.entrySet()) {
+				String symbol = entry.getKey();
+				IEX[]  value  = entry.getValue();
+				for(int i = 0; i < value.length; i++) {
+					value[i].symbol = symbol;
 				}
 			}
-			
-			int count = 0;
-			int lastOutputCount = -1;
-			Set<String> nextSymbolSet = new TreeSet<>();
-			int lastCountOld = countOld;
-			countOld = 0;
-
-			int symbolSetSize = symbolSet.size();
-			int showInterval = (symbolSetSize < 100) ? 1 : 100;
-			
-			Pause pause = updateProvider.getPause();
-			logger.info("{}", pause);
-			pause.reset();
-						
-			for(String symbol: symbolSet) {
-				int outputCount = count / showInterval;
-				boolean showOutput;
-				if (outputCount != lastOutputCount) {
-					showOutput = true;
-					lastOutputCount = outputCount;
-				} else {
-					showOutput = false;
-				}
-
-				count++;
-				
-				File file = updateProvider.getFile(symbol);
-				if (file.exists()) {
-					if (needUpdate(file)) {
-						pause.sleep();
-						if (updateProvider.updateFile(symbol, false)) {
-							if (showOutput) logger.info("{}  update {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
-							countUpdate++;
-						} else {
-							if (showOutput) logger.info("{}  old    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
-							countOld++;
-							nextSymbolSet.add(symbol);
-						}
-					} else {
-						if (showOutput) logger.info("{}  skip   {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
-						countSkip++;
-					}
-				} else {
-					pause.sleep();
-					if (updateProvider.updateFile(symbol, true)) {
-						/*if (showOutput)*/ logger.info("{}  new    {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
-						countNew++;
-					} else {
-//						/*if (showOutput)*/ logger.info("{}  none   {}", String.format("%4d / %4d",  count, symbolSetSize), symbol);
-						countNone++;
-					}
-				}
-			}
-			logger.info("old    {}", String.format("%4d", countOld));
-			if (countOld == 0) break; // Exit loop because there is no old file. 
-			if (countOld != lastCountOld) {
-				retryCount = 0; // reset retry count
-			}
-			needSleep = true;
-			symbolSet = nextSymbolSet;
+			return ret;
 		}
-		logger.info("===========");
-		logger.info("update {}", String.format("%4d", countUpdate));
-		logger.info("old    {}", String.format("%4d", countOld));
-		logger.info("skip   {}", String.format("%4d", countSkip));
-		logger.info("new    {}", String.format("%4d", countNew));
-		logger.info("none   {}", String.format("%4d", countNone));
-		logger.info("total  {}", String.format("%4d", countUpdate + countOld + countSkip + countNew + countNone));
-		logger.info("total  {}", String.format("%4d", total));
+	}
+	
+	public static final String TYPE = "price";
+	
+	public static final String PATH_DATA_DIR = "tmp/eod";
+	
+	public static final String PATH_DELISTED_DIR = "tmp/eod/delisted";
+
+	public static final Range UPDATE_RANGE = Range.Y1;
+	
+	public static final int DELTA = 50;
+	
+	public static String getCSVDir() {
+		return String.format("%s/%s", PATH_DATA_DIR, TYPE);
+	}
+	public static String getCSVPath(String symbol) {
+		return String.format("%s/%s.csv", getCSVDir(), symbol);
+	}
+	public static String getDelistedCSVDir() {
+		return String.format("%s/%s-delisted", PATH_DATA_DIR, TYPE);
+	}
+	public static String getDelistedCSVPath(String symbol, String suffix) {
+		return String.format("%s/%s.csv-%s", getDelistedCSVDir(), symbol, suffix);
+	}
+	
+	public static List<Price> load(String symbol) {
+		return CSVUtil.loadWithHeader(getCSVPath(symbol), Price.class);
+	}
+	public static List<Price> load(File file) {
+		return CSVUtil.loadWithHeader(file.getPath(), Price.class);
+	}
+	
+	public static void save(List<Price> dataList, File file) {
+		CSVUtil.saveWithHeader(dataList, file.getPath());
 	}
 	
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		logger.info("DATE_FIRST {}", UpdateProvider.DATE_FIRST);
-		logger.info("DATE_LAST  {}", UpdateProvider.DATE_LAST);
+		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
 
-		String providerName = args[0];
-		UpdateProvider updateProvider = getProvider(providerName);
-		logger.info("UpdateProvider {}", updateProvider.getName());
+		List<String> symbolList = UpdateSymbols.getSymbolList();
+		logger.info("symbolList {}", symbolList.size());
 		
-		int countUnknown    = 0;
-//		int countNoDateLast = 0;
-		
+		Set<String> delistedSymbolSet = new TreeSet<>();
 		{
-			File dir = updateProvider.getFile("DUMMY").getParentFile();
+			File dir = new File(PATH_DELISTED_DIR);
+			for(File file: dir.listFiles()) {
+				String name = file.getName();
+
+				// Sanity checks
+				if (!name.endsWith(".csv")) {
+					logger.warn("Not CSV file {}", file.getPath());
+					continue;
+				}
+				if (file.length() == 0) {
+					logger.warn("Empty file {}", file.getPath());
+					continue;
+				}
+				
+				String symbol = name.substring(0, name.length() - 4); // minus 4 for ".csv"
+				delistedSymbolSet.add(symbol);
+			}
+		}
+		
+		// Remove unknown file
+		{
+			Set<String> symbolSet = new HashSet<>(symbolList);
+			
+			File dir = new File(getCSVDir());			
 			if (!dir.exists()) {
-				logger.info("Create directory {}", dir.getPath());
 				dir.mkdirs();
-			} else {
-				if (!dir.isDirectory()) {
-					logger.info("Not directory {}", dir.getAbsolutePath());
-					throw new SecuritiesException("Not directory");
-				}
 			}
 			
-			{
-				File unknownDir = new File(PATH_UNKNOWN_DIR);
-				if (!unknownDir.exists()) {
-					logger.info("Create directory {}", unknownDir.getPath());
-					unknownDir.mkdirs();
-				} else {
-					if (!unknownDir.isDirectory()) {
-						logger.info("Not directory {}", unknownDir.getAbsolutePath());
-						throw new SecuritiesException("Not directory");
-					}
-				}
+			File dirDelisted = new File(getDelistedCSVDir());
+			if (!dirDelisted.exists()) {
+				dirDelisted.mkdirs();
 			}
+
+			String suffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
 			
-			
-			// Remove unknown file
-			{
-				String destFileSuffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
-				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
+			// Make list of csv file.
+			List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
+			fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
+			try {
 				for(File file: fileList) {
-					String name = file.getName();
-					String symbol = name.replace(".csv", "");
-					if (StockUtil.contains(symbol)) continue;
+					String symbol = file.getName().replace(".csv", "");
+					if (symbolSet.contains(symbol)) continue;
+					if (delistedSymbolSet.contains(symbol)) continue;
 					
-					countUnknown++;
-					
-					try {
-						File destFile = new File(PATH_UNKNOWN_DIR, String.format("%s-%s", name, destFileSuffix));
-						logger.info("{}  move unknown file {} to {}", String.format("%4d",  countUnknown), file.getPath(), destFile.getPath());
+						File destFile = new File(getDelistedCSVPath(symbol, suffix));
+						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
 											
 						// Copy file to new location
 						Files.copy(file.toPath(), destFile.toPath());
 						// Delete file after successful copy
 						file.delete();
-					} catch (IOException e) {
-						logger.error("IOException {}", e.toString());
-						throw new SecuritiesException("IOException");
-					}
 				}
+			} catch (IOException e) {
+				logger.error("IOException {}", e.toString());
+				throw new SecuritiesException("IOException");
+			}
+		}
+	
+		// Update csv file
+		{
+			int symbolListSize = symbolList.size();
+			
+			int countGet  = 0;
+			int countData = 0;
 
+			for(int i = 0; i < symbolListSize; i += DELTA) {
+				int fromIndex = i;
+				int toIndex = Math.min(fromIndex + DELTA, symbolListSize);
+				
+				List<String> getList = new ArrayList<>();
+				for(String symbol: symbolList.subList(fromIndex, toIndex)) {
+//					File file = new File(getCSVPath(symbol));
+//					if (file.exists()) continue;
+					getList.add(symbol);
+				}
+				if (getList.isEmpty()) continue;
+				if (getList.size() == 1) {
+					logger.info("  {} ({}) {}", fromIndex, getList.size(), getList.get(0));
+				} else {
+					logger.info("  {} ({}) {} - {}", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1));
+				}
+				countGet += getList.size();
+
+				Map<String, IEX[]> dataMap = IEX.getStock(UPDATE_RANGE, getList.toArray(new String[0]));
+				for(Map.Entry<String, IEX[]>entry: dataMap.entrySet()) {
+					List<IEX> dataList = Arrays.asList(entry.getValue());
+					if (dataList.size() == 0) continue;
+					CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
+					countData++;
+				}
 			}
 			
-//			// Remove file that contains no DATE_LAST
-//			{
-//				String dateLast = UpdateProvider.DATE_LAST.toString();
-//				List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
-//				fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
-//				
-//				for(File file: fileList) {
-//					String name = file.getName();
-//
-//					boolean hasDateLast = false;
-//					List<Price> priceList = Price.load(file);
-//					for(Price price: priceList) {
-//						if (price.date.equals(dateLast)) {
-//							hasDateLast = true;
-//							break;
-//						}
-//					}
-//					if (hasDateLast) continue;
-//					
-//					countNoDateLast++;
-//					logger.info("{} delete file contains no {}  {}", String.format("%4d",  countNoDateLast), dateLast, name);
-//					file.delete();
-//				}
-//			}
+			logger.info("count {} / {}", countData, countGet);
 		}
-		
+
+		// Copy csv files from PATH_DELISTED_DIR
 		{
-			Map<String, Stock> stockMap = new TreeMap<>();
-			StockUtil.getAll().stream().forEach(e -> stockMap.put(e.symbol, e));
-			updateFile(updateProvider, stockMap);
+			try {
+				for(String symbol: delistedSymbolSet) {
+					logger.info("copy delisted  {}", symbol);
+					File source = new File(String.format("%s/%s.csv", PATH_DELISTED_DIR, symbol));
+					File target = new File(getCSVPath(symbol));
+					
+					Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				}
+			} catch (IOException e) {
+				logger.info("IOException {}", e.getMessage());
+				throw new SecuritiesException("IOException");
+			}
 		}
-		
-		logger.info("===========");
-		logger.info("unknown    {}", String.format("%4d", countUnknown));
-//		logger.info("noDateLast {}", String.format("%4d", countNoDateLast));
-		
+
 		logger.info("STOP");
 	}
 }

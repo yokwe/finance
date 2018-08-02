@@ -16,7 +16,6 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.DateMap;
 import yokwe.finance.securities.eod.ForexUtil;
 import yokwe.finance.securities.eod.Market;
-import yokwe.finance.securities.eod.UpdateProvider;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.DoubleUtil;
@@ -268,6 +267,9 @@ public class Report {
 
 			// Build UnrealizedGain sheet
 			{
+				LocalDate DATE_LAST  = Market.getLastTradingDate();
+				LocalDate DATE_FIRST = DATE_LAST.minusYears(1);
+
 				// build accountMap
 				DateMap<Account> accountMap = new DateMap<>();
 				for(Account account: accountList) {
@@ -276,8 +278,8 @@ public class Report {
 
 				// build unrealizedGainList
 				List<UnrealizedGain> unrealizedGainList = new ArrayList<>();
-				LocalDate last = UpdateProvider.DATE_LAST;
-				for(LocalDate date = UpdateProvider.DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
+				LocalDate last = DATE_LAST;
+				for(LocalDate date = DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
 					if (Market.isClosed(date)) continue;
 					
 					Account account = accountMap.get(date);

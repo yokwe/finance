@@ -18,7 +18,7 @@ public class StockUtil {
 	private static List<String>       symbolList = new ArrayList<>();
 	
 	static {
-		for(Stock stock: Stock.load()) {
+		for(Stock stock: UpdateStock.load()) {
 			map.put(stock.symbol, stock);
 			symbolList.add(stock.symbol);
 		}

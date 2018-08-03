@@ -2,8 +2,10 @@ package yokwe.finance.securities.eod;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.json.JsonObject;
 
@@ -53,7 +55,7 @@ public class UpdateStock {
 	
 	public static final String PATH_DATA_DIR = "tmp/eod";
 	
-	public static final int DELTA = 100;
+	public static final int DELTA = IEXBase.MAX_PARAM;
 	
 	public static String getCSVPath() {
 		return String.format("%s/%s.csv", PATH_DATA_DIR, TYPE);
@@ -70,6 +72,22 @@ public class UpdateStock {
 		CSVUtil.saveWithHeader(dataList, file.getPath());
 	}
 	
+	private static List<Stock> stockList = null;
+	public static List<Stock> getStockList() {
+		if (stockList == null) {
+			stockList = load();
+			Collections.sort(stockList);
+		}
+		return stockList;
+	}
+	private static List<String> symbolList = null;
+	public static List<String> getSymbolList() {
+		if (symbolList == null) {
+			symbolList = getStockList().stream().map(o -> o.symbol).collect(Collectors.toList());
+			Collections.sort(symbolList);
+		}
+		return symbolList;
+	}
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
 		logger.info("START");

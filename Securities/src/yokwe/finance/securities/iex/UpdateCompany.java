@@ -41,5 +41,4 @@ public class UpdateCompany {
 
 		logger.info("STOP");
 	}
-
 }

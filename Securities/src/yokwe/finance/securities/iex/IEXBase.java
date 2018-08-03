@@ -443,6 +443,38 @@ public class IEXBase {
 					throw new IEXUnexpectedError("Unknown valueType");
 				}
 			}
+			
+			// Assign default value, if field value is null)
+			for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
+				Object o = fieldInfo.field.get(this);
+				// If field is null, assign default value
+				if (o == null) {
+					switch(fieldInfo.type) {
+					case "double":
+						if (!fieldInfo.ignoreField) {
+							logger.warn("Assign defautl value  {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
+						}
+						fieldInfo.field.setDouble(this, 0);
+						break;
+					case "java.lang.String":
+						if (!fieldInfo.ignoreField) {
+							logger.warn("Assign defautl value  {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
+						}
+						fieldInfo.field.set(this, "");
+						break;
+					case "java.time.LocalDateTime":
+						if (!fieldInfo.ignoreField) {
+							logger.warn("Assign defautl value  {} {} {}", iexInfo.clazzName, fieldInfo.name, fieldInfo.type);
+						}
+						fieldInfo.field.set(this, NULL_LOCAL_DATE_TIME);
+						break;
+					default:
+						logger.error("Unexpected field type {} {}", iexInfo.clazzName, fieldInfo.toString());
+						throw new IEXUnexpectedError("Unexpected field type");
+					}
+				}
+			}
+
 		} catch (IllegalAccessException e) {
 			logger.error("IllegalAccessException {}", e.toString());
 			throw new IEXUnexpectedError("IllegalAccessException");
@@ -704,34 +736,7 @@ public class IEXBase {
 					
 					for(int i = 0; i < jsonArraySize; i++) {
 						JsonObject arg = jsonArray.getJsonObject(i);
-						E e = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
-						
-						// Assign default value, if field value is null)
-						for(IEXInfo.FieldInfo fieldInfo: iexInfo.fieldInfos) {
-							Object o = fieldInfo.field.get(e);
-							// If field is null, assign default value
-							if (o == null) {
-								switch(fieldInfo.type) {
-								case "double":
-									if (!fieldInfo.ignoreField) {
-										logger.warn("Assign defautl value  {} {}", iexInfo.clazzName, fieldInfo.toString());
-									}
-									fieldInfo.field.setDouble(e, 0);
-									break;
-								case "java.lang.String":
-									if (!fieldInfo.ignoreField) {
-										logger.warn("Assign defautl value  {} {}", iexInfo.clazzName, fieldInfo.toString());
-									}
-									fieldInfo.field.set(e, "");
-									break;
-								default:
-									logger.error("Unexpected field type {} {}", iexInfo.clazzName, fieldInfo.toString());
-									throw new IEXUnexpectedError("Unexpected field type");
-								}
-							}
-						}
-
-						childArray[i] = e;
+						childArray[i]  = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
 					}
 					ret.put(resultKey, childArray);
 				}

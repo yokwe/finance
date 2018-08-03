@@ -89,7 +89,11 @@ public class UpdateDividends {
 				getList.add(symbol);
 			}
 			if (getList.isEmpty()) continue;
-			logger.info("  {} ({}){}", fromIndex, getList.size(), getList.toString());
+			if (getList.size() == 1) {
+				logger.info("  {}", String.format("%4d  %3d %-7s", fromIndex, getList.size(), getList.get(0)));
+			} else {
+				logger.info("  {}", String.format("%4d  %3d %-7s - %-7s", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1)));
+			}
 			countGetStock += getList.size();
 
 			Map<String, Dividends[]> dividendsMap = Dividends.getStock(Range.Y1, getList.toArray(new String[0]));

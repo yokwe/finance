@@ -27,7 +27,12 @@ public class UpdateOHLC {
 			int fromIndex = i;
 			int toIndex = Math.min(fromIndex + IEXBase.MAX_PARAM, symbolListSize);
 			List<String> getList = symbolList.subList(fromIndex, toIndex);
-			logger.info("  {} {}", fromIndex, getList.toString());
+			if (getList.isEmpty()) continue;
+			if (getList.size() == 1) {
+				logger.info("  {}", String.format("%4d  %3d %-7s", fromIndex, getList.size(), getList.get(0)));
+			} else {
+				logger.info("  {}", String.format("%4d  %3d %-7s - %-7s", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1)));
+			}
 			
 			Map<String, OHLC> companyMap = OHLC.getStock(getList.toArray(new String[0]));
 			for(Map.Entry<String, OHLC> entry: companyMap.entrySet()) {

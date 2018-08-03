@@ -778,7 +778,12 @@ public class IEXBase {
 			int fromIndex = i;
 			int toIndex = Math.min(fromIndex + IEXBase.MAX_PARAM, symbolListSize);
 			List<String> getList = symbolList.subList(fromIndex, toIndex);
-			logger.info("  {} {}", fromIndex, getList.toString());
+			if (getList.isEmpty()) continue;
+			if (getList.size() == 1) {
+				logger.info("  {}", String.format("%4d  %3d %-7s", fromIndex, getList.size(), getList.get(0)));
+			} else {
+				logger.info("  {}", String.format("%4d  %3d %-7s - %-7s", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1)));
+			}
 			
 			Map<String, E> dataMap = getStockObject(clazz, getList.toArray(new String[0]));
 			dataMap.values().stream().forEach(o -> dataList.add(o));

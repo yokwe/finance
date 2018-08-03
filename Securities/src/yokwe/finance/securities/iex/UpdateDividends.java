@@ -84,8 +84,8 @@ public class UpdateDividends {
 			
 			List<String> getList = new ArrayList<>();
 			for(String symbol: symbolList.subList(fromIndex, toIndex)) {
-				File file = new File(getCSVPath(symbol));
-				if (file.exists()) continue;
+//				File file = new File(getCSVPath(symbol));
+//				if (file.exists()) continue;
 				getList.add(symbol);
 			}
 			if (getList.isEmpty()) continue;

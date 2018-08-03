@@ -191,9 +191,9 @@ public class UpdatePrice {
 				}
 				if (getList.isEmpty()) continue;
 				if (getList.size() == 1) {
-					logger.info("  {} ({}) {}", fromIndex, getList.size(), getList.get(0));
+					logger.info("  {}", String.format("%4d  %3d %-7s", fromIndex, getList.size(), getList.get(0)));
 				} else {
-					logger.info("  {} ({}) {} - {}", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1));
+					logger.info("  {}", String.format("%4d  %3d %-7s - %-7s", fromIndex, getList.size(), getList.get(0), getList.get(getList.size() - 1)));
 				}
 				countGet += getList.size();
 

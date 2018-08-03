@@ -25,7 +25,7 @@ public class Price {
 	
 	@Override
 	public String toString() {
-//		return String.format("[%s  %6.2f %6.2f %6.2f %6.2f %d]", date, open, high, low, close, volume);
-		return String.format("{%s %-9s %6.2f}", date, symbol, close);
+		return String.format("[%s  %s %s %s %s %d]", date, Double.valueOf(open), Double.valueOf(high), Double.valueOf(low), Double.valueOf(close), volume);
+//		return String.format("{%s %-9s %6.2f}", date, symbol, close);
 	}
 }

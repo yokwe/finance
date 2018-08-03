@@ -22,7 +22,6 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.iex.Chart;
 import yokwe.finance.securities.iex.IEXBase;
 import yokwe.finance.securities.iex.IEXBase.Range;
-import yokwe.finance.securities.iex.UpdateSymbols;
 import yokwe.finance.securities.util.CSVUtil;
 
 public class UpdatePrice {
@@ -109,7 +108,7 @@ public class UpdatePrice {
 		
 		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
 
-		List<String> symbolList = UpdateSymbols.getSymbolList();
+		List<String> symbolList = UpdateStock.getSymbolList();
 		logger.info("symbolList {}", symbolList.size());
 		
 		Set<String> delistedSymbolSet = new TreeSet<>();

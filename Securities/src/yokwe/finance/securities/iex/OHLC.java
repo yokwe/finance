@@ -5,7 +5,65 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
+import yokwe.finance.securities.eod.PriceUtil.IEX;
+
 public class OHLC extends IEXBase {
+	public static class CSV implements Comparable<CSV> {
+		public String        symbol;
+		public double        open;
+		public LocalDateTime openTime;
+		public double        high;
+		public double        low;
+		public double        close;
+		public LocalDateTime closeTime;
+		
+		public CSV(String symbol, double open, LocalDateTime openTime, double high, double low, double close, LocalDateTime closeTime) {
+			this.symbol    = symbol;
+			this.open      = open;
+			this.openTime  = openTime;
+			this.high      = high;
+			this.low       = low;
+			this.close     = close;
+			this.closeTime = closeTime;
+		}
+		public CSV() {
+			this("", 0, IEX.NULL_LOCAL_DATE_TIME, 0, 0, 0, IEX.NULL_LOCAL_DATE_TIME);
+		}
+		public CSV(String symbol, OHLC ohlc) {
+			this.symbol    = symbol;
+			this.open      = ohlc.open.price;
+			this.openTime  = ohlc.open.time;
+			this.high      = ohlc.high;
+			this.low       = ohlc.low;
+			this.close     = ohlc.close.price;
+			this.closeTime = ohlc.close.time;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("{symbol: %s, open: %s, openTime: %s, high: %s, low: %s, close: %s, closeTime: %s}",
+					symbol, Double.toString(open), openTime, Double.toString(high), Double.toString(low), Double.toString(close), closeTime);
+		}
+		
+		public OHLC toOHLC() {
+			OHLC ohlc  = new OHLC();
+			
+			ohlc.open.price  = open;
+			ohlc.open.time   = openTime;
+			ohlc.high        = high;
+			ohlc.low         = low;
+			ohlc.close.price = close;
+			ohlc.close.time  = closeTime;
+			
+			return ohlc;
+		}
+		
+		@Override
+		public int compareTo(CSV that) {
+			return this.symbol.compareTo(that.symbol);
+		}
+	}
+	
 	public static final String TYPE = "ohlc";
 
 	public static class Pair extends IEXBase {
@@ -16,7 +74,7 @@ public class OHLC extends IEXBase {
 		
 		public Pair() {
 			price = 0;
-			time  = null;
+			time  = NULL_LOCAL_DATE_TIME;
 		}
 		Pair(JsonObject jsonObject) {
 			super(jsonObject);

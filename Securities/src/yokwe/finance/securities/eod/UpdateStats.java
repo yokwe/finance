@@ -145,7 +145,7 @@ public class UpdateStats {
 		
 		List<Stats> statsList = new ArrayList<>();
 		
-		Collection<Stock> stockCollection = StockUtil.getAll();
+		Collection<Stock> stockCollection = UpdateStock.getStockList();
 		
 //		Collection<Stock> stockCollection = new ArrayList<>();
 //		stockCollection.add(StockUtil.get("IBM"));
@@ -176,8 +176,8 @@ public class UpdateStats {
 			
 			if (!priceFile.exists()) continue;
 			
-			// Filter data for last one year
-			final List<Price> priceList = UpdatePrice.load(symbol).stream().filter(o -> (0 < o.date.compareTo(STRING_DATE_FIRST))).collect(Collectors.toList());
+			// Skip zero data
+			List<Price> priceList = UpdatePrice.load(symbol).stream().filter(o -> (0 < o.open && 0 < o.high && 0 < o.low && 0 < o.close)).collect(Collectors.toList());
 			if (priceList.size() == 0) continue;
 			
 			// Order of data is very important to calculate statistics number

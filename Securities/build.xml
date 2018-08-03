@@ -321,6 +321,14 @@
                 </java>
         </target>
 
+        <target name="run-iex-update-delayed-quote">
+                <java classname="yokwe.finance.securities.iex.UpdateDelayedQuote" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
         <target name="run-iex-update-dividends">
                 <java classname="yokwe.finance.securities.iex.UpdateDividends" fork="true">
                         <classpath location="${jar.yokwe}" />

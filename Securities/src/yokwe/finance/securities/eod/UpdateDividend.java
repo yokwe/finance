@@ -21,7 +21,6 @@ import yokwe.finance.securities.iex.IEXBase.Range;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.iex.Dividends;
 import yokwe.finance.securities.iex.IEXBase;
-import yokwe.finance.securities.iex.UpdateSymbols;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
@@ -98,7 +97,7 @@ public class UpdateDividend {
 		
 		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
 
-		List<String> symbolList = UpdateSymbols.getSymbolList();
+		List<String> symbolList = UpdateStock.getSymbolList();
 		logger.info("symbolList {}", symbolList.size());
 		
 		// Remove unknown file

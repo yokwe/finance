@@ -209,6 +209,7 @@ public class CSVUtil {
 					Object value = fields[i].get(entry);
 					if (value == null) {
 						logger.error("value is null.  {} {} {}", o.getClass().getName(), fields[i].getName(), fields[i].getType().getName());
+						logger.error("entry {}", entry.toString());
 						throw new SecuritiesException("value is null");
 					}
 					values[i] = value.toString();

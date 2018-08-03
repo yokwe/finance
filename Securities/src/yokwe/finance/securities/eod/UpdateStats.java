@@ -198,23 +198,27 @@ public class UpdateStats {
 				for(Price price: priceList) {
 					if (price.open <= minimumPrice) {
 						tooSmall = true;
+						logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE open  %s", symbol, price.toString()));
 						break;
 					}
 					if (price.high <= minimumPrice) {
 						tooSmall = true;
+						logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE high  %s", symbol, price.toString()));
 						break;
 					}
 					if (price.low <= minimumPrice) {
 						tooSmall = true;
+						logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE low   %s", symbol, price.toString()));
 						break;
 					}
 					if (price.close <= minimumPrice) {
 						tooSmall = true;
+						logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE close %s", symbol, price.toString()));
 						break;
 					}
+					if (tooSmall) break;
 				}
 				if (tooSmall) {
-					logger.warn("{}  skip   {}", String.format("%4d / %4d",  count, total), String.format("%-8s TOO SMALL PRICE", symbol));
 					continue;
 				}
 			}

@@ -1,158 +1,228 @@
 package yokwe.finance.securities.eod;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.iex.Dividends;
 import yokwe.finance.securities.iex.IEXBase.Range;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class StockDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockDividend.class);
-
-	public static class OneDividend {
-		public int    month;
-		public String exDiv;    // MM/dd
-		public String pay;      // MM/dd
-		public double amount;   // amount per stock
-		public double dividend; // amount * quantity
-	}
 	
-	static class HoldingStock {
-		final String  group;
-		final int     session;
-		final String  symbol;
-		final String  dateStart;
-		final String  dateStop;
-		final Dividends[] dividends;
+	static LocalDate toLocalDate(String date) {
+		LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+		return localDate;
+	}
+
+	static class Period {
+		String symbol;
 		
-		HoldingStock(String group, int session, String symbol, String dateStart, String dateStop, Dividends[] dividends) {
-			this.group     = group;
-			this.session   = session;
-			this.symbol    = symbol;
-			this.dateStart = dateStart;
-			this.dateStop  = dateStop;
-			this.dividends = dividends;
+		double quantity;
+		String periodStart;
+		String periodStop;
+		
+		Period(String symbol, double quantity, String periodStart, String periodStop) {
+			this.symbol      = symbol;
+			this.quantity    = quantity;
+			this.periodStart = periodStart;
+			this.periodStop  = periodStop;
+		}
+		Period(Period that) {
+			this.symbol      = that.symbol;
+			this.quantity    = that.quantity;
+			this.periodStart = that.periodStart;
+			this.periodStop  = that.periodStop;
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("{%-8s %4d %-8s %s %s %2d}", group, session, symbol, dateStart, dateStop, dividends.length);
+			return String.format("{%-6s  %6.2f %s %s}", symbol, quantity, periodStart, periodStop);
+		}
+		
+		boolean contains(String date) {
+			return 0 <= periodStart.compareTo(date) && 0 <= date.compareTo(periodStop);
 		}
 	}
 	
-	public String symbol;
-	public String name;
-	public String date;
-	public int    quantitity;
-	public double buy;
-	public double totalDividend;
-	
-	List<OneDividend> dividendList;
-	
+	static class Holding {
+		static final String DATE_FOREVER = "9999-12-31";
+		//         symbol
+		static Map<String, List<Period>> map = new TreeMap<>();
+		
+		static void buy(String symbol, String date, double quantity) {
+			logger.info("buy  {}", String.format("%-8s  %s %6.2f", symbol, date, quantity));
+
+			if (!map.containsKey(symbol)) {
+				map.put(symbol, new ArrayList<>());
+			}
+			
+			List<Period> periodList = map.get(symbol);
+			if (periodList.isEmpty()) {
+				// Special for first entry
+				Period period = new Period(symbol, quantity, date, DATE_FOREVER);
+				periodList.add(period);
+			} else {
+				LocalDate localDate = toLocalDate(date);
+				String prevDate = localDate.minusDays(1).toString();
+
+				Period lastPeriod = periodList.get(periodList.size() - 1);
+				Period nextPeriod = new Period(lastPeriod);
+				
+				lastPeriod.periodStop = prevDate;
+				
+				double newQuantity = Transaction.roundQuantity(lastPeriod.quantity + quantity);
+				nextPeriod.quantity    = newQuantity;
+				nextPeriod.periodStart = date;
+				
+				periodList.add(nextPeriod);
+			}
+		}
+		static void sell(String symbol, String date, double quantity) {
+			logger.info("sell {}", String.format("%-8s  %s %6.2f", symbol, date, quantity));
+			
+			if (!map.containsKey(symbol)) {
+				logger.error("No symbol in map {} {} {}", symbol, date, quantity);
+				throw new SecuritiesException("No symbol in map");
+			}
+			
+			List<Period> periodList = map.get(symbol);
+			if (periodList.isEmpty()) {
+				logger.error("Unexpected {} {} {}", symbol, date, quantity);
+				throw new SecuritiesException("Unexpected");
+			} else {
+				LocalDate localDate = toLocalDate(date);
+				String prevDate = localDate.minusDays(1).toString();
+
+				Period lastPeriod = periodList.get(periodList.size() - 1);
+				Period nextPeriod = new Period(lastPeriod);
+				
+				// Sanity check
+				if (lastPeriod.quantity == 0) {
+					logger.error("Unexpected {} {} {}", symbol, date, quantity);
+					throw new SecuritiesException("Unexpected");
+				}
+				
+				lastPeriod.periodStop = prevDate;
+				
+				double newQuantity = Transaction.roundQuantity(lastPeriod.quantity - quantity);
+				if (DoubleUtil.isAlmostZero(newQuantity)) newQuantity = 0;
+				
+				// Sanity check
+				if (newQuantity < 0) {
+					logger.error("Unexpected {} {} {}", symbol, date, quantity);
+					throw new SecuritiesException("Unexpected");
+				}
+				
+				nextPeriod.quantity = newQuantity;
+				nextPeriod.periodStart = date;
+				
+				periodList.add(nextPeriod);
+			}
+		}
+		static double quantity(String symbol, String date) {
+			if (!map.containsKey(symbol)) {
+				logger.error("No symbol in map {} {}", symbol, date);
+				throw new SecuritiesException("No symbol in map");
+			}
+			
+			List<Period> periodList = map.get(symbol);
+			if (periodList.isEmpty()) {
+				logger.error("Unexpected {} {}", symbol, date);
+				throw new SecuritiesException("Unexpected");
+			} else {
+				for(Period period: periodList) {
+					if (period.contains(date)) {
+						return period.quantity;
+					}
+				}
+				return 0;
+			}
+		}
+		static List<String> getSymbolList() {
+			List<String> symbolList = new ArrayList<>(map.keySet());
+			Collections.sort(symbolList);
+			return symbolList;
+		}
+		static List<Period> getPeriod(String symbol) {
+			return map.get(symbol);
+		}
+	}
 	
 	public static void main(String[] args) {
 		logger.info("START");
 
 		String targetYear = Integer.toString(LocalDate.now().getYear());
-		logger.info("targetYear {}", targetYear);
+		String targetStart = String.format("%s-01-01", targetYear);
+		String targetStop  = String.format("%s-12-31", targetYear);
+		logger.info("target {}  {} - {}", targetStart, targetStop);
 		
 		// Cannot use Stock HistoryMap. Because HistoryMap is summarized.
 		Map<String, List<StockHistory>> stockHistoryMap = UpdateStockHistory.getStockHistoryMap();
 		logger.info("stockHistoryMap {}", stockHistoryMap.size());		
 		
-		List<HoldingStock> holdingStockList = new ArrayList<>();
+//		List<HoldingStock> holdingStockList = new ArrayList<>();
 		
 		for(Map.Entry<String, List<StockHistory>> entry: stockHistoryMap.entrySet()) {
-			String symbol = entry.getKey();
+			List<StockHistory> stockHistoryList = entry.getValue();
+			Collections.sort(stockHistoryList);
 			
-			Map<String, Dividends[]> dividendsMap = Dividends.getStock(Range.Y2, symbol);
-			// Skip if no dividends info or stock is delisted, skip this symbol
-			if (!dividendsMap.containsKey(symbol)) {
-				logger.warn("{} No dividends null", String.format("%-8s", symbol));
-				continue;
-			}
-			
-			Dividends[] dividends = dividendsMap.get(symbol);
-//			logger.info("dividends {}", dividends.length);
-			if (dividends.length == 0) {
-				logger.warn("{} No dividends 0", String.format("%-8s", symbol));
-				continue;
-			}
-			
-			Map<Integer, List<StockHistory>> sessionStockHistoryMap = new TreeMap<>();
-			for(StockHistory stockHistory: entry.getValue()) {
-				Integer session = stockHistory.session;
-				if (!sessionStockHistoryMap.containsKey(session)) {
-					sessionStockHistoryMap.put(session, new ArrayList<>());
+			for(StockHistory stockHistory: stockHistoryList) {
+				if (stockHistory.buyQuantity != 0) {
+					// stockHistory.date is tradindDate
+					LocalDate tradeDate = toLocalDate(stockHistory.date);
+					LocalDate settlementDate = Market.toSettlementDate(tradeDate);
+					
+					Holding.buy(stockHistory.group, settlementDate.toString(), stockHistory.buyQuantity);
 				}
-				sessionStockHistoryMap.get(session).add(stockHistory);
-			}
-			for(Map.Entry<Integer, List<StockHistory>> sessionStockHistorEntry: sessionStockHistoryMap.entrySet()) {
-//				Integer session = sessionStockHistorEntry.getKey();
-				List<StockHistory> stockHistoryList = sessionStockHistorEntry.getValue();
-				
-				StockHistory firstStockHistory = stockHistoryList.get(0);
-				int session = firstStockHistory.session;
-				String group = firstStockHistory.group;
-				int size = stockHistoryList.size();
-				
-				// dateStart
-				String firstTradeDate = null;
-				{
-					// Find first sell and use it as firstTradeDate
-					ListIterator<StockHistory> li = stockHistoryList.listIterator(0);
-					while(li.hasNext()) {
-						StockHistory stockHistory = li.next();
-						if (stockHistory.buyQuantity != 0) {
-							firstTradeDate = stockHistory.date;
-							break;
-						}
-					}
-					if (firstTradeDate == null) {
-						// No buy record
-						logger.warn("{} No buy record", String.format("%-8s", symbol));
-						continue;
-					}
+				if (stockHistory.sellQuantity != 0) {
+					LocalDate tradeDate = toLocalDate(stockHistory.date);
+					LocalDate settlementDate = Market.toSettlementDate(tradeDate);
+
+					Holding.sell(stockHistory.group, settlementDate.toString(), stockHistory.sellQuantity);
 				}
-				
-				// dateLast
-				String lastTradeDate = null;
-				{
-					StockHistory lastStockHistory = stockHistoryList.get(size - 1);
-					if (lastStockHistory.totalQuantity != 0) {
-						lastTradeDate = "9999-12-31";
-					} else {
-						// Find last sell and use it as lastDate
-						ListIterator<StockHistory> li = stockHistoryList.listIterator(stockHistoryList.size());
-						while(li.hasPrevious()) {
-							StockHistory stockHistory = li.previous();
-							if (stockHistory.sellQuantity != 0) {
-								lastTradeDate = stockHistory.date;
-								break;
-							}
-						}
-						if (lastTradeDate == null) {
-							// No sell record
-							logger.error("Unexpected {} {}", symbol, session);
-							throw new SecuritiesException("Unexpected");
-						}
-					}
-				}
-				holdingStockList.add(new HoldingStock(group, session, symbol, firstTradeDate, lastTradeDate, dividends));
 			}
+		}
+		for(String symbol: Holding.getSymbolList()) {
+			List<Period> periodList = Holding.getPeriod(symbol);
+			logger.info("Period {}", periodList);
 		}
 		
-		for(HoldingStock holdingStock: holdingStockList) {
-			logger.info("{}", holdingStock);
+		Map<String, List<Dividends>> dividendsMap = new TreeMap<>();
+		for(String symbol: Holding.getSymbolList()) {
+			Map<String, Dividends[]> map = Dividends.getStock(Range.Y2, symbol);
+			if (map.containsKey(symbol)) {
+				Dividends[] divedendsArray = map.get(symbol);
+				if (divedendsArray == null) {
+					logger.error("Unexpected {}", symbol);
+					throw new SecuritiesException("Unexpected");
+				}
+				List<Dividends> dividendsList = new ArrayList<>();
+				for(Dividends divedends: divedendsArray) {					
+					if (divedends.paymentDate.length() == 0) continue;
+					
+					String year = divedends.paymentDate.substring(0, 4);
+					if (year.equals(targetYear)) {
+						dividendsList.add(divedends);
+					}
+				}
+				logger.info("{}", String.format("%-8s (%d)%s", symbol, dividendsList.size(), dividendsList));
+				if (!dividendsList.isEmpty()) {
+					dividendsMap.put(symbol, dividendsList);
+				}
+			} else {
+				logger.warn("{} not found", String.format("%-8s", symbol));
+			}
 		}
-		logger.info("holdingStokcList {}", holdingStockList.size());
 
 		logger.info("STOP");
 	}

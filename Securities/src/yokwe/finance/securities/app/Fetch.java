@@ -42,7 +42,7 @@ public class Fetch {
 				
 				if (!matcherParam.reset(line).matches()) {
 					logger.error("unknown line = {}", line);
-					throw new SecuritiesException("");
+					throw new SecuritiesException("unknown line");
 				}
 				
 				String file = matcherParam.group(1);
@@ -77,7 +77,25 @@ public class Fetch {
 				lastDownload = System.currentTimeMillis();
 				logger.info("{}", String.format("%5d / %5d  %s", count, totalCount, file));
 				
-				HttpUtil.download(url, file);
+				for(int retryCount = 5;;retryCount--) {
+					if (retryCount == 0) {
+						logger.error("retryCount exceed");
+						throw new SecuritiesException("retryCount exceed");
+					}
+					try {
+						HttpUtil.download(url, file);
+						break;
+					} catch (SecuritiesException e) {
+						String message = e.getMessage();
+						if (message.equals("IOException")) {
+							logger.warn("IOException  retryCount {}", retryCount);
+							Thread.sleep(3_000);
+							continue;
+						} else {
+							throw e;
+						}
+					}
+				}
 			}
 		} catch (InterruptedException e) {
 			logger.info("InterruptedException {}", e.toString());

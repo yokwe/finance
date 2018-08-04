@@ -1,54 +1,10 @@
 package yokwe.finance.securities.iex;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import javax.json.JsonObject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class Chart extends IEXBase {
-	public static class EOD extends IEXBase {
-		public static final String TYPE = "chart";
-		
-		// date,symbol,open,high,low,close,volume
-		public String date;
-		@IgnoreField
-		public String symbol;
-		public double open;
-		public double high;
-		public double low;
-		public double close;
-		public long   volume;
-		
-		EOD() {
-			date   = null;
-			symbol = null;
-			open   = 0;
-			high   = 0;
-			low    = 0;
-			close  = 0;
-			volume = 0;
-		}
-		
-		public EOD(JsonObject jsonObject) {
-			super(jsonObject);
-		}
-		
-		public static Map<String, EOD[]> getStock(Range range, String... symbols) {
-			Map<String, EOD[]> ret = IEXBase.getStockArray(EOD.class, range, symbols);
-			for(Map.Entry<String, EOD[]> entry: ret.entrySet()) {
-				String symbol = entry.getKey();
-				EOD[]  value  = entry.getValue();
-				for(int i = 0; i < value.length; i++) {
-					value[i].symbol = symbol;
-				}
-			}
-			return ret;
-		}
-	}
-
 	public static final String TYPE = "chart";
 	
 	// Support all charts except 1d
@@ -130,19 +86,59 @@ public class Chart extends IEXBase {
 //		}
 //	}
 //	
-	public static void main(String[] args) {
-		Logger logger = LoggerFactory.getLogger(Chart.class);
-		logger.info("START");
-		
-		{
-			Map<String, EOD[]> dataMap = EOD.getStock(Range.M1, "ibm", "bt");
-			logger.info("dataMap {}", dataMap.size());
-			for(Map.Entry<String, EOD[]> entry: dataMap.entrySet()) {
-				logger.info("  {} {}", entry.getKey(), Arrays.asList(entry.getValue()));
-			}
-		}
 
-		logger.info("STOP");
-	}
+//	public static class EOD extends IEXBase {
+//		public static final String TYPE = "chart";
+//		
+//		// date,symbol,open,high,low,close,volume
+//		public String date;
+//		@IgnoreField
+//		public String symbol;
+//		public double open;
+//		public double high;
+//		public double low;
+//		public double close;
+//		public long   volume;
+//		
+//		EOD() {
+//			date   = null;
+//			symbol = null;
+//			open   = 0;
+//			high   = 0;
+//			low    = 0;
+//			close  = 0;
+//			volume = 0;
+//		}
+//		
+//		public EOD(JsonObject jsonObject) {
+//			super(jsonObject);
+//		}
+//		
+//		public static Map<String, EOD[]> getStock(Range range, String... symbols) {
+//			Map<String, EOD[]> ret = IEXBase.getStockArray(EOD.class, range, symbols);
+//			for(Map.Entry<String, EOD[]> entry: ret.entrySet()) {
+//				String symbol = entry.getKey();
+//				EOD[]  value  = entry.getValue();
+//				for(int i = 0; i < value.length; i++) {
+//					value[i].symbol = symbol;
+//				}
+//			}
+//			return ret;
+//		}
+//	}
+//	public static void main(String[] args) {
+//		Logger logger = LoggerFactory.getLogger(Chart.class);
+//		logger.info("START");
+//		
+//		{
+//			Map<String, EOD[]> dataMap = EOD.getStock(Range.M1, "ibm", "bt");
+//			logger.info("dataMap {}", dataMap.size());
+//			for(Map.Entry<String, EOD[]> entry: dataMap.entrySet()) {
+//				logger.info("  {} {}", entry.getKey(), Arrays.asList(entry.getValue()));
+//			}
+//		}
+//
+//		logger.info("STOP");
+//	}
 }
 

@@ -81,4 +81,18 @@ public class Market {
 		Holiday holiday = holidayMap.get(date);
 		return holiday != null && holiday.closed;
 	}
+	
+	public static LocalDate getNextTradeDate(LocalDate date) {
+		LocalDate nextDate = date;
+		for(;;) {
+			nextDate = nextDate.plusDays(1);
+			if (isClosed(nextDate)) continue;
+			return nextDate;
+		}
+	}
+	public static LocalDate toSettlementDate(LocalDate tradeDate) {
+		LocalDate settlementDate = getNextTradeDate(tradeDate);
+		settlementDate = getNextTradeDate(settlementDate);
+		return settlementDate;
+	}
 }

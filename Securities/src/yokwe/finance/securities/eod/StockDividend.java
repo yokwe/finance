@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
@@ -189,14 +190,13 @@ public class StockDividend {
 			List<Period> periodList = getPeriod(symbol);
 			for(Period period: periodList) {
 				if (period.quantity == 0) continue;
-				if (period.periodStart.getYear() == year) return true;
-				if (period.periodStop.getYear() == year) return true;
+				if (period.periodStart.getYear() <= year && year <= period.periodStop.getYear()) return true;
 			}
 			return false;
 		}
 	}
 	
-	static class Dividend {
+	static class Dividend implements Comparable<Dividend> {
 		LocalDate recordDate;
 		LocalDate paymentDate;
 		double    amount;
@@ -220,6 +220,13 @@ public class StockDividend {
 			} else {
 				return false;
 			}
+		}
+
+		@Override
+		public int compareTo(Dividend that) {
+			int ret = this.recordDate.getMonthValue() - that.recordDate.getMonthValue();
+			if (ret == 0) ret = this.recordDate.getDayOfMonth() - that.recordDate.getDayOfMonth();
+			return ret;
 		}
 	}
 	
@@ -260,8 +267,9 @@ public class StockDividend {
 					dividendList.add(dividend);
 					lastDividend = dividend;
 				}
-//				logger.info("{}", String.format("%-8s (%d)%s", symbol, dividendList.size(), dividendList));
+				logger.info("{}", String.format("%-8s (%d)%s", symbol, dividendList.size(), dividendList));
 				if (!dividendList.isEmpty()) {
+					Collections.sort(dividendList);
 					dividmentMap.put(symbol, dividendList);
 				}
 			} else {
@@ -271,11 +279,34 @@ public class StockDividend {
 		return dividmentMap;
 	}
 	
+	static class PayDiv {
+		public LocalDate pay;
+		public double    quantity;
+		public double    amount;
+		public double    div;
+		
+		PayDiv(LocalDate pay, double quantity, double amount, double div) {
+			this.pay      = pay;
+			this.quantity = quantity;
+			this.amount   = amount;
+			this.div      = div;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("{%s %4.0f %8.5f %6.2f}", pay, quantity, amount, div);
+		}
+	}
+	
 	public static void main(String[] args) {
 		logger.info("START");
 
-		int year = LocalDate.now().getYear();
-		logger.info("year {}", year);
+		LocalDate today = LocalDate.now();
+		logger.info("today {}", today);
+		int todayYear  = today.getYear();
+		int todayMonth = today.getMonthValue();
+		int todayDay   = today.getDayOfMonth();
+		int todayMMDD  = todayMonth * 100 + todayDay;
 		
 		// Cannot use Stock HistoryMap. Because HistoryMap is summarized.
 		Map<String, List<StockHistory>> stockHistoryMap = UpdateStockHistory.getStockHistoryMap();
@@ -285,7 +316,7 @@ public class StockDividend {
 		List<String> symbolList = new ArrayList<>();
 		Holding holding = new Holding(stockHistoryMap);
 		for(String symbol: holding.getSymbolList()) {
-			if (holding.containsYear(symbol, year)) {
+			if (holding.containsYear(symbol, todayYear)) {
 				symbolList.add(symbol);
 				logger.info("Period {}", holding.getPeriod(symbol));
 			} else {
@@ -301,7 +332,109 @@ public class StockDividend {
 			logger.info("Dividend {} ({}) {}", String.format("%-8s", entry.getKey()), entry.getValue().size(), entry.getValue());
 		}
 
+		// Build excel sheet
+		for(String symbol: symbolList) {
+			List<Dividend> dividendList;
+			if (dividendMap.containsKey(symbol)) {
+				dividendList = dividendMap.get(symbol);
+			} else {
+				dividendList = new ArrayList<>();
+			}
+			
+			// Remove Dividend of last year if same month of this year exists.
+			{				
+				Map<Integer, List<Dividend>> monMap = new TreeMap<>();
+				
+				for(Dividend dividend: dividendList) {
+					LocalDate paymentDate = dividend.paymentDate;
+					int mon = paymentDate.getMonthValue();
+					
+					if (!monMap.containsKey(mon)) {
+						monMap.put(mon, new ArrayList<>());
+					}
+					monMap.get(mon).add(dividend);
+				}
+				
+				List<Dividend> newDividendList = new ArrayList<>();
+				for(List<Dividend> divList: monMap.values()) {
+					List<Dividend> thisYear = divList.stream().filter(o -> o.paymentDate.getYear() == todayYear).collect(Collectors.toList());
+					List<Dividend> lastYear = divList.stream().filter(o -> o.paymentDate.getYear() != todayYear).collect(Collectors.toList());
+					
+					if ((!thisYear.isEmpty()) && (!lastYear.isEmpty())) {
+						// Discard same month of last year
+						newDividendList.addAll(thisYear);
+					} else if (!thisYear.isEmpty()) {
+						newDividendList.addAll(thisYear);
+					} else if (!lastYear.isEmpty()) {
+						newDividendList.addAll(lastYear);
+					}
+				}
+				Collections.sort(newDividendList);
+				dividendList = newDividendList;
+			}
+			
+			double totalQuantity;
+			double totalCost;
+			{
+				List<StockHistory> stockHistory = stockHistoryMap.get(symbol);
+				StockHistory lastStockHistory = stockHistory.get(stockHistory.size() - 1);
+				totalQuantity = lastStockHistory.totalQuantity;
+				totalCost     = lastStockHistory.totalCost;
+				
+				// There are 2 days difference between trade date and settlement date.
+				// So there can be a chance that stock was bought but not reach to settlement date as of today.
+				
+				// Sanity check
+//				double quantity = holding.quantity(symbol, today);
+//				if (!DoubleUtil.isAlmostEqual(totalQuantity, quantity)) {
+//					logger.error("Unexpected {}", symbol);
+//					logger.error("  totalQuantity {}", Double.toString(totalQuantity));
+//					logger.error("  quantity      {}", Double.toString(quantity));
+//					throw new SecuritiesException("Unexpected");
+//				}
+			}
+			
+			// Find out dividend for each month
+			Map<Integer, List<PayDiv>> payDivMap = new TreeMap<>();
+			{
+				for(int month = 1; month <= 12; month++) {
+					List<PayDiv> payDivList = new ArrayList<>();
+					
+					for(Dividend dividend: dividendList) {
+						// Use paymentDate to find month value
+						if (dividend.paymentDate.getMonthValue() == month) {
+							// Use recordDate to calculate div
+							LocalDate recordDate = dividend.recordDate.withYear(todayYear);
+							int recMonth = recordDate.getMonthValue();
+							int recDay   = recordDate.getDayOfMonth();
+							int recMMDD  = recMonth * 100 + recDay;
+							
+							double quantity = holding.quantity(symbol, (recMMDD <= todayMMDD) ? recordDate : today);
+							if (quantity == 0) continue;
+
+							double div = Transaction.roundPrice(quantity * dividend.amount);
+							
+							LocalDate paymentDate = dividend.paymentDate.withYear(todayYear);
+							
+							PayDiv payDiv = new PayDiv(paymentDate, quantity, dividend.amount, div);
+							payDivList.add(payDiv);
+						}
+					}
+					if (!payDivList.isEmpty()) {
+						payDivMap.put(month, payDivList);
+					}
+				}
+			}
+			double totalDiv = 0;
+			for(List<PayDiv> payDivList: payDivMap.values()) {
+				for(PayDiv payDiv: payDivList) {
+					totalDiv = Transaction.roundPrice(totalDiv + payDiv.div);
+				}
+			}
+			
+			logger.info("{} {}", String.format("%-8s %8.0f %8.2f %8.2f", symbol, totalQuantity, totalCost, totalDiv), payDivMap);
+		}
+		
 		logger.info("STOP");
 	}
-
 }

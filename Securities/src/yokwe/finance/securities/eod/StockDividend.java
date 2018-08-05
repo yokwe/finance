@@ -170,13 +170,29 @@ public class StockDividend {
 				return 0;
 			}
 		}
+		public int size() {
+			return map.size();
+		}
 		public List<String> getSymbolList() {
 			List<String> symbolList = new ArrayList<>(map.keySet());
 			Collections.sort(symbolList);
 			return symbolList;
 		}
 		public List<Period> getPeriod(String symbol) {
+			if (!map.containsKey(symbol)) {
+				logger.error("Unknown symbol {}", symbol);
+				throw new SecuritiesException("Unknown symbol");
+			}
 			return map.get(symbol);
+		}
+		public boolean containsYear(String symbol, int year) {
+			List<Period> periodList = getPeriod(symbol);
+			for(Period period: periodList) {
+				if (period.quantity == 0) continue;
+				if (period.periodStart.getYear() == year) return true;
+				if (period.periodStop.getYear() == year) return true;
+			}
+			return false;
 		}
 	}
 	
@@ -258,25 +274,31 @@ public class StockDividend {
 	public static void main(String[] args) {
 		logger.info("START");
 
-		String targetYear = Integer.toString(LocalDate.now().getYear());
-		String targetStart = String.format("%s-01-01", targetYear);
-		String targetStop  = String.format("%s-12-31", targetYear);
-		logger.info("target {}  {} - {}", targetStart, targetStop);
+		int year = LocalDate.now().getYear();
+		logger.info("year {}", year);
 		
 		// Cannot use Stock HistoryMap. Because HistoryMap is summarized.
 		Map<String, List<StockHistory>> stockHistoryMap = UpdateStockHistory.getStockHistoryMap();
 		logger.info("stockHistoryMap {}", stockHistoryMap.size());		
 		
-		// Build holding
+		// Build holding and symboList
+		List<String> symbolList = new ArrayList<>();
 		Holding holding = new Holding(stockHistoryMap);
 		for(String symbol: holding.getSymbolList()) {
-			List<Period> periodList = holding.getPeriod(symbol);
-			logger.info("Period {}", periodList);
+			if (holding.containsYear(symbol, year)) {
+				symbolList.add(symbol);
+				logger.info("Period {}", holding.getPeriod(symbol));
+			} else {
+				logger.info("skip   {}", symbol);
+			}
 		}
+		logger.info("holding    {}", holding.size());
+		logger.info("symbolList {}", symbolList.size());
 		
-		Map<String, List<Dividend>> dividendMap = buildDividendMap(holding.getSymbolList());
+		// Build dividendMap with symbolList
+		Map<String, List<Dividend>> dividendMap = buildDividendMap(symbolList);
 		for(Map.Entry<String, List<Dividend>> entry: dividendMap.entrySet()) {
-			logger.info("Dividend {} ({}) {}", entry.getKey(), entry.getValue().size(), entry.getValue());
+			logger.info("Dividend {} ({}) {}", String.format("%-8s", entry.getKey()), entry.getValue().size(), entry.getValue());
 		}
 
 		logger.info("STOP");

@@ -115,83 +115,94 @@ public class ReportStockHistory {
 					logger.info("stockDividendList {}", stockDividendList.size());
 
 					for(StockDividend stockDividend: stockDividendList) {
+						// Skip not active stock
+						if (stockDividend.quantity == 0) continue;
+						
 						DividendSheet dividendSheet = new DividendSheet();
 						
 						dividendSheet.symbol   = stockDividend.symbol;
-						dividendSheet.quantity = stockDividend.quantity;
-						dividendSheet.cost     = stockDividend.cost;
-//						dividendSheet.interest = DoubleUtil.round(stockDividend.div / stockDividend.cost, 4);
-						dividendSheet.interest = (double)0;
+						if (stockDividend.quantity != 0) {
+							dividendSheet.quantity = stockDividend.quantity;
+						}
+						if (stockDividend.cost != 0) {
+							dividendSheet.cost     = stockDividend.cost;
+						}
+						if (stockDividend.div != 0) {
+							dividendSheet.div      = stockDividend.div;
+						}
+						if (stockDividend.cost != 0 && stockDividend.div != 0) {
+							dividendSheet.interest = DoubleUtil.round(stockDividend.div / stockDividend.cost, 4);
+						}
 
 						if (stockDividend.payDivMap.containsKey(1)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(1);
-							dividendSheet.pay1 = payDiv.pay.toString();
+							dividendSheet.pay1 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div1 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(2)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(2);
-							dividendSheet.pay2 = payDiv.pay.toString();
+							dividendSheet.pay2 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div2 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(3)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(3);
-							dividendSheet.pay3 = payDiv.pay.toString();
+							dividendSheet.pay3 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div3 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(4)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(4);
-							dividendSheet.pay4 = payDiv.pay.toString();
+							dividendSheet.pay4 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div4 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(5)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(5);
-							dividendSheet.pay5 = payDiv.pay.toString();
+							dividendSheet.pay5 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div5 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(6)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(6);
-							dividendSheet.pay6 = payDiv.pay.toString();
+							dividendSheet.pay6 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div6 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(7)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(7);
-							dividendSheet.pay7 = payDiv.pay.toString();
+							dividendSheet.pay7 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div7 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(8)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(8);
-							dividendSheet.pay8 = payDiv.pay.toString();
+							dividendSheet.pay8 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div8 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(9)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(9);
-							dividendSheet.pay9 = payDiv.pay.toString();
+							dividendSheet.pay9 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div9 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(10)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(10);
-							dividendSheet.pay10 = payDiv.pay.toString();
+							dividendSheet.pay10 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div10 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(11)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(11);
-							dividendSheet.pay11 = payDiv.pay.toString();
+							dividendSheet.pay11 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div11 = payDiv.div;
 						}
 
 						if (stockDividend.payDivMap.containsKey(12)) {
 							PayDiv payDiv = stockDividend.payDivMap.get(12);
-							dividendSheet.pay12 = payDiv.pay.toString();
+							dividendSheet.pay12 = String.format("%02d/%02d", payDiv.pay.getMonthValue(), payDiv.pay.getDayOfMonth());
 							dividendSheet.div12 = payDiv.div;
 						}
 						

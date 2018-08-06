@@ -21,11 +21,10 @@ public class UpdateStockHistory {
 	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history.csv";
 
 	//                group
-	public static Map<String, List<StockHistory>> getStockHistoryMap() {
+	public static Map<String, List<StockHistory>> getStockHistoryMap(List<StockHistory> stockHistoryList) {
 		Map<String, List<StockHistory>> ret = new TreeMap<>();
 		
-		List<StockHistory> allStockHistory = CSVUtil.loadWithHeader(PATH_STOCK_HISTORY, StockHistory.class);
-		for(StockHistory stockHistory: allStockHistory) {
+		for(StockHistory stockHistory: stockHistoryList) {
 			String key = stockHistory.group;
 			if (!ret.containsKey(key)) {
 				ret.put(key, new ArrayList<>());
@@ -39,11 +38,13 @@ public class UpdateStockHistory {
 		
 		return ret;
 	}
+	public static Map<String, List<StockHistory>> getStockHistoryMap() {
+		return getStockHistoryMap(CSVUtil.loadWithHeader(PATH_STOCK_HISTORY, StockHistory.class));
+	}
 	
 	
-	public static void generateReport(String url) {
-		logger.info("url        {}", url);		
-		try (SpreadSheet docActivity = new SpreadSheet(url, true)) {
+	public static List<StockHistory> getStockHistoryList() {
+		try (SpreadSheet docActivity = new SpreadSheet(Report.URL_ACTIVITY, true)) {
 
 			// Create transaction from activity
 			List<Transaction> transactionList = Transaction.getTransactionList(docActivity);
@@ -114,28 +115,26 @@ public class UpdateStockHistory {
 				}
 			}
 			
-			logger.info("");
 			List<StockHistory> stockHistoryList = StockHistory.getStockList();
+			
+			// Change symbol style from ".PR." to "-"
 			for(StockHistory stockHistory: stockHistoryList) {
-				// Change symbol style
 				stockHistory.group  = stockHistory.group.replace(".PR.", "-");
 				stockHistory.symbol = stockHistory.symbol.replace(".PR.", "-");
-				logger.info("{}", stockHistory);
 			}
 			Collections.sort(stockHistoryList);
 			
-			logger.info("transactionList  = {}", transactionList.size());
-			logger.info("stockHistoryList = {}", stockHistoryList.size());
-			
-			logger.info("save stockHistoryList as {}", PATH_STOCK_HISTORY);
-			CSVUtil.saveWithHeader(stockHistoryList, PATH_STOCK_HISTORY);
+			return stockHistoryList;
 		}
 	}
-		
+
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		generateReport(Report.URL_ACTIVITY);
+		List<StockHistory>stockHistoryList = getStockHistoryList();
+		logger.info("stockHistoryList = {}", stockHistoryList.size());
+
+		CSVUtil.saveWithHeader(stockHistoryList, PATH_STOCK_HISTORY);
 		
 		logger.info("STOP");
 		System.exit(0);

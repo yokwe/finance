@@ -61,9 +61,9 @@ public class PriceUtil {
 			if (delayedQuote != null) {
 				Price data = new Price(date, symbol, 0, 0, 0, delayedQuote, 0);
 				map.put(date, data);
-				logger.warn("using delayedQuote  {}  {}  {}", date, symbol, delayedQuote);
+				logger.warn("using delayedQuote  {}  {}", date, String.format("%-8s %6.2f", symbol, delayedQuote));
 			} else {
-				logger.warn("no data in map  {}  {}", date, symbol);
+				logger.warn("no data in map  {}  {}", date, String.format("%-8s", symbol));
 			}
 		}
 		return map.get(date);

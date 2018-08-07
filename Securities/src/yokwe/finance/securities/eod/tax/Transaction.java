@@ -1,5 +1,7 @@
 package yokwe.finance.securities.eod.tax;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -329,6 +331,14 @@ public class Transaction implements Comparable<Transaction> {
 						logger.error("Wrong tradeDate  {}", activity);
 						throw new SecuritiesException("Wrong tradeDate");
 					}
+					{
+						String settlementDate = Market.toSettlementDate(LocalDate.parse(activity.tradeDate, DateTimeFormatter.ISO_LOCAL_DATE)).toString();
+						if (!activity.date.equals(settlementDate)) {
+							logger.error("Unexpected settlement date {}", settlementDate);
+							logger.error("  {}", activity);
+							throw new SecuritiesException("Unexpected settlement date");
+						}
+					}
 					if (activity.quantity <= 0) {
 						logger.error("quantity <= 0  {}", activity.quantity);
 						throw new SecuritiesException("Unexpected");
@@ -443,6 +453,14 @@ public class Transaction implements Comparable<Transaction> {
 						if (activity.date.compareTo(activity.tradeDate) <= 0) {
 							logger.error("Wrong tradeDate  {}", activity);
 							throw new SecuritiesException("Wrong tradeDate");
+						}
+						{
+							String settlementDate = Market.toSettlementDate(LocalDate.parse(activity.tradeDate, DateTimeFormatter.ISO_LOCAL_DATE)).toString();
+							if (!activity.date.equals(settlementDate)) {
+								logger.error("Unexpected settlement date {}", settlementDate);
+								logger.error("  {}", activity);
+								throw new SecuritiesException("Unexpected settlement date");
+							}
 						}
 						break;
 					case "REDEEMED":

@@ -90,9 +90,28 @@ public class Market {
 			return nextDate;
 		}
 	}
+	private static LocalDate T2_SETTLEMENT_START_DATE = LocalDate.of(2017, 9, 5);
+	// See settlement calendar below
+	//    https://stld.com/?year=2016&month=11
+	private static Map<LocalDate, LocalDate> irregularlementDateMap = new TreeMap<>();
+	static {
+		irregularlementDateMap.put(LocalDate.of(2016, 11, 10), LocalDate.of(2016, 11, 16));
+		irregularlementDateMap.put(LocalDate.of(2017, 10,  6), LocalDate.of(2017, 10, 11));
+	}
 	public static LocalDate toSettlementDate(LocalDate tradeDate) {
-		LocalDate settlementDate = getNextTradeDate(tradeDate);
-		settlementDate = getNextTradeDate(settlementDate);
-		return settlementDate;
+		if (irregularlementDateMap.containsKey(tradeDate)) {
+			return irregularlementDateMap.get(tradeDate);
+		}
+			
+		LocalDate t0 = tradeDate;
+		LocalDate t1 = getNextTradeDate(t0);
+		LocalDate t2 = getNextTradeDate(t1);
+		LocalDate t3 = getNextTradeDate(t2);
+		
+		if (tradeDate.isBefore(T2_SETTLEMENT_START_DATE)) {
+			return t3;
+		} else {
+			return t2;
+		}
 	}
 }

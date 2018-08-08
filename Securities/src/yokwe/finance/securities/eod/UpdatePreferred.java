@@ -540,6 +540,10 @@ public class UpdatePreferred {
 							remark.append("/PARTIAL CALL");
 							callDate  = t4[1];
 							maturDate = t4[2];
+						} else if (t4[0].equals("Tender Offer")) {
+							remark.append("/TENDER OFFER");
+							callDate  = t4[1];
+							maturDate = t4[2];
 						} else {
 							logger.error("Unexpected t4[0] = {}", t4[0]);
 							throw new SecuritiesException("Unexpected");

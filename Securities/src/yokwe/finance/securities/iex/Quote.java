@@ -7,6 +7,8 @@ import javax.json.JsonObject;
 
 public class Quote extends IEXBase implements Comparable<Quote> {
 	public static final String TYPE = "quote";
+	
+	// Use extendedPrice and extendedPriceTime to get extended (pre-market and after-market) hours trading price.
 
 	public String        symbol;                // refers to the stock ticker.
 	public String        companyName;           // refers to the company name.

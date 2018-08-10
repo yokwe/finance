@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ public class UpdatePrice {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdatePrice.class);
 	
 	// Define eod.Price compatible class using IEXBase
-	public static class IEX extends IEXBase {
+	public static class IEX extends IEXBase implements Comparable<IEX> {
 		public static final String TYPE = Chart.TYPE;
 		
 		// date,symbol,open,high,low,close,volume
@@ -53,6 +54,13 @@ public class UpdatePrice {
 		
 		public IEX(JsonObject jsonObject) {
 			super(jsonObject);
+		}
+
+		@Override
+		public int compareTo(IEX that) {
+			int ret = this.symbol.compareTo(that.symbol);
+			if (ret == 0) ret = this.date.compareTo(that.date);
+			return ret;
 		}
 		
 		public static Map<String, IEX[]> getStock(Range range, String... symbols) {
@@ -107,6 +115,9 @@ public class UpdatePrice {
 		logger.info("START");
 		
 		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
+		
+		String lastTradingDate = Market.getLastTradingDate().toString();
+		logger.info("lastTradingDate {}", lastTradingDate);
 
 		List<String> symbolList = UpdateStock.getSymbolList();
 		logger.info("symbolList {}", symbolList.size());
@@ -177,6 +188,7 @@ public class UpdatePrice {
 			
 			int countGet  = 0;
 			int countData = 0;
+			int countHasLastTradingDate = 0;
 
 			for(int i = 0; i < symbolListSize; i += DELTA) {
 				int fromIndex = i;
@@ -200,12 +212,14 @@ public class UpdatePrice {
 				for(Map.Entry<String, IEX[]>entry: dataMap.entrySet()) {
 					List<IEX> dataList = Arrays.asList(entry.getValue());
 					if (dataList.size() == 0) continue;
+					Collections.sort(dataList);
+					if (dataList.stream().filter(o -> o.date.equals(lastTradingDate)).count() != 0) countHasLastTradingDate++;
 					CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
 					countData++;
 				}
 			}
 			
-			logger.info("count {} / {}", countData, countGet);
+			logger.info("count {} / {} / {}", countHasLastTradingDate, countData, countGet);
 		}
 
 		// Copy csv files from PATH_DELISTED_DIR

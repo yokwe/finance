@@ -90,6 +90,14 @@ public class Market {
 			return nextDate;
 		}
 	}
+	public static LocalDate getPreviousTradeDate(LocalDate date) {
+		LocalDate prevDate = date;
+		for(;;) {
+			prevDate = prevDate.minusDays(1);
+			if (isClosed(prevDate)) continue;
+			return prevDate;
+		}
+	}
 	private static LocalDate T2_SETTLEMENT_START_DATE = LocalDate.of(2017, 9, 5);
 	// See settlement calendar below
 	//    https://stld.com/?year=2016&month=11

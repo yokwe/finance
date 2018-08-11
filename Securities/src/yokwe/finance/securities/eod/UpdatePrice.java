@@ -116,8 +116,11 @@ public class UpdatePrice {
 		
 		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
 		
-		String lastTradingDate = Market.getLastTradingDate().toString();
-		logger.info("lastTradingDate {}", lastTradingDate);
+		String lastTradingDateM0 = Market.getLastTradingDate().toString();
+		logger.info("lastTradingDateM0 {}", lastTradingDateM0);
+
+		String lastTradingDateM1 = Market.getPreviousTradeDate(Market.getLastTradingDate()).toString();
+		logger.info("lastTradingDateM1 {}", lastTradingDateM1);
 
 		List<String> symbolList = UpdateStock.getSymbolList();
 		logger.info("symbolList {}", symbolList.size());
@@ -188,7 +191,8 @@ public class UpdatePrice {
 			
 			int countGet  = 0;
 			int countData = 0;
-			int countHasLastTradingDate = 0;
+			int countHasLastTradingDateM0 = 0;
+			int countHasLastTradingDateM1 = 0;
 
 			for(int i = 0; i < symbolListSize; i += DELTA) {
 				int fromIndex = i;
@@ -213,13 +217,14 @@ public class UpdatePrice {
 					List<IEX> dataList = Arrays.asList(entry.getValue());
 					if (dataList.size() == 0) continue;
 					Collections.sort(dataList);
-					if (dataList.stream().filter(o -> o.date.equals(lastTradingDate)).count() != 0) countHasLastTradingDate++;
+					if (dataList.stream().filter(o -> o.date.equals(lastTradingDateM0)).count() != 0) countHasLastTradingDateM0++;
+					if (dataList.stream().filter(o -> o.date.equals(lastTradingDateM1)).count() != 0) countHasLastTradingDateM1++;
 					CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
 					countData++;
 				}
 			}
 			
-			logger.info("count {} / {} / {}", countHasLastTradingDate, countData, countGet);
+			logger.info("count {} - {} / {} / {}", countHasLastTradingDateM1, countHasLastTradingDateM0, countData, countGet);
 		}
 
 		// Copy csv files from PATH_DELISTED_DIR

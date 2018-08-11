@@ -72,6 +72,11 @@ public class CSVUtil {
 	}
 	
 	public static <E> List<E> load(String path, Class<E> clazz, CSVFormat csvFormat) {
+		{
+			File file = new File(path);
+			if (!file.exists()) return null;
+		}
+		
 		try {
 			return load(new BufferedReader(new FileReader(path), BUFFER_SIZE), clazz, csvFormat);
 		} catch (FileNotFoundException e) {

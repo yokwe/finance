@@ -11,6 +11,11 @@
     <description>
       This servlet returns EOD data for chart of securities
     </description>
+    
+    <context-param>
+      <param-name>path.eod</param-name>
+      <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/eod</param-value>
+    </context-param>
 
     <!-- Servlet definitions for the servlets that make up
          your web application, including initialization
@@ -44,6 +49,17 @@
       <load-on-startup>1</load-on-startup>
     </servlet>
 
+    <servlet>
+      <servlet-name>price</servlet-name>
+      <init-param>
+        <param-name>path.sqlite.database</param-name>
+        <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3</param-value>
+      </init-param>
+      <servlet-class>yokwe.finance.securities.eod.servlet.PriceServlet</servlet-class>
+      <!-- Load this servlet at server startup time -->
+      <load-on-startup>1</load-on-startup>
+    </servlet>
+
     <!-- Define mappings that are used by the servlet container to
          translate a particular request URI (context-relative) to a
          particular servlet.  The examples below correspond to the
@@ -65,6 +81,11 @@
     <servlet-mapping>
       <servlet-name>json001</servlet-name>
       <url-pattern>/json</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+      <servlet-name>price</servlet-name>
+      <url-pattern>/price</url-pattern>
     </servlet-mapping>
 
     <!-- Define the default session timeout for your application,

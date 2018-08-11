@@ -56,8 +56,6 @@
 	<target name="eod-deploy">
                 <!-- delete war file -->
 		<delete file="${eod.war}" quiet="true" />
-		<echo message=" eod.dir.web = ${eod.dir.web}" />
-		<echo message=" eod.war = ${eod.war}" />
                 <!-- create war file -->
 		<war destfile="${eod.war}" webxml="${eod.dir.web}/WEB-INF/web.xml">
 			<lib file="${jar.yokwe}" />

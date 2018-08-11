@@ -6,7 +6,8 @@
 	<property name="dir.build.bin" location="${dir.build}/bin" />
 	<property name="dir.build.jar" location="${dir.build}/jar" />
 
-	<property name="dir.web" location="./web" />
+	<property name="eod.dir.web" location="${dir.src}/yokwe/finance/securities/eod/web" />
+	<property name="eod.war" location="${dir.build}/eod.war" />
 	
 	<property name="dir.libreoffice.jar" location="/usr/lib/libreoffice/program/classes" />
 
@@ -52,6 +53,29 @@
 		<copy file="${dir.build}/securities.war" todir="${catalina.base}/webapps" />
 	</target>
 
+	<target name="eod-deploy">
+                <!-- delete war file -->
+		<delete file="${eod.war}" quiet="true" />
+		<echo message=" eod.dir.web = ${eod.dir.web}" />
+		<echo message=" eod.war = ${eod.war}" />
+                <!-- create war file -->
+		<war destfile="${eod.war}" webxml="${eod.dir.web}/WEB-INF/web.xml">
+			<lib file="${jar.yokwe}" />
+			<lib dir="${dir.ext.jar}">
+				<include name="*.jar" />
+			</lib>
+			<classes dir="${eod.dir.web}/WEB-INF/classes" />
+			<fileset dir="${eod.dir.web}">
+                <exclude name="WEB-INF/**" />
+			</fileset>
+		</war>
+
+		<!-- webapps directory has auto deploy feature (default on) -->
+		<!-- Use this feature to deploy eod.war -->
+		<!-- So deploing war file in tomcat is just copy war file to ${catalina.base}/webapps -->
+		<copy file="${eod.war}" todir="${catalina.base}/webapps" />
+	</target>
+
 	<target name="clean">
 		<delete includeemptydirs="true" quiet="true">
 			<fileset dir="${dir.build}" includes="**/*" />
@@ -69,7 +93,10 @@
 			debug="true" debuglevel="lines,vars,source" />
 		<!-- copy resource file -->
 		<copy todir="${dir.build.bin}">
-			<fileset dir="${dir.src}" excludes="**/*.java" />
+			<fileset dir="${dir.src}">
+				<exclude name="**/*.java" />
+				<exclude name="**/web/WEB-INF/**" />
+			</fileset>
 		</copy>
 		<!-- make jar -->
 		<jar destfile="${jar.yokwe}" basedir="${dir.build.bin}" />

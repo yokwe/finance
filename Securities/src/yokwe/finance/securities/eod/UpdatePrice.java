@@ -89,8 +89,11 @@ public class UpdatePrice {
 	public static String getCSVDir() {
 		return String.format("%s/%s", PATH_DATA_DIR, TYPE);
 	}
+	public static String getCSVPath(String dir, String symbol) {
+		return String.format("%s/%s.csv", dir, symbol);
+	}
 	public static String getCSVPath(String symbol) {
-		return String.format("%s/%s.csv", getCSVDir(), symbol);
+		return getCSVPath(getCSVDir(), symbol);
 	}
 	public static String getDelistedCSVDir() {
 		return String.format("%s/%s-delisted", PATH_DATA_DIR, TYPE);

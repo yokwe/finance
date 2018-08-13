@@ -10,6 +10,8 @@
 	<property name="eod.war" location="${dir.build}/eod.war" />
 	
 	<property name="dir.libreoffice.jar" location="/usr/lib/libreoffice/program/classes" />
+	
+	<property name="dir.plotlyjs" location="../../plotly.js" />
 
 	<property name="catalina.base" location="/var/lib/tomcat8" />
 	<property name="catalina.home" location="/usr/share/tomcat8" />
@@ -65,6 +67,9 @@
 			<classes dir="${eod.dir.web}/WEB-INF/classes" />
 			<fileset dir="${eod.dir.web}">
                 <exclude name="WEB-INF/**" />
+			</fileset>
+			<fileset dir="${dir.plotlyjs}/dist">
+				<include name="plotly.min.js" />
 			</fileset>
 		</war>
 

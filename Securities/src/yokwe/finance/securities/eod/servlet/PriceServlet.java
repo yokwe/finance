@@ -97,22 +97,18 @@ public class PriceServlet extends HttpServlet {
     			
     			logger.debug("entry {} {}", symbol, dataList.size());
     			
-    			gen.writeStartArray(symbol);
-    			
-    			for(Price data: dataList) {
-    				gen.
-    				writeStartObject().
-    					write("date",   data.date).
-//    					write("symbol", data.symbol).
-//    					write("open",   data.open).
-//    					write("high",   data.high).
-//    					write("low",    data.low).
-    					write("close",  data.close).
-//    					write("volume", data.volume).
-    				writeEnd();
+				gen.writeStartArray("date");
+				for(Price data: dataList) {
+					gen.write(data.date);
+				}
+				gen.writeEnd();
+				
+				gen.writeStartArray("close");
+				for(Price data: dataList) {
+					gen.write(data.close);
+				}
+				gen.writeEnd();
 
-    			}
-    			gen.writeEnd();
     		}
     		gen.writeEnd();
     		gen.flush();

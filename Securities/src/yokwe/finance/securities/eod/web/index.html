@@ -1,7 +1,26 @@
 <html>
   <head>
     <title>EOD</title>
+    <script src="plotly.min.js"></script>
+    
+    <script type="text/javascript">
+    function myOnLoad() {
+        div1 = document.getElementById("div1");
+
+        data = [{
+          x:["2017-08-10","2017-08-11","2017-08-14"],
+          y:[136.0702,136.0702,136.5307,136.2909],
+
+          type: "scatter",
+        }];
+
+        Plotly.newPlot('div1', data)
+    }
+
+    window.onload = myOnLoad
+    </script>
   </head>
   <body>
+    <div id="div1"></div>
   </body>
 </html>

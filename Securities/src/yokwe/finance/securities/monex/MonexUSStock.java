@@ -1,10 +1,6 @@
 package yokwe.finance.securities.monex;
 
-import java.util.List;
-
-import yokwe.finance.securities.util.CSVUtil;
-
-public class MonexUS {
+public class MonexUSStock {
 	public String ticker;
 	public String name;
 	public String jname;
@@ -26,7 +22,7 @@ public class MonexUS {
 	public String comp;
 	public String pdf;
 	
-	public MonexUS(String ticker, String name, String jname, String keyword, String etf, String shijo, String update,
+	public MonexUSStock(String ticker, String name, String jname, String keyword, String etf, String shijo, String update,
 			String gyoshu, String jigyo,
 			String benchmark, String shisan, String chiiki, String category, String keihi, String comp, String pdf) {
 		this.ticker  = ticker;
@@ -49,12 +45,5 @@ public class MonexUS {
 		this.keihi     = keihi;
 		this.comp      = comp;
 		this.pdf       = pdf;
-	}
-	
-	public static void save(List<MonexUS> usSecurityList) {
-		CSVUtil.saveWithHeader(usSecurityList, UpdateMonexUS.PATH_MONEX_US);
-	}
-	public static List<MonexUS> load() {
-		return CSVUtil.loadWithHeader(UpdateMonexUS.PATH_MONEX_US, MonexUS.class);
 	}
 }

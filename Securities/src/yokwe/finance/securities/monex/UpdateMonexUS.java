@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
+import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.FileUtil;
 
 public class UpdateMonexUS {
@@ -23,11 +24,19 @@ public class UpdateMonexUS {
 
 	public static final String SOURCE_ENCODING  = "SHIFT_JIS";
 	
-	public static final String PATH_SOUTH      = "tmp/fetch/monex/UsMeigaraJsonGST";
-	public static final String PATH_MONEX_US = "tmp/monex/monex-us.csv";
+	public static final String PATH_SOUTH    = "tmp/fetch/monex/UsMeigaraJsonGST";
+	public static final String PATH_MONEX_US = "tmp/monex/monex-us-stock.csv";
 
 	private static final String  PATTERN_STRING = "\\((.+)\\)";
 	private static final Pattern PATTERN = Pattern.compile(PATTERN_STRING, (Pattern.MULTILINE | Pattern.DOTALL));
+	
+	
+	public static void save(List<MonexUSStock> usSecurityList) {
+		CSVUtil.saveWithHeader(usSecurityList, PATH_MONEX_US);
+	}
+	public static List<MonexUSStock> load() {
+		return CSVUtil.loadWithHeader(PATH_MONEX_US, MonexUSStock.class);
+	}
 	
 	public static void main(String[] args) {
 		logger.info("START");
@@ -50,7 +59,7 @@ public class UpdateMonexUS {
 			JsonArray data = jsonObject.getJsonArray("data");
 //			logger.info("data = {}", data.size());
 			
-			List<MonexUS> monexUSList = new ArrayList<>(data.size());
+			List<MonexUSStock> monexUSList = new ArrayList<>(data.size());
 
 			int count = 0;
 			int countETF = 0;
@@ -85,14 +94,14 @@ public class UpdateMonexUS {
 				count++;
 				if (etf.equals("1")) countETF++;
 
-				MonexUS usSecurity = new MonexUS(ticker, name, jname, keyword, etf, shijo, update,
+				MonexUSStock usSecurity = new MonexUSStock(ticker, name, jname, keyword, etf, shijo, update,
 						gyoshu, jigyo,
 						benchmark, shisan, chiiki, category, keihi, comp, pdf);
 				
 				monexUSList.add(usSecurity);
 			}
 			logger.info("output = {}", PATH_MONEX_US);
-			MonexUS.save(monexUSList);
+			save(monexUSList);
 			
 			logger.info("ETF   = {}", String.format("%5d", countETF));
 			logger.info("STOCK = {}", String.format("%5d", count - countETF));

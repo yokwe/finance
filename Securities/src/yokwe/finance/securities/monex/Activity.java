@@ -1,15 +1,18 @@
 package yokwe.finance.securities.monex;
 
 import yokwe.finance.securities.libreoffice.Sheet;
+import yokwe.finance.securities.libreoffice.SpreadSheet;
 
 @Sheet.SheetName("Transaction")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class Activity extends Sheet {
 	@ColumnName("受渡日")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String settlementDate;
 	
 	@ColumnName("約定日")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String tradeDate;
 	
 	// 金銭 外株
@@ -31,7 +34,7 @@ public class Activity extends Sheet {
 	public String transaction;
 
 	@ColumnName("数量")
-	public int quantity;
+	public double quantity;
 
 	@ColumnName("単価")
 	public double unitPrice;
@@ -41,15 +44,6 @@ public class Activity extends Sheet {
 
 	@ColumnName("為替レート")
 	public double fxRate;
-
-	@ColumnName("手数料")
-	public double fee;
-
-	@ColumnName("消費税")
-	public double consumptionTax;
-
-	@ColumnName("換算金額")
-	public double equivalentAmount;
 
 	@Override
 	public String toString() {

@@ -34,20 +34,20 @@ public class Activity extends Sheet {
 	public String transaction;
 
 	@ColumnName("数量")
-	public double quantity;
+	public Integer quantity;
 
 	@ColumnName("単価")
-	public double unitPrice;
+	public Double unitPrice;
 
 	@ColumnName("受渡金額")
-	public double amount;
+	public Double amount;
 
 	@ColumnName("為替レート")
-	public double fxRate;
+	public Double fxRate;
 
 	@Override
 	public String toString() {
-		return String.format("%s %s %s %s %s %8.2f %8.2f %8.2f %8.2f",
-				settlementDate, tradeDate, product, detail, transaction, quantity, unitPrice, amount, fxRate);
+		return String.format("%s %s %s %s %4d %8s %8s %8s %s",
+				settlementDate, tradeDate, product, transaction, quantity, unitPrice, amount, fxRate, detail);
 	}
 }

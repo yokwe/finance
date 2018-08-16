@@ -2,12 +2,15 @@ package yokwe.finance.securities.monex;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class Transaction {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transaction.class);
@@ -26,7 +29,9 @@ public class Transaction {
 	private static final String DETAIL_TO_DEPOSIT_USD = "円貨から外貨預り金へ（外貨）";
 	private static final String DETAIL_TO_DEPOSIT_JPY = "円貨から外貨預り金へ（円貨）";
 
-	private static final String ACCOUNT_TYPE = "特定";
+	private static final String ACCOUNT_TYPE_TOKUTEI = "特定";
+	
+	private static final String TRANSACTION_BUY = "買付";
 
 	public final Type   type;
 	public final String date; // settlement date
@@ -61,7 +66,7 @@ public class Transaction {
 	
 	@Override
 	public String toString() {
-		return String.format("%s %7s %s %4d %6.2f %6.2f %6.2f %8d %8.2f %6.2f",
+		return String.format("%s %-7s %-8s %4d %6.2f %6.2f %8.2f %8d %8.2f %6.2f",
 				date, type, symbol, quantity, price, fee, total, jpy, usd, fxRate);
 	}
 	private static Transaction jpyIn(String date, int jpy) {
@@ -70,7 +75,13 @@ public class Transaction {
 	private static Transaction usdIn(String date, int jpy, double usd, double fxRate) {
 		return new Transaction(Type.USD_IN, date, "", 0, 0, 0, 0, jpy, usd, fxRate);
 	}
+	private static Transaction buy(String date, String symbol, int quantity, double price, double fee, double total, double fxRate) {
+		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, total, 0, 0, fxRate);
+	}
 	
+	private static final String  PATTERN_STRING = "A[0-9]+ ([^ ]+) .+";
+	private static final Pattern PATTERN = Pattern.compile(PATTERN_STRING);
+
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
 		List<Transaction> transactionList = new ArrayList<>();
 		
@@ -109,8 +120,6 @@ public class Transaction {
 					logger.error("Unexpected  {}", activity);
 					throw new SecuritiesException("Unexpected");
 				}
-
-//				logger.info("{}", activity);
 				
 				switch(activity.product) {
 				case PRODUCT_KINSEN:
@@ -224,7 +233,67 @@ public class Transaction {
 				{
 					logger.info("SOTOKABU {}", activity);
 					// Sanity check
-					if (!activity.accountType.equals(ACCOUNT_TYPE)) {
+					if (!activity.accountType.equals(ACCOUNT_TYPE_TOKUTEI)) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.transaction == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.quantity == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.unitPrice == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.amount == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.fxRate == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.fee == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.tax == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.total == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					
+					switch(activity.transaction) {
+					case TRANSACTION_BUY:
+					{
+						//	private static Transaction buy(String date, String symbol, int quantity, double price, double fee, double total, double fxRate) {
+						Matcher matcher = PATTERN.matcher(activity.detail);
+						if (!matcher.find()) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						
+						double fee1 = DoubleUtil.round(-activity.amount - DoubleUtil.round(activity.unitPrice * activity.quantity, 2), 2);
+						double fee2 = DoubleUtil.round(activity.fee + activity.tax, 2);
+						
+						if (fee1 != fee2) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						
+						String symbol = matcher.group(1);
+						lastTransaction = Transaction.buy(lastTransaction.date, symbol, activity.quantity, activity.unitPrice, fee1, -activity.amount, activity.fxRate);
+						transactionList.add(lastTransaction);
+					}
+						break;
+					default:
 						logger.error("Unexpected  {}", activity);
 						throw new SecuritiesException("Unexpected");
 					}

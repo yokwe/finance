@@ -45,6 +45,15 @@ public class Activity extends Sheet {
 	@ColumnName("為替レート")
 	public Double fxRate;
 
+	@ColumnName("手数料")
+	public Double fee;
+
+	@ColumnName("消費税")
+	public Double tax;
+
+	@ColumnName("換算金額")
+	public Double total;
+
 	@Override
 	public String toString() {
 		return String.format("%s %s %s %s %4d %8s %8s %8s %s",

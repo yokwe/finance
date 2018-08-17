@@ -34,27 +34,6 @@
 	
 	<property name="jar.yokwe" location="${dir.build.jar}/yokwe.jar" />
 
-	<target name="deploy">
-                <!-- delete war file -->
-		<delete file="${dir.build}/securities.war" quiet="true" />
-                <!-- create war file -->
-		<war destfile="${dir.build}/securities.war" webxml="${dir.web}/WEB-INF/web.xml">
-			<lib file="${jar.yokwe}" />
-			<lib dir="${dir.ext.jar}">
-				<include name="*.jar" />
-			</lib>
-			<classes dir="${dir.web}/WEB-INF/classes" />
-			<fileset dir="${dir.web}">
-                                <exclude name="WEB-INF/**" />
-			</fileset>
-		</war>
-
-		<!-- webapps directory has auto deploy feature (default on) -->
-		<!-- Use this feature to deploy securities.war -->
-		<!-- So deploing war file in tomcat is just copy war file to ${catalina.base}/webapps -->
-		<copy file="${dir.build}/securities.war" todir="${catalina.base}/webapps" />
-	</target>
-
 	<target name="eod-deploy">
                 <!-- delete war file -->
 		<delete file="${eod.war}" quiet="true" />
@@ -114,38 +93,6 @@
 		</java>
 	</target>
 
-        <target name="run-update-nasdaq">
-                <java classname="yokwe.finance.securities.update.Nasdaq" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/nasdaq/nasdaqtraded.txt"/>
-                        <arg value="tmp/database/nasdaq.csv"/>
-                </java>
-        </target>
-	
-        <target name="run-update-nasdaq-company">
-                <java classname="yokwe.finance.securities.update.NasdaqCompany" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/nasdaq/"/>
-                        <arg value="tmp/database/nasdaq-company.csv"/>
-                </java>
-        </target>
-	
-	<target name="run-update-price">
-		<java classname="yokwe.finance.securities.app.UpdatePrice" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
-
-	<target name="run-update-dividend">
-		<java classname="yokwe.finance.securities.app.UpdateDividend" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-		</java>
-	</target>
-
 	<target name="run-update-correlation">
 		<java classname="yokwe.finance.securities.app.UpdateCorrelation" fork="true">
 			<classpath location="${jar.yokwe}" />
@@ -159,42 +106,6 @@
 	</target>
 
 	
-        <target name="run-update-yahoo-dividend">
-                <java classname="yokwe.finance.securities.update.YahooDividend" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/yahoo-dividend"/>
-                        <arg value="tmp/database/yahoo-dividend-update.csv"/>
-                </java>
-        </target>
-	
-        <target name="run-update-google-getprices">
-                <java classname="yokwe.finance.securities.update.GoogleGetPrices" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/google-getprices"/>
-                        <arg value="tmp/database/google-getprices-update.csv"/>
-                </java>
-        </target>
-
-        <target name="run-update-yahoo-daily">
-                <java classname="yokwe.finance.securities.update.YahooDaily" fork="true">
-                        <classpath location="${jar.yokwe}" />
-                        <classpath refid="ext.jar" />
-                        <arg value="tmp/fetch/yahoo-daily"/>
-                        <arg value="tmp/database/yahoo-daily-update.csv"/>
-                </java>
-        </target>
-
-	<target name="run-update-google-historical">
-		<java classname="yokwe.finance.securities.update.GoogleHistorical" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/fetch/google-historical"/>
-			<arg value="tmp/database/google-historical-update.csv"/>
-		</java>
-	</target>
-	
 	<target name="run-update-quantum">
 		<java classname="yokwe.finance.securities.update.QuantumOnline" fork="true">
 			<classpath location="${jar.yokwe}" />
@@ -204,15 +115,7 @@
 		</java>
 	</target>
 
-	<target name="run-equityStats">
-		<java classname="yokwe.finance.securities.app.EquityStats" fork="true">
-			<classpath location="${jar.yokwe}" />
-			<classpath refid="ext.jar" />
-			<arg value="tmp/database/equityStats-header.csv"/>
-		</java>
-	</target>
-	
-	<!-- Quand -->
+	<!-- Quandl -->
         <target name="run-databaseList">
                 <java classname="yokwe.finance.securities.quandl.DatabaseList" fork="true">
                         <classpath location="${jar.yokwe}" />

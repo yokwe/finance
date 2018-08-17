@@ -5,9 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -25,6 +27,8 @@ public class HttpUtil {
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 	
 	private static final String USER_AGENT = "Mozilla";
+	
+	private static final String DEFAULT_ENCODING = "UTF-8";
 
 	private static final int CONNECTION_POOLING_MAX_TOTAL = 5;
 
@@ -42,10 +46,14 @@ public class HttpUtil {
 	}
 
 	public static String downloadAsString(String url) {
-		return downloadAsString(url, null);
+		return downloadAsString(url, DEFAULT_ENCODING, null);
 	}
 	
-	public static String downloadAsString(String url, String cookie) {
+	public static String downloadAsString(String url, String encoding) {
+		return downloadAsString(url, encoding, null);
+	}
+	
+	public static String downloadAsString(String url, String encoding, String cookie) {
 		HttpGet httpGet = new HttpGet(url);
 		httpGet.setHeader("User-Agent", USER_AGENT);
 		if (cookie != null) {
@@ -55,79 +63,87 @@ public class HttpUtil {
 		int retryCount = 0;
 		for(;;) {
 			try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-					final int code = response.getStatusLine().getStatusCode();
-					final String reasonPhrase = response.getStatusLine().getReasonPhrase();
-					
-					if (code == 429) { // 429 Too Many Requests
-						if (retryCount < 10) {
-							retryCount++;
-							logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
-							Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
-							continue;
-						}
+				final int code = response.getStatusLine().getStatusCode();
+				final String reasonPhrase = response.getStatusLine().getReasonPhrase();
+				
+				if (code == 429) { // 429 Too Many Requests
+					if (retryCount < 10) {
+						retryCount++;
+						logger.warn("retry {} {} {}  {}", retryCount, code, reasonPhrase, url);
+						Thread.sleep(1000 * retryCount * retryCount); // sleep 1 * retryCount * retryCount sec
+						continue;
 					}
-					retryCount = 0;
-					if (code == HttpStatus.SC_NOT_FOUND) { // 404
-						logger.warn("{} {}  {}", code, reasonPhrase, url);
-						return null;
-					}
-					if (code == HttpStatus.SC_BAD_REQUEST) { // 400
-						logger.warn("{} {}  {}", code, reasonPhrase, url);
-						return null;
-					}
-					if (code == HttpStatus.SC_OK) {
-					    HttpEntity entity = response.getEntity();
-					    if (entity != null) {
-							StringBuilder ret = new StringBuilder();
-					    	char[] cbuf = new char[1024 * 64];
-					    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
-					    		for(;;) {
-					    			int len = isr.read(cbuf);
-					    			if (len == -1) break;
-					    			ret.append(cbuf, 0, len);
-					    		}
-					    	}
-					    	return ret.toString();
-					    } else {
-							logger.error("entity is null");
-							throw new SecuritiesException("entity is null");
-					    }
-					}
-					
-					// Other code
-					logger.error("statusLine = {}", response.getStatusLine().toString());
-					logger.error("url {}", url);
-					logger.error("code {}", code);
-				    HttpEntity entity = response.getEntity();
-				    if (entity != null) {
-						StringBuilder ret = new StringBuilder();
-				    	char[] cbuf = new char[1024 * 64];
-				    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), "UTF-8")) {
-				    		for(;;) {
-				    			int len = isr.read(cbuf);
-				    			if (len == -1) break;
-				    			ret.append(cbuf, 0, len);
-				    		}
-				    	}
-				    	logger.error("entity {}", ret);
-				    }
-					throw new SecuritiesException("download");
-
-				} catch (UnsupportedOperationException e) {
-					logger.error("UnsupportedOperationException {}", e.toString());
-					throw new SecuritiesException("UnsupportedOperationException");
-				} catch (IOException e) {
-					logger.error("IOException {}", e.toString());
-					throw new SecuritiesException("IOException");
-				} catch (InterruptedException e) {
-					logger.error("InterruptedException {}", e.toString());
-					throw new SecuritiesException("InterruptedException");
 				}
+				retryCount = 0;
+				if (code == HttpStatus.SC_NOT_FOUND) { // 404
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
+				}
+				if (code == HttpStatus.SC_BAD_REQUEST) { // 400
+					logger.warn("{} {}  {}", code, reasonPhrase, url);
+					return null;
+				}
+				if (code == HttpStatus.SC_OK) {
+					return getContent(response.getEntity(), encoding);
+				}
+				
+				// Other code
+				logger.error("statusLine = {}", response.getStatusLine().toString());
+				logger.error("url {}", url);
+				logger.error("code {}", code);
+				HttpEntity entity = response.getEntity();
+				if (entity != null) {
+			    	logger.error("entity {}", getContent(entity, encoding));
+				}
+				throw new SecuritiesException("download");
+			} catch (ClientProtocolException e) {
+				logger.error("ClientProtocolException {}", e.toString());
+				throw new SecuritiesException("ClientProtocolException");
+			} catch (IOException e) {
+				logger.error("IOException {}", e.toString());
+				throw new SecuritiesException("IOException");
+			} catch (InterruptedException e) {
+				logger.error("InterruptedException {}", e.toString());
+				throw new SecuritiesException("InterruptedException");
+			}
 		}
 	}
 	
+	private static String getContent(HttpEntity entity, String encoding) {
+		if (entity == null) {
+			logger.error("entity is null");
+			throw new SecuritiesException("entity is null");
+		}
+		if (encoding == null) {
+			logger.error("encoding is null");
+			throw new SecuritiesException("encoding is null");
+		}
+    	try (InputStreamReader isr = new InputStreamReader(entity.getContent(), encoding)) {
+     		char[]        cbuf = new char[1024 * 64];
+       		StringBuilder ret  = new StringBuilder();
+       		for(;;) {
+    			int len = isr.read(cbuf);
+    			if (len == -1) break;
+    			ret.append(cbuf, 0, len);
+    		}
+    	   	return ret.toString();
+    	} catch (UnsupportedEncodingException e) {
+			logger.error("UnsupportedEncodingException {}", e.toString());
+			throw new SecuritiesException("UnsupportedEncodingException");
+		} catch (UnsupportedOperationException e) {
+			logger.error("UnsupportedOperationException {}", e.toString());
+			throw new SecuritiesException("UnsupportedOperationException");
+		} catch (IOException e) {
+			logger.error("IOException {}", e.toString());
+			throw new SecuritiesException("IOException");
+		}
+ 	}
+	
 	public static void download(String url, String path) {
-		String content = downloadAsString(url);
+		download(url, path, DEFAULT_ENCODING);
+	}
+	public static void download(String url, String path, String encoding) {
+		String content = downloadAsString(url, encoding);
 		
 		if (content != null) {
 			File file = new File(path);

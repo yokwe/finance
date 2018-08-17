@@ -28,10 +28,12 @@ public class Transaction {
 	private static final String DETAIL_FROM_SOUGOU    = "証券総合口座より";
 	private static final String DETAIL_TO_DEPOSIT_USD = "円貨から外貨預り金へ（外貨）";
 	private static final String DETAIL_TO_DEPOSIT_JPY = "円貨から外貨預り金へ（円貨）";
+	private static final String DETAIL_FOREIGN_STOCK  = "外国証券";
 
 	private static final String ACCOUNT_TYPE_TOKUTEI = "特定";
 	
 	private static final String TRANSACTION_BUY = "買付";
+	private static final String TRANSACTION_MANAGEMENT_FEE = "管理料";
 
 	public final Type   type;
 	public final String date; // settlement date
@@ -97,7 +99,7 @@ public class Transaction {
 			
 			List<Activity> activityList = Sheet.extractSheet(docActivity, Activity.class, sheetName);
 			
-			Transaction lastTransaction = null;
+			Transaction transactionToDepositUSD = null;
 			for(Activity activity: activityList) {
 				// Sanity check
 				if (activity.settlementDate == null) {
@@ -127,15 +129,7 @@ public class Transaction {
 					logger.info("KINSEN   {}", activity);
 					
 					// Sanity check
-					if (!activity.tradeDate.equals(activity.settlementDate)) {
-						logger.error("Unexpected  {}", activity);
-						throw new SecuritiesException("Unexpected");
-					}
 					if (activity.accountType != null) {
-						logger.error("Unexpected  {}", activity);
-						throw new SecuritiesException("Unexpected");
-					}
-					if (activity.transaction != null) {
 						logger.error("Unexpected  {}", activity);
 						throw new SecuritiesException("Unexpected");
 					}
@@ -164,6 +158,14 @@ public class Transaction {
 					case DETAIL_FROM_SOUGOU:
 					{
 						// Sanity check
+						if (!activity.tradeDate.equals(activity.settlementDate)) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.transaction != null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
 						if (activity.unitPrice != null) {
 							logger.error("Unexpected  {}", activity);
 							throw new SecuritiesException("Unexpected");
@@ -178,24 +180,40 @@ public class Transaction {
 							}
 						}
 
-						lastTransaction = Transaction.jpyIn(activity.settlementDate, (int)amount);
-						transactionList.add(lastTransaction);
+						transactionList.add(Transaction.jpyIn(activity.settlementDate, (int)amount));
+						transactionToDepositUSD = null;
 					}
 						break;
 					case DETAIL_TO_DEPOSIT_USD:
 					{
 						// Sanity check
+						if (!activity.tradeDate.equals(activity.settlementDate)) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.transaction != null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
 						if (activity.unitPrice == null) {
 							logger.error("Unexpected  {}", activity);
 							throw new SecuritiesException("Unexpected");
 						}
 						
-						lastTransaction = Transaction.usdIn(activity.settlementDate, 0, activity.amount, activity.unitPrice);
+						transactionToDepositUSD = Transaction.usdIn(activity.settlementDate, 0, activity.amount, activity.unitPrice);
 					}
 						break;
 					case DETAIL_TO_DEPOSIT_JPY:
 					{
 						// Sanity check
+						if (!activity.tradeDate.equals(activity.settlementDate)) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.transaction != null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
 						if (activity.unitPrice != null) {
 							logger.error("Unexpected  {}", activity);
 							throw new SecuritiesException("Unexpected");
@@ -210,17 +228,36 @@ public class Transaction {
 							}
 						}
 						
-						if (lastTransaction.type != Type.USD_IN) {
+						if (transactionToDepositUSD.type != Type.USD_IN) {
 							logger.error("Unexpected  {}", activity);
 							throw new SecuritiesException("Unexpected");
 						}
-						if (!lastTransaction.date.equals(activity.settlementDate)) {
+						if (!transactionToDepositUSD.date.equals(activity.settlementDate)) {
 							logger.error("Unexpected  {}", activity);
 							throw new SecuritiesException("Unexpected");
 						}
 
-						lastTransaction = Transaction.usdIn(lastTransaction.date, (int)amount, lastTransaction.usd, lastTransaction.fxRate);
-						transactionList.add(lastTransaction);
+						transactionList.add(Transaction.usdIn(transactionToDepositUSD.date, (int)amount, transactionToDepositUSD.usd, transactionToDepositUSD.fxRate));
+						transactionToDepositUSD = null;
+					}
+						break;
+					case DETAIL_FOREIGN_STOCK:
+					{
+						// Sanity check
+						if(!activity.transaction.equals(TRANSACTION_MANAGEMENT_FEE)) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.amount == null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.amount != 0) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						// Do nothing. because no amount
+						transactionToDepositUSD = null;
 					}
 						break;
 					default:
@@ -285,12 +322,13 @@ public class Transaction {
 						
 						if (fee1 != fee2) {
 							logger.error("Unexpected  {}", activity);
+							logger.error("  {} {}", fee1, fee2);
 							throw new SecuritiesException("Unexpected");
 						}
 						
 						String symbol = matcher.group(1);
-						lastTransaction = Transaction.buy(lastTransaction.date, symbol, activity.quantity, activity.unitPrice, fee1, -activity.amount, activity.fxRate);
-						transactionList.add(lastTransaction);
+						transactionList.add(Transaction.buy(activity.settlementDate, symbol, activity.quantity, activity.unitPrice, fee1, -activity.amount, activity.fxRate));
+						transactionToDepositUSD = null;
 					}
 						break;
 					default:
@@ -321,5 +359,6 @@ public class Transaction {
 			logger.info("transactionList {}", transactionList.size());
 		}
 		logger.info("STOP");
+		System.exit(0);
 	}
 }

@@ -1,6 +1,5 @@
 package yokwe.finance.securities.monex;
 
-import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +16,14 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.CSVUtil;
-import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.HttpUtil;
 
 public class UpdateMonexUS {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexUS.class);
 
+	public static final String SOURCE_URL       = "https://mxp1.monex.co.jp/mst/servlet/ITS/ucu/UsMeigaraJsonGST";
 	public static final String SOURCE_ENCODING  = "SHIFT_JIS";
 	
-	public static final String PATH_SOUTH    = "tmp/fetch/monex/UsMeigaraJsonGST";
 	public static final String PATH_MONEX_US = "tmp/monex/monex-us-stock.csv";
 
 	private static final String  PATTERN_STRING = "\\((.+)\\)";
@@ -41,8 +40,7 @@ public class UpdateMonexUS {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		File file = new File(PATH_SOUTH);
-		String contents = FileUtil.read(file, SOURCE_ENCODING);
+		String contents = HttpUtil.downloadAsString(SOURCE_URL, SOURCE_ENCODING);
 		String content2 = contents.replaceAll(",\\s+]", "]"); // Remove comma of last array element
 		Matcher matcher = PATTERN.matcher(content2);
 		if (!matcher.find()) {
@@ -100,12 +98,13 @@ public class UpdateMonexUS {
 				
 				monexUSList.add(usSecurity);
 			}
-			logger.info("output = {}", PATH_MONEX_US);
+			logger.info("URL    = {}", SOURCE_URL);
+			logger.info("OUTPUT = {}", PATH_MONEX_US);
 			save(monexUSList);
 			
-			logger.info("ETF   = {}", String.format("%5d", countETF));
-			logger.info("STOCK = {}", String.format("%5d", count - countETF));
-			logger.info("TOTAL = {}", String.format("%5d", count));
+			logger.info("ETF    = {}", String.format("%5d", countETF));
+			logger.info("STOCK  = {}", String.format("%5d", count - countETF));
+			logger.info("TOTAL  = {}", String.format("%5d", count));
 		}
 
 		logger.info("STOP");		

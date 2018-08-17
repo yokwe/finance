@@ -1,6 +1,5 @@
 package yokwe.finance.securities.monex;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -10,14 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.util.CSVUtil;
-import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.HttpUtil;
 
 public class UpdateMonexStockFX {
 	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexStockFX.class);
 
+	public static final String SOURCE_URL       = "https://mst.monex.co.jp/mst/servlet/ITS/ucu/UsEvaluationRateGST";
 	public static final String SOURCE_ENCODING  = "SHIFT_JIS";
 	
-	public static final String PATH_SOUTH          = "tmp/fetch/monex/UsEvaluationRateGST";
 	public static final String PATH_MONEX_STOCK_FX = "tmp/monex/monex-stock-fx.csv";
 	
 //    <tr>
@@ -40,8 +39,8 @@ public class UpdateMonexStockFX {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		File file = new File(PATH_SOUTH);
-		String contents = FileUtil.read(file, SOURCE_ENCODING);
+		String contents = HttpUtil.downloadAsString(SOURCE_URL, SOURCE_ENCODING);
+
 		Matcher matcher = PATTERN.matcher(contents);
 		
 		List<MonexStockFX> monexStockFXList = new ArrayList<>();
@@ -58,10 +57,11 @@ public class UpdateMonexStockFX {
 			
 			logger.info("{}", monexStockFX);
 		}
-		logger.info("output {}", PATH_MONEX_STOCK_FX);
+		logger.info("URL    = {}", SOURCE_URL);
+		logger.info("OUTPUT = {}", PATH_MONEX_STOCK_FX);
 		
 		save(monexStockFXList);
-		logger.info("monexStockFXList {}", monexStockFXList.size());
+		logger.info("DATA   = {}", monexStockFXList.size());
 
 		logger.info("STOP");		
 	}

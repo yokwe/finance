@@ -2,7 +2,6 @@ package yokwe.finance.securities.eod;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,13 +11,14 @@ import java.lang.reflect.Field;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.util.FileUtil;
+import yokwe.finance.securities.util.HttpUtil;
 
 public class UpdateForex {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStats.class);
 	
+	public static final String URL_MIZUHO       = "https://www.mizuhobank.co.jp/market/csv/quote.csv";
 	public static final String ENCODING_MIZUHO  = "SHIFT_JIS";
-	public static final String PATH_MIZUHO      = "tmp/fetch/mizuho/quote.csv";
+	
 	public static final String PATH_FOREX       = "tmp/eod/forex.csv";
 	
 	public static void main (String[] args) {
@@ -45,7 +45,7 @@ public class UpdateForex {
 			}
 		}
 		
-		String contents = FileUtil.read(new File(PATH_MIZUHO), ENCODING_MIZUHO);
+		String contents = HttpUtil.downloadAsString(URL_MIZUHO, ENCODING_MIZUHO);
 
 		int count = 0;
 

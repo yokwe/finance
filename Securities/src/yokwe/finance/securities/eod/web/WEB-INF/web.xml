@@ -43,19 +43,15 @@
     -->
 
     <servlet>
-      <servlet-name>json001</servlet-name>
-      <servlet-class>yokwe.finance.securities.eod.servlet.JsonServlet</servlet-class>
+      <servlet-name>price-json</servlet-name>
+      <servlet-class>yokwe.finance.securities.eod.servlet.PriceJsonServlet</servlet-class>
       <!-- Load this servlet at server startup time -->
       <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>
-      <servlet-name>price</servlet-name>
-      <init-param>
-        <param-name>path.sqlite.database</param-name>
-        <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/sqlite/securities.sqlite3</param-value>
-      </init-param>
-      <servlet-class>yokwe.finance.securities.eod.servlet.PriceServlet</servlet-class>
+      <servlet-name>price-csv</servlet-name>
+      <servlet-class>yokwe.finance.securities.eod.servlet.PriceCSVServlet</servlet-class>
       <!-- Load this servlet at server startup time -->
       <load-on-startup>1</load-on-startup>
     </servlet>
@@ -79,13 +75,13 @@
     -->
 
     <servlet-mapping>
-      <servlet-name>json001</servlet-name>
-      <url-pattern>/json</url-pattern>
+      <servlet-name>price-json</servlet-name>
+      <url-pattern>/price-json</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-      <servlet-name>price</servlet-name>
-      <url-pattern>/price</url-pattern>
+      <servlet-name>price-csv</servlet-name>
+      <url-pattern>/price-csv</url-pattern>
     </servlet-mapping>
 
     <!-- Define the default session timeout for your application,

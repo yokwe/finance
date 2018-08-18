@@ -24,8 +24,8 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.Price;
 import yokwe.finance.securities.eod.UpdatePrice;
 
-public class PriceServlet extends HttpServlet {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PriceServlet.class);
+public class PriceJsonServlet extends HttpServlet {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PriceJsonServlet.class);
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -33,7 +33,7 @@ public class PriceServlet extends HttpServlet {
 	private String path_price;
 	@Override
 	public void init(ServletConfig config) {
-		logger.info("init csv");
+		logger.info("init");
 		
 		ServletContext servletContext = config.getServletContext();
 		
@@ -46,7 +46,7 @@ public class PriceServlet extends HttpServlet {
 	
 	@Override
 	public void destroy() {
-		logger.info("destroy csv");
+		logger.info("destroy");
 	}
 	
 	private static <E> void buildDoubleArray(JsonGenerator gen, String name, List<E> dataList, ToDoubleFunction<E> mapper) {

@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>price csv</title>
+    <script src="plotly.min.js"></script>
+    
+    <script type="text/javascript">
+	var div1 = document.getElementById("div1");
+	var url = "price-csv?symbol=IBM";
+	var dataTemplate = {
+	  type: 'candlestick',
+	}
+
+	var layout = {
+	  dragmode: 'zoom', 
+	  margin: {
+	    r: 10, 
+	    t: 25, 
+	    b: 40, 
+	    l: 60
+	  }, 
+	  showlegend: false, 
+	  xaxis: {
+	    autorange: true, 
+	    domain: [0, 1], 
+	    title: 'Date', 
+	    type: 'date',
+	    tickformat: '%y-%m-%d'
+	  }, 
+	  yaxis: {
+	    autorange: true, 
+	    domain: [0.2, 0.8], 
+	    type: 'linear'
+	  }
+	};
+
+   	var fieldMap = {
+       	    'date': 'x',
+            'open': 'open',
+            'high': 'high',
+            'low': 'low',
+            'close': 'close'
+        };
+
+    function myOnLoad() {
+        Plotly.d3.csv(url, dataProcessor);
+    }
+
+   function dataProcessor(rows) {
+    	var csvData = {};
+    	for(var key in fieldMap) {
+    	    csvData[fieldMap[key]] = [];
+    	}
+    	
+     	for(var row of rows) {
+    	    for(var key in fieldMap) {
+    	    	var value = fieldMap[key];
+    	    	csvData[value].push(row[key]);
+    	    }
+    	}
+        var data = Object.assign(dataTemplate, csvData);
+    	
+        Plotly.plot('div1', [data], layout)
+    }   
+
+    window.onload = myOnLoad
+    </script>
+  </head>
+  <body>
+    <div id="div1"></div>
+  </body>
+</html>

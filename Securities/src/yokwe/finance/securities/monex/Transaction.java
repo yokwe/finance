@@ -26,6 +26,7 @@ public class Transaction {
 	private static final String PRODUCT_SOTOKABU = "外株";
 	
 	private static final String DETAIL_FROM_SOUGOU    = "証券総合口座より";
+	private static final String DETAIL_TO_SOUGOU      = "証券総合口座へ";
 	private static final String DETAIL_TO_DEPOSIT_USD = "円貨から外貨預り金へ（外貨）";
 	private static final String DETAIL_TO_DEPOSIT_JPY = "円貨から外貨預り金へ（円貨）";
 	private static final String DETAIL_FOREIGN_STOCK  = "外国証券";
@@ -73,6 +74,9 @@ public class Transaction {
 	}
 	private static Transaction jpyIn(String date, int jpy) {
 		return new Transaction(Type.JPY_IN, date, "", 0, 0, 0, 0, jpy, 0, 0);
+	}
+	private static Transaction jpyOut(String date, int jpy) {
+		return new Transaction(Type.JPY_OUT, date, "", 0, 0, 0, 0, jpy, 0, 0);
 	}
 	private static Transaction usdIn(String date, int jpy, double usd, double fxRate) {
 		return new Transaction(Type.USD_IN, date, "", 0, 0, 0, 0, jpy, usd, fxRate);
@@ -181,6 +185,35 @@ public class Transaction {
 						}
 
 						transactionList.add(Transaction.jpyIn(activity.settlementDate, (int)amount));
+						transactionToDepositUSD = null;
+					}
+						break;
+					case DETAIL_TO_SOUGOU:
+					{
+						// Sanity check
+						if (!activity.tradeDate.equals(activity.settlementDate)) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.transaction != null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						if (activity.unitPrice != null) {
+							logger.error("Unexpected  {}", activity);
+							throw new SecuritiesException("Unexpected");
+						}
+						double amount = activity.amount;
+						{
+							int decimal = (int)amount;
+							double fractional = amount - decimal;
+							if (fractional != 0) {
+								logger.error("Unexpected  {}", activity);
+								throw new SecuritiesException("Unexpected");
+							}
+						}
+
+						transactionList.add(Transaction.jpyOut(activity.settlementDate, (int)amount));
 						transactionToDepositUSD = null;
 					}
 						break;

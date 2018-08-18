@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -45,6 +47,17 @@ public class PriceServlet extends HttpServlet {
 	@Override
 	public void destroy() {
 		logger.info("destroy csv");
+	}
+	
+	private static <E> void buildDoubleArray(JsonGenerator gen, String name, List<E> dataList, ToDoubleFunction<E> mapper) {
+		gen.writeStartArray(name);
+		dataList.stream().mapToDouble(mapper).forEach(o -> gen.write(o));
+		gen.writeEnd();
+	}
+	private static <E> void buildStringArray(JsonGenerator gen, String name, List<E> dataList, Function<E, String> mapper) {
+		gen.writeStartArray(name);
+		dataList.stream().map(mapper).forEach(o -> gen.write(o));
+		gen.writeEnd();
 	}
 	
 	@Override
@@ -97,18 +110,11 @@ public class PriceServlet extends HttpServlet {
     			
     			logger.debug("entry {} {}", symbol, dataList.size());
     			
-				gen.writeStartArray("date");
-				for(Price data: dataList) {
-					gen.write(data.date);
-				}
-				gen.writeEnd();
-				
-				gen.writeStartArray("close");
-				for(Price data: dataList) {
-					gen.write(data.close);
-				}
-				gen.writeEnd();
-
+    			buildStringArray(gen, "date",  dataList, (o -> o.date));
+    			buildDoubleArray(gen, "open",  dataList, (o -> o.open));
+    			buildDoubleArray(gen, "high",  dataList, (o -> o.high));
+    			buildDoubleArray(gen, "low",   dataList, (o -> o.low));
+    			buildDoubleArray(gen, "close", dataList, (o -> o.close));
     		}
     		gen.writeEnd();
     		gen.flush();

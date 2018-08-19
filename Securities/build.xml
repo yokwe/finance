@@ -45,7 +45,6 @@
 			</lib>
 			<classes dir="${eod.dir.web}/WEB-INF/classes" />
 			<fileset dir="${eod.dir.web}">
-                <exclude name="WEB-INF/**" />
 			</fileset>
 			<fileset dir="${dir.plotlyjs}/dist">
 				<include name="plotly.min.js" />

@@ -11,11 +11,6 @@
     <description>
       This servlet returns EOD data for chart of securities
     </description>
-    
-    <context-param>
-      <param-name>path.eod</param-name>
-      <param-value>/data1/home/hasegawa/git/finance/Securities/tmp/eod</param-value>
-    </context-param>
 
     <!-- Servlet definitions for the servlets that make up
          your web application, including initialization

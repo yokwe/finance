@@ -3,12 +3,12 @@ package yokwe.finance.securities.eod.servlet;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Function;
-import java.util.function.ToDoubleFunction;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -49,21 +49,131 @@ public class PriceJsonServlet extends HttpServlet {
 		logger.info("destroy");
 	}
 	
-	private static <E> void buildDoubleArray(JsonGenerator gen, String name, List<E> dataList, ToDoubleFunction<E> mapper) {
-		gen.writeStartArray(name);
-		dataList.stream().mapToDouble(mapper).forEach(o -> gen.write(o));
+	private static <E> List<E> getLastElement(List<E> list, int count) {
+		int listSize = list.size();
+		return list.subList(Math.max(listSize - count, 0), listSize);
+	}
+	
+	public static class FieldInfo {
+		public enum Type {
+			BOOLEAN, DOUBLE, FLOAT, INTEGER, LONG, STRING
+		}
+		
+		private static Map<String, Type> typeMap = new TreeMap<>();
+		static {
+			typeMap.put(boolean.class.getName(), Type.BOOLEAN);
+			typeMap.put(double.class.getName(),  Type.DOUBLE);
+			typeMap.put(float.class.getName(),   Type.FLOAT);
+			typeMap.put(int.class.getName(),     Type.INTEGER);
+			typeMap.put(long.class.getName(),    Type.LONG);
+			typeMap.put(String.class.getName(),  Type.STRING);
+		}
+
+		public final Field  field;
+		public final String name;
+		public final Type   type;
+		
+		public FieldInfo(Field field) {
+			this.field = field;
+			this.name  = field.getName();
+			
+			String typeName = field.getType().getName();
+			if (typeMap.containsKey(typeName)) {
+				type = typeMap.get(typeName);
+			} else {
+				logger.error("Unexpected {}", typeName);
+				throw new SecuritiesException("Unexpected");
+			}
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("{%-8s %s}", type, name);
+		}
+	}
+	
+	//                 class       field
+	private static Map<String, Map<String, FieldInfo>> fieldInfoMap = new TreeMap<>();
+	private static Map<String, FieldInfo> getFieldInfoMap(Class<?> clazz) {
+		String className = clazz.getName();
+		if (!fieldInfoMap.containsKey(className)) {
+			Map<String, FieldInfo> map = new TreeMap<>();
+			for(Field field: clazz.getDeclaredFields()) {
+				int modifier = field.getModifiers();
+				// Skip static field
+				if (Modifier.isStatic(modifier)) continue;
+				
+				FieldInfo fieldInfo = new FieldInfo(field);
+				map.put(fieldInfo.name, fieldInfo);
+			}
+			fieldInfoMap.put(className, map);
+		}
+		return fieldInfoMap.get(className);
+	}
+
+	private static <E> void buildArray(JsonGenerator gen, String fieldName, List<E> dataList) {		
+		gen.writeStartArray(fieldName);
+		
+		if (!dataList.isEmpty()) {
+			Object o = dataList.get(0);
+			Map<String, FieldInfo> fieldInfoMap = getFieldInfoMap(o.getClass());
+			
+			if (!fieldInfoMap.containsKey(fieldName)) {
+				logger.error("Unexpected {}", fieldName);
+				throw new SecuritiesException("Unexpected");
+			}
+			
+			FieldInfo fieldInfo = fieldInfoMap.get(fieldName);
+			
+			try {
+				for(E data: dataList) {
+					Object fieldValue = fieldInfo.field.get(data);
+					if (fieldValue == null) {
+						gen.writeNull();
+					} else {
+						switch(fieldInfo.type) {
+						// BOOLEAN, DOUBLE, FLOAT, INTEGER, LONG, STRING
+						case BOOLEAN:
+							gen.write((boolean)fieldValue);
+							break;
+						case DOUBLE:
+							gen.write((double)fieldValue);
+							break;
+						case FLOAT:
+							gen.write((float)fieldValue);
+							break;
+						case INTEGER:
+							gen.write((int)fieldValue);
+							break;
+						case LONG:
+							gen.write((long)fieldValue);
+							break;
+						case STRING:
+							gen.write((String)fieldValue);
+							break;
+						default:
+							logger.error("Unexpected {}", fieldInfo);
+							throw new SecuritiesException("Unexpected");
+						}
+					}
+				}
+			} catch (IllegalArgumentException e) {
+				logger.error("IllegalArgumentException {}", e.getMessage());
+				throw new SecuritiesException("IllegalArgumentException");
+			} catch (IllegalAccessException e) {
+				logger.error("IllegalAccessException {}", e.getMessage());
+				throw new SecuritiesException("IllegalAccessException");
+			}
+		}
 		gen.writeEnd();
 	}
-	private static <E> void buildStringArray(JsonGenerator gen, String name, List<E> dataList, Function<E, String> mapper) {
-		gen.writeStartArray(name);
-		dataList.stream().map(mapper).forEach(o -> gen.write(o));
-		gen.writeEnd();
-	}
+
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) {
 		logger.info("doGet START");
 		
+		// symbol
 		String symbolString = req.getParameter("symbol");
 		logger.debug("symbolString {}", symbolString);
 		if (symbolString == null) {
@@ -71,6 +181,24 @@ public class PriceJsonServlet extends HttpServlet {
 		}
 		String[] symbols = symbolString.split(",");
 		logger.debug("symbols {}", Arrays.asList(symbols));
+		
+		// filter
+		String filterString = req.getParameter("filter");
+		logger.debug("filterString {}", filterString);
+		if (filterString == null) {
+			filterString = "close";
+		}
+		String[] filters = filterString.split(",");
+		logger.debug("filters {}", Arrays.asList(filters));
+		
+		// last
+		String lastString = req.getParameter("last");
+		logger.debug("lastString {}", lastString);
+		if (lastString == null) {
+			lastString = "0";
+		}
+		int last = Integer.valueOf(lastString);
+		logger.debug("last {}", last);
 		
 		Map<String, List<Price>> map = new TreeMap<>();
 		for(String symbol: symbols) {
@@ -92,6 +220,11 @@ public class PriceJsonServlet extends HttpServlet {
 				logger.warn("priceList.isEmpty() {}", filePath);
 				continue;
 			}
+			
+			if (0 < last) {
+				priceList = getLastElement(priceList, last);
+			}
+			
 			map.put(symbol, priceList);
 		}
 		logger.debug("map {}", map.size());
@@ -110,11 +243,17 @@ public class PriceJsonServlet extends HttpServlet {
     			
     			logger.debug("entry {} {}", symbol, dataList.size());
     			
-    			buildStringArray(gen, "date",  dataList, (o -> o.date));
-    			buildDoubleArray(gen, "open",  dataList, (o -> o.open));
-    			buildDoubleArray(gen, "high",  dataList, (o -> o.high));
-    			buildDoubleArray(gen, "low",   dataList, (o -> o.low));
-    			buildDoubleArray(gen, "close", dataList, (o -> o.close));
+    			gen.writeStartObject(symbol);
+    			
+    			// First output date
+    			buildArray(gen, "date", dataList);
+    			
+    			// Then output specified in filters
+    			for(String filter: filters) {
+        			buildArray(gen, filter, dataList);
+    			}
+    			
+    			gen.writeEnd();
     		}
     		gen.writeEnd();
     		gen.flush();

@@ -202,6 +202,9 @@ public class PriceJsonServlet extends HttpServlet {
 		
 		Map<String, List<Price>> map = new TreeMap<>();
 		for(String symbol: symbols) {
+			// Skip empty symbol
+			if (symbol.length() == 0) continue;
+			
 			logger.debug("symbol {}", symbol);
 			String filePath = UpdatePrice.getCSVPath(path_price, symbol);
 			logger.debug("filePath {}", filePath);

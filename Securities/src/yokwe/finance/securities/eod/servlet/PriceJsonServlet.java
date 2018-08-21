@@ -119,8 +119,8 @@ public class PriceJsonServlet extends HttpServlet {
 			Map<String, FieldInfo> fieldInfoMap = getFieldInfoMap(o.getClass());
 			
 			if (!fieldInfoMap.containsKey(fieldName)) {
-				logger.error("Unexpected {}", fieldName);
-				throw new SecuritiesException("Unexpected");
+				logger.error("Unknown field {} {}", o.getClass().getName(), fieldName);
+				throw new SecuritiesException("Unknown field");
 			}
 			
 			FieldInfo fieldInfo = fieldInfoMap.get(fieldName);
@@ -258,9 +258,8 @@ public class PriceJsonServlet extends HttpServlet {
     		gen.writeEnd();
     		gen.flush();
        } catch (IOException e) {
-			logger.error(e.getClass().getName());
-			logger.error(e.getMessage());
-			throw new SecuritiesException();
+			logger.error("IOException {}", e.getMessage());
+			throw new SecuritiesException("IOException");
 		}
 
 		logger.info("doGet STOP");

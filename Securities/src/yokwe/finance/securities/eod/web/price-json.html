@@ -4,34 +4,31 @@
     <script src="plotly.min.js"></script>
     
     <script type="text/javascript">
-	var div1 = document.getElementById("div1");
-	var url = "price-json?symbol=IBM";
-	var dataTemplate = {
-	  type: 'candlestick',
-	}
+    var symbol = "IBM";
 
-	var layout = {
-	  dragmode: 'zoom', 
-	  margin: {
-	    r: 10, 
-	    t: 25, 
-	    b: 40, 
-	    l: 60
-	  }, 
-	  showlegend: false, 
-	  xaxis: {
+    var url = "price-json?filter=open,high,low,close&symbol=" + symbol;
+
+    var dataTemplate = {
+	type: 'candlestick',
+    }
+	
+    var layout = {
+        dragmode: 'zoom', 
+	margin: {r: 10, t: 25, b: 40, l: 60}, 
+	showlegend: false, 
+	xaxis: {
 	    autorange: true, 
 	    domain: [0, 1], 
-	    title: 'Date', 
-	    type: 'date',
+	    title:      'Date', 
+	    type:       'date',
 	    tickformat: '%y-%m-%d'
-	  }, 
-	  yaxis: {
+	}, 
+	yaxis: {
 	    autorange: true, 
 	    domain: [0.2, 0.8], 
 	    type: 'linear'
-	  }
-	};
+	}
+    };
 
     function myOnLoad() {
         Plotly.d3.json(url, jsonProcessor);
@@ -40,7 +37,7 @@
     function jsonProcessor(jsonError, jsonData) {
         if (jsonError) return console.warn(jsonError);
 
-        var data = Object.assign(dataTemplate, jsonData);
+        var data = Object.assign(dataTemplate, jsonData[symbol]);
 	data.x = data.date
 	delete data.date
 

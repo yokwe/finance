@@ -293,4 +293,21 @@
                 </java>
         </target>
 
+	<!-- monex -->
+        <target name="run-update-monex-tax-fx">
+                <java classname="yokwe.finance.securities.monex.UpdateMonexTaxFX" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-update-monex-us-stock">
+                <java classname="yokwe.finance.securities.monex.UpdateMonexUSStock" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
 </project>

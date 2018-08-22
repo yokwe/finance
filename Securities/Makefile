@@ -73,7 +73,7 @@ update-quantum:
 #
 eod-stats:
 	ant run-eod-update-stats
-	cp tmp/eod/stats.csv ~/Dropbox/Trade/stats.csv
+	cp tmp/eod/stats.csv ~/Dropbox/Trade/
 
 eod-yahoo-portfolio:
 	ant run-eod-update-stock-history
@@ -85,6 +85,17 @@ eod-update-stock:
 	cp tmp/eod/stock.csv ~/Dropbox/Trade
 
 #
+# monex
+#
+monex-tax-fx:
+	ant run-update-monex-tax-fx
+	cp tmp/monex/monex-tax-fx.csv ~/Dropbox/Trade/
+
+monex-us-tock:
+	ant run-update-monex-us-stock
+	cp tmp/monex/monex-us-stock.csv ~/Dropbox/Trade/
+
+#
 # sp500
 #
 fetch-sp500:
@@ -92,16 +103,3 @@ fetch-sp500:
 	wget -nv -O tmp/fetch/sp500/constituents.csv            'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents.csv'
 	wget -nv -O tmp/fetch/sp500/constituents-financials.csv 'https://github.com/datasets/s-and-p-500-companies/raw/master/data/constituents-financials.csv'
 
-#
-# forex
-#
-fetch-forex:
-	mkdir -p ${DIR_FETCH_MIZUHO}
-#	rm    -f ${DIR_FETCH_MIZUHO}/*
-# From https://www.mizuhobank.co.jp/market/historical.html at 2018-06-19
-# Daily data from 2002-04-01
-	wget  -nv -O ${DIR_FETCH_MIZUHO}/quote.csv https://www.mizuhobank.co.jp/market/csv/quote.csv
-
-update-forex:
-	ant run-eod-update-forex
-	cp tmp/eod/forex.csv ~/Dropbox/Trade

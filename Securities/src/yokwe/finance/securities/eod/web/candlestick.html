@@ -1,18 +1,14 @@
 <html>
 <head>
-<title>price json</title>
+<title>candlestick</title>
 <script src="plotly.min.js"></script>
 <script type="text/javascript">
     var symbol = "IBM";
 
-    var url = "price-json?filter=date,close&symbol=" + symbol;
+    var url = "price-json?filter=date,open,high,low,close&symbol=" + symbol;
 
     var dataTemplate = {
-	type : 'scatter',
-	mode : 'lines+markers',
-	line : {
-	    shape : 'spline'
-	},
+	type : 'candlestick',
     }
 
     var layout = {
@@ -49,8 +45,6 @@
 	var data = Object.assign(dataTemplate, jsonData[symbol]);
 	data.x = data.date
 	delete data.date
-	data.y = data.close
-	delete data.close
 
 	Plotly.plot('div1', [ data ], layout)
     }

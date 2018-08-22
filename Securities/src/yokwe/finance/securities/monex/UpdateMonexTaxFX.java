@@ -11,13 +11,13 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.HttpUtil;
 
-public class UpdateMonexStockFX {
-	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexStockFX.class);
+public class UpdateMonexTaxFX {
+	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexTaxFX.class);
 
 	public static final String SOURCE_URL       = "https://mst.monex.co.jp/mst/servlet/ITS/ucu/UsEvaluationRateGST";
 	public static final String SOURCE_ENCODING  = "SHIFT_JIS";
 	
-	public static final String PATH_MONEX_STOCK_FX = "tmp/monex/monex-stock-fx.csv";
+	public static final String PATH_MONEX_TAX_FX = "tmp/monex/monex-tax-fx.csv";
 	
 //    <tr>
 //      <td class="al-c table-sub-th">2018/01/04</td>
@@ -30,10 +30,10 @@ public class UpdateMonexStockFX {
 	private static final Pattern PATTERN = Pattern.compile(PATTERN_STRING, (Pattern.MULTILINE | Pattern.DOTALL));
 	
 	public static void save(List<MonexStockFX> dataList) {
-		CSVUtil.saveWithHeader(dataList, PATH_MONEX_STOCK_FX);
+		CSVUtil.saveWithHeader(dataList, PATH_MONEX_TAX_FX);
 	}
 	public static List<MonexStockFX> load() {
-		return CSVUtil.loadWithHeader(PATH_MONEX_STOCK_FX, MonexStockFX.class);
+		return CSVUtil.loadWithHeader(PATH_MONEX_TAX_FX, MonexStockFX.class);
 	}
 
 	public static void main(String[] args) {
@@ -58,7 +58,7 @@ public class UpdateMonexStockFX {
 			logger.info("{}", monexStockFX);
 		}
 		logger.info("URL    = {}", SOURCE_URL);
-		logger.info("OUTPUT = {}", PATH_MONEX_STOCK_FX);
+		logger.info("OUTPUT = {}", PATH_MONEX_TAX_FX);
 		
 		save(monexStockFXList);
 		logger.info("DATA   = {}", monexStockFXList.size());

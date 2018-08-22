@@ -18,8 +18,8 @@ import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.util.CSVUtil;
 import yokwe.finance.securities.util.HttpUtil;
 
-public class UpdateMonexUS {
-	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexUS.class);
+public class UpdateMonexUSStock {
+	private static final Logger logger = LoggerFactory.getLogger(UpdateMonexUSStock.class);
 
 	public static final String SOURCE_URL       = "https://mxp1.monex.co.jp/mst/servlet/ITS/ucu/UsMeigaraJsonGST";
 	public static final String SOURCE_ENCODING  = "SHIFT_JIS";

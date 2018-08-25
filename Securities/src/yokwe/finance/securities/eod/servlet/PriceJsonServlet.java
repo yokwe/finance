@@ -29,19 +29,16 @@ public class PriceJsonServlet extends HttpServlet {
 	
 	private static final long serialVersionUID = 1L;
 	
-	private String path_eod;
-	private String path_price;
+	private String path_base;
+
 	@Override
 	public void init(ServletConfig config) {
 		logger.info("init");
 		
 		ServletContext servletContext = config.getServletContext();
 		
-		path_eod = servletContext.getInitParameter("path.eod");
-		logger.info("path_eod {}", path_eod);
-		
-		path_price = String.format("%s/price", path_eod);
-		logger.info("path_price {}", path_price);
+		path_base = servletContext.getInitParameter("path.base");
+		logger.info("path_base {}", path_base);
 	}
 	
 	@Override
@@ -92,7 +89,7 @@ public class PriceJsonServlet extends HttpServlet {
 			if (symbol.length() == 0) continue;
 			
 			logger.debug("symbol {}", symbol);
-			String filePath = UpdatePrice.getCSVPath(path_price, symbol);
+			String filePath = UpdatePrice.getCSVPath(path_base, symbol);
 			logger.debug("filePath {}", filePath);
 			File file = new File(filePath);
 			if (!file.exists()) {

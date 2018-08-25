@@ -86,24 +86,22 @@ public class UpdatePrice {
 	
 	public static final int DELTA = 50;
 	
-	public static String getCSVDir() {
-		return String.format("%s/%s", PATH_DATA_DIR, TYPE);
+	public static String getCSVDir(String basePath) {
+		return String.format("%s/%s/%s", basePath, PATH_DATA_DIR, TYPE);
 	}
-	public static String getCSVPath(String dir, String symbol) {
-		return String.format("%s/%s.csv", dir, symbol);
+
+	public static String getCSVPath(String basePath, String symbol) {
+		return String.format("%s/%s.csv", getCSVDir(basePath), symbol);
 	}
-	public static String getCSVPath(String symbol) {
-		return getCSVPath(getCSVDir(), symbol);
+	public static String getDelistedCSVDir(String basePath) {
+		return String.format("%s/%s/%s-delisted", basePath, PATH_DATA_DIR, TYPE);
 	}
-	public static String getDelistedCSVDir() {
-		return String.format("%s/%s-delisted", PATH_DATA_DIR, TYPE);
-	}
-	public static String getDelistedCSVPath(String symbol, String suffix) {
-		return String.format("%s/%s.csv-%s", getDelistedCSVDir(), symbol, suffix);
+	public static String getDelistedCSVPath(String basePath, String symbol, String suffix) {
+		return String.format("%s/%s.csv-%s", getDelistedCSVDir(basePath), symbol, suffix);
 	}
 	
-	public static List<Price> load(String symbol) {
-		return CSVUtil.loadWithHeader(getCSVPath(symbol), Price.class);
+	public static List<Price> load(String basePath, String symbol) {
+		return CSVUtil.loadWithHeader(getCSVPath(basePath, symbol), Price.class);
 	}
 	public static List<Price> load(File file) {
 		return CSVUtil.loadWithHeader(file.getPath(), Price.class);
@@ -115,6 +113,8 @@ public class UpdatePrice {
 	
 	// This methods update end of day csv in tmp/eod directory.
 	public static void main(String[] args) {
+		String basePath = ".";
+		
 		logger.info("START");
 		
 		logger.info("UPDATE_RANGE {}", UPDATE_RANGE.toString());
@@ -153,12 +153,12 @@ public class UpdatePrice {
 		{
 			Set<String> symbolSet = new HashSet<>(symbolList);
 			
-			File dir = new File(getCSVDir());			
+			File dir = new File(getCSVDir(basePath));			
 			if (!dir.exists()) {
 				dir.mkdirs();
 			}
 			
-			File dirDelisted = new File(getDelistedCSVDir());
+			File dirDelisted = new File(getDelistedCSVDir(basePath));
 			if (!dirDelisted.exists()) {
 				dirDelisted.mkdirs();
 			}
@@ -174,7 +174,7 @@ public class UpdatePrice {
 					if (symbolSet.contains(symbol)) continue;
 					if (delistedSymbolSet.contains(symbol)) continue;
 					
-						File destFile = new File(getDelistedCSVPath(symbol, suffix));
+						File destFile = new File(getDelistedCSVPath(basePath, symbol, suffix));
 						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
 											
 						// Copy file to new location
@@ -222,7 +222,7 @@ public class UpdatePrice {
 					Collections.sort(dataList);
 					if (dataList.stream().filter(o -> o.date.equals(lastTradingDateM0)).count() != 0) countHasLastTradingDateM0++;
 					if (dataList.stream().filter(o -> o.date.equals(lastTradingDateM1)).count() != 0) countHasLastTradingDateM1++;
-					CSVUtil.saveWithHeader(dataList, getCSVPath(entry.getKey()));
+					CSVUtil.saveWithHeader(dataList, getCSVPath(basePath, entry.getKey()));
 					countData++;
 				}
 			}
@@ -236,7 +236,7 @@ public class UpdatePrice {
 				for(String symbol: delistedSymbolSet) {
 					logger.info("copy delisted  {}", symbol);
 					File source = new File(String.format("%s/%s.csv", PATH_DELISTED_DIR, symbol));
-					File target = new File(getCSVPath(symbol));
+					File target = new File(getCSVPath(basePath, symbol));
 					
 					Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				}

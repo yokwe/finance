@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context>
-    <Parameter name="path.eod" value="/data1/home/hasegawa/git/finance/Securities/tmp/eod" override="false"/>
+<Context>    
+    <Parameter name="path.base" value="/data1/home/hasegawa/git/finance/Securities" override="false"/>
 </Context>

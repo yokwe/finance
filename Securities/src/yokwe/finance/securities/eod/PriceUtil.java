@@ -34,7 +34,7 @@ public class PriceUtil {
 	private static void fillMap(String symbol) {
 		if (priceMap.containsKey(symbol)) return;
 		
-		File file = new File(UpdatePrice.getCSVPath(symbol));
+		File file = new File(UpdatePrice.getCSVPath(".", symbol));
 		if (file.canRead()) {
 			DateMap<Price> map = new DateMap<>();
 			for(Price price: UpdatePrice.load(file)) {

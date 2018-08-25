@@ -21,6 +21,12 @@ public class UpdateStockHistory {
 	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history.csv";
 
 	//                group
+	public static Map<String, List<StockHistory>> getStockHistoryMap(String pathBase) {
+		String path = String.format("%s/%s", pathBase, PATH_STOCK_HISTORY);
+		List<StockHistory> stockHistoryList = CSVUtil.loadWithHeader(path, StockHistory.class);
+		
+		return getStockHistoryMap(stockHistoryList);
+	}
 	public static Map<String, List<StockHistory>> getStockHistoryMap(List<StockHistory> stockHistoryList) {
 		Map<String, List<StockHistory>> ret = new TreeMap<>();
 		
@@ -39,7 +45,7 @@ public class UpdateStockHistory {
 		return ret;
 	}
 	public static Map<String, List<StockHistory>> getStockHistoryMap() {
-		return getStockHistoryMap(CSVUtil.loadWithHeader(PATH_STOCK_HISTORY, StockHistory.class));
+		return getStockHistoryMap(".");
 	}
 	
 	

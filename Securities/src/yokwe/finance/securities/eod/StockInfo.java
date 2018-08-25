@@ -44,7 +44,7 @@ public class StockInfo {
 		entryMap = Collections.unmodifiableMap(map);
 	}
 	
-	public Map<String, Entry> getStockInfoMap() {
+	public Map<String, Entry> getEntryMap() {
 		return entryMap;
 	}
 	

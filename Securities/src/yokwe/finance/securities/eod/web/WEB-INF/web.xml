@@ -38,15 +38,22 @@
     -->
 
     <servlet>
-      <servlet-name>price-json</servlet-name>
-      <servlet-class>yokwe.finance.securities.eod.servlet.PriceJsonServlet</servlet-class>
+      <servlet-name>price-csv</servlet-name>
+      <servlet-class>yokwe.finance.securities.eod.servlet.PriceCSVServlet</servlet-class>
       <!-- Load this servlet at server startup time -->
       <load-on-startup>1</load-on-startup>
     </servlet>
 
     <servlet>
-      <servlet-name>price-csv</servlet-name>
-      <servlet-class>yokwe.finance.securities.eod.servlet.PriceCSVServlet</servlet-class>
+      <servlet-name>price</servlet-name>
+      <servlet-class>yokwe.finance.securities.eod.servlet.PriceServlet</servlet-class>
+      <!-- Load this servlet at server startup time -->
+      <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+      <servlet-name>stock</servlet-name>
+      <servlet-class>yokwe.finance.securities.eod.servlet.StockServlet</servlet-class>
       <!-- Load this servlet at server startup time -->
       <load-on-startup>1</load-on-startup>
     </servlet>
@@ -70,13 +77,18 @@
     -->
 
     <servlet-mapping>
-      <servlet-name>price-json</servlet-name>
-      <url-pattern>/price-json</url-pattern>
+      <servlet-name>price-csv</servlet-name>
+      <url-pattern>/price-csv</url-pattern>
+    </servlet-mapping>
+
+     <servlet-mapping>
+      <servlet-name>price</servlet-name>
+      <url-pattern>/price</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>
-      <servlet-name>price-csv</servlet-name>
-      <url-pattern>/price-csv</url-pattern>
+      <servlet-name>stock</servlet-name>
+      <url-pattern>/stock</url-pattern>
     </servlet-mapping>
 
     <!-- Define the default session timeout for your application,

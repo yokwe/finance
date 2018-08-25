@@ -24,8 +24,8 @@ import yokwe.finance.securities.eod.UpdatePrice;
 import yokwe.finance.securities.util.JSONUtil;
 import yokwe.finance.securities.util.JSONUtil.ClassInfo;
 
-public class PriceJsonServlet extends HttpServlet {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PriceJsonServlet.class);
+public class PriceServlet extends HttpServlet {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PriceServlet.class);
 	
 	private static final long serialVersionUID = 1L;
 	

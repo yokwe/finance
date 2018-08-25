@@ -1,17 +1,17 @@
 <html>
 <head>
-<title>price json</title>
+<title>price</title>
 <script src="plotly.min.js"></script>
 <script type="text/javascript">
     var symbol = "IBM";
 
-    var url = "price-json?filter=date,close&symbol=" + symbol;
+    var url = "price?filter=date,close&symbol=" + symbol;
 
     var dataTemplate = {
 	type : 'scatter',
-	mode : 'lines+markers',
+	mode : 'lines',
 	line : {
-	    shape : 'spline'
+	    shape : 'linear'
 	},
     }
 

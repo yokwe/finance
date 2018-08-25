@@ -29,7 +29,7 @@ public class UpdateStockHistory {
 			if (!ret.containsKey(key)) {
 				ret.put(key, new ArrayList<>());
 			}
-			ret.get(stockHistory.group).add(stockHistory);
+			ret.get(key).add(stockHistory);
 		}
 		
 		for(Map.Entry<String, List<StockHistory>> entry: ret.entrySet()) {

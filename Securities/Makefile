@@ -78,7 +78,7 @@ eod-stats:
 eod-yahoo-portfolio:
 	ant run-eod-update-stock-history
 	ant run-eod-update-yahoo-portfolio
-	cp tmp/eod/yahoo-portfolio.csv ~/Dropbox/Trade
+	cp tmp/eod/yahoo-portfolio-firstrade.csv ~/Dropbox/Trade
 
 eod-update-stock:
 	ant run-eod-update-stock
@@ -94,6 +94,11 @@ monex-tax-fx:
 monex-us-tock:
 	ant run-update-monex-us-stock
 	cp tmp/monex/monex-us-stock.csv ~/Dropbox/Trade/
+
+monex-yahoo-portfolio:
+	ant run-monex-update-stock-history
+	ant run-monex-update-yahoo-portfolio
+	cp tmp/monex/yahoo-portfolio-monex.csv ~/Dropbox/Trade
 
 #
 # sp500

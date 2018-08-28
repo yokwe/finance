@@ -294,7 +294,7 @@
         </target>
 
 	<!-- monex -->
-        <target name="run-update-monex-tax-fx">
+        <target name="run-monex-update-tax-fx">
                 <java classname="yokwe.finance.securities.monex.UpdateMonexTaxFX" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
@@ -302,8 +302,24 @@
                 </java>
         </target>
 
-        <target name="run-update-monex-us-stock">
+        <target name="run-monex-update-us-stock">
                 <java classname="yokwe.finance.securities.monex.UpdateMonexUSStock" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-monex-update-stock-history">
+                <java classname="yokwe.finance.securities.monex.UpdateStockHistory" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+	
+        <target name="run-monex-update-yahoo-portfolio">
+                <java classname="yokwe.finance.securities.monex.UpdateYahooPortfolio" fork="true">
                         <classpath location="${jar.yokwe}" />
                         <classpath refid="ext.jar" />
                         <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>

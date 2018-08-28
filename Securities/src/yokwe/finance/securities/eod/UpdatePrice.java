@@ -225,6 +225,12 @@ public class UpdatePrice {
 					CSVUtil.saveWithHeader(dataList, getCSVPath(basePath, entry.getKey()));
 					countData++;
 				}
+				
+				// Too few update
+				if (100 < countGet && countHasLastTradingDateM0 < (countHasLastTradingDateM1 / 2)) {
+					logger.error("Too few update  {} - {} / {} / {}", countHasLastTradingDateM1, countHasLastTradingDateM0, countData, countGet);
+					throw new SecuritiesException("Too few update");
+				}
 			}
 			
 			logger.info("count {} - {} / {} / {}", countHasLastTradingDateM1, countHasLastTradingDateM0, countData, countGet);

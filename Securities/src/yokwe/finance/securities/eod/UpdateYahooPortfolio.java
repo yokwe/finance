@@ -12,8 +12,7 @@ import yokwe.finance.securities.util.CSVUtil;
 public class UpdateYahooPortfolio {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateYahooPortfolio.class);
 	
-	public static final String PATH_YAHOO_PORTFOLIO = "tmp/eod/yahoo-portfolio.csv";
-	public static final String PATH_STOCK_HISTORY   = "tmp/eod/stock-history.csv";
+	public static final String PATH_YAHOO_PORTFOLIO = "tmp/eod/yahoo-portfolio-firstrade.csv";
 
 	public static void main(String[] args) {
 		logger.info("START");

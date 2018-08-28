@@ -18,7 +18,7 @@ import yokwe.finance.securities.util.DoubleUtil;
 public class UpdateStockHistory {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStockHistory.class);
 
-	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history.csv";
+	public static final String PATH_STOCK_HISTORY               = "tmp/eod/stock-history-firstrade.csv";
 
 	//                group
 	public static Map<String, List<StockHistory>> getStockHistoryMap(String pathBase) {

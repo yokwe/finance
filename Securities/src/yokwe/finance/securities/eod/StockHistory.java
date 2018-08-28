@@ -122,7 +122,7 @@ public class StockHistory implements Comparable<StockHistory> {
 
 	//         key                  symbol      date
 	static Map<String, NavigableMap<String, StockHistory>> allStockMap = new TreeMap<>();
-	static List<StockHistory> getStockList() {
+	public static List<StockHistory> getStockList() {
 		List<StockHistory> ret = new ArrayList<>();
 		allStockMap.values().stream().forEach(map -> ret.addAll(map.values()));		
 		Collections.sort(ret);

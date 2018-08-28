@@ -220,7 +220,7 @@ public class BuySell {
 	}
 	
 	public static final String DUMMY_DATE = "9999-12-31";
-	public static final double DUMMY_FEE  = 3.0;
+	public static final double DUMMY_FEE  = 0.0;
 	private static void addDummySell(Map<String, BuySell> buySellMap) {
 		for(BuySell buySell: buySellMap.values()) {
 			if (buySell.isAlmostZero()) continue;

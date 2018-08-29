@@ -88,11 +88,11 @@ eod-update-stock:
 # monex
 #
 monex-tax-fx:
-	ant run-update-monex-tax-fx
+	ant run-monex-update-tax-fx
 	cp tmp/monex/monex-tax-fx.csv ~/Dropbox/Trade/
 
 monex-us-tock:
-	ant run-update-monex-us-stock
+	ant run-monex-update-us-stock
 	cp tmp/monex/monex-us-stock.csv ~/Dropbox/Trade/
 
 monex-yahoo-portfolio:

@@ -241,13 +241,17 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new SecuritiesException("Unexpected");
 				}
-				if (activity.feeJP <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new SecuritiesException("Unexpected");
-				}
-				if (activity.consumptionTaxJP <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new SecuritiesException("Unexpected");
+				if (activity.feeJP == 0 && activity.consumptionTaxJP == 0) {
+					// If both have zero, it is OK.
+				} else {
+					if (activity.feeJP <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
+					if (activity.consumptionTaxJP <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new SecuritiesException("Unexpected");
+					}
 				}
 				if (activity.withholdingTaxJP < 0) {
 					logger.error("Unexpected  {}", activity);

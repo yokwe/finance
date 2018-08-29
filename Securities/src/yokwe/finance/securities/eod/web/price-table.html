@@ -4,9 +4,9 @@
 <script src="plotly.min.js"></script>
 <script type="text/javascript">
     var symbol = "IBM";
-    var filterString="date,close,volume";
-    var filter = filterString.split(",");
-    var url = "price?filter=" + filterString + "&symbol=" + symbol;
+    var filter="date,close,volume";
+
+    var url = "price?filter=" + filter + "&symbol=" + symbol;
 
     var dataTemplate = {
         type : 'table',
@@ -26,13 +26,14 @@
         if (jsonError)
             return console.warn(jsonError);
 	var myData = jsonData[symbol];
-//	console.info("myData ", myData)
 
+        var columns = Object.getOwnPropertyNames(myData);
+        
         var headerValues = [];
-	filter.forEach((value) => headerValues.push(value));
+        columns.forEach((value) => headerValues.push(value));
         
         var cellsValues = [];
-        filter.forEach((value) => cellsValues.push(myData[value]));
+        columns.forEach((value) => cellsValues.push(myData[value]));
         
         var data = Object.assign(dataTemplate, {});
         data.header.values = headerValues;

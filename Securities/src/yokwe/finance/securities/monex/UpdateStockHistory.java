@@ -66,38 +66,33 @@ public class UpdateStockHistory {
 					StockHistory.buy(date, symbol, quantity, buy, buyFee);
 				}
 					break;
-//				case DIVIDEND:
-//				{
-//					String date   = transaction.date;
-//					String symbol = transaction.symbol;
-//					double fee    = transaction.fee;
-//					double debit  = transaction.debit;
-//					double credit = transaction.credit;
-//					
-//					if (!DoubleUtil.isAlmostZero(fee)) {
-//						logger.error("Unexpected {} {} {}", date, symbol, fee);
-//						throw new SecuritiesException("Unexpected");
+				case SELL:
+				{
+					String date     = transaction.date;
+					String symbol   = transaction.symbol;
+					double quantity = transaction.quantity;
+					double sell     = DoubleUtil.round(transaction.total + transaction.fee, 2);
+					double sellFee  = transaction.fee;
+					
+					StockHistory.sell(date, symbol, quantity, sell, sellFee);
+				}
+					break;
+//					case DIVIDEND:
+//					{
+//						String date   = transaction.date;
+//						String symbol = transaction.symbol;
+//						double fee    = transaction.fee;
+//						double debit  = transaction.debit;
+//						double credit = transaction.credit;
+//						
+//						if (!DoubleUtil.isAlmostZero(fee)) {
+//							logger.error("Unexpected {} {} {}", date, symbol, fee);
+//							throw new SecuritiesException("Unexpected");
+//						}
+//						
+//						StockHistory.dividend(date, symbol, credit, debit);
 //					}
-//					
-//					StockHistory.dividend(date, symbol, credit, debit);
-//				}
-//					break;
-//				case SELL:
-//				{
-//					String date     = transaction.date;
-//					String symbol   = transaction.symbol;
-//					double quantity = transaction.quantity;
-//					double sell     = transaction.credit;
-//					double sellFee  = transaction.fee;
-//					
-//					if (!DoubleUtil.isAlmostZero(transaction.debit)) {
-//						logger.error("Unexpected {} {} {}", date, symbol, transaction.debit);
-//						throw new SecuritiesException("Unexpected");
-//					}
-//					
-//					StockHistory.sell(date, symbol, quantity, sell, sellFee);
-//				}
-//					break;
+//						break;
 //				case CHANGE:
 //				{
 //					String date        = transaction.date;

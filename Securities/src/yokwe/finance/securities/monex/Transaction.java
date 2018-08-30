@@ -18,7 +18,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	public enum Type {
 		JPY_IN, JPY_OUT, USD_IN, USD_OUT,
-		BUY,
+		BUY, SELL,
 	}
 	
 	public final Type   type;
@@ -80,6 +80,9 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	private static Transaction buy(String date, String symbol, int quantity, double price, double fee, double total) {
 		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, total, 0, 0, 0);
+	}
+	private static Transaction sell(String date, String symbol, int quantity, double price, double fee, double total) {
+		return new Transaction(Type.SELL, date, symbol, quantity, price, fee, total, 0, 0, 0);
 	}
 
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
@@ -266,19 +269,25 @@ public class Transaction implements Comparable<Transaction> {
 					throw new SecuritiesException("Unexpected");
 				}
 
-				switch(activity.transaction) {
-				case Activity.Trade.TRANSACTION_BUY:
-					{
-						double fee = DoubleUtil.round(activity.total - activity.price, 2);
-						transactionList.add(Transaction.buy(activity.settlementDate, activity.symbol, activity.quantity, activity.unitPrice, fee, activity.total));
-					}
-						break;
-					default:
-						logger.error("Unexpected  {}", activity);
-						throw new SecuritiesException("Unexpected");
-					}
+				switch (activity.transaction) {
+				case Activity.Trade.TRANSACTION_BUY: {
+					double fee = DoubleUtil.round(activity.total - activity.price, 2);
+					transactionList.add(Transaction.buy(activity.settlementDate, activity.symbol, activity.quantity,
+							activity.unitPrice, fee, activity.total));
+				}
+					break;
+				case Activity.Trade.TRANSACTION_SELL: {
+					double fee = DoubleUtil.round(activity.price - activity.total, 2);
+					transactionList.add(Transaction.sell(activity.settlementDate, activity.symbol, activity.quantity,
+							activity.unitPrice, fee, activity.total));
+				}
+					break;
+				default:
+					logger.error("Unexpected  {}", activity);
+					throw new SecuritiesException("Unexpected");
 				}
 			}
+		}
 
 		Collections.sort(transactionList);
 		return transactionList;

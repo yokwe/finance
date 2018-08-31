@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
 import yokwe.finance.securities.eod.StockDividend.PayDiv;
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.iex.Dividends;
 import yokwe.finance.securities.iex.IEXBase.Range;
 import yokwe.finance.securities.util.DoubleUtil;
@@ -105,7 +104,7 @@ public class UpdateStockDividend {
 				
 				lastPeriod.periodStop = prevDate;
 				
-				double newQuantity = Transaction.roundQuantity(lastPeriod.quantity + quantity);
+				double newQuantity = DoubleUtil.roundQuantity(lastPeriod.quantity + quantity);
 				nextPeriod.quantity    = newQuantity;
 				nextPeriod.periodStart = date;
 				
@@ -138,7 +137,7 @@ public class UpdateStockDividend {
 				
 				lastPeriod.periodStop = prevDate;
 				
-				double newQuantity = Transaction.roundQuantity(lastPeriod.quantity - quantity);
+				double newQuantity = DoubleUtil.roundQuantity(lastPeriod.quantity - quantity);
 				if (DoubleUtil.isAlmostZero(newQuantity)) newQuantity = 0;
 				
 				// Sanity check
@@ -393,7 +392,7 @@ public class UpdateStockDividend {
 							double quantity = holding.quantity(symbol, (recMMDD <= todayMMDD) ? recordDate : today);
 							if (quantity == 0) continue;
 
-							double div = Transaction.roundPrice(quantity * dividend.amount);
+							double div = DoubleUtil.roundPrice(quantity * dividend.amount);
 							
 							LocalDate paymentDate = dividend.paymentDate.withYear(todayYear);
 							
@@ -409,7 +408,7 @@ public class UpdateStockDividend {
 			
 			double totalDiv = 0;
 			for(List<PayDiv> payDivList: payDivMap.values()) {
-				totalDiv = Transaction.roundPrice(totalDiv + payDivList.stream().mapToDouble(o -> o.div).sum());
+				totalDiv = DoubleUtil.roundPrice(totalDiv + payDivList.stream().mapToDouble(o -> o.div).sum());
 			}
 			
 			Map<Integer, PayDiv> simplePayDivMap = new TreeMap<>();

@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.tax.Transaction;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class Transfer {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transfer.class);
@@ -35,7 +35,7 @@ public class Transfer {
 			this.quantity      = quantity;
 			this.price         = price;
 			this.fee           = fee;
-			this.buy           = Transaction.roundPrice(this.price * this.quantity);
+			this.buy           = DoubleUtil.roundPrice(this.price * this.quantity);
 			this.totalQuantity = totalQuantity;
 			this.totalCost     = totalCost;
 		}
@@ -80,7 +80,7 @@ public class Transfer {
 			this.price         = price;
 			this.fee           = fee;
 			
-			this.sell          = Transaction.roundPrice(this.price * this.quantity);
+			this.sell          = DoubleUtil.roundPrice(this.price * this.quantity);
 			
 			this.cost          = cost;
 			

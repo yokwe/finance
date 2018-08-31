@@ -40,6 +40,13 @@ public final class DoubleUtil {
 	    return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
 	}
 	
+	public static double roundPrice(double value) {
+		return round(String.format("%.4f", value), 2);
+	}
+	public static double roundQuantity(double value) {
+		return round(String.format("%.7f", value), 5);
+	}
+
 	
 
 	public static final double CONFIDENCE_95_PERCENT = 1.65;

@@ -52,7 +52,7 @@ public class BuySell {
 		buyCount++;
 		
 		totalQuantity += transaction.quantity;
-		totalCost     += Transaction.roundPrice(transaction.quantity * transaction.price);
+		totalCost     += DoubleUtil.roundPrice(transaction.quantity * transaction.price);
 
 		Transfer.Buy buy = new Transfer.Buy(
 			transaction.date, transaction.symbol, transaction.name,
@@ -62,7 +62,7 @@ public class BuySell {
 		current.add(new Transfer(transaction.id, buy));
 	}
 	void sell(Transaction transaction) {
-		double sell = Transaction.roundPrice(transaction.price * transaction.quantity);
+		double sell = DoubleUtil.roundPrice(transaction.price * transaction.quantity);
 		double cost = Position.cost(transaction);
 		
 		if (buyCount == 1) {
@@ -203,7 +203,7 @@ public class BuySell {
 //			logger.info("price {} {} {}", price.date, price.symbol, price.close);
 
 			// Add dummy sell record
-			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, Transaction.roundPrice(quantity * price.close));	
+			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, DoubleUtil.roundPrice(quantity * price.close));	
 			buySell.sell(transaction);
 			Position.sell(transaction);
 		}

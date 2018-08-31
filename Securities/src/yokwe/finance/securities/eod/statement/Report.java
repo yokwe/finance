@@ -123,8 +123,8 @@ public class Report {
 			case WIRE_IN:
 			{
 				double credit = transaction.credit;
-				fundTotal = Transaction.roundPrice(fundTotal + credit);
-				cashTotal = Transaction.roundPrice(cashTotal + credit);
+				fundTotal = DoubleUtil.roundPrice(fundTotal + credit);
+				cashTotal = DoubleUtil.roundPrice(cashTotal + credit);
 				
 				ret.add(Account.wireIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
@@ -132,8 +132,8 @@ public class Report {
 			case WIRE_OUT:
 			{
 				double debit = transaction.debit;
-				fundTotal = Transaction.roundPrice(fundTotal - debit);
-				cashTotal = Transaction.roundPrice(cashTotal - debit);
+				fundTotal = DoubleUtil.roundPrice(fundTotal - debit);
+				cashTotal = DoubleUtil.roundPrice(cashTotal - debit);
 				
 				ret.add(Account.wireOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit));
 			}
@@ -141,8 +141,8 @@ public class Report {
 			case ACH_IN:
 			{
 				double credit = transaction.credit;
-				fundTotal = Transaction.roundPrice(fundTotal + credit);
-				cashTotal = Transaction.roundPrice(cashTotal + credit);
+				fundTotal = DoubleUtil.roundPrice(fundTotal + credit);
+				cashTotal = DoubleUtil.roundPrice(cashTotal + credit);
 				
 				ret.add(Account.achIn(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
@@ -150,8 +150,8 @@ public class Report {
 			case ACH_OUT:
 			{
 				double debit = transaction.debit;
-				fundTotal = Transaction.roundPrice(fundTotal - debit);
-				cashTotal = Transaction.roundPrice(cashTotal - debit);
+				fundTotal = DoubleUtil.roundPrice(fundTotal - debit);
+				cashTotal = DoubleUtil.roundPrice(cashTotal - debit);
 				
 				ret.add(Account.achOut(date, fundTotal, cashTotal, stockTotal, gainTotal, debit));
 			}
@@ -159,8 +159,8 @@ public class Report {
 			case INTEREST:
 			{
 				double credit = transaction.credit;
-				cashTotal = Transaction.roundPrice(cashTotal + credit);
-				gainTotal = Transaction.roundPrice(gainTotal + credit);
+				cashTotal = DoubleUtil.roundPrice(cashTotal + credit);
+				gainTotal = DoubleUtil.roundPrice(gainTotal + credit);
 				
 				ret.add(Account.interest(date, fundTotal, cashTotal, stockTotal, gainTotal, credit));
 			}
@@ -173,14 +173,14 @@ public class Report {
 				double credit = transaction.credit;
 				
 				if (!DoubleUtil.isAlmostZero(debit)) {
-					cashTotal = Transaction.roundPrice(cashTotal - debit);
-					gainTotal = Transaction.roundPrice(gainTotal - debit);
+					cashTotal = DoubleUtil.roundPrice(cashTotal - debit);
+					gainTotal = DoubleUtil.roundPrice(gainTotal - debit);
 
 					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, -debit));
 				}
 				if (!DoubleUtil.isAlmostZero(credit)) {
-					cashTotal = Transaction.roundPrice(cashTotal + credit);
-					gainTotal = Transaction.roundPrice(gainTotal + credit);
+					cashTotal = DoubleUtil.roundPrice(cashTotal + credit);
+					gainTotal = DoubleUtil.roundPrice(gainTotal + credit);
 
 					ret.add(Account.dividend(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, credit));
 				}
@@ -193,9 +193,9 @@ public class Report {
 				double   buy      = transfer.buy.buy;
 				double   fee      = transfer.buy.fee;
 
-				cashTotal  = Transaction.roundPrice(cashTotal - buy);
-				cashTotal  = Transaction.roundPrice(cashTotal - fee);
-				stockTotal = Transaction.roundPrice(stockTotal + buy);
+				cashTotal  = DoubleUtil.roundPrice(cashTotal - buy);
+				cashTotal  = DoubleUtil.roundPrice(cashTotal - fee);
+				stockTotal = DoubleUtil.roundPrice(stockTotal + buy);
 				ret.add(Account.buy(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, fee, buy));
 			}
 				break;
@@ -206,12 +206,12 @@ public class Report {
 				double sell       = transfer.sell.sell;
 				double fee        = transfer.sell.fee;
 				double sellCost   = transfer.sell.cost;
-				double sellGain   = Transaction.roundPrice(sell - sellCost);
+				double sellGain   = DoubleUtil.roundPrice(sell - sellCost);
 				
-				cashTotal  = Transaction.roundPrice(cashTotal + sell);
-				cashTotal  = Transaction.roundPrice(cashTotal - fee);
-				stockTotal = Transaction.roundPrice(stockTotal - sellCost);
-				gainTotal  = Transaction.roundPrice(gainTotal + sellGain);
+				cashTotal  = DoubleUtil.roundPrice(cashTotal + sell);
+				cashTotal  = DoubleUtil.roundPrice(cashTotal - fee);
+				stockTotal = DoubleUtil.roundPrice(stockTotal - sellCost);
+				gainTotal  = DoubleUtil.roundPrice(gainTotal + sellGain);
 
 				ret.add(Account.sell(date, fundTotal, cashTotal, stockTotal, gainTotal, symbol, fee, sell, sellCost, sellGain));
 			}

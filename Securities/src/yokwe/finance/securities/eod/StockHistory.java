@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.util.DoubleUtil;
 
 public class StockHistory implements Comparable<StockHistory> {
@@ -182,9 +181,9 @@ public class StockHistory implements Comparable<StockHistory> {
 	public static void dividend(String date, String symbol, double dividend, double dividendFee) {
 		StockHistory stock = getStock(date, symbol);
 		
-		stock.dividend      = Transaction.roundPrice(stock.dividend      + dividend);
-		stock.dividendFee   = Transaction.roundPrice(stock.dividendFee   + dividendFee);
-		stock.totalDividend = Transaction.roundPrice(stock.totalDividend + dividend - dividendFee);
+		stock.dividend      = DoubleUtil.roundPrice(stock.dividend      + dividend);
+		stock.dividendFee   = DoubleUtil.roundPrice(stock.dividendFee   + dividendFee);
+		stock.totalDividend = DoubleUtil.roundPrice(stock.totalDividend + dividend - dividendFee);
 	}
 
 	public static void buy(String date, String symbol, double buyQuantity, double buy, double buyFee) {
@@ -205,33 +204,33 @@ public class StockHistory implements Comparable<StockHistory> {
 			stock.totalProfit   = 0;
 		}
 		
-		stock.buyQuantity = Transaction.roundQuantity(stock.buyQuantity + buyQuantity);
-		stock.buyFee      = Transaction.roundPrice(stock.buyFee + buyFee);
-		stock.buy         = Transaction.roundPrice(stock.buy    + buy);
+		stock.buyQuantity = DoubleUtil.roundQuantity(stock.buyQuantity + buyQuantity);
+		stock.buyFee      = DoubleUtil.roundPrice(stock.buyFee + buyFee);
+		stock.buy         = DoubleUtil.roundPrice(stock.buy    + buy);
 		
-		stock.totalQuantity = Transaction.roundQuantity(stock.totalQuantity + buyQuantity);
-		stock.totalCost     = Transaction.roundPrice(stock.totalCost + buy + buyFee);
+		stock.totalQuantity = DoubleUtil.roundQuantity(stock.totalQuantity + buyQuantity);
+		stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost + buy + buyFee);
 	}
 	
 	public static void sell(String date, String symbol, double sellQuantity, double sell, double sellFee) {
 //		logger.info("{}", String.format("sellQuantity = %8.2f  sell = %8.2f  sellFee = %8.2f", sellQuantity, sell, sellFee));
 		StockHistory stock = getStock(date, symbol);
 		
-		double sellCost   = Transaction.roundPrice((stock.totalCost / stock.totalQuantity) * sellQuantity);
-		double sellProfit = Transaction.roundPrice(sell - sellFee - sellCost);
+		double sellCost   = DoubleUtil.roundPrice((stock.totalCost / stock.totalQuantity) * sellQuantity);
+		double sellProfit = DoubleUtil.roundPrice(sell - sellFee - sellCost);
 //		logger.info("{}", String.format("sellCost = %8.2f  sellProfit = %8.2f", sellCost, sellProfit));
 		
-		stock.sellQuantity = Transaction.roundQuantity(stock.sellQuantity + sellQuantity);
-		stock.sellFee      = Transaction.roundPrice(stock.sellFee    + sellFee);
-		stock.sell         = Transaction.roundPrice(stock.sell       + sell);
+		stock.sellQuantity = DoubleUtil.roundQuantity(stock.sellQuantity + sellQuantity);
+		stock.sellFee      = DoubleUtil.roundPrice(stock.sellFee    + sellFee);
+		stock.sell         = DoubleUtil.roundPrice(stock.sell       + sell);
 		
-		stock.sellCost     = Transaction.roundPrice(stock.sellCost   + sellCost);
-		stock.sellProfit   = Transaction.roundPrice(stock.sellProfit + sellProfit);
+		stock.sellCost     = DoubleUtil.roundPrice(stock.sellCost   + sellCost);
+		stock.sellProfit   = DoubleUtil.roundPrice(stock.sellProfit + sellProfit);
 		
-		stock.totalQuantity = Transaction.roundQuantity(stock.totalQuantity - sellQuantity);
-		stock.totalCost     = Transaction.roundPrice(stock.totalCost - sellCost);
+		stock.totalQuantity = DoubleUtil.roundQuantity(stock.totalQuantity - sellQuantity);
+		stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost - sellCost);
 		
-		stock.totalProfit = Transaction.roundPrice(stock.totalProfit   + sellProfit);
+		stock.totalProfit = DoubleUtil.roundPrice(stock.totalProfit   + sellProfit);
 		
 		if (DoubleUtil.isAlmostZero(stock.totalQuantity)) {
 			stock.totalQuantity = 0;
@@ -279,6 +278,6 @@ public class StockHistory implements Comparable<StockHistory> {
 			stockMap.put(date, stock);
 		}
 		StockHistory stock = stockMap.get(date);
-		stock.totalValue = Transaction.roundPrice(stock.totalQuantity * price);
+		stock.totalValue = DoubleUtil.roundPrice(stock.totalQuantity * price);
 	}
 }

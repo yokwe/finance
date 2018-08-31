@@ -65,7 +65,7 @@ public class Position {
 	public double getQuantity() {
 		double ret = 0;
 		for(Lot lot: lotList) {
-			ret = Transaction.roundQuantity(ret + lot.remain);
+			ret = DoubleUtil.roundQuantity(ret + lot.remain);
 		}
 		return ret;
 	}
@@ -110,10 +110,10 @@ public class Position {
 			if (lot.remain == 0) continue;
 			
 			if (quantity <= lot.remain) {
-				lot.remain = Transaction.roundQuantity(lot.remain - quantity);
+				lot.remain = DoubleUtil.roundQuantity(lot.remain - quantity);
 				quantity   = 0;
 			} else {
-				quantity   = Transaction.roundQuantity(quantity - lot.remain);
+				quantity   = DoubleUtil.roundQuantity(quantity - lot.remain);
 				lot.remain = 0;
 			}
 			
@@ -154,11 +154,11 @@ public class Position {
 			if (lot.remain == 0) continue;
 			
 			if (quantity <= lot.remain) {
-				ret      = Transaction.roundPrice(ret + quantity * lot.price);
+				ret      = DoubleUtil.roundPrice(ret + quantity * lot.price);
 				quantity = 0;
 			} else {
-				ret      = Transaction.roundPrice(ret + lot.remain * lot.price);
-				quantity = Transaction.roundQuantity(quantity - lot.remain);
+				ret      = DoubleUtil.roundPrice(ret + lot.remain * lot.price);
+				quantity = DoubleUtil.roundQuantity(quantity - lot.remain);
 			}
 			
 			// Sanity check
@@ -205,11 +205,11 @@ public class Position {
 			for(Lot lot: position.lotList) {
 				if (lot.remain == 0) continue;
 				
-				double q = Transaction.roundQuantity(lot.remain * qRatio);
-				double p = Transaction.roundQuantity(lot.price * pRatio);
+				double q = DoubleUtil.roundQuantity(lot.remain * qRatio);
+				double p = DoubleUtil.roundQuantity(lot.price * pRatio);
 				
-				double oldCost = Transaction.roundPrice(lot.price * lot.remain);
-				double newCost = Transaction.roundPrice(p * q);
+				double oldCost = DoubleUtil.roundPrice(lot.price * lot.remain);
+				double newCost = DoubleUtil.roundPrice(p * q);
 				
 				if (!DoubleUtil.isAlmostEqual(oldCost, newCost)) {
 					logger.error("change {} {} {} {} {}", date, symbol, quantity, newSymbol, newQuantity);
@@ -218,7 +218,7 @@ public class Position {
 					throw new SecuritiesException("Unexpected");
 				}
 				
-				qNew = Transaction.roundQuantity(qNew + q);
+				qNew = DoubleUtil.roundQuantity(qNew + q);
 				newLotList.add(new Lot(lot.date, p, q));
 			}
 			if (!DoubleUtil.isAlmostEqual(qNew, newQuantity)) {
@@ -245,7 +245,7 @@ public class Position {
 			double price = PriceUtil.getClose(symbol, date);
 			double value = price * quantity;
 			
-			ret = Transaction.roundPrice(ret + value);
+			ret = DoubleUtil.roundPrice(ret + value);
 		} else {
 			// price of symbol at the date is not available
 			return NO_VALUE;
@@ -262,7 +262,7 @@ public class Position {
 			double value = getUnrealizedValue(date, position);
 			if (value == NO_VALUE) noValue = true;
 			
-			ret = Transaction.roundPrice(ret + value);
+			ret = DoubleUtil.roundPrice(ret + value);
 		}
 		return noValue ? NO_VALUE : ret;
 	}

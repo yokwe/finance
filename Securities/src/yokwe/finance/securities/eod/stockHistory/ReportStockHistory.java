@@ -16,7 +16,6 @@ import yokwe.finance.securities.eod.StockDividend.PayDiv;
 import yokwe.finance.securities.eod.StockHistory;
 import yokwe.finance.securities.eod.UpdateStockDividend;
 import yokwe.finance.securities.eod.UpdateStockHistory;
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
 import yokwe.finance.securities.util.DoubleUtil;
@@ -72,8 +71,8 @@ public class ReportStockHistory {
 						
 						if (PriceUtil.contains(symbol, date)) {
 							double closePrice = PriceUtil.getClose(symbol, date);
-							value = Transaction.roundPrice(stockHistory.totalQuantity * closePrice);
-							profit = Transaction.roundPrice(value - cost);
+							value = DoubleUtil.roundPrice(stockHistory.totalQuantity * closePrice);
+							profit = DoubleUtil.roundPrice(value - cost);
 						}
 						
 						stockHistorySheetList.add(new StockHistorySheet(symbol, date, quantity, cost, value, dividend, profit));
@@ -91,8 +90,8 @@ public class ReportStockHistory {
 						Double profit   = stockHistory.totalProfit;
 						
 						double closePrice = PriceUtil.getClose(symbol, date);
-						value = Transaction.roundPrice(stockHistory.totalQuantity * closePrice);
-						profit = Transaction.roundPrice(value - cost);
+						value = DoubleUtil.roundPrice(stockHistory.totalQuantity * closePrice);
+						profit = DoubleUtil.roundPrice(value - cost);
 						
 						stockHistorySheetList.add(new StockHistorySheet(symbol, date, quantity, cost, value, dividend, profit));
 					}

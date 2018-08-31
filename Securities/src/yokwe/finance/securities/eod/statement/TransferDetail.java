@@ -3,9 +3,9 @@ package yokwe.finance.securities.eod.statement;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.SecuritiesException;
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 @Sheet.SheetName("譲渡明細")
 @Sheet.HeaderRow(0)
@@ -103,7 +103,7 @@ public class TransferDetail extends Sheet {
 		this.priceSell     = sell.price;
 		this.sell          = sell.sell;
 		this.cost          = sell.cost;
-		this.profitLoss    = Transaction.roundPrice(this.sell - this.cost);
+		this.profitLoss    = DoubleUtil.roundPrice(this.sell - this.cost);
 
 		this.dateBuy       = null;
 		this.quantityBuy   = null;
@@ -127,7 +127,7 @@ public class TransferDetail extends Sheet {
 		this.priceSell     = sell.price;
 		this.sell          = sell.sell;
 		this.cost          = sell.cost;
-		this.profitLoss    = Transaction.roundPrice(this.sell - this.cost);
+		this.profitLoss    = DoubleUtil.roundPrice(this.sell - this.cost);
 
 		this.dateBuy       = buy.date;
 		this.quantityBuy   = buy.quantity;

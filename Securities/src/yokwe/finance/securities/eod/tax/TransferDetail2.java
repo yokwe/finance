@@ -2,6 +2,7 @@ package yokwe.finance.securities.eod.tax;
 
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 @Sheet.SheetName("譲渡明細2")
 @Sheet.HeaderRow(0)
@@ -91,7 +92,7 @@ public class TransferDetail2 extends Sheet {
 		
 		this.date          = buy.date;
 		
-		if (Transaction.roundQuantity(buy.quantity) == 0) {
+		if (DoubleUtil.roundQuantity(buy.quantity) == 0) {
 			// special for change
 			this.quantity      = null;
 			this.price         = null;

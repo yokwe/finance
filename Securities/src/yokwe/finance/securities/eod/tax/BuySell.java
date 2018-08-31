@@ -63,13 +63,13 @@ public class BuySell {
 		}
 		
 		// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-		double costPrice = Transaction.roundPrice(transaction.quantity * transaction.price);
+		double costPrice = DoubleUtil.roundPrice(transaction.quantity * transaction.price);
 		double costFee   = transaction.fee;
-		double cost      = Transaction.roundPrice(costPrice + costFee);
+		double cost      = DoubleUtil.roundPrice(costPrice + costFee);
 		int    costJPY   = (int)Math.floor(costPrice * fxRate) + (int)Math.floor(costFee * fxRate);
 		
-		totalQuantity = Transaction.roundQuantity(totalQuantity + transaction.quantity);
-		totalCost     = Transaction.roundPrice(totalCost + cost);
+		totalQuantity = DoubleUtil.roundQuantity(totalQuantity + transaction.quantity);
+		totalCost     = DoubleUtil.roundPrice(totalCost + cost);
 		totalCostJPY  = totalCostJPY + costJPY;
 
 		Transfer.Buy buy = new Transfer.Buy(
@@ -81,20 +81,20 @@ public class BuySell {
 	}
 	void sell(Transaction transaction) {
 		double fxRate  = transaction.fxRate;
-		double sell    = Transaction.roundPrice(transaction.price * transaction.quantity);
+		double sell    = DoubleUtil.roundPrice(transaction.price * transaction.quantity);
 		int    sellJPY = (int)Math.floor(sell * fxRate);
 		int    feeJPY  = (int)Math.floor(transaction.fee * fxRate);
 
 		double sellRatio = transaction.quantity / totalQuantity;
-		double cost      = Transaction.roundPrice(totalCost * sellRatio);
+		double cost      = DoubleUtil.roundPrice(totalCost * sellRatio);
 		int    costJPY;
 		
 		if (buyCount == 1) {
 			costJPY = (int)Math.floor(totalCostJPY * sellRatio);
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			totalQuantity = Transaction.roundQuantity(totalQuantity - transaction.quantity);
-			totalCost     = Transaction.roundPrice(totalCost - cost);
+			totalQuantity = DoubleUtil.roundQuantity(totalQuantity - transaction.quantity);
+			totalCost     = DoubleUtil.roundPrice(totalCost - cost);
 			totalCostJPY  = totalCostJPY - costJPY;
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
@@ -105,8 +105,8 @@ public class BuySell {
 			costJPY = (int)Math.floor(unitCostJPY * transaction.quantity);
 			
 			// maintain totalQuantity, totalAcquisitionCost and totalAcquisitionCostJPY
-			totalQuantity = Transaction.roundQuantity(totalQuantity - transaction.quantity);
-			totalCost     = Transaction.roundPrice(totalCost - cost);
+			totalQuantity = DoubleUtil.roundQuantity(totalQuantity - transaction.quantity);
+			totalCost     = DoubleUtil.roundPrice(totalCost - cost);
 			totalCostJPY  = (int)Math.floor(unitCostJPY * totalQuantity); // totalCostJPY is calculated with unitCostJPY
 			
 			// date symbol name sellAmountJPY asquisionCostJPY sellCommisionJPY dateBuyFirst dateBuyLast
@@ -234,7 +234,7 @@ public class BuySell {
 //			logger.info("price {} {} {}", price.date, price.symbol, price.close);
 
 			// Add dummy sell record
-			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, Transaction.roundPrice(quantity * price.close));	
+			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, DoubleUtil.roundPrice(quantity * price.close));	
 			buySell.sell(transaction);
 			Position.sell(transaction.date, transaction.symbol, transaction.quantity);
 		}

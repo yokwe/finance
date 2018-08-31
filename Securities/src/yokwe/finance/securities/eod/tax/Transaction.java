@@ -57,17 +57,17 @@ public class Transaction implements Comparable<Transaction> {
 		this.date         = date;
 		this.symbol       = symbol;
 		this.name         = name;
-		this.quantity     = roundQuantity(quantity);
-		this.price        = roundQuantity(price);
-		this.fee          = roundPrice(fee);
-		this.debit        = roundPrice(debit);
-		this.credit       = roundPrice(credit);
+		this.quantity     = DoubleUtil.roundQuantity(quantity);
+		this.price        = DoubleUtil.roundQuantity(price);
+		this.fee          = DoubleUtil.roundPrice(fee);
+		this.debit        = DoubleUtil.roundPrice(debit);
+		this.credit       = DoubleUtil.roundPrice(credit);
 		
 		this.newSymbol    = newSymbol;
 		this.newName      = newName;
 		this.newQuantity  = newQuantity;
 		
-		this.fxRate       = roundPrice(fxRate);
+		this.fxRate       = DoubleUtil.roundPrice(fxRate);
 		
 		// Sanity check
 		if (!DoubleUtil.isAlmostEqual(fxRate, this.fxRate)) {
@@ -152,13 +152,6 @@ public class Transaction implements Comparable<Transaction> {
 		return new Transaction(Type.CHANGE, date, symbol, name, quantity, 0, 0, 0, 0, newSymbol, newName, newQuantity);
 	}
 	
-	public static double roundPrice(double value) {
-		return DoubleUtil.round(String.format("%.4f", value), 2);
-	}
-	public static double roundQuantity(double value) {
-		return DoubleUtil.round(String.format("%.7f", value), 5);
-	}
-	
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
 		return getTransactionList(docActivity, true);
 	}
@@ -200,15 +193,15 @@ public class Transaction implements Comparable<Transaction> {
 						throw new SecuritiesException("Market is closed");
 					}
 				}
-				if (!DoubleUtil.isAlmostEqual(activity.quantity, roundQuantity(activity.quantity))) {
+				if (!DoubleUtil.isAlmostEqual(activity.quantity, DoubleUtil.roundQuantity(activity.quantity))) {
 					logger.error("quantity  {}", activity.quantity);
 					throw new SecuritiesException("Unexpected");
 				}
-				if (!DoubleUtil.isAlmostEqual(activity.price, roundQuantity(activity.price))) {
+				if (!DoubleUtil.isAlmostEqual(activity.price, DoubleUtil.roundQuantity(activity.price))) {
 					logger.error("price  {}", activity.price);
 					throw new SecuritiesException("Unexpected");
 				}
-				if (!DoubleUtil.isAlmostEqual(activity.commission, roundPrice(activity.commission))) {
+				if (!DoubleUtil.isAlmostEqual(activity.commission, DoubleUtil.roundPrice(activity.commission))) {
 					logger.error("commission  {}", activity.commission);
 					throw new SecuritiesException("Unexpected");
 				}
@@ -281,15 +274,15 @@ public class Transaction implements Comparable<Transaction> {
 						throw new SecuritiesException("Unexpected");
 					}
 					
-					if (!DoubleUtil.isAlmostEqual(nextActivity.quantity, roundQuantity(nextActivity.quantity))) {
+					if (!DoubleUtil.isAlmostEqual(nextActivity.quantity, DoubleUtil.roundQuantity(nextActivity.quantity))) {
 						logger.error("quantity  {}", nextActivity.quantity);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (!DoubleUtil.isAlmostEqual(nextActivity.price, roundQuantity(nextActivity.price))) {
+					if (!DoubleUtil.isAlmostEqual(nextActivity.price, DoubleUtil.roundQuantity(nextActivity.price))) {
 						logger.error("price  {}", activity.price);
 						throw new SecuritiesException("Unexpected");
 					}
-					if (!DoubleUtil.isAlmostEqual(nextActivity.commission, roundPrice(nextActivity.commission))) {
+					if (!DoubleUtil.isAlmostEqual(nextActivity.commission, DoubleUtil.roundPrice(nextActivity.commission))) {
 						logger.error("commission  {}", activity.commission);
 						throw new SecuritiesException("Unexpected");
 					}
@@ -299,11 +292,11 @@ public class Transaction implements Comparable<Transaction> {
 						String date        = activity.date;
 						String newSymbol   = activity.symbol;
 						String newName     = activity.name;
-						double newQuantity = roundQuantity(activity.quantity);
+						double newQuantity = DoubleUtil.roundQuantity(activity.quantity);
 						
 						String symbol      = nextActivity.symbol;
 						String name        = nextActivity.name;
-						double quantity    = roundQuantity(nextActivity.quantity);
+						double quantity    = DoubleUtil.roundQuantity(nextActivity.quantity);
 						
 						Transaction transaction = Transaction.change(date, symbol, name, quantity, newSymbol, newName, newQuantity);
 						logger.info("transaction {}", transaction);
@@ -364,14 +357,14 @@ public class Transaction implements Comparable<Transaction> {
 					String date     = useTradeDate ? activity.tradeDate : activity.date;
 					String symbol   = activity.symbol;
 					String name     = activity.name;
-					double quantity = roundQuantity(activity.quantity);
-					double price    = roundQuantity(activity.price);
-					double fee      = roundPrice(activity.commission);
-					double debit    = roundPrice(price * quantity);
+					double quantity = DoubleUtil.roundQuantity(activity.quantity);
+					double price    = DoubleUtil.roundQuantity(activity.price);
+					double fee      = DoubleUtil.roundPrice(activity.commission);
+					double debit    = DoubleUtil.roundPrice(price * quantity);
 					
 					// Sanity check
 					{
-						double roundDebit = roundPrice(activity.debit);
+						double roundDebit = DoubleUtil.roundPrice(activity.debit);
 						if (!DoubleUtil.isAlmostEqual((debit + fee), roundDebit)) {
 							logger.error("Not equal  debit {}  {}", (debit + fee), roundDebit);
 							throw new SecuritiesException("Unexpected");
@@ -418,14 +411,14 @@ public class Transaction implements Comparable<Transaction> {
 					String date     = activity.date; // use date. not tradeDate.
 					String symbol   = activity.symbol;
 					String name     = activity.name;
-					double quantity = roundQuantity(activity.quantity);
+					double quantity = DoubleUtil.roundQuantity(activity.quantity);
 					double price    = 0;
 					double fee      = 0;
 					double debit    = 0;
 					
 					// Sanity check
 					{
-						double roundDebit = roundPrice(activity.debit);
+						double roundDebit = DoubleUtil.roundPrice(activity.debit);
 						if (!DoubleUtil.isAlmostEqual((debit + fee), roundDebit)) {
 							logger.error("Not equal  debit {}  {}", (debit + fee), roundDebit);
 							throw new SecuritiesException("Unexpected");
@@ -498,14 +491,14 @@ public class Transaction implements Comparable<Transaction> {
 					String date     = useTradeDate ? activity.tradeDate : activity.date;
 					String symbol   = activity.symbol;
 					String name     = activity.name;
-					double quantity = roundQuantity(activity.quantity);
-					double price    = roundQuantity(activity.price);
-					double fee      = roundPrice(activity.commission);
-					double credit   = roundPrice(price * quantity);
+					double quantity = DoubleUtil.roundQuantity(activity.quantity);
+					double price    = DoubleUtil.roundQuantity(activity.price);
+					double fee      = DoubleUtil.roundPrice(activity.commission);
+					double credit   = DoubleUtil.roundPrice(price * quantity);
 					
 					// Sanity check
 					{
-						double roundCredit = roundPrice(activity.credit);
+						double roundCredit = DoubleUtil.roundPrice(activity.credit);
 						if (!DoubleUtil.isAlmostEqual((credit - fee), roundCredit)) {
 							logger.error("Not equal  credit {}  {}", (credit - fee), roundCredit);
 							throw new SecuritiesException("Unexpected");
@@ -549,7 +542,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					String date     = activity.date;
-					double credit   = roundPrice(activity.credit);
+					double credit   = DoubleUtil.roundPrice(activity.credit);
 					
 					// Sanity check
 					if (!DoubleUtil.isAlmostEqual(activity.credit, credit)) {
@@ -601,9 +594,9 @@ public class Transaction implements Comparable<Transaction> {
 					String date     = activity.date;
 					String symbol   = activity.symbol;
 					String name     = activity.name;
-					double quantity = roundQuantity(activity.quantity);
-					double debit    = roundPrice(activity.debit);
-					double credit   = roundPrice(activity.credit);
+					double quantity = DoubleUtil.roundQuantity(activity.quantity);
+					double debit    = DoubleUtil.roundPrice(activity.debit);
+					double credit   = DoubleUtil.roundPrice(activity.credit);
 					
 					// Sanity check
 					if (!DoubleUtil.isAlmostEqual(activity.debit, debit)) {
@@ -652,8 +645,8 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					String date     = activity.date;
-					double debit    = roundPrice(activity.debit);
-					double credit   = roundPrice(activity.credit);
+					double debit    = DoubleUtil.roundPrice(activity.debit);
+					double credit   = DoubleUtil.roundPrice(activity.credit);
 					
 					// Sanity check
 					if (!DoubleUtil.isAlmostEqual(activity.debit, debit)) {
@@ -710,8 +703,8 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					String date     = activity.date;
-					double debit    = roundPrice(activity.debit);
-					double credit   = roundPrice(activity.credit);
+					double debit    = DoubleUtil.roundPrice(activity.debit);
+					double credit   = DoubleUtil.roundPrice(activity.credit);
 					
 					// Sanity check
 					if (!DoubleUtil.isAlmostEqual(activity.debit, debit)) {

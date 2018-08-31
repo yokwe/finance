@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.securities.eod.StockHistory;
 import yokwe.finance.securities.eod.YahooPortfolio;
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.util.CSVUtil;
+import yokwe.finance.securities.util.DoubleUtil;
 
 public class UpdateYahooPortfolio {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateYahooPortfolio.class);
@@ -33,7 +33,7 @@ public class UpdateYahooPortfolio {
 			// Change symbol style from iex to yahoo
 			String symbol        = entry.getKey().replaceAll("-", "-P");
 			double quantity      = lastStockHistory.totalQuantity;
-			double purchasePrice = Transaction.roundPrice(lastStockHistory.totalCost / lastStockHistory.totalQuantity);
+			double purchasePrice = DoubleUtil.round(lastStockHistory.totalCost / lastStockHistory.totalQuantity, 2);
 			
 			yahooPortfolioList.add(new YahooPortfolio(symbol, purchasePrice, quantity));
 		}

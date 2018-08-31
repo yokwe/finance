@@ -198,7 +198,7 @@ public class Report {
 			{
 				String symbol     = transaction.symbol;
 				Transfer transfer = Transfer.getByID(transaction.id);
-				double   buy      = Transaction.roundPrice(transfer.buy.buy + transfer.buy.fee);
+				double   buy      = DoubleUtil.roundPrice(transfer.buy.buy + transfer.buy.fee);
 
 				cashTotal  -= buy;
 				stockTotal += buy;
@@ -209,9 +209,9 @@ public class Report {
 			{
 				String symbol     = transaction.symbol;
 				Transfer transfer = Transfer.getByID(transaction.id);
-				double sell       = Transaction.roundPrice(transfer.sell.sell - transfer.sell.fee);
+				double sell       = DoubleUtil.roundPrice(transfer.sell.sell - transfer.sell.fee);
 				double sellCost   = transfer.sell.cost;
-				double sellGain   = Transaction.roundPrice(sell - sellCost);
+				double sellGain   = DoubleUtil.roundPrice(sell - sellCost);
 				
 				cashTotal  += sell;
 				stockTotal -= sellCost;
@@ -350,7 +350,7 @@ public class Report {
 						for(TransferDetail2 work: workList) {
 							count++;
 							transferList.add(work);
-							if (count != listCount && Transaction.roundQuantity(work.totalQuantity) == 0) {
+							if (count != listCount && DoubleUtil.roundQuantity(work.totalQuantity) == 0) {
 								// Add break
 								transferList.add(new TransferDetail2());
 							}

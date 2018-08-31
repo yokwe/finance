@@ -1,8 +1,8 @@
 package yokwe.finance.securities.eod.statement;
 
-import yokwe.finance.securities.eod.tax.Transaction;
 import yokwe.finance.securities.libreoffice.Sheet;
 import yokwe.finance.securities.libreoffice.SpreadSheet;
+import yokwe.finance.securities.util.DoubleUtil;
 
 @Sheet.SheetName("配当明細")
 @Sheet.HeaderRow(0)
@@ -39,17 +39,17 @@ public class Dividend extends Sheet {
 		this.symbol         = symbol;
 		this.symbolName     = symbol + " - " + symbolName;
 		
-		this.dividend       = Transaction.roundPrice(dividend);
-		this.taxWithholding = Transaction.roundPrice(taxWithholding);
+		this.dividend       = DoubleUtil.roundPrice(dividend);
+		this.taxWithholding = DoubleUtil.roundPrice(taxWithholding);
 		
-		this.profitLoss     = Transaction.roundPrice(dividend - taxWithholding);
+		this.profitLoss     = DoubleUtil.roundPrice(dividend - taxWithholding);
 	}
 	
 	public void update(double dividend, double taxWithholding) {
-		this.dividend       = Transaction.roundPrice(this.dividend       + dividend);
-		this.taxWithholding = Transaction.roundPrice(this.taxWithholding + taxWithholding);
+		this.dividend       = DoubleUtil.roundPrice(this.dividend       + dividend);
+		this.taxWithholding = DoubleUtil.roundPrice(this.taxWithholding + taxWithholding);
 		
-		this.profitLoss     = Transaction.roundPrice(this.dividend - this.taxWithholding);
+		this.profitLoss     = DoubleUtil.roundPrice(this.dividend - this.taxWithholding);
 	}
 
 	public static Dividend getInstance(

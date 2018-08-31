@@ -93,7 +93,7 @@ public class Position {
 		double price = PriceUtil.getClose(symbol, date);
 		double value = (price * quantity) - COMMISSION;
 		
-		ret = Transaction.roundPrice(ret + value);
+		ret = DoubleUtil.roundPrice(ret + value);
 		return ret;
 	}
 
@@ -104,7 +104,7 @@ public class Position {
 		for(Position position: positionList) {
 			double value = getUnrealizedValue(date, position);
 			
-			ret = Transaction.roundPrice(ret + value);
+			ret = DoubleUtil.roundPrice(ret + value);
 		}
 		return ret;
 	}

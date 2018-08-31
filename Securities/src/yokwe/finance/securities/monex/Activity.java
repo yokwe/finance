@@ -55,7 +55,7 @@ public class Activity {
 	@Sheet.DataRow(1)
 	public static class Trade extends Sheet {
 		public static final String TRANSACTION_BUY  = "買付";
-		public static final String TRANSACTION_SELL = "売却";
+		public static final String TRANSACTION_SELL = "売付";
 
 		@ColumnName("約定日")
 		@NumberFormat(SpreadSheet.FORMAT_DATE)

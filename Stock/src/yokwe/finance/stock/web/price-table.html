@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>price table</title>
+<script src="plotly.min.js"></script>
+<script type="text/javascript">
+    var symbol = "IBM";
+    var filter="date,close,volume";
+
+    var url = "price?filter=" + filter + "&symbol=" + symbol;
+
+    var dataTemplate = {
+        type : 'table',
+        header : {
+        },
+        mode : 'lines',
+        cells : {
+            align : 'right'
+        }
+    }
+
+    function myOnLoad() {
+        Plotly.d3.json(url, jsonProcessor);
+    }
+
+    function jsonProcessor(jsonError, jsonData) {
+        if (jsonError)
+            return console.warn(jsonError);
+	var myData = jsonData[symbol];
+
+        var columns = Object.getOwnPropertyNames(myData);
+        
+        var headerValues = [];
+        columns.forEach((value) => headerValues.push(value));
+        
+        var cellsValues = [];
+        columns.forEach((value) => cellsValues.push(myData[value]));
+        
+        var data = Object.assign(dataTemplate, {});
+        data.header.values = headerValues;
+        data.cells.values  = cellsValues;
+
+        Plotly.plot('div1', [ data ])
+    }
+
+    window.onload = myOnLoad
+</script>
+</head>
+<body>
+    <div id="div1"></div>
+</body>
+</html>

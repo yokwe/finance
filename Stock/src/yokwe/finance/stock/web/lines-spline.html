@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>lines spline</title>
+<script src="plotly.min.js"></script>
+<script type="text/javascript">
+    var symbol = "IBM";
+
+    var url = "price?filter=date,close&symbol=" + symbol;
+
+    var dataTemplate = {
+	type : 'scatter',
+	mode : 'lines',
+	line : {
+	    shape : 'spline'
+	},
+    }
+
+    var layout = {
+	dragmode : 'zoom',
+	margin : {
+	    r : 10,
+	    t : 25,
+	    b : 40,
+	    l : 60
+	},
+	showlegend : false,
+	xaxis : {
+	    autorange : true,
+	    domain : [ 0, 1 ],
+	    title : 'Date',
+	    type : 'date',
+	    tickformat : '%y-%m-%d'
+	},
+	yaxis : {
+	    autorange : true,
+	    domain : [ 0.2, 0.8 ],
+	    type : 'linear'
+	}
+    };
+
+    function myOnLoad() {
+	Plotly.d3.json(url, jsonProcessor);
+    }
+
+    function jsonProcessor(jsonError, jsonData) {
+	if (jsonError)
+	    return console.warn(jsonError);
+
+	var data = Object.assign(dataTemplate, jsonData[symbol]);
+	data.x = data.date
+	delete data.date
+	data.y = data.close
+	delete data.close
+
+	Plotly.plot('div1', [ data ], layout)
+    }
+
+    window.onload = myOnLoad
+</script>
+</head>
+<body>
+    <div id="div1"></div>
+</body>
+</html>

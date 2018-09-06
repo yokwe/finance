@@ -9,6 +9,8 @@ import java.util.TreeMap;
 import yokwe.finance.stock.util.CSVUtil;
 
 public class StockHistoryUtil {
+	public static final String PATH_STOCK_HISTORY_MONEX     = "tmp/monex/stock-history-monex.csv";
+	public static final String PATH_STOCK_HISTORY_FIRSTRADE = "tmp/firstrade/stock-history-firstrade.csv";
 	//                group
 	public static Map<String, List<StockHistory>> getStockHistoryMap(String pathBase, String fileName) {
 		String path = String.format("%s/%s", pathBase, fileName);

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.StockHistory;
+import yokwe.finance.stock.data.StockHistoryUtil;
 import yokwe.finance.stock.libreoffice.SpreadSheet;
 import yokwe.finance.stock.util.CSVUtil;
 import yokwe.finance.stock.util.DoubleUtil;
@@ -14,8 +15,6 @@ import yokwe.finance.stock.util.DoubleUtil;
 public class UpdateStockHistory {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStockHistory.class);
 
-	public static final String PATH_STOCK_HISTORY               = "tmp/firstrade/stock-history-firstrade.csv";
-	
 	public static List<StockHistory> getStockHistoryList() {
 		try (SpreadSheet docActivity = new SpreadSheet(Transaction.URL_ACTIVITY, true)) {
 
@@ -108,7 +107,7 @@ public class UpdateStockHistory {
 		List<StockHistory>stockHistoryList = getStockHistoryList();
 		logger.info("stockHistoryList = {}", stockHistoryList.size());
 
-		CSVUtil.saveWithHeader(stockHistoryList, PATH_STOCK_HISTORY);
+		CSVUtil.saveWithHeader(stockHistoryList, StockHistoryUtil.PATH_STOCK_HISTORY_FIRSTRADE);
 		
 		logger.info("STOP");
 		System.exit(0);

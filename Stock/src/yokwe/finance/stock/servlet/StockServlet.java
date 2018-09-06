@@ -1,12 +1,12 @@
 package yokwe.finance.stock.servlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.json.Json;
 import javax.json.stream.JsonGenerator;
@@ -19,18 +19,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
-import yokwe.finance.stock.data.Price;
-import yokwe.finance.stock.app.UpdatePrice;
+import yokwe.finance.stock.data.StockHistory;
+import yokwe.finance.stock.data.StockHistoryUtil;
+import yokwe.finance.stock.data.StockInfo;
 import yokwe.finance.stock.util.JSONUtil;
 import yokwe.finance.stock.util.JSONUtil.ClassInfo;
 
-public class PriceServlet extends HttpServlet {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PriceServlet.class);
+public class StockServlet extends HttpServlet {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockServlet.class);
 	
 	private static final long serialVersionUID = 1L;
 	
-	private String pathBase;
-
+	private String    pathBase;
+	private StockInfo stockInfo;
+	
 	@Override
 	public void init(ServletConfig config) {
 		logger.info("init");
@@ -39,6 +41,9 @@ public class PriceServlet extends HttpServlet {
 		
 		pathBase = servletContext.getInitParameter("path.base");
 		logger.info("pathBase {}", pathBase);
+		
+		// Firstrade or Monex
+		stockInfo = new StockInfo(pathBase, StockHistoryUtil.PATH_STOCK_HISTORY_FIRSTRADE);
 	}
 	
 	@Override
@@ -46,20 +51,17 @@ public class PriceServlet extends HttpServlet {
 		logger.info("destroy");
 	}
 	
-	private static ClassInfo classInfo = JSONUtil.getClassInfo(Price.class);
+	private static ClassInfo classInfo = JSONUtil.getClassInfo(StockHistory.class);
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) {
 		logger.info("doGet START");
 		
-		// symbol
-		String symbolString = req.getParameter("symbol");
-		logger.debug("symbolString {}", symbolString);
-		if (symbolString == null) {
-			symbolString = "";
-		}
-		String[] symbols = symbolString.split(",");
-		logger.debug("symbols {}", Arrays.asList(symbols));
+		// active
+		boolean onlyActive = req.getParameter("onlyActive") != null;
+		
+		// active
+		boolean onlyLast = req.getParameter("onlyLast") != null;
 		
 		// filter
 		String filterString = req.getParameter("filter");
@@ -72,48 +74,20 @@ public class PriceServlet extends HttpServlet {
 		}
 		logger.debug("filters {}", Arrays.asList(filters));
 		
-		// last
-		String lastString = req.getParameter("last");
-		logger.debug("lastString {}", lastString);
-		if (lastString == null) {
-			lastString = "0";
+		// symbol
+		String symbolString = req.getParameter("symbol");
+		logger.debug("symbolString {}", symbolString);
+		Set<String> symbolSet;
+		if (symbolString == null) {
+			symbolSet = null;
+		} else {
+			symbolSet = new TreeSet<>();
+			for(String symbol: symbolString.split(",")) {
+				if (symbol.length() == 0) continue;
+				symbolSet.add(symbol);
+			}
 		}
-		int last = Integer.valueOf(lastString);
-		logger.debug("last {}", last);
-		
-		
-		// Build data
-		Map<String, List<Price>> dataMap = new TreeMap<>();
-		for(String symbol: symbols) {
-			// Skip empty symbol
-			if (symbol.length() == 0) continue;
-			
-			logger.debug("symbol {}", symbol);
-			String filePath = UpdatePrice.getCSVPath(pathBase, symbol);
-			logger.debug("filePath {}", filePath);
-			File file = new File(filePath);
-			if (!file.exists()) {
-				logger.warn("file doesn't exist {}", filePath);
-				continue;
-			}
-			
-			List<Price> priceList = UpdatePrice.load(file);
-			if (priceList == null) {
-				logger.warn("priceList == null {}", filePath);
-				continue;
-			}
-			if (priceList.isEmpty()) {
-				logger.warn("priceList.isEmpty() {}", filePath);
-				continue;
-			}
-			
-			if (0 < last) {
-				priceList = JSONUtil.getLastElement(priceList, last);
-			}
-			
-			dataMap.put(symbol, priceList);
-		}
-		logger.debug("dataMap {}", dataMap.size());
+		logger.debug("symbolSet {}", symbolSet);
 		
 		// Prepare for output response
         res.setStatus(HttpServletResponse.SC_OK);
@@ -124,13 +98,22 @@ public class PriceServlet extends HttpServlet {
     		JsonGenerator gen = Json.createGenerator(writer);
     		
      		gen.writeStartObject();
-    		for(Map.Entry<String, List<Price>> entry: dataMap.entrySet()) {
-    			String symbol = entry.getKey();
-    			List<Price> dataList = entry.getValue();
+    		for(StockInfo.Entry entry: stockInfo.getEntryMap().values()) {
+    			if (onlyActive) {
+    				if (!entry.active) continue;
+    			}
     			
-    			logger.debug("entry {} {}", symbol, dataList.size());
+    			if (symbolSet != null) {
+    				if (!symbolSet.contains(entry.symbol)) continue;
+    			}
     			
-    			gen.writeStartObject(symbol);
+    			List<StockHistory> dataList = new ArrayList<>();
+    			if (onlyLast) {
+    				dataList.add(entry.lastStockHistory);
+    			} else {
+    				dataList.addAll(entry.lastStockHistoryList);
+    			}
+    			gen.writeStartObject(entry.symbol);
     			
     			// Then output field in filters
     			for(String filter: filters) {

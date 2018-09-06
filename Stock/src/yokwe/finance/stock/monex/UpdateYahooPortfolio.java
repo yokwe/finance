@@ -22,7 +22,7 @@ public class UpdateYahooPortfolio {
 		
 		List<YahooPortfolio> yahooPortfolioList = new ArrayList<>();
 		
-		Map<String, List<StockHistory>> stockHistoryMap = StockHistoryUtil.getStockHistoryMap(".", UpdateStockHistory.PATH_STOCK_HISTORY);
+		Map<String, List<StockHistory>> stockHistoryMap = StockHistoryUtil.getStockHistoryMap(".", StockHistoryUtil.PATH_STOCK_HISTORY_MONEX);
 		logger.info("stockHistoryMap {}", stockHistoryMap.size());
 		
 		for(Map.Entry<String, List<StockHistory>> entry: stockHistoryMap.entrySet()) {

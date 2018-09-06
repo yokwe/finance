@@ -1,0 +1,189 @@
+<project>
+	<property name="dir.ext.jar" location="../Common/jar" />
+	<property name="dir.src" location="src" />
+
+	<property name="dir.build" location="tmp/build" />
+	<property name="dir.build.bin" location="${dir.build}/bin" />
+	<property name="dir.build.jar" location="${dir.build}/jar" />
+
+	<property name="eod.dir.web" location="${dir.src}/yokwe/finance/stock/web" />
+	<property name="eod.war" location="${dir.build}/eod.war" />
+	
+	<property name="dir.libreoffice.jar" location="/usr/lib/libreoffice/program/classes" />
+	
+	<property name="dir.plotlyjs" location="../../plotly.js" />
+
+	<property name="catalina.base" location="/var/lib/tomcat8" />
+	<property name="catalina.home" location="/usr/share/tomcat8" />
+
+	<path id="ext.jar">
+		<fileset dir="${dir.ext.jar}">
+			<include name="*.jar" />
+		</fileset>
+		<fileset dir="${catalina.home}/lib" >
+			<include name="servlet-api.jar" />
+		</fileset>
+                <fileset dir="${dir.libreoffice.jar}">
+                        <include name="unoloader.jar" />
+                        <include name="unoil.jar" />
+                        <include name="juh.jar" />
+                        <include name="jurt.jar" />
+                        <include name="ridl.jar" />
+                </fileset>
+	</path>
+	
+	<property name="jar.yokwe" location="${dir.build.jar}/yokwe.jar" />
+
+	<target name="eod-deploy">
+                <!-- delete war file -->
+		<delete file="${eod.war}" quiet="true" />
+                <!-- create war file -->
+		<war destfile="${eod.war}" webxml="${eod.dir.web}/WEB-INF/web.xml">
+			<lib file="${jar.yokwe}" />
+			<lib dir="${dir.ext.jar}">
+				<include name="*.jar" />
+			</lib>
+			<classes dir="${eod.dir.web}/WEB-INF/classes" />
+			<fileset dir="${eod.dir.web}">
+			</fileset>
+			<fileset dir="${dir.plotlyjs}/dist">
+				<include name="plotly.min.js" />
+			</fileset>
+		</war>
+
+		<!-- webapps directory has auto deploy feature (default on) -->
+		<!-- Use this feature to deploy eod.war -->
+		<!-- So deploing war file in tomcat is just copy war file to ${catalina.base}/webapps -->
+		<copy file="${eod.war}" todir="${catalina.base}/webapps" />
+	</target>
+
+	<target name="clean">
+		<delete includeemptydirs="true" quiet="true">
+			<fileset dir="${dir.build}" includes="**/*" />
+		</delete>
+	</target>
+
+	<target name="build">
+		<!-- clean destination directories -->
+		<delete dir="${dir.build.bin}" quiet="true" />
+		<mkdir dir="${dir.build.bin}" />
+		<delete dir="${dir.build.jar}" quiet="true" />
+		<mkdir dir="${dir.build.jar}" />
+		<!-- compile -->
+		<javac srcdir="${dir.src}" destdir="${dir.build.bin}" classpathref="ext.jar" includeAntRuntime="false" 
+			debug="true" debuglevel="lines,vars,source" />
+		<!-- copy resource file -->
+		<copy todir="${dir.build.bin}">
+			<fileset dir="${dir.src}">
+				<exclude name="**/*.java" />
+				<exclude name="**/web/WEB-INF/**" />
+			</fileset>
+		</copy>
+		<!-- make jar -->
+		<jar destfile="${jar.yokwe}" basedir="${dir.build.bin}" />
+	</target>
+	
+	
+	<!-- app -->
+	<target name="run-fetch">
+		<java classname="yokwe.finance.stock.app.Fetch" fork="true">
+			<classpath location="${jar.yokwe}" />
+			<classpath refid="ext.jar" />
+                        <sysproperty key="waitPeriod" value="1000"/>
+			<arg value="tmp/fetch/fetch.list"/>
+		</java>
+	</target>
+	
+        <target name="run-update-dividend">
+                <java classname="yokwe.finance.stock.app.UpdateDividend" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-update-forex">
+                <java classname="yokwe.finance.stock.app.UpdateForex" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                 </java>
+        </target>
+
+        <target name="run-update-price">
+                <java classname="yokwe.finance.stock.app.UpdatePrice" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                 </java>
+        </target>
+
+        <target name="run-update-stock">
+                <java classname="yokwe.finance.stock.app.UpdateStock" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+	
+	
+	<!-- monex -->
+        <target name="run-monex-update-fx-tax">
+                <java classname="yokwe.finance.stock.monex.UpdateFXTax" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
+        <target name="run-monex-update-stock-history">
+                <java classname="yokwe.finance.stock.monex.UpdateStockHistory" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-monex-update-stock-us">
+                <java classname="yokwe.finance.stock.monex.UpdateStockUS" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
+	<target name="run-monex-update-yahoo-portfolio">
+                <java classname="yokwe.finance.stock.monex.UpdateYahooPortfolio" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+	
+	<!-- firstrade -->
+        <target name="run-firstrade-update-stock-history">
+                <java classname="yokwe.finance.stock.firstrade.UpdateStockHistory" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
+        <target name="run-firstrade-update-yahoo-portfolio">
+                <java classname="yokwe.finance.stock.firstrade.UpdateYahooPortfolio" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+        <target name="run-firstrade-tax-report">
+                <java classname="yokwe.finance.stock.firstrade.tax.Report" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
+
+</project>

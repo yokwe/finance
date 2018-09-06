@@ -7,6 +7,7 @@ import java.util.Map;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.data.StockHistory;
+import yokwe.finance.stock.data.StockHistoryUtil;
 import yokwe.finance.stock.data.YahooPortfolio;
 import yokwe.finance.stock.util.CSVUtil;
 import yokwe.finance.stock.util.DoubleUtil;
@@ -21,7 +22,7 @@ public class UpdateYahooPortfolio {
 		
 		List<YahooPortfolio> yahooPortfolioList = new ArrayList<>();
 		
-		Map<String, List<StockHistory>> stockHistoryMap = UpdateStockHistory.getStockHistoryMap();
+		Map<String, List<StockHistory>> stockHistoryMap = StockHistoryUtil.getStockHistoryMap(".", UpdateStockHistory.PATH_STOCK_HISTORY);
 		logger.info("stockHistoryMap {}", stockHistoryMap.size());
 		
 		for(Map.Entry<String, List<StockHistory>> entry: stockHistoryMap.entrySet()) {

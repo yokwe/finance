@@ -103,8 +103,6 @@ public class PriceUtil {
 			Map<String, IEX> ret = IEXBase.getStockObject(IEX.class, symbols);
 			return ret;
 		}
-	
-		
 	}
 	
 	private static Map<String, Double> delayedQuoteMap = new TreeMap<>();

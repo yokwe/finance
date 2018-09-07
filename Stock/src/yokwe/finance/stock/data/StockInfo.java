@@ -62,9 +62,6 @@ public class StockInfo {
 		
 		entryMap = Collections.unmodifiableMap(map);
 	}
-	public StockInfo(String fileName) {
-		this(".", fileName);
-	}
 	
 	public Map<String, Entry> getEntryMap() {
 		return entryMap;
@@ -75,7 +72,7 @@ public class StockInfo {
 		
 		{
 			int count_active = 0;
-			StockInfo stockInfo = new StockInfo("tmp/firstrade/stock-history-firstrade.csv");
+			StockInfo stockInfo = new StockInfo(".", "tmp/firstrade/stock-history-firstrade.csv");
 			
 			Map<String, Entry> entryMap = stockInfo.entryMap;
 			for(Entry entry: entryMap.values()) {				
@@ -92,7 +89,7 @@ public class StockInfo {
 		
 		{
 			int count_active = 0;
-			StockInfo stockInfo = new StockInfo("tmp/monex/stock-history-monex.csv");
+			StockInfo stockInfo = new StockInfo(".", "tmp/monex/stock-history-monex.csv");
 			
 			Map<String, Entry> entryMap = stockInfo.entryMap;
 			for(Entry entry: entryMap.values()) {				

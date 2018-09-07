@@ -45,8 +45,8 @@
     </servlet>
 
     <servlet>
-      <servlet-name>stock</servlet-name>
-      <servlet-class>yokwe.finance.stock.servlet.StockServlet</servlet-class>
+      <servlet-name>portfolio</servlet-name>
+      <servlet-class>yokwe.finance.stock.servlet.PortfolioServlet</servlet-class>
       <!-- Load this servlet at server startup time -->
       <load-on-startup>1</load-on-startup>
     </servlet>
@@ -75,8 +75,8 @@
     </servlet-mapping>
 
      <servlet-mapping>
-      <servlet-name>stock</servlet-name>
-      <url-pattern>/stock</url-pattern>
+      <servlet-name>portfolio</servlet-name>
+      <url-pattern>/portfolio</url-pattern>
     </servlet-mapping>
 
     <!-- Define the default session timeout for your application,

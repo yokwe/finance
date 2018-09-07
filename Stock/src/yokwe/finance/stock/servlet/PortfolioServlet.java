@@ -5,7 +5,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.json.Json;
@@ -21,17 +23,21 @@ import org.slf4j.LoggerFactory;
 import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.StockHistory;
 import yokwe.finance.stock.data.StockHistoryUtil;
-import yokwe.finance.stock.data.StockInfo;
+import yokwe.finance.stock.data.Portfolio;
 import yokwe.finance.stock.util.JSONUtil;
 import yokwe.finance.stock.util.JSONUtil.ClassInfo;
 
-public class StockServlet extends HttpServlet {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockServlet.class);
+public class PortfolioServlet extends HttpServlet {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PortfolioServlet.class);
 	
 	private static final long serialVersionUID = 1L;
 	
-	private String    pathBase;
-	private StockInfo stockInfo;
+	private static String PORTFOLIO_FIRSTRADE = "firstrade";
+	private static String PORTFOLIO_MONEX     = "monex";
+	
+	
+	private String                 pathBase;
+	private Map<String, Portfolio> portfolioMap;
 	
 	@Override
 	public void init(ServletConfig config) {
@@ -42,8 +48,15 @@ public class StockServlet extends HttpServlet {
 		pathBase = servletContext.getInitParameter("path.base");
 		logger.info("pathBase {}", pathBase);
 		
+		portfolioMap = new TreeMap<>();
+		
 		// Firstrade or Monex
-		stockInfo = new StockInfo(pathBase, StockHistoryUtil.PATH_STOCK_HISTORY_FIRSTRADE);
+		portfolioMap.put(PORTFOLIO_FIRSTRADE, new Portfolio(pathBase, StockHistoryUtil.PATH_STOCK_HISTORY_FIRSTRADE));
+		portfolioMap.put(PORTFOLIO_MONEX,     new Portfolio(pathBase, StockHistoryUtil.PATH_STOCK_HISTORY_MONEX));
+		
+		for(Map.Entry<String, Portfolio> entry: portfolioMap.entrySet()) {
+			logger.info("{} {}", entry.getKey(), entry.getValue().getEntryMap().size());
+		}
 	}
 	
 	@Override
@@ -57,11 +70,24 @@ public class StockServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse res) {
 		logger.info("doGet START");
 		
-		// active
-		boolean onlyActive = req.getParameter("onlyActive") != null;
+		// name
+		String name = req.getParameter("name");
+		logger.debug("name {}", name);
+		if (name == null) {
+			logger.error("name is null");
+			throw new UnexpectedException("portfolio is null");
+		}
+		if (!portfolioMap.containsKey(name)) {
+			logger.error("Unknown name", name);
+			throw new UnexpectedException("Unknown name");
+		}
+		Portfolio portfolio = portfolioMap.get(name);
 		
 		// active
-		boolean onlyLast = req.getParameter("onlyLast") != null;
+		boolean active = req.getParameter("active") != null;
+		
+		// active
+		boolean last = req.getParameter("last") != null;
 		
 		// filter
 		String filterString = req.getParameter("filter");
@@ -98,8 +124,8 @@ public class StockServlet extends HttpServlet {
     		JsonGenerator gen = Json.createGenerator(writer);
     		
      		gen.writeStartObject();
-    		for(StockInfo.Entry entry: stockInfo.getEntryMap().values()) {
-    			if (onlyActive) {
+    		for(Portfolio.Entry entry: portfolio.getEntryMap().values()) {
+    			if (active) {
     				if (!entry.active) continue;
     			}
     			
@@ -108,7 +134,7 @@ public class StockServlet extends HttpServlet {
     			}
     			
     			List<StockHistory> dataList = new ArrayList<>();
-    			if (onlyLast) {
+    			if (last) {
     				dataList.add(entry.lastStockHistory);
     			} else {
     				dataList.addAll(entry.lastStockHistoryList);
@@ -117,9 +143,6 @@ public class StockServlet extends HttpServlet {
     			
     			// Then output field in filters
     			for(String filter: filters) {
-    				// Skip symbol
-    				if (filter.equals("symbol")) continue;
-    				
     				JSONUtil.buildArray(gen, filter, dataList);
     			}
     			

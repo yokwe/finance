@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.util.CSVUtil;
 
-public class StockInfo {
-	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockInfo.class);
+public class Portfolio {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Portfolio.class);
 	
 	public static class Entry {
 		public final String             symbol;
@@ -33,7 +33,7 @@ public class StockInfo {
 	}
 	
 	private final Map<String, Entry> entryMap;
-	public StockInfo(String pathBase, String fileName) {
+	public Portfolio(String pathBase, String fileName) {
 		Map<String, Entry> map = new TreeMap<>();
 		
 		{
@@ -72,9 +72,9 @@ public class StockInfo {
 		
 		{
 			int count_active = 0;
-			StockInfo stockInfo = new StockInfo(".", "tmp/firstrade/stock-history-firstrade.csv");
+			Portfolio portfolio = new Portfolio(".", "tmp/firstrade/stock-history-firstrade.csv");
 			
-			Map<String, Entry> entryMap = stockInfo.entryMap;
+			Map<String, Entry> entryMap = portfolio.entryMap;
 			for(Entry entry: entryMap.values()) {				
 				logger.info("{} {}", String.format("%-8s", entry.symbol), entry.active ? "ACTIVE" : "");
 				if (entry.active) {
@@ -89,9 +89,9 @@ public class StockInfo {
 		
 		{
 			int count_active = 0;
-			StockInfo stockInfo = new StockInfo(".", "tmp/monex/stock-history-monex.csv");
+			Portfolio portfolio = new Portfolio(".", "tmp/monex/stock-history-monex.csv");
 			
-			Map<String, Entry> entryMap = stockInfo.entryMap;
+			Map<String, Entry> entryMap = portfolio.entryMap;
 			for(Entry entry: entryMap.values()) {				
 				logger.info("{} {}", String.format("%-8s", entry.symbol), entry.active ? "ACTIVE" : "");
 				if (entry.active) {

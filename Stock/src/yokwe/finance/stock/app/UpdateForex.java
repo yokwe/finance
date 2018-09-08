@@ -88,29 +88,31 @@ public class UpdateForex {
 					logger.info("{}", String.format("%s  %2d", currency, index));
 				}
 			}
-			String lastDate = "????";
+			StringBuilder lineOut = new StringBuilder();
 			for(;;) {
-				String line = in.readLine();
-				if (line == null) break;
+				String lineIn = in.readLine();
+				if (lineIn == null) break;
 				
-				String[] token = line.split("[,/]");
+				String[] token = lineIn.split("[,/]");
 				int y = Integer.parseInt(token[0]);
 				int m = Integer.parseInt(token[1]);
 				int d = Integer.parseInt(token[2]);
 				
 				if (y < 2015) continue;
 				
-				lastDate = String.format("%4d-%02d-%02d", y, m, d);
-				out.append(lastDate);
+				// clear lineOut
+				lineOut.setLength(0);
+				lineOut.append(String.format("%4d-%02d-%02d", y, m, d));
+				
 				for(int i = 0; i < currencyIndex.length; i++) {
 					double value = Double.parseDouble(token[2 + currencyIndex[i]]);
-					out.format(",%.2f", value);
+					lineOut.append(String.format(",%.2f", value));
 				}
-				out.println();
+				
+				out.println(lineOut.toString());
+				logger.info("{}", lineOut);
 				count++;
 			}
-			
-			logger.info("lastDate {}", lastDate);
 		} catch (IOException e) {
 			logger.error(e.getClass().getName());
 			logger.error(e.getMessage());

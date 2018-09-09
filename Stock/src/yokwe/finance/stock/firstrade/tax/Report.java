@@ -238,7 +238,7 @@ public class Report {
 			SpreadSheet docSave = new SpreadSheet();
 
 			// Create transaction from activity
-			List<Transaction> transactionList = Transaction.getTransactionList(docActivity);
+			List<Transaction> transactionList = Transaction.getTransactionList(docActivity, true);
 			
 			// key is date
 			Map<String, Dividend> dividendMap = getDividendMap(transactionList);

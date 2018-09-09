@@ -16,19 +16,19 @@ import yokwe.finance.stock.util.DoubleUtil;
 public class BuySell {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(BuySell.class);
 
-	String symbol;
-	String name;
+	public String symbol;
+	public String name;
 
-	int    buyCount;
-	String dateBuyFirst;
-	String dateBuyLast;
+	public int    buyCount;
+	public String dateBuyFirst;
+	public String dateBuyLast;
 
-	double totalQuantity;
-	double totalCost;
-	int    totalCostJPY;
+	public double totalQuantity;
+	public double totalCost;
+	public int    totalCostJPY;
 	
-	List<Transfer>       current;
-	List<List<Transfer>> past;
+	public List<Transfer>       current;
+	public List<List<Transfer>> past;
 	
 	public BuySell(String symbol, String name) {
 		this.symbol = symbol;

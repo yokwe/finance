@@ -185,5 +185,13 @@
                 </java>
         </target>
 
+        <target name="run-firstrade-statement-report">
+                <java classname="yokwe.finance.stock.firstrade.statement.Report" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+
 
 </project>

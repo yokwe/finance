@@ -19,7 +19,7 @@ public class UpdateStockHistory {
 		try (SpreadSheet docActivity = new SpreadSheet(Transaction.URL_ACTIVITY, true)) {
 
 			// Create transaction from activity
-			List<Transaction> transactionList = Transaction.getTransactionList(docActivity);
+			List<Transaction> transactionList = Transaction.getTransactionList(docActivity, true);
 			StockHistory.Builder builder = new StockHistory.Builder();
 			
 			for(Transaction transaction: transactionList) {

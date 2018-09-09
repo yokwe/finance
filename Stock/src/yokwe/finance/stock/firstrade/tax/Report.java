@@ -24,6 +24,8 @@ import yokwe.finance.stock.util.DoubleUtil;
 public class Report {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Report.class);
 	
+	public static final boolean MODE_TEST = false;
+	
 	public static final String TIMESTAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
 
 	public static final String URL_ACTIVITY_TEST = "file:///home/hasegawa/Dropbox/Trade/投資活動_TEST.ods";
@@ -266,7 +268,7 @@ public class Report {
 			Collections.reverse(yearList);
 
 			// Build UnrealizedGain sheet
-			{
+			if (!MODE_TEST) {
 				LocalDate DATE_LAST  = Market.getLastTradingDate();
 				LocalDate DATE_FIRST = DATE_LAST.minusYears(1);
 
@@ -439,11 +441,12 @@ public class Report {
 		logger.info("START");
 		
 		// For test
-//		ForexUtil.enableTestMode();
-//		generateReport(URL_ACTIVITY_TEST);
-		
-		// Not test
-		generateReport(Transaction.URL_ACTIVITY);
+		if (MODE_TEST) {
+			ForexUtil.enableTestMode();
+			generateReport(URL_ACTIVITY_TEST);
+		} else {
+			generateReport(Transaction.URL_ACTIVITY);
+		}
 
 		logger.info("STOP");
 		System.exit(0);

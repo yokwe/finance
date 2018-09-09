@@ -154,9 +154,6 @@ public class Transaction implements Comparable<Transaction> {
 		return new Transaction(Type.CHANGE, date, symbol, name, quantity, 0, 0, 0, 0, newSymbol, newName, newQuantity);
 	}
 	
-	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
-		return getTransactionList(docActivity, true);
-	}
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity, boolean useTradeDate) {
 		List<Transaction> transactionList = new ArrayList<>();
 		

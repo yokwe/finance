@@ -196,11 +196,6 @@ public class Report {
 	public static void main(String[] args) {
 		logger.info("START");
 		
-		// For test
-//		ForexUtil.enableTestMode();
-//		generateReport(URL_ACTIVITY_TEST);
-		
-		// Not test
 		generateReport(Transaction.URL_ACTIVITY);
 
 		logger.info("STOP");

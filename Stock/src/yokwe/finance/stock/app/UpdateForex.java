@@ -25,7 +25,7 @@ public class UpdateForex {
 	public static final String PATH_FOREX       = "tmp/data/forex.csv";
 	
 	public static List<Forex> load() {
-		return CSVUtil.loadWithHeader(UpdateForex.PATH_FOREX, Forex.class);
+		return CSVUtil.loadWithHeader(PATH_FOREX, Forex.class);
 	}
 	
 	public static void main (String[] args) {
@@ -120,10 +120,12 @@ public class UpdateForex {
 		}
 		
 		// Sanity check
-		logger.info("count    {}", count);
+		logger.info("URL    = {}", URL_MIZUHO);
+		logger.info("OUTPUT = {}", PATH_FOREX);
+		logger.info("COUNT  = {}", count);
 		
 		int forexCount = load().size();
-		logger.info("forex    {}", forexCount);
+		logger.info("FOREX  = {}", forexCount);
 		if (forexCount != count) {
 			logger.error("count({}) != forexCount({})", count, forexCount);
 			throw new UnexpectedException("Unexpected");

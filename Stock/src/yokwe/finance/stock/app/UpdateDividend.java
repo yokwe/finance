@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.Dividend;
-import yokwe.finance.stock.iex.IEXBase.Range;
-import yokwe.finance.stock.util.CSVUtil;
 import yokwe.finance.stock.iex.Dividends;
 import yokwe.finance.stock.iex.IEXBase;
+import yokwe.finance.stock.iex.IEXBase.Range;
+import yokwe.finance.stock.util.CSVUtil;
 
 public class UpdateDividend {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateDividend.class);
@@ -41,6 +41,11 @@ public class UpdateDividend {
 			date     = null;
 			symbol   = null;
 			dividend = 0;
+		}
+		
+		@Override
+		public String toString() {
+			return String.format("%s %s %s", date, symbol, dividend);
 		}
 		
 		public IEX(JsonObject jsonObject) {
@@ -169,7 +174,18 @@ public class UpdateDividend {
 
 				Map<String, IEX[]> dataMap = IEX.getStock(UPDATE_RANGE, getList.toArray(new String[0]));
 				for(Map.Entry<String, IEX[]>entry: dataMap.entrySet()) {
-					List<IEX> dataList = Arrays.asList(entry.getValue());
+					// Build dataList
+					List<IEX> dataList = new ArrayList<>();
+					for(IEX iex: entry.getValue()) {
+						// Sanity check
+						// Skip if date is empty
+						if (iex.date.length() == 0) {
+							logger.warn("skip {}", iex);
+							continue;
+						}
+						dataList.add(iex);
+					}
+					
 					if (dataList.size() == 0) continue;
 					CSVUtil.saveWithHeader(dataList, getCSVPath(basePath, entry.getKey()));
 					countData++;

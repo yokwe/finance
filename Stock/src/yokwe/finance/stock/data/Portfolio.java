@@ -32,9 +32,22 @@ public class Portfolio {
 		}
 	}
 	
-	private final Map<String, Entry> entryMap;
+	public static class Active {
+		public final String             symbol;
+		public final List<StockHistory> stockHistoryList;
+		
+		private Active (String symbol, List<StockHistory> stockHistoryList) {
+			this.symbol           = symbol;
+			this.stockHistoryList = stockHistoryList;
+		}
+	}
+	
+	private final Map<String, Entry>  entryMap;
+	private final Map<String, Active> activeMap;
+	
 	public Portfolio(String pathBase, String fileName) {
-		Map<String, Entry> map = new TreeMap<>();
+		Map<String, Entry>  map1 = new TreeMap<>();
+		Map<String, Active> map2 = new TreeMap<>();
 		
 		{
 			String path = String.format("%s/%s", pathBase, fileName);
@@ -56,15 +69,25 @@ public class Portfolio {
 
 			for(List<StockHistory> list: stockHistoryMap.values()) {
 				Entry entry = new Entry(list);
-				map.put(entry.symbol, entry);
+				map1.put(entry.symbol, entry);
+				
+				if (entry.active) {
+					Active active = new Active(entry.symbol, entry.lastStockHistoryList);
+					map2.put(active.symbol, active);
+				}
 			}
 		}
 		
-		entryMap = Collections.unmodifiableMap(map);
+		entryMap  = Collections.unmodifiableMap(map1);
+		activeMap = Collections.unmodifiableMap(map2);
 	}
 	
 	public Map<String, Entry> getEntryMap() {
 		return entryMap;
+	}
+	
+	public Map<String, Active> getActiveEntryMap() {
+		return activeMap;
 	}
 	
 	public static void main(String[] args) {

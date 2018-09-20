@@ -86,7 +86,7 @@ public class Portfolio {
 		return entryMap;
 	}
 	
-	public Map<String, Active> getActiveEntryMap() {
+	public Map<String, Active> getActiveMap() {
 		return activeMap;
 	}
 	

@@ -42,6 +42,10 @@ update-stock:
 	ant run-update-stock
 	cp tmp/data/stock.csv ~/Dropbox/Trade
 
+update-stats:
+	ant run-update-stats
+	cp tmp/data/stats.csv ~/Dropbox/Trade
+
 #
 # firstrade
 #

@@ -125,7 +125,15 @@
                         <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
                 </java>
         </target>
-	
+        
+        <target name="run-update-stats">
+                <java classname="yokwe.finance.stock.app.UpdateStats" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
 	
 	<!-- monex -->
         <target name="run-monex-update-fx-tax">

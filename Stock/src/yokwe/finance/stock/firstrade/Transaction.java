@@ -298,7 +298,7 @@ public class Transaction implements Comparable<Transaction> {
 						double quantity    = DoubleUtil.roundQuantity(nextActivity.quantity);
 						
 						Transaction transaction = Transaction.change(date, symbol, name, quantity, newSymbol, newName, newQuantity);
-						logger.info("transaction {}", transaction);
+//						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					} else {
 						logger.error("Unexpect transaction  {}  {}", activity.transaction, nextActivity);
@@ -371,7 +371,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 					
 					Transaction transaction = Transaction.buy(date, symbol, name, quantity, price, fee, debit);
-					logger.info("transaction {}", transaction);
+//					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
 				}
@@ -425,7 +425,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 					
 					Transaction transaction = Transaction.buy(date, symbol, name, quantity, price, fee, debit);
-					logger.info("transaction {}", transaction);
+//					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
 				}
@@ -505,7 +505,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					Transaction transaction = Transaction.sell(date, symbol, name, quantity, price, fee, credit);
-					logger.info("transaction {}", transaction);
+//					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
 				}
@@ -550,7 +550,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					Transaction transaction = Transaction.interest(date, credit);
-					logger.info("transaction {}", transaction);
+//					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
 				}
@@ -608,7 +608,7 @@ public class Transaction implements Comparable<Transaction> {
 					}
 
 					Transaction transaction = Transaction.dividend(date, symbol, name, quantity, 0, debit, credit);
-					logger.info("transaction {}", transaction);
+//					logger.info("transaction {}", transaction);
 					transactionList.add(transaction);
 					break;
 				}
@@ -660,12 +660,12 @@ public class Transaction implements Comparable<Transaction> {
 					
 					if (debit != 0) {
 						Transaction transaction = Transaction.achOut(date, debit);
-						logger.info("transaction {}", transaction);
+//						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					}
 					if (credit != 0) {
 						Transaction transaction = Transaction.achIn(date, credit);
-						logger.info("transaction {}", transaction);
+//						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					}
 					break;
@@ -718,12 +718,12 @@ public class Transaction implements Comparable<Transaction> {
 					
 					if (debit != 0) {
 						Transaction transaction = Transaction.wireOut(date, debit);
-						logger.info("transaction {}", transaction);
+//						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					}
 					if (credit != 0) {
 						Transaction transaction = Transaction.wireIn(date, credit);
-						logger.info("transaction {}", transaction);
+//						logger.info("transaction {}", transaction);
 						transactionList.add(transaction);
 					}
 					break;

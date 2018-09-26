@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.StockHistory;
 import yokwe.finance.stock.data.StockHistoryUtil;
 import yokwe.finance.stock.libreoffice.SpreadSheet;
 import yokwe.finance.stock.util.CSVUtil;
-import yokwe.finance.stock.util.DoubleUtil;
 
 public class UpdateStockHistory {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStockHistory.class);
@@ -24,56 +24,29 @@ public class UpdateStockHistory {
 			for(Transaction transaction: transactionList) {
 				switch(transaction.type) {
 				case BUY:
-				{
-					String date     = transaction.date;
-					String symbol   = transaction.symbol;
-					double quantity = transaction.quantity;
-					double buy      = DoubleUtil.round(transaction.total - transaction.fee, 2);
-					double buyFee   = transaction.fee;
-					
-					builder.buy(date, symbol, quantity, buy, buyFee);
-				}
+					builder.buy(transaction.date, transaction.symbol, transaction.quantity, transaction.fee, transaction.total);
 					break;
 				case SELL:
-				{
-					String date     = transaction.date;
-					String symbol   = transaction.symbol;
-					double quantity = transaction.quantity;
-					double sell     = DoubleUtil.round(transaction.total + transaction.fee, 2);
-					double sellFee  = transaction.fee;
-					
-					builder.sell(date, symbol, quantity, sell, sellFee);
-				}
+					builder.sell(transaction.date, transaction.symbol, transaction.quantity, transaction.fee, transaction.total);
 					break;
-//					case DIVIDEND:
-//					{
-//						String date   = transaction.date;
-//						String symbol = transaction.symbol;
-//						double fee    = transaction.fee;
-//						double debit  = transaction.debit;
-//						double credit = transaction.credit;
-//						
-//						if (!DoubleUtil.isAlmostZero(fee)) {
-//							logger.error("Unexpected {} {} {}", date, symbol, fee);
-//							throw new SecuritiesException("Unexpected");
-//						}
-//						
-//						StockHistory.dividend(date, symbol, credit, debit);
+//				case DIVIDEND:
+//					if (!DoubleUtil.isAlmostZero(transaction.fee)) {
+//						logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.fee);
+//						throw new UnexpectedException("Unexpected");
 //					}
-//						break;
-//				case CHANGE:
-//				{
-//					String date        = transaction.date;
-//					String symbol      = transaction.symbol;
-//					double quantity    = transaction.quantity;
-//					String newSymbol   = transaction.newSymbol;
-//					double newQuantity = transaction.newQuantity;
-//					
-//					StockHistory.change(date, symbol, -quantity, newSymbol, newQuantity);
-//				}
+//					builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.total);
 //					break;
-				default:
+//				case CHANGE:
+//					builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
+//					break;
+				case JPY_IN:
+				case JPY_OUT:
+				case USD_IN:
+				case USD_OUT:
 					break;
+				default:
+					logger.error("Unexpected {}", transaction);
+					throw new UnexpectedException("Unexpected");
 				}
 			}
 			

@@ -25,66 +25,41 @@ public class UpdateStockHistory {
 			for(Transaction transaction: transactionList) {
 				switch(transaction.type) {
 				case DIVIDEND:
-				{
-					String date   = transaction.date;
-					String symbol = transaction.symbol;
-					double fee    = transaction.fee;
-					double debit  = transaction.debit;
-					double credit = transaction.credit;
-					
-					if (!DoubleUtil.isAlmostZero(fee)) {
-						logger.error("Unexpected {} {} {}", date, symbol, fee);
+					if (!DoubleUtil.isAlmostZero(transaction.fee)) {
+						logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.fee);
 						throw new UnexpectedException("Unexpected");
 					}
 					
-					builder.dividend(date, symbol, credit, debit);
-				}
+					builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.credit);
 					break;
 				case BUY:
-				{
-					String date     = transaction.date;
-					String symbol   = transaction.symbol;
-					double quantity = transaction.quantity;
-					double buy      = transaction.debit;
-					double buyFee   = transaction.fee;
-					
 					if (!DoubleUtil.isAlmostZero(transaction.credit)) {
-						logger.error("Unexpected {} {} {}", date, symbol, transaction.credit);
+						logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.credit);
 						throw new UnexpectedException("Unexpected");
 					}
 					
-					builder.buy(date, symbol, quantity, buy, buyFee);
-				}
+					builder.buy(transaction.date, transaction.symbol, transaction.quantity, transaction.fee, DoubleUtil.roundPrice(transaction.debit + transaction.fee));
 					break;
 				case SELL:
-				{
-					String date     = transaction.date;
-					String symbol   = transaction.symbol;
-					double quantity = transaction.quantity;
-					double sell     = transaction.credit;
-					double sellFee  = transaction.fee;
-					
 					if (!DoubleUtil.isAlmostZero(transaction.debit)) {
-						logger.error("Unexpected {} {} {}", date, symbol, transaction.debit);
+						logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.debit);
 						throw new UnexpectedException("Unexpected");
 					}
 					
-					builder.sell(date, symbol, quantity, sell, sellFee);
-				}
+					builder.sell(transaction.date, transaction.symbol, transaction.quantity, transaction.fee, DoubleUtil.roundPrice(transaction.credit - transaction.fee));
 					break;
 				case CHANGE:
-				{
-					String date        = transaction.date;
-					String symbol      = transaction.symbol;
-					double quantity    = transaction.quantity;
-					String newSymbol   = transaction.newSymbol;
-					double newQuantity = transaction.newQuantity;
-					
-					builder.change(date, symbol, -quantity, newSymbol, newQuantity);
-				}
+					builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
+					break;
+				case WIRE_IN:
+				case WIRE_OUT:
+				case ACH_IN:
+				case ACH_OUT:
+				case INTEREST:
 					break;
 				default:
-					break;
+					logger.error("Unexpected {}", transaction);
+					throw new UnexpectedException("Unexpected");
 				}
 			}
 			

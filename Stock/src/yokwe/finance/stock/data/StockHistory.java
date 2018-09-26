@@ -120,7 +120,7 @@ public class StockHistory implements Comparable<StockHistory> {
 	public static class Builder {
 		private int nextSession = 1;
 		
-		//                 key                  symbol      date
+		//          symbol               date
 		private Map<String, NavigableMap<String, StockHistory>> allStockMap = new TreeMap<>();
 		
 		public List<StockHistory> getStockList() {
@@ -180,15 +180,17 @@ public class StockHistory implements Comparable<StockHistory> {
 			return ret;
 		}
 		
-		public void dividend(String date, String symbol, double dividend, double dividendFee) {
+		public void dividend(String date, String symbol, double debit, double credit) {
 			StockHistory stock = getStock(date, symbol);
 			
-			stock.dividend      = DoubleUtil.roundPrice(stock.dividend      + dividend);
-			stock.dividendFee   = DoubleUtil.roundPrice(stock.dividendFee   + dividendFee);
-			stock.totalDividend = DoubleUtil.roundPrice(stock.totalDividend + dividend - dividendFee);
+			double amount = DoubleUtil.roundPrice(credit - debit);
+			
+			stock.dividend      = DoubleUtil.roundPrice(stock.dividend      + amount);
+			stock.dividendFee   = DoubleUtil.roundPrice(stock.dividendFee   + debit);
+			stock.totalDividend = DoubleUtil.roundPrice(stock.totalDividend + amount);
 		}
 
-		public void buy(String date, String symbol, double buyQuantity, double buy, double buyFee) {
+		public void buy(String date, String symbol, double buyQuantity, double fee, double debit) {
 //			logger.info("{}", String.format("buyQuantity  = %8.2f  buy  = %8.2f  buyFee  = %8.2f", buyQuantity, buy, buyFee));
 			StockHistory stock = getStock(date, symbol);
 			
@@ -207,24 +209,24 @@ public class StockHistory implements Comparable<StockHistory> {
 			}
 			
 			stock.buyQuantity = DoubleUtil.roundQuantity(stock.buyQuantity + buyQuantity);
-			stock.buyFee      = DoubleUtil.roundPrice(stock.buyFee + buyFee);
-			stock.buy         = DoubleUtil.roundPrice(stock.buy    + buy);
+			stock.buyFee      = DoubleUtil.roundPrice(stock.buyFee + fee);
+			stock.buy         = DoubleUtil.roundPrice(stock.buy    + debit);
 			
 			stock.totalQuantity = DoubleUtil.roundQuantity(stock.totalQuantity + buyQuantity);
-			stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost + buy + buyFee);
+			stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost + debit);
 		}
 		
-		public void sell(String date, String symbol, double sellQuantity, double sell, double sellFee) {
+		public void sell(String date, String symbol, double sellQuantity, double fee, double credit) {
 //			logger.info("{}", String.format("sellQuantity = %8.2f  sell = %8.2f  sellFee = %8.2f", sellQuantity, sell, sellFee));
 			StockHistory stock = getStock(date, symbol);
 			
 			double sellCost   = DoubleUtil.roundPrice((stock.totalCost / stock.totalQuantity) * sellQuantity);
-			double sellProfit = DoubleUtil.roundPrice(sell - sellFee - sellCost);
+			double sellProfit = DoubleUtil.roundPrice(credit - sellCost);
 //			logger.info("{}", String.format("sellCost = %8.2f  sellProfit = %8.2f", sellCost, sellProfit));
 			
 			stock.sellQuantity = DoubleUtil.roundQuantity(stock.sellQuantity + sellQuantity);
-			stock.sellFee      = DoubleUtil.roundPrice(stock.sellFee    + sellFee);
-			stock.sell         = DoubleUtil.roundPrice(stock.sell       + sell);
+			stock.sellFee      = DoubleUtil.roundPrice(stock.sellFee    + fee);
+			stock.sell         = DoubleUtil.roundPrice(stock.sell       + credit);
 			
 			stock.sellCost     = DoubleUtil.roundPrice(stock.sellCost   + sellCost);
 			stock.sellProfit   = DoubleUtil.roundPrice(stock.sellProfit + sellProfit);

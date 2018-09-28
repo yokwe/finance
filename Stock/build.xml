@@ -134,6 +134,22 @@
                 </java>
         </target>
         
+        <target name="run-fetch-quantum">
+                <java classname="yokwe.finance.stock.app.FetchQuantum" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
+        <target name="run-update-preferred">
+                <java classname="yokwe.finance.stock.app.UpdatePreferred" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
+        
 	
 	<!-- monex -->
         <target name="run-monex-update-fx-tax">

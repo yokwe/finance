@@ -96,7 +96,20 @@ public class UpdateStock {
 		// To update symbolList, invoke UpdateSymbols
 		UpdateSymbols.main(new String[0]);
 		
-		List<String> symbolList = UpdateSymbols.getSymbolList();
+		List<String> symbolList = new ArrayList<>();
+		for(String symbol: UpdateSymbols.getSymbolList()) {
+			// Remove suffix for Called
+			if (symbol.endsWith("*")) {
+				symbolList.add(symbol.substring(0, symbol.length() - 1));
+				continue;
+			}
+			// Remove suffix for When Issued
+			if (symbol.endsWith("#")) {
+				symbolList.add(symbol.substring(0, symbol.length() - 1));
+				continue;
+			}
+			symbolList.add(symbol);
+		}
 		logger.info("symbolList {}", symbolList.size());
 		
 		// Update csv file

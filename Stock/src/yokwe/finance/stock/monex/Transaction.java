@@ -29,7 +29,7 @@ public class Transaction implements Comparable<Transaction> {
 	public final int    quantity;
 	public final double price;
 	public final double fee;
-	public final double total;
+	public final double total;   // Actual amount subtract/add from/to account - contains fee
 	
 	public final int    jpy;
 	public final double usd;

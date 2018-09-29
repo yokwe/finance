@@ -29,13 +29,9 @@ public class UpdateStockHistory {
 				case SELL:
 					builder.sell(transaction.date, transaction.symbol, transaction.quantity, transaction.fee, transaction.total);
 					break;
-//				case DIVIDEND:
-//					if (!DoubleUtil.isAlmostZero(transaction.fee)) {
-//						logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.fee);
-//						throw new UnexpectedException("Unexpected");
-//					}
-//					builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.total);
-//					break;
+				case DIVIDEND:
+					builder.dividend(transaction.date, transaction.symbol, transaction.fee, transaction.total);
+					break;
 //				case CHANGE:
 //					builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
 //					break;

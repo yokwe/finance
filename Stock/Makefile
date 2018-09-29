@@ -2,11 +2,6 @@
 #
 #
 
-# From quantumonline
-DIR_FETCH_QUANTUM		=tmp/fetch/quantum
-
-FETCH_LIST			=tmp/fetch/fetch.list
-
 FILE_LOG			=/tmp/stock.log
 
 all:
@@ -23,17 +18,11 @@ prepare-deploy-jar:
 	sudo chmod 777 /var/lib/tomcat8/webapps/
 	
 #
-# quantumonline
+# preferred
 #
-fetch-quantum:
-	mkdir -p ${DIR_FETCH_QUANTUM}
-	awk -v DIR_OUTPUT="${DIR_FETCH_QUANTUM}"        -f ${DIR_SCRIPT}/fetch-quantum.awk \
-	  tmp/eod/stock.csv >${FETCH_LIST}
-	ant run-fetch
-
-update-quantum:
-	ant run-update-quantum
-	tail -n +2 ${DIR_DATABASE}/quantum-header.csv >${DIR_DATABASE}/quantum.csv
+update-preferred:
+	ant run-update-preferred
+	cp tmp/data/preferred.csv ~/Dropbox/Trade
 
 #
 # data

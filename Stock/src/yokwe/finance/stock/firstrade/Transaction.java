@@ -38,8 +38,8 @@ public class Transaction implements Comparable<Transaction> {
 	public final double         quantity;
 	public final double         price;
 	public final double         fee;
-	public final double         debit;
-	public final double         credit;
+	public final double         debit;    // Actual amount subtract from account - contains fee
+	public final double         credit;   // Actual amount add to account        - contains fee
 	
 	// for name change
 	public final String         newSymbol;

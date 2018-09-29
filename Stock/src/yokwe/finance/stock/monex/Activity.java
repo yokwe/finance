@@ -146,10 +146,115 @@ public class Activity {
 		@Override
 		public String toString() {
 			return String.format("%s %s %s %s %s   %d %.2f %.2f %.2f %.2f %.2f   %.2f %.2f %.2f %.2f %.2f  %.2f %d", 
-					tradeDate, settlementDate, securityCode, symbol, transaction,
-					quantity, unitPrice, price, tax, fee, other,
-					subTotalPrice, fxRate, feeJP, consumptionTaxJP, withholdingTaxJP,
-					total, totalJPY);
+				tradeDate, settlementDate, securityCode, symbol, transaction,
+				quantity, unitPrice, price, tax, fee, other,
+				subTotalPrice, fxRate, feeJP, consumptionTaxJP, withholdingTaxJP,
+				total, totalJPY);
+		}
+	}
+	
+	@Sheet.SheetName("配当")
+	@Sheet.HeaderRow(0)
+	@Sheet.DataRow(1)
+	public static class Dividend extends Sheet {
+		@ColumnName("確定日")
+		@NumberFormat(SpreadSheet.FORMAT_DATE)
+		public String payDateUS;
+
+		@ColumnName("支払日")
+		@NumberFormat(SpreadSheet.FORMAT_DATE)
+		public String payDateJP;
+
+		@ColumnName("銘柄")
+		public String securityCode;
+
+		@ColumnName("シンボル")
+		public String symbol;
+
+		@ColumnName("数量")
+		public int quantity;
+
+		@ColumnName("単価")
+		public double unitPrice;
+
+		@ColumnName("税込金額")
+		public double taxBaseUS;
+
+		@ColumnName("国外税率")
+		public double taxRateUS;
+		
+		@ColumnName("国外税額")
+		public double withholdingTaxUS;
+
+		@ColumnName("差引金額")
+		public double amount1;
+		
+		@ColumnName("国内税率")
+		public double taxRateJP;
+		
+		@ColumnName("国内税額")
+		public double withholdingTaxJPUS;
+
+		@ColumnName("受取金額")
+		public double amount2;
+
+		@ColumnName("為替レート")
+		public double fxRate;
+
+		@ColumnName("課税対象額")
+		public double taxBaseJP;
+		
+		@ColumnName("国内源泉額")
+		public double withholdingTaxJP;
+		
+		@ColumnName("国外課税額")
+		public double taxBaseUSJP;
+		
+		@ColumnName("国外源泉額")
+		public double withholdingTaxUSJP;
+		
+
+		public Dividend(String payDateUS, String payDateJP, String securityCode, String symbol,
+				int quantity, double unitPrice, double taxBaseUS,
+				double taxRateUS, double withholdingTaxUS, double amount1,
+				double taxRateJP, double withholdingTaxJPUS, double amount2,
+				double fxRate, double taxBaseJP, double withholdingTaxJP, double taxBaseUSJP, double withholdingTaxUSJP) {
+			this.payDateUS          = payDateUS;
+			this.payDateJP          = payDateJP;
+			this.securityCode       = securityCode;
+			this.symbol             = symbol;
+			
+			this.quantity           = quantity;
+			this.unitPrice          = unitPrice;
+			this.taxBaseUS          = taxBaseUS;
+			
+			this.taxRateUS          = taxRateUS;
+			this.withholdingTaxUS   = withholdingTaxUS;
+			this.amount1            = amount1;
+
+			this.taxRateJP          = taxRateJP;
+			this.withholdingTaxJPUS = withholdingTaxJPUS;
+			this.amount2            = amount2;
+			
+			this.fxRate             = fxRate;
+			this.taxBaseJP          = taxBaseJP;
+			this.withholdingTaxJP   = withholdingTaxJP;
+			this.taxBaseUSJP        = taxBaseUSJP;
+			this.withholdingTaxUSJP = withholdingTaxUSJP;
+		}
+
+		public Dividend() {
+			this(null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+		}
+
+		@Override
+		public String toString() {
+			return String.format("%s %s %s %s   %d %.2f %.2f   %.2f %.2f   %.2f %.2f   %.2f %.2f %.2f %.2f %.2f", 
+				payDateUS, payDateJP, securityCode, symbol,
+				quantity, unitPrice, taxBaseUS,
+				withholdingTaxUS, amount1,
+				withholdingTaxJPUS, amount2,
+				fxRate, taxBaseJP, withholdingTaxJP, taxBaseUSJP, withholdingTaxUSJP);
 		}
 	}
 }

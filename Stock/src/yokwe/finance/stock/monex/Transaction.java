@@ -18,6 +18,7 @@ public class Transaction implements Comparable<Transaction> {
 
 	public enum Type {
 		JPY_IN, JPY_OUT, USD_IN, USD_OUT,
+		DIVIDEND,
 		BUY, SELL,
 	}
 	
@@ -54,7 +55,7 @@ public class Transaction implements Comparable<Transaction> {
 	
 	@Override
 	public String toString() {
-		return String.format("%s %-7s %-8s %4d %6.2f %6.2f %8.2f %8d %8.2f %6.2f",
+		return String.format("%s %-8s %-8s %4d %6.2f %6.2f %8.2f %8d %8.2f %6.2f",
 				date, type, symbol, quantity, price, fee, total, jpy, usd, fxRate);
 	}
 
@@ -83,6 +84,9 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	private static Transaction sell(String date, String symbol, int quantity, double price, double fee, double total) {
 		return new Transaction(Type.SELL, date, symbol, quantity, price, fee, total, 0, 0, 0);
+	}
+	private static Transaction dividend(String date, String symbol, int quantity, double price, double fee, double total) {
+		return new Transaction(Type.DIVIDEND, date, symbol, quantity, price, fee, total, 0, 0, 0);
 	}
 
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
@@ -182,6 +186,25 @@ public class Transaction implements Comparable<Transaction> {
 					throw new UnexpectedException("Unexpected");
 				}
 			}			
+		}
+		
+		// Process Dividend
+		for(String sheetName: sheetNameList) {
+			if (!sheetName.equals("配当")) continue;
+			logger.info("Sheet {}", sheetName);
+			
+			List<Activity.Dividend> activityList = Sheet.extractSheet(docActivity, Activity.Dividend.class, sheetName);
+			for(Activity.Dividend activity: activityList) {
+				// Sanity check
+				if (activity.payDateUS == null) {
+					logger.error("Unexpected  {}", activity);
+					throw new UnexpectedException("Unexpected");
+				}
+				
+				double fee = DoubleUtil.roundPrice(activity.withholdingTaxUS + activity.withholdingTaxJPUS);
+//				double fee = DoubleUtil.roundPrice(activity.taxBaseUS - activity.amount2);
+				transactionList.add(Transaction.dividend(activity.payDateUS, activity.symbol, activity.quantity, activity.unitPrice, fee, activity.amount2));
+			}
 		}
 		
 		for(String sheetName: sheetNameList) {

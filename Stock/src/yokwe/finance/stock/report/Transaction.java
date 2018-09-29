@@ -147,8 +147,8 @@ public class Transaction implements Comparable<Transaction> {
 	public static Transaction interest(String date, double credit) {
 		return new Transaction(Type.INTEREST, date, FILLER, 0, 0, 0, 0, credit);
 	}
-	public static Transaction dividend(String date, String symbol, double quantity, double fee, double debit, double credit) {
-		return new Transaction(Type.DIVIDEND, date, symbol, quantity, 0, fee, debit, credit);
+	public static Transaction dividend(String date, String symbol, double quantity, double fee, double credit) {
+		return new Transaction(Type.DIVIDEND, date, symbol, quantity, 0, fee, 0, credit);
 	}
 	public static Transaction buy(String date, String symbol, double quantity, double price, double fee, double debit) {
 		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, debit, 0);
@@ -185,8 +185,9 @@ public class Transaction implements Comparable<Transaction> {
 				transaction = Transaction.interest(otherTransaction.date, otherTransaction.credit);
 				break;
 			case DIVIDEND:
-				transaction = Transaction.dividend(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.fee,
-					otherTransaction.debit, otherTransaction.credit);
+				transaction = Transaction.dividend(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity,
+					DoubleUtil.roundPrice(otherTransaction.debit + otherTransaction.fee),
+					DoubleUtil.roundPrice(otherTransaction.credit - otherTransaction.debit - otherTransaction.fee));
 				break;
 			case BUY:
 				transaction = Transaction.buy(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee,
@@ -231,6 +232,9 @@ public class Transaction implements Comparable<Transaction> {
 				break;
 			case USD_OUT:
 				transaction = Transaction.withdraw(otherTransaction.date, -otherTransaction.usd);
+				break;
+			case DIVIDEND:
+				transaction = Transaction.dividend(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.fee, otherTransaction.total);
 				break;
 			case BUY:
 				transaction = Transaction.buy(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee, otherTransaction.total);

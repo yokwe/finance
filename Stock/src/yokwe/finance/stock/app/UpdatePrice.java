@@ -163,6 +163,27 @@ public class UpdatePrice {
 			}
 		}
 		
+		Set<String> yahooSymbolSet = new TreeSet<>();
+		{
+			File dir = new File(UpdateYahooPrice.DIR_OUT);
+			for(File file: dir.listFiles()) {
+				String name = file.getName();
+
+				// Sanity checks
+				if (!name.endsWith(".csv")) {
+					logger.warn("Not CSV file {}", file.getPath());
+					continue;
+				}
+				if (file.length() == 0) {
+					logger.warn("Empty file {}", file.getPath());
+					continue;
+				}
+				
+				String symbol = name.substring(0, name.length() - 4); // minus 4 for ".csv"
+				yahooSymbolSet.add(symbol);
+			}
+		}
+		
 		// Remove unknown file
 		{
 			Set<String> symbolSet = new HashSet<>(symbolList);
@@ -187,6 +208,7 @@ public class UpdatePrice {
 					String symbol = file.getName().replace(".csv", "");
 					if (symbolSet.contains(symbol)) continue;
 					if (delistedSymbolSet.contains(symbol)) continue;
+					if (yahooSymbolSet.contains(symbol)) continue;
 					
 						File destFile = new File(getDelistedCSVPath(basePath, symbol, suffix));
 						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
@@ -256,6 +278,22 @@ public class UpdatePrice {
 				for(String symbol: delistedSymbolSet) {
 					logger.info("copy delisted  {}", symbol);
 					File source = new File(String.format("%s/%s.csv", PATH_DELISTED_DIR, symbol));
+					File target = new File(getCSVPath(basePath, symbol));
+					
+					Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				}
+			} catch (IOException e) {
+				logger.info("IOException {}", e.getMessage());
+				throw new UnexpectedException("IOException");
+			}
+		}
+
+		// Copy csv files from UpdateYahooPrice.DIR_OUT
+		{
+			try {
+				for(String symbol: yahooSymbolSet) {
+					logger.info("copy yahooPrice  {}", symbol);
+					File source = new File(String.format("%s/%s.csv", UpdateYahooPrice.DIR_OUT, symbol));
 					File target = new File(getCSVPath(basePath, symbol));
 					
 					Files.copy(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);

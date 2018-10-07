@@ -559,6 +559,7 @@ public class Transaction implements Comparable<Transaction> {
 				case "MLP":
 				case "NRA":
 				case "CAP GAIN": 
+				case "SUB PAY": 
 				case "JOURNAL": {
 					// Sanity check
 					if (activity.date == null) {

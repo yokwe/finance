@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.json.JsonObject;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.Stock;
 import yokwe.finance.stock.iex.Company;
 import yokwe.finance.stock.iex.IEXBase;
@@ -73,21 +76,21 @@ public class UpdateStock {
 		CSVUtil.saveWithHeader(dataList, file.getPath());
 	}
 	
-	private static List<Stock> stockList = null;
+	private static List<Stock> stockListCache = null;
 	public static List<Stock> getStockList() {
-		if (stockList == null) {
-			stockList = load();
-			Collections.sort(stockList);
+		if (stockListCache == null) {
+			stockListCache = load();
+			Collections.sort(stockListCache);
 		}
-		return stockList;
+		return stockListCache;
 	}
-	private static List<String> symbolList = null;
+	private static List<String> symbolListCache = null;
 	public static List<String> getSymbolList() {
-		if (symbolList == null) {
-			symbolList = getStockList().stream().map(o -> o.symbol).collect(Collectors.toList());
-			Collections.sort(symbolList);
+		if (symbolListCache == null) {
+			symbolListCache = getStockList().stream().map(o -> o.symbol).collect(Collectors.toList());
+			Collections.sort(symbolListCache);
 		}
-		return symbolList;
+		return symbolListCache;
 	}
 	// This methods update end of day csv in tmp/data directory.
 	public static void main(String[] args) {
@@ -96,19 +99,55 @@ public class UpdateStock {
 		// To update symbolList, invoke UpdateSymbols
 		UpdateSymbols.main(new String[0]);
 		
-		List<String> symbolList = new ArrayList<>();
-		for(String symbol: UpdateSymbols.getSymbolList()) {
-			// Remove suffix for Called
-			if (symbol.endsWith("*")) {
-				symbolList.add(symbol.substring(0, symbol.length() - 1));
-				continue;
+		final List<String> symbolList;
+
+		{
+			Set<String> symbolSet = new TreeSet<>();
+			
+			// Add candidate from UpdateSymbols.getSymbolList()
+			{
+				for(String symbol: UpdateSymbols.getSymbolList()) {
+					// Remove suffix for Called
+					if (symbol.endsWith("*")) {
+						symbol = symbol.substring(0, symbol.length() - 1);
+					}
+					// Remove suffix for When Issued
+					if (symbol.endsWith("#")) {
+						symbol = symbol.substring(0, symbol.length() - 1);
+					}
+					symbolSet.add(symbol);
+				}
 			}
-			// Remove suffix for When Issued
-			if (symbol.endsWith("#")) {
-				symbolList.add(symbol.substring(0, symbol.length() - 1));
-				continue;
+			
+			// Add candidate from price-delisted
+			{
+				String dirPath = UpdatePrice.getDelistedCSVDir(".");
+				File dir = new File(dirPath);
+				for(File file: dir.listFiles(f -> f.isFile() && f.getName().contains(".csv-"))) {
+					// ACSF.csv-20180828-121551
+					//     12345678901234567890
+					String name = file.getName();
+					String symbol = name.substring(0, name.length() - 20);
+					String suffix = name.substring(name.length() - 20, name.length());
+					if (!suffix.startsWith(".csv")) {
+						logger.error("Unexpected {}", suffix);
+						throw new UnexpectedException("Unexpected");
+					}
+					
+					// Remove suffix for Called
+					if (symbol.endsWith("*")) {
+						symbol = symbol.substring(0, symbol.length() - 1);
+					}
+					// Remove suffix for When Issued
+					if (symbol.endsWith("#")) {
+						symbol = symbol.substring(0, symbol.length() - 1);
+					}
+
+					symbolSet.add(symbol);
+				}
 			}
-			symbolList.add(symbol);
+
+			symbolList = new ArrayList<>(symbolSet);
 		}
 		logger.info("symbolList {}", symbolList.size());
 		

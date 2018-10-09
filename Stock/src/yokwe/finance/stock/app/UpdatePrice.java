@@ -9,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -184,46 +183,8 @@ public class UpdatePrice {
 			}
 		}
 		
-		// Remove unknown file
-		{
-			Set<String> symbolSet = new HashSet<>(symbolList);
-			
-			File dir = new File(getCSVDir(basePath));			
-			if (!dir.exists()) {
-				dir.mkdirs();
-			}
-			
-			File dirDelisted = new File(getDelistedCSVDir(basePath));
-			if (!dirDelisted.exists()) {
-				dirDelisted.mkdirs();
-			}
+		Set<String> updatedSymbolSet = new TreeSet<>();
 
-			String suffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-			
-			// Make list of csv file.
-			List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
-			fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
-			try {
-				for(File file: fileList) {
-					String symbol = file.getName().replace(".csv", "");
-					if (symbolSet.contains(symbol)) continue;
-					if (delistedSymbolSet.contains(symbol)) continue;
-					if (yahooSymbolSet.contains(symbol)) continue;
-					
-						File destFile = new File(getDelistedCSVPath(basePath, symbol, suffix));
-						logger.info("move unknown file {} to {}", file.getPath(), destFile.getPath());
-											
-						// Copy file to new location
-						Files.copy(file.toPath(), destFile.toPath());
-						// Delete file after successful copy
-						file.delete();
-				}
-			} catch (IOException e) {
-				logger.error("IOException {}", e.toString());
-				throw new UnexpectedException("IOException");
-			}
-		}
-	
 		// Update csv file
 		{
 			int symbolListSize = symbolList.size();
@@ -232,7 +193,7 @@ public class UpdatePrice {
 			int countData = 0;
 			int countHasLastTradingDateM0 = 0;
 			int countHasLastTradingDateM1 = 0;
-
+			
 			for(int i = 0; i < symbolListSize; i += DELTA) {
 				int fromIndex = i;
 				int toIndex = Math.min(fromIndex + DELTA, symbolListSize);
@@ -260,6 +221,8 @@ public class UpdatePrice {
 					if (dataList.stream().filter(o -> o.date.equals(lastTradingDateM1)).count() != 0) countHasLastTradingDateM1++;
 					CSVUtil.saveWithHeader(dataList, getCSVPath(basePath, entry.getKey()));
 					countData++;
+					
+					updatedSymbolSet.add(entry.getKey());
 				}
 				
 				// Too few update
@@ -268,6 +231,8 @@ public class UpdatePrice {
 					throw new UnexpectedException("Too few update");
 				}
 			}
+			
+			// Remove not updatedSymbol
 			
 			logger.info("count {} - {} / {} / {}", countHasLastTradingDateM1, countHasLastTradingDateM0, countData, countGet);
 		}
@@ -300,6 +265,35 @@ public class UpdatePrice {
 				}
 			} catch (IOException e) {
 				logger.info("IOException {}", e.getMessage());
+				throw new UnexpectedException("IOException");
+			}
+		}
+		
+		// Remove not updated symbol file
+		{
+			String suffix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+			
+			// Make list of csv file.
+			File dir = new File(getCSVDir(basePath));			
+			List<File> fileList = Arrays.asList(dir.listFiles((d, name) -> (name.endsWith(".csv"))));
+			fileList.sort((a, b) -> a.getName().compareTo(b.getName()));
+			try {
+				for(File file: fileList) {
+					String symbol = file.getName().replace(".csv", "");
+					if (updatedSymbolSet.contains(symbol)) continue;
+					if (delistedSymbolSet.contains(symbol)) continue;
+					if (yahooSymbolSet.contains(symbol)) continue;
+					
+					File destFile = new File(getDelistedCSVPath(basePath, symbol, suffix));
+					logger.info("move not updated file {} to {}", file.getPath(), destFile.getPath());
+										
+					// Copy file to new location
+					Files.copy(file.toPath(), destFile.toPath());
+					// Delete file after successful copy
+					file.delete();
+				}
+			} catch (IOException e) {
+				logger.error("IOException {}", e.toString());
 				throw new UnexpectedException("IOException");
 			}
 		}

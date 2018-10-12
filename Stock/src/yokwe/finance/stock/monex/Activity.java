@@ -189,8 +189,11 @@ public class Activity {
 		@ColumnName("差引金額")
 		public double amount1;
 		
-		@ColumnName("国内税率")
-		public double taxRateJP;
+		@ColumnName("所得税率")
+		public double incomeTaxRateJP;
+		
+		@ColumnName("地方税率")
+		public double localTaxRateJP;
 		
 		@ColumnName("国内税額")
 		public double withholdingTaxJPUS;
@@ -203,6 +206,12 @@ public class Activity {
 
 		@ColumnName("課税対象額")
 		public double taxBaseJP;
+		
+		@ColumnName("所得税")
+		public double incomeTaxJP;
+		
+		@ColumnName("地方税")
+		public double localTaxJP;
 		
 		@ColumnName("国内源泉額")
 		public double withholdingTaxJP;
@@ -217,8 +226,8 @@ public class Activity {
 		public Dividend(String payDateUS, String payDateJP, String securityCode, String symbol,
 				int quantity, double unitPrice, double taxBaseUS,
 				double taxRateUS, double withholdingTaxUS, double amount1,
-				double taxRateJP, double withholdingTaxJPUS, double amount2,
-				double fxRate, double taxBaseJP, double withholdingTaxJP, double taxBaseUSJP, double withholdingTaxUSJP) {
+				double incomeTaxRateJP, double localTaxRateJP, double withholdingTaxJPUS, double amount2,
+				double fxRate, double taxBaseJP, double incomeTaxJP, double localTaxJP, double withholdingTaxJP, double taxBaseUSJP, double withholdingTaxUSJP) {
 			this.payDateUS          = payDateUS;
 			this.payDateJP          = payDateJP;
 			this.securityCode       = securityCode;
@@ -232,19 +241,22 @@ public class Activity {
 			this.withholdingTaxUS   = withholdingTaxUS;
 			this.amount1            = amount1;
 
-			this.taxRateJP          = taxRateJP;
+			this.incomeTaxRateJP    = incomeTaxRateJP;
+			this.localTaxRateJP     = localTaxRateJP;
 			this.withholdingTaxJPUS = withholdingTaxJPUS;
 			this.amount2            = amount2;
 			
 			this.fxRate             = fxRate;
 			this.taxBaseJP          = taxBaseJP;
+			this.incomeTaxJP        = incomeTaxJP;
+			this.localTaxJP         = localTaxJP;
 			this.withholdingTaxJP   = withholdingTaxJP;
 			this.taxBaseUSJP        = taxBaseUSJP;
 			this.withholdingTaxUSJP = withholdingTaxUSJP;
 		}
 
 		public Dividend() {
-			this(null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			this(null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		}
 
 		@Override

@@ -49,6 +49,7 @@ public class UpdateStockUS {
 		}
 		
 		String match = matcher.group(1);
+		match = match.replace("\t", ""); // To prevent JsonParsingException, remove TAB from match
 //		logger.info("match = {}", match.length());
 //		logger.info("match = {} ... {}", match.substring(0, 20), match.substring(match.length() - 20, match.length()));
 		try (JsonReader reader = Json.createReader(new StringReader(match))) {

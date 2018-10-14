@@ -131,6 +131,7 @@ public class IEXBase {
 		public final String      clazzName;
 		public final String      type;
 		public final FieldInfo[] fieldInfos;
+		public final int         fieldSize;
 		public final String      filter;
 		
 		IEXInfo(Class<? extends IEXBase> clazz) {
@@ -144,6 +145,14 @@ public class IEXBase {
 				FieldInfo[] fieldInfos = new FieldInfo[fieldList.size()];
 				for(int i = 0; i < fieldInfos.length; i++) {
 					fieldInfos[i] = new FieldInfo(fieldList.get(i));
+				}
+				
+				int fieldSize = 0;
+				{
+					for(int i = 0; i < fieldInfos.length; i++) {
+						if (fieldInfos[i].ignoreField) continue;
+						fieldSize++;
+					}
 				}
 				
 				String type;
@@ -181,9 +190,10 @@ public class IEXBase {
 					filter = String.join(",", filterList.toArray(new String[0]));
 				}
 
-				this.clazzName = clazz.getName();
+				this.clazzName  = clazz.getName();
 				this.type       = type;
 				this.fieldInfos = fieldInfos;
+				this.fieldSize  = fieldSize;
 				this.filter     = filter;
 			} catch (NoSuchFieldException e) {
 				logger.error("NoSuchFieldException {}", e.toString());
@@ -560,8 +570,8 @@ public class IEXBase {
 				{
 					JsonObject arg = elementValue.asJsonObject();
 					// Sanity check
-					if (iexInfo.fieldInfos.length != arg.size()) {
-						logger.warn("Unexpected resultChild {} {} {}", resultKey, iexInfo.fieldInfos.length, arg.size());
+					if (iexInfo.fieldSize != arg.size()) {
+						logger.warn("Unexpected resultChild {} {} {}", resultKey, iexInfo.fieldSize, arg.size());
 						continue;
 					}
 

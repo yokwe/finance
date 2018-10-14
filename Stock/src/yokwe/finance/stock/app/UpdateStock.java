@@ -27,21 +27,29 @@ public class UpdateStock {
 	public static class IEX extends IEXBase {
 		public static final String TYPE = Stats.TYPE;
 		
-		@IgnoreField
 		public String symbol;
 		@JSONName("companyName")
 		public String name;
 
+		public double marketcap;          // is not calculated in real time.
 		public double beta;
-		public double week52high;
-		public double week52low;
-		public double week52change;
-		public long   shortInterest;
-		public String shortDate;
-		public double dividendRate;
+
 		public double dividendYield;
 		public String exDividendDate;
+
+		public double priceToBook;
+
+		public double institutionPercent; // represents top 15 institutions
+		public double insiderPercent;
+		public double shortRatio;
 		
+		public double year5ChangePercent;
+		public double year2ChangePercent;
+		public double year1ChangePercent;
+		public double month6ChangePercent;
+		public double month3ChangePercent;
+		public double month1ChangePercent;
+
 		IEX() {}
 		
 		public IEX(JsonObject jsonObject) {
@@ -178,7 +186,7 @@ public class UpdateStock {
 				Map<String, IEX> dataMap = IEX.getStock(getList.toArray(new String[0]));
 				for(Map.Entry<String, IEX> entry: dataMap.entrySet()) {
 					IEX iex = entry.getValue();
-					iex.symbol = entry.getKey();
+					// Special for exDividendDate
 					if (iex.exDividendDate.equals("0")) {
 						iex.exDividendDate = "";
 					} else if (iex.exDividendDate.endsWith(" 00:00:00.0")) {

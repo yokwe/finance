@@ -15,35 +15,34 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.Stock;
-import yokwe.finance.stock.iex.Company;
 import yokwe.finance.stock.iex.IEXBase;
+import yokwe.finance.stock.iex.Stats;
 import yokwe.finance.stock.iex.UpdateSymbols;
 import yokwe.finance.stock.util.CSVUtil;
 
 public class UpdateStock {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStock.class);
 	
-	// Define data.Price compatible class using IEXBase
+	// Define data.Stock compatible class using iex.Stats
 	public static class IEX extends IEXBase {
-		public static final String TYPE = Company.TYPE;
+		public static final String TYPE = Stats.TYPE;
 		
+		@IgnoreField
 		public String symbol;
-		public String exchange;
-		public String issueType;
-		public String sector;
-		public String industry;
 		@JSONName("companyName")
 		public String name;
 
+		public double beta;
+		public double week52high;
+		public double week52low;
+		public double week52change;
+		public long   shortInterest;
+		public String shortDate;
+		public double dividendRate;
+		public double dividendYield;
+		public String exDividendDate;
 		
-		IEX() {
-			symbol    = null;
-			exchange  = null;
-			issueType = null;
-			sector    = null;
-			industry  = null;
-			name      = null;
-		}
+		IEX() {}
 		
 		public IEX(JsonObject jsonObject) {
 			super(jsonObject);
@@ -177,6 +176,18 @@ public class UpdateStock {
 				countGet += getList.size();
 
 				Map<String, IEX> dataMap = IEX.getStock(getList.toArray(new String[0]));
+				for(Map.Entry<String, IEX> entry: dataMap.entrySet()) {
+					IEX iex = entry.getValue();
+					iex.symbol = entry.getKey();
+					if (iex.exDividendDate.equals("0")) {
+						iex.exDividendDate = "";
+					} else if (iex.exDividendDate.endsWith(" 00:00:00.0")) {
+						iex.exDividendDate = iex.exDividendDate.substring(0, 10);
+					} else {
+						logger.error("Unexpected exDividendDate {}", iex.exDividendDate);
+						throw new UnexpectedException("Unexpected exDividendDate");
+					}
+				}
 				dataList.addAll(dataMap.values());
 				countData += dataMap.size();
 			}

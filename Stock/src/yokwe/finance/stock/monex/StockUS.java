@@ -1,6 +1,6 @@
 package yokwe.finance.stock.monex;
 
-public class StockUS {
+public class StockUS implements Comparable<StockUS> {
 	public String ticker;
 	public String name;
 	public String jname;
@@ -45,5 +45,10 @@ public class StockUS {
 		this.keihi     = keihi;
 		this.comp      = comp;
 		this.pdf       = pdf;
+	}
+
+	@Override
+	public int compareTo(StockUS that) {
+		return this.ticker.compareTo(that.ticker);
 	}
 }

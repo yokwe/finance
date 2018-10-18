@@ -2,6 +2,7 @@ package yokwe.finance.stock.monex;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -99,6 +100,8 @@ public class UpdateStockUS {
 				
 				monexUSList.add(usSecurity);
 			}
+			Collections.sort(monexUSList);
+
 			logger.info("URL    = {}", SOURCE_URL);
 			logger.info("OUTPUT = {}", PATH_MONEX_US);
 			save(monexUSList);

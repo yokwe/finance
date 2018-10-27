@@ -100,6 +100,18 @@ public class Activity {
 		@ColumnName("為替レート")
 		public double fxRate;
 
+		@ColumnName("国内手数料率")
+		public double feeRateJP;
+
+		@ColumnName("消費税率")
+		public double consumptionTaxRateJP;
+
+		@ColumnName("手数料率")
+		public double totalFeeRateJP;
+		
+		@ColumnName("国内手数料税抜")
+		public double feeBeforeTaxJP;
+
 		@ColumnName("国内手数料")
 		public double feeJP;
 
@@ -117,7 +129,9 @@ public class Activity {
 
 		public Trade(String tradeDate, String settlementDate, String securityCode, String symbol, String transaction,
 				int quantity, double unitPrice, double price, double tax, double fee, double other,
-				double subTotalPrice, double fxRate, double feeJP, double consumptionTaxJP, double withholdingTaxJP,
+				double subTotalPrice, double fxRate,
+				double feeRateJP, double consumptionTaxRateJP, double totalFeeRateJP, double feeBeforeTaxJP,
+				double feeJP, double consumptionTaxJP, double withholdingTaxJP,
 				double total, int totalJPY) {
 			this.tradeDate        = tradeDate;
 			this.settlementDate   = settlementDate;
@@ -132,6 +146,10 @@ public class Activity {
 			this.other            = other;
 			this.subTotalPrice    = subTotalPrice;
 			this.fxRate           = fxRate;
+			this.feeRateJP        = feeRateJP;
+			this.consumptionTaxRateJP = consumptionTaxRateJP;
+			this.totalFeeRateJP   = totalFeeRateJP;
+			this.feeBeforeTaxJP   = feeBeforeTaxJP;
 			this.feeJP            = feeJP;
 			this.consumptionTaxJP = consumptionTaxJP;
 			this.withholdingTaxJP = withholdingTaxJP;
@@ -140,7 +158,7 @@ public class Activity {
 		}
 
 		public Trade() {
-			this(null, null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+			this(null, null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 		}
 
 		@Override

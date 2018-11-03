@@ -27,13 +27,13 @@ public class YahooPortfolio {
 	public double purchasePrice;
 	@ColumnName("Quantity")
 	public double quantity;
-	@ColumnName("Commision")
-	public double commision;
+	@ColumnName("Commission")
+	public double commission;
 	@ColumnName("High Limit")
 	public double highLimit;
 	@ColumnName("Low Limit")
 	public double lowLimit;
-	@ColumnName("Commit")
+	@ColumnName("Comment")
 	public String comment;
 	
 	public YahooPortfolio() {
@@ -49,7 +49,7 @@ public class YahooPortfolio {
 		this.tradeDate     = "";
 		this.purchasePrice = 0;
 		this.quantity      = 0;
-		this.commision     = 0;
+		this.commission    = 0;
 		this.highLimit     = 0;
 		this.lowLimit      = 0;
 		this.comment       = "";
@@ -67,7 +67,7 @@ public class YahooPortfolio {
 		this.tradeDate     = "";
 		this.purchasePrice = purchasePrice;
 		this.quantity      = quantity;
-		this.commision     = 0;
+		this.commission    = 0;
 		this.highLimit     = 0;
 		this.lowLimit      = 0;
 		this.comment       = "";

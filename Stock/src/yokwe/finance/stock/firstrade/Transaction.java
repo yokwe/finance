@@ -325,8 +325,14 @@ public class Transaction implements Comparable<Transaction> {
 					}
 					{
 						String settlementDate = Market.toSettlementDate(LocalDate.parse(activity.tradeDate, DateTimeFormatter.ISO_LOCAL_DATE)).toString();
-						if (!activity.date.equals(settlementDate)) {
-							logger.error("Unexpected settlement date {}", settlementDate);
+						if (activity.date.compareTo(settlementDate) == 0) {
+							// same as expected
+						} else if (0 < activity.date.compareTo(settlementDate)) {
+							// There is irregular settlement date (2018-10-04 => 2018-10-09  2018-10-05 => 2018-10-10  2018-10-08 => 2018-10-10)
+							logger.warn("Unexpected settlement date  expected {}  actual {}", settlementDate, activity.date);
+							logger.warn("  {}", activity);
+						} else {
+							logger.error("Unexpected settlement date  expected {}  actual {}", settlementDate, activity.date);
 							logger.error("  {}", activity);
 							throw new UnexpectedException("Unexpected settlement date");
 						}
@@ -448,8 +454,14 @@ public class Transaction implements Comparable<Transaction> {
 						}
 						{
 							String settlementDate = Market.toSettlementDate(LocalDate.parse(activity.tradeDate, DateTimeFormatter.ISO_LOCAL_DATE)).toString();
-							if (!activity.date.equals(settlementDate)) {
-								logger.error("Unexpected settlement date {}", settlementDate);
+							if (activity.date.compareTo(settlementDate) == 0) {
+								// same as expected
+							} else if (0 < activity.date.compareTo(settlementDate)) {
+								// There is irregular settlement date (2018-10-04 => 2018-10-09  2018-10-05 => 2018-10-10  2018-10-08 => 2018-10-10)
+								logger.warn("Unexpected settlement date  expected {}  actual {}", settlementDate, activity.date);
+								logger.warn("  {}", activity);
+							} else {
+								logger.error("Unexpected settlement date  expected {}  actual {}", settlementDate, activity.date);
 								logger.error("  {}", activity);
 								throw new UnexpectedException("Unexpected settlement date");
 							}

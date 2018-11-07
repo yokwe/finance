@@ -162,48 +162,48 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	
 	public static List<Transaction> getFirstrade() {
-		final List<yokwe.finance.stock.firstrade.Transaction> othreTransactionList;
+		final List<yokwe.finance.stock.firstrade.Transaction> originalTransactionList;
 		
 		try (SpreadSheet docActivity = new SpreadSheet(yokwe.finance.stock.firstrade.Transaction.URL_ACTIVITY, true)) {
 			// Create transaction from activity using tradeDate
-			othreTransactionList = yokwe.finance.stock.firstrade.Transaction.getTransactionList(docActivity, true);
+			originalTransactionList = yokwe.finance.stock.firstrade.Transaction.getTransactionList(docActivity, true);
 		}
 		
 		List<Transaction> transactionList = new ArrayList<>();
 		
-		for(yokwe.finance.stock.firstrade.Transaction otherTransaction: othreTransactionList) {
+		for(yokwe.finance.stock.firstrade.Transaction originalTransaction: originalTransactionList) {
 			final Transaction transaction;
-			switch(otherTransaction.type) {
+			switch(originalTransaction.type) {
 			case WIRE_IN:
 			case ACH_IN:
-				transaction = Transaction.deposit(otherTransaction.date, otherTransaction.credit);
+				transaction = Transaction.deposit(originalTransaction.date, originalTransaction.credit);
 				break;
 			case WIRE_OUT:
 			case ACH_OUT:
-				transaction = Transaction.withdraw(otherTransaction.date, otherTransaction.debit);
+				transaction = Transaction.withdraw(originalTransaction.date, originalTransaction.debit);
 				break;
 			case INTEREST:
-				transaction = Transaction.interest(otherTransaction.date, otherTransaction.credit);
+				transaction = Transaction.interest(originalTransaction.date, originalTransaction.credit);
 				break;
 			case DIVIDEND:
-				transaction = Transaction.dividend(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity,
-					DoubleUtil.roundPrice(otherTransaction.debit + otherTransaction.fee),
-					DoubleUtil.roundPrice(otherTransaction.credit - otherTransaction.debit - otherTransaction.fee));
+				transaction = Transaction.dividend(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity,
+					DoubleUtil.roundPrice(originalTransaction.debit + originalTransaction.fee),
+					DoubleUtil.roundPrice(originalTransaction.credit - originalTransaction.debit - originalTransaction.fee));
 				break;
 			case BUY:
-				transaction = Transaction.buy(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee,
-					DoubleUtil.roundPrice(otherTransaction.debit + otherTransaction.fee));
+				transaction = Transaction.buy(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.price, originalTransaction.fee,
+					DoubleUtil.roundPrice(originalTransaction.debit + originalTransaction.fee));
 				break;
 			case SELL:
-				transaction = Transaction.sell(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee,
-					DoubleUtil.roundPrice(otherTransaction.credit - otherTransaction.fee));
+				transaction = Transaction.sell(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.price, originalTransaction.fee,
+					DoubleUtil.roundPrice(originalTransaction.credit - originalTransaction.fee));
 				break;
 			case CHANGE:
-				transaction = Transaction.change(otherTransaction.date, otherTransaction.symbol, -otherTransaction.quantity,
-					otherTransaction.newSymbol, otherTransaction.newQuantity);
+				transaction = Transaction.change(originalTransaction.date, originalTransaction.symbol, -originalTransaction.quantity,
+					originalTransaction.newSymbol, originalTransaction.newQuantity);
 				break;
 			default:
-				logger.error("Unknown type {}", otherTransaction.type);
+				logger.error("Unknown type {}", originalTransaction.type);
 				throw new UnexpectedException("Unknown type");
 			}
 			
@@ -216,32 +216,32 @@ public class Transaction implements Comparable<Transaction> {
 	}
 	
 	public static List<Transaction> getMonex() {
-		final List<yokwe.finance.stock.monex.Transaction> othreTransactionList;
+		final List<yokwe.finance.stock.monex.Transaction> origintalTransactionList;
 		
 		try (SpreadSheet docActivity = new SpreadSheet(yokwe.finance.stock.monex.Transaction.URL_ACTIVITY, true)) {
 			// Create transaction from activity using tradeDate
-			othreTransactionList = yokwe.finance.stock.monex.Transaction.getTransactionList(docActivity);
+			origintalTransactionList = yokwe.finance.stock.monex.Transaction.getTransactionList(docActivity);
 		}
 
 		List<Transaction> transactionList = new ArrayList<>();
 		
-		for(yokwe.finance.stock.monex.Transaction otherTransaction: othreTransactionList) {
+		for(yokwe.finance.stock.monex.Transaction originalTransaction: origintalTransactionList) {
 			final Transaction transaction;
-			switch(otherTransaction.type) {
+			switch(originalTransaction.type) {
 			case USD_IN:
-				transaction = Transaction.deposit(otherTransaction.date, otherTransaction.usd);
+				transaction = Transaction.deposit(originalTransaction.date, originalTransaction.usd);
 				break;
 			case USD_OUT:
-				transaction = Transaction.withdraw(otherTransaction.date, -otherTransaction.usd);
+				transaction = Transaction.withdraw(originalTransaction.date, -originalTransaction.usd);
 				break;
 			case DIVIDEND:
-				transaction = Transaction.dividend(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.fee, otherTransaction.total);
+				transaction = Transaction.dividend(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.fee, originalTransaction.total);
 				break;
 			case BUY:
-				transaction = Transaction.buy(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee, otherTransaction.total);
+				transaction = Transaction.buy(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.price, originalTransaction.fee, originalTransaction.total);
 				break;
 			case SELL:
-				transaction = Transaction.sell(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee, otherTransaction.total);
+				transaction = Transaction.sell(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.price, originalTransaction.fee, originalTransaction.total);
 				break;
 			// TODO How to process of JPY_IN and JPY_OUT
 			case JPY_IN:
@@ -249,7 +249,7 @@ public class Transaction implements Comparable<Transaction> {
 				transaction = null;
 				break;
 			default:
-				logger.error("Unknown type {}", otherTransaction.type);
+				logger.error("Unknown type {}", originalTransaction.type);
 				throw new UnexpectedException("Unknown type");
 			}
 			

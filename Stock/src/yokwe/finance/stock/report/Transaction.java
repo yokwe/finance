@@ -87,10 +87,11 @@ public class Transaction implements Comparable<Transaction> {
 			logger.error("debit  {}  {}", debit, this.debit);
 			throw new UnexpectedException("Unexpected");
 		}
-		if (credit < 0) {
-			logger.error("credit {}", credit);
-			throw new UnexpectedException("Unexpected");
-		}
+		// Sometime dividend of debit and credit has separate row.
+//		if (credit < 0) {
+//			logger.error("credit {}", credit);
+//			throw new UnexpectedException("Unexpected");
+//		}
 		if (!DoubleUtil.isAlmostEqual(credit, this.credit)) {
 			logger.error("fxRate  {}  {}", credit, this.credit);
 			throw new UnexpectedException("Unexpected");
@@ -242,6 +243,7 @@ public class Transaction implements Comparable<Transaction> {
 			case SELL:
 				transaction = Transaction.sell(otherTransaction.date, otherTransaction.symbol, otherTransaction.quantity, otherTransaction.price, otherTransaction.fee, otherTransaction.total);
 				break;
+			// TODO How to process of JPY_IN and JPY_OUT
 			case JPY_IN:
 			case JPY_OUT:
 				transaction = null;

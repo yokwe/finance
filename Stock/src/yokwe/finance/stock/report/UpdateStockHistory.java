@@ -18,10 +18,11 @@ public class UpdateStockHistory {
 		for(Transaction transaction: transactionList) {
 			switch(transaction.type) {
 			case DIVIDEND:
-				if (!DoubleUtil.isAlmostZero(transaction.fee)) {
-					logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.fee);
-					throw new UnexpectedException("Unexpected");
-				}
+				// We can get dividend after selling the stock.
+//				if (!DoubleUtil.isAlmostZero(transaction.fee)) {
+//					logger.error("Unexpected {} {} {}", transaction.date, transaction.symbol, transaction.fee);
+//					throw new UnexpectedException("Unexpected");
+//				}
 				
 				builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.credit);
 				break;

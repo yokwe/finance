@@ -80,9 +80,9 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 	@ColumnName("合計費用")
 	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double totalCost;
-	@ColumnName("合計購入")
+	@ColumnName("合計手数料")
 	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
-	public double totalValue;
+	public double totalFee;
 	
 	@ColumnName("合計配当")
 	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
@@ -95,7 +95,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 		double dividend, double dividendFee,
 		double buyQuantity, double buyFee, double buy,
 		double sellQuantity, double sellFee, double sell, double sellCost, double sellProfit,
-		double totalQuantity, double totalCost, double totalValue, double totalDividend, double totalProfit) {
+		double totalQuantity, double totalCost, double totalFee, double totalDividend, double totalProfit) {
 		this.group   = group;
 		this.session = session;
 		
@@ -121,7 +121,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 		// Value of the date
 		this.totalQuantity = totalQuantity;
 		this.totalCost     = totalCost;
-		this.totalValue    = totalValue; // unrealized gain = totalValue - totalCost 
+		this.totalFee      = totalFee; // unrealized gain = totalValue - totalCost 
 		
 		// Realized gain
 		this.totalDividend = totalDividend;
@@ -156,7 +156,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			group, session, date, symbol, dividend, dividendFee,
 			buyQuantity, buyFee, buy,
 			sellQuantity, sellFee, sell, sellCost, sellProfit,
-			totalQuantity, totalCost, totalValue,
+			totalQuantity, totalCost, totalFee,
 			totalDividend, totalProfit
 			);
 	}
@@ -197,7 +197,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 					// Copy totalXXX from lastStcok
 					stock.totalQuantity = lastStock.totalQuantity;
 					stock.totalCost     = lastStock.totalCost;
-					stock.totalValue    = lastStock.totalValue;
+					stock.totalFee      = lastStock.totalFee;
 					
 					stock.totalDividend = lastStock.totalDividend;
 					stock.totalProfit   = lastStock.totalProfit;
@@ -232,6 +232,8 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			stock.dividend      = DoubleUtil.roundPrice(stock.dividend      + amount);
 			stock.dividendFee   = DoubleUtil.roundPrice(stock.dividendFee   + debit);
 			stock.totalDividend = DoubleUtil.roundPrice(stock.totalDividend + amount);
+			
+			stock.totalFee      = DoubleUtil.roundPrice(stock.totalFee + debit);
 		}
 
 		public void buy(String date, String symbol, double buyQuantity, double fee, double debit) {
@@ -246,7 +248,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 				// clear totalXXX
 				stock.totalQuantity = 0;
 				stock.totalCost     = 0;
-				stock.totalValue    = 0;
+				stock.totalFee      = 0;
 						
 				stock.totalDividend = 0;
 				stock.totalProfit   = 0;
@@ -258,6 +260,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			
 			stock.totalQuantity = DoubleUtil.roundQuantity(stock.totalQuantity + buyQuantity);
 			stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost + debit);
+			stock.totalFee      = DoubleUtil.roundPrice(stock.totalFee + fee);
 		}
 		
 		public void sell(String date, String symbol, double sellQuantity, double fee, double credit) {
@@ -277,6 +280,7 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			
 			stock.totalQuantity = DoubleUtil.roundQuantity(stock.totalQuantity - sellQuantity);
 			stock.totalCost     = DoubleUtil.roundPrice(stock.totalCost - sellCost);
+			stock.totalFee      = DoubleUtil.roundPrice(stock.totalFee + fee);
 			
 			stock.totalProfit = DoubleUtil.roundPrice(stock.totalProfit   + sellProfit);
 			
@@ -315,18 +319,6 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			StockHistory stock = getStock(date, newSymbol);
 			stock.totalQuantity = newQuantity;
 			stockMap.put(date, stock);
-		}
-
-		public void updateTotalValue(String date, String symbol, double price) {
-			NavigableMap<String, StockHistory> stockMap = allStockMap.get(symbol);
-			if (stockMap.containsKey(date)) {
-				// Entry is already exists. use the entry.
-			} else {
-				StockHistory stock = getStock(date, symbol);
-				stockMap.put(date, stock);
-			}
-			StockHistory stock = stockMap.get(date);
-			stock.totalValue = DoubleUtil.roundPrice(stock.totalQuantity * price);
 		}
 	}
 }

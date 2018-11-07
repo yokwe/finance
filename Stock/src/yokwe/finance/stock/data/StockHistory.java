@@ -11,40 +11,84 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
+import yokwe.finance.stock.libreoffice.Sheet;
+import yokwe.finance.stock.libreoffice.SpreadSheet;
 import yokwe.finance.stock.util.DoubleUtil;
 
-public class StockHistory implements Comparable<StockHistory> {
+
+@Sheet.SheetName("株式履歴")
+@Sheet.HeaderRow(0)
+@Sheet.DataRow(1)
+public class StockHistory extends Sheet implements Comparable<StockHistory> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(StockHistory.class);
 
+	@ColumnName("グループ")
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
 	public String group;
+	@ColumnName("番号")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER_BLANK)
 	public int    session;
 
 	// One record for one stock per day
+	@ColumnName("年月日")
+	@NumberFormat(SpreadSheet.FORMAT_DATE)
 	public String date;
+	@NumberFormat(SpreadSheet.FORMAT_STRING)
+	@ColumnName("銘柄コード")
 	public String symbol;
 	
 	// Dividend detail
+	@ColumnName("配当")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double dividend;
+	@ColumnName("配当手数料")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double dividendFee;
 	
 	// Buy detail
+	@ColumnName("購入数量")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER_BLANK)
 	public double buyQuantity;
+	@ColumnName("購入手数料")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double buyFee;
+	@ColumnName("購入額")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double buy;
 	
 	// Sell detail
+	@ColumnName("売却数量")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER_BLANK)
 	public double sellQuantity;
+	@ColumnName("売却手数料")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sellFee;
+	@ColumnName("売却額")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sell;
+	@ColumnName("売却費用")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sellCost;
+	@ColumnName("売却益")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double sellProfit;
 	
 	// Value of the date
+	@ColumnName("合計数量")
+	@NumberFormat(SpreadSheet.FORMAT_INTEGER_BLANK)
 	public double totalQuantity;
+	@ColumnName("合計費用")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double totalCost;
+	@ColumnName("合計購入")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double totalValue;
 	
+	@ColumnName("合計配当")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double totalDividend; // from dividend
+	@ColumnName("合計利益")
+	@NumberFormat(SpreadSheet.FORMAT_USD_BLANK)
 	public double totalProfit;   // from buy and sell
 	
 	private StockHistory(String group, int session, String date, String symbol,

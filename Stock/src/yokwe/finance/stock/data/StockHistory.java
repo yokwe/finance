@@ -16,7 +16,7 @@ import yokwe.finance.stock.libreoffice.SpreadSheet;
 import yokwe.finance.stock.util.DoubleUtil;
 
 
-@Sheet.SheetName("株式履歴")
+@Sheet.SheetName("履歴")
 @Sheet.HeaderRow(0)
 @Sheet.DataRow(1)
 public class StockHistory extends Sheet implements Comparable<StockHistory> {

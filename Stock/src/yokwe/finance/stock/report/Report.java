@@ -72,7 +72,7 @@ public class Report {
 							stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
 							stockHistory.totalQuantity, stockHistory.totalCost, averagePrice);
 				} else if (stockHistory.buyQuantity == 0 && stockHistory.sellQuantity != 0) {
-					double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell - stockHistory.sellFee) / stockHistory.sellQuantity);
+					double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell + stockHistory.sellFee) / stockHistory.sellQuantity);
 					transfer = Transfer.sell(stockHistory.symbol, stockHistory.date,
 							stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
 				} else if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity != 0) {

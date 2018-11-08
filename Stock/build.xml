@@ -158,6 +158,13 @@
                 </java>
         </target>
         
+        <target name="run-stock-report">
+                <java classname="yokwe.finance.stock.report.Report" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
 	
 	<!-- monex -->
         <target name="run-monex-update-fx-tax">

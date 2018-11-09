@@ -2,6 +2,7 @@ package yokwe.finance.stock.report;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ import yokwe.finance.stock.util.DoubleUtil;
 public class UpdateStockHistory {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(UpdateStockHistory.class);
 
-	public static List<StockHistory> getStockHistoryList(List<Transaction> transactionList) {
+	public static List<StockHistory> getStockHistoryList(List<Transaction> transactionList, boolean includeDividend) {
 		StockHistory.Builder builder = new StockHistory.Builder();
 		
 		for(Transaction transaction: transactionList) {
@@ -28,7 +29,7 @@ public class UpdateStockHistory {
 //					throw new UnexpectedException("Unexpected");
 //				}
 				
-				builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.credit);
+				if (includeDividend) builder.dividend(transaction.date, transaction.symbol, transaction.debit, transaction.credit);
 				break;
 			case BUY:
 				if (!DoubleUtil.isAlmostZero(transaction.credit)) {
@@ -60,18 +61,20 @@ public class UpdateStockHistory {
 		}
 		
 		List<StockHistory> stockHistoryList = builder.getStockList();
-		
-		// Change symbol style from ".PR." to "-"
-		for(StockHistory stockHistory: stockHistoryList) {
-			stockHistory.group  = stockHistory.group.replace(".PR.", "-");
-			stockHistory.symbol = stockHistory.symbol.replace(".PR.", "-");
-		}
 		Collections.sort(stockHistoryList);
 		
 		return stockHistoryList;
 	}
-
-	private static List<StockHistory> onlyActiveSession(List<StockHistory> stockHistoryList) {
+	public static List<StockHistory> getStockHistoryListWithDividend(List<Transaction> transactionList) {
+		return getStockHistoryList(transactionList, true);
+	}
+	public static List<StockHistory> getStockHistoryListWithoutDividend(List<Transaction> transactionList) {
+		return getStockHistoryList(transactionList, false);
+	}
+	
+	public static List<List<StockHistory>> getSotckHistoryListCollection(List<StockHistory> stockHistoryList) {
+		Collections.sort(stockHistoryList);
+		
 		Map<Integer, List<StockHistory>> map = new TreeMap<>();
 		for(StockHistory stockHistory: stockHistoryList) {
 			int session = stockHistory.session;
@@ -81,54 +84,45 @@ public class UpdateStockHistory {
 			map.get(session).add(stockHistory);
 		}
 		
-		List<StockHistory> ret = new ArrayList<>();
+		List<List<StockHistory>> ret = new ArrayList<>();		
+		// To make sure order of list
 		for(List<StockHistory> list: map.values()) {
-			StockHistory last = list.get(list.size() - 1);
-			if (last.totalQuantity == 0) continue;
-			
-			ret.addAll(list);
+			Collections.sort(list);
+			ret.add(new ArrayList<>(list));
 		}
 		
-		Collections.sort(ret);
+		// Sort with first element of list
+		ret.sort((o1, o2) -> o1.get(0).compareTo(o2.get(0)));
+		
 		return ret;
 	}
-
+	
 	private static String THIS_YEAR = String.format("%d", Calendar.getInstance().get(Calendar.YEAR));
-	private static List<StockHistory> onlyActiveThisYear(List<StockHistory> stockHistoryList) {
-		Map<Integer, List<StockHistory>> map = new TreeMap<>();
-		for(StockHistory stockHistory: stockHistoryList) {
-			int session = stockHistory.session;
-			if (!map.containsKey(session)) {
-				map.put(session, new ArrayList<>());
-			}
-			map.get(session).add(stockHistory);
-		}
+	public static List<List<StockHistory>> filter(Collection<List<StockHistory>> listCollection, boolean wantActive, boolean wantThisYear) {
+		List<List<StockHistory>> ret = new ArrayList<>();
 		
-		List<StockHistory> ret = new ArrayList<>();
-		for(List<StockHistory> list: map.values()) {
+		for(List<StockHistory> list: listCollection) {
 			StockHistory last = list.get(list.size() - 1);
-			if (!last.date.startsWith(THIS_YEAR)) continue;
 			
-			ret.addAll(list);
+			if (wantActive) {
+				if (last.isActive()) ret.add(list);
+			}
+			if (wantThisYear) {
+				if (last.date.startsWith(THIS_YEAR)) ret.add(list);
+			}
 		}
 		
-		Collections.sort(ret);
 		return ret;
 	}
-	
-	public static List<StockHistory> getActiveStockHistoryList(List<Transaction> transactionList) {
-		return onlyActiveSession(getStockHistoryList(transactionList));
-	}
-	
-	public static List<StockHistory> getActiveThisYearStockHistoryList(List<Transaction> transactionList) {
-		return onlyActiveThisYear(getStockHistoryList(transactionList));
+	public static List<List<StockHistory>> filter(List<StockHistory> stockHistoryList, boolean wantActive, boolean wantThisYear) {
+		return filter(getSotckHistoryListCollection(stockHistoryList), wantActive, wantThisYear);
 	}
 	
 	public static void main(String[] args) {
 		logger.info("START");
 		
 		{
-			List<StockHistory> stockHistoryList = getStockHistoryList(Transaction.getMonex());
+			List<StockHistory> stockHistoryList = getStockHistoryListWithDividend(Transaction.getMonex());
 			for(StockHistory stockHistory: stockHistoryList) {
 				logger.info("monex     {}", stockHistory);
 			}
@@ -136,7 +130,7 @@ public class UpdateStockHistory {
 		}
 		
 		{
-			List<StockHistory> stockHistoryList = getStockHistoryList(Transaction.getFirstrade());
+			List<StockHistory> stockHistoryList = getStockHistoryListWithDividend(Transaction.getFirstrade());
 			for(StockHistory stockHistory: stockHistoryList) {
 				logger.info("firstarde {}", stockHistory);
 			}

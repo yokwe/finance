@@ -92,7 +92,7 @@ public class UpdateStockHistory {
 		}
 		
 		// Sort with first element of list
-		ret.sort((o1, o2) -> o1.get(0).compareTo(o2.get(0)));
+		ret.sort((a, b) -> a.get(0).compareTo(b.get(0)));
 		
 		return ret;
 	}

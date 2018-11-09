@@ -45,7 +45,7 @@ public class Report {
 		}
 		
 		{
-			Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithoutDividend(transactionList), true, true);
+			Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithoutDividend(transactionList), true, false);
 
 			List<Transfer> transferList = new ArrayList<>();
 			for(List<StockHistory> stockHistoryList: collectionList) {

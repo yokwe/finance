@@ -138,6 +138,10 @@ public class Transaction implements Comparable<Transaction> {
 		ret = this.symbol.compareTo(that.symbol);
 		return ret;
 	}
+	
+	public static String normalizeSymbol(String symbol) {
+		return symbol.replace(".PR.", "-");
+	}
 
 	public static Transaction deposit(String date, double credit) {
 		return new Transaction(Type.DEPOSIT, date, FILLER, 0, 0, 0, 0, credit);
@@ -149,16 +153,16 @@ public class Transaction implements Comparable<Transaction> {
 		return new Transaction(Type.INTEREST, date, FILLER, 0, 0, 0, 0, credit);
 	}
 	public static Transaction dividend(String date, String symbol, double quantity, double fee, double credit) {
-		return new Transaction(Type.DIVIDEND, date, symbol, quantity, 0, fee, 0, credit);
+		return new Transaction(Type.DIVIDEND, date, normalizeSymbol(symbol), quantity, 0, fee, 0, credit);
 	}
 	public static Transaction buy(String date, String symbol, double quantity, double price, double fee, double debit) {
-		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, debit, 0);
+		return new Transaction(Type.BUY, date, normalizeSymbol(symbol), quantity, price, fee, debit, 0);
 	}
 	public static Transaction sell(String date, String symbol, double quantity, double price, double fee, double credit) {
-		return new Transaction(Type.SELL, date, symbol, quantity, price, fee, 0, credit);
+		return new Transaction(Type.SELL, date, normalizeSymbol(symbol), quantity, price, fee, 0, credit);
 	}
 	public static Transaction change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {
-		return new Transaction(Type.CHANGE, date, symbol, quantity, 0, 0, 0, 0, newSymbol, newQuantity);
+		return new Transaction(Type.CHANGE, date, normalizeSymbol(symbol), quantity, 0, 0, 0, 0, normalizeSymbol(newSymbol), newQuantity);
 	}
 	
 	public static List<Transaction> getFirstrade() {

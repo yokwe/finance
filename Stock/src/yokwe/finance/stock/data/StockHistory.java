@@ -161,6 +161,10 @@ public class StockHistory extends Sheet implements Comparable<StockHistory> {
 			);
 	}
 	
+	public boolean isActive() {
+		return totalQuantity != 0;
+	}
+	
 	public static class Builder {
 		private int nextSession = 1;
 		

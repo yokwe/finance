@@ -50,6 +50,10 @@ public class UpdateStockHistory {
 			case CHANGE:
 				builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
 				break;
+			case DEPOSIT_JPY:
+			case WITHDRAW_JPY:
+			case EXCHANGE_JPY_TO_USD:
+			case EXCHANGE_USD_TO_JPY:
 			case DEPOSIT:
 			case WITHDRAW:
 			case INTEREST:

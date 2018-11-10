@@ -14,6 +14,11 @@ public class Transaction implements Comparable<Transaction> {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Transaction.class);
 
 	public enum Type {
+		DEPOSIT_JPY,         // Increase cash JPY
+		WITHDRAW_JPY,        // Decrease cash
+		EXCHANGE_JPY_TO_USD, // Buy USD from JPY
+		EXCHANGE_USD_TO_JPY, // Buy JPY from USD
+		
 		DEPOSIT,  // Increase cash
 		WITHDRAW, // Decrease cash
 		INTEREST, // Interest of account
@@ -39,9 +44,11 @@ public class Transaction implements Comparable<Transaction> {
 	public final String         newSymbol;
 	public final double         newQuantity;
 	
+	public final int            amountJPY;  // JPY amount for DEPOSIT_JPY, WITHDRAW_JP, JPY_TO_USD and USD_TO_JPY
+	public final double         amountUSD;  // JPY amount for DEPOSIT_JPY, WITHDRAW_JP, JPY_TO_USD and USD_TO_JPY
 	
 	private Transaction(Type type, String date, String symbol, double quantity, double price, double fee, double debit, double credit,
-			String newSymbol, double newQuantity) {
+			String newSymbol, double newQuantity, int amountJPY, double amountUSD) {
 		this.type         = type;
 		this.date         = date;
 		this.symbol       = symbol;
@@ -53,6 +60,9 @@ public class Transaction implements Comparable<Transaction> {
 		
 		this.newSymbol    = newSymbol;
 		this.newQuantity  = DoubleUtil.roundQuantity(newQuantity);
+		
+		this.amountJPY    = amountJPY;
+		this.amountUSD    = DoubleUtil.roundPrice(amountUSD);
 		
 		// Sanity check
 		if (quantity < 0) {
@@ -104,10 +114,19 @@ public class Transaction implements Comparable<Transaction> {
 			logger.error("newQuantity {}  {}", newQuantity, this.newQuantity);
 			throw new UnexpectedException("Unexpected");
 		}
+		if (amountJPY < 0) {
+			logger.error("amountJPY {}", amountJPY);
+			throw new UnexpectedException("Unexpected");
+		}
+		if (amountUSD < 0) {
+			logger.error("amountUSD {}", amountUSD);
+			throw new UnexpectedException("Unexpected");
+		}
+
 	}
 	
 	private Transaction(Type type, String date, String symbol, double quantity, double price, double fee, double debit, double credit) {
-		this(type, date, symbol, quantity, price, fee, debit, credit, FILLER, 0);
+		this(type, date, symbol, quantity, price, fee, debit, credit, FILLER, 0, 0, 0);
 	}
 
 	@Override
@@ -116,8 +135,8 @@ public class Transaction implements Comparable<Transaction> {
 			return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %-10s %10.5f",
 					type, date, symbol, quantity, price, fee, debit, credit, newSymbol, newQuantity);
 		} else {
-			return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f",
-					type, date, symbol, quantity, price, fee, debit, credit);
+			return String.format("%-9s %10s %-10s %10.5f %10.5f %5.2f %8.2f %8.2f %8d",
+					type, date, symbol, quantity, price, fee, debit, credit, amountJPY);
 		}
 	}
 	
@@ -162,8 +181,22 @@ public class Transaction implements Comparable<Transaction> {
 		return new Transaction(Type.SELL, date, normalizeSymbol(symbol), quantity, price, fee, 0, credit);
 	}
 	public static Transaction change(String date, String symbol, double quantity, String newSymbol, double newQuantity) {
-		return new Transaction(Type.CHANGE, date, normalizeSymbol(symbol), quantity, 0, 0, 0, 0, normalizeSymbol(newSymbol), newQuantity);
+		return new Transaction(Type.CHANGE, date, normalizeSymbol(symbol), quantity, 0, 0, 0, 0, normalizeSymbol(newSymbol), newQuantity, 0, 0);
 	}
+	
+	public static Transaction depositJPY(String date, int amountJPY) {
+		return new Transaction(Type.DEPOSIT_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, 0);
+	}
+	public static Transaction withdrawJPY(String date, int amountJPY) {
+		return new Transaction(Type.DEPOSIT_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, 0);
+	}
+	public static Transaction exchangeJPYToUSD(String date, int amountJPY, double amountUSD) {
+		return new Transaction(Type.EXCHANGE_JPY_TO_USD, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, amountUSD);
+	}
+	public static Transaction exchangeUSDToJPY(String date, int amountJPY, double amountUSD) {
+		return new Transaction(Type.EXCHANGE_USD_TO_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, amountUSD);
+	}
+	
 	
 	public static List<Transaction> getFirstrade() {
 		final List<yokwe.finance.stock.firstrade.Transaction> originalTransactionList;
@@ -233,10 +266,10 @@ public class Transaction implements Comparable<Transaction> {
 			final Transaction transaction;
 			switch(originalTransaction.type) {
 			case USD_IN:
-				transaction = Transaction.deposit(originalTransaction.date, originalTransaction.usd);
+				transaction = Transaction.exchangeJPYToUSD(originalTransaction.date, -originalTransaction.jpy, originalTransaction.usd);
 				break;
 			case USD_OUT:
-				transaction = Transaction.withdraw(originalTransaction.date, -originalTransaction.usd);
+				transaction = Transaction.exchangeUSDToJPY(originalTransaction.date, originalTransaction.jpy, -originalTransaction.usd);
 				break;
 			case DIVIDEND:
 				transaction = Transaction.dividend(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.fee, originalTransaction.total);
@@ -247,8 +280,9 @@ public class Transaction implements Comparable<Transaction> {
 			case SELL:
 				transaction = Transaction.sell(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.price, originalTransaction.fee, originalTransaction.total);
 				break;
-			// TODO How to process of JPY_IN and JPY_OUT
 			case JPY_IN:
+				transaction = Transaction.depositJPY(originalTransaction.date, originalTransaction.jpy);
+				break;
 			case JPY_OUT:
 				transaction = null;
 				break;

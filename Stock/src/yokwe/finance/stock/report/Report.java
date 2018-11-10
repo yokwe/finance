@@ -23,73 +23,75 @@ public class Report {
 	public static final String URL_TEMPLATE      = "file:///home/hasegawa/Dropbox/Trade/TEMPLATE_STOCK_REPORT.ods";
 	public static final String URL_REPORT        = String.format("file:///home/hasegawa/Dropbox/Trade/Report/STOCK_REPORT_%s.ods", TIMESTAMP);
 
-	
-	private static void generateReport(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
-		{
-			Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithDividend(transactionList), true, true);
-			
-			List<StockHistory> stockHistoryList = new ArrayList<>();
-			
-			for(List<StockHistory> list: collectionList) {
-				stockHistoryList.addAll(list);
-				stockHistoryList.add(new StockHistory());
-			}
-			
-			String sheetName = Sheet.getSheetName(StockHistory.class);
-			docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-			Sheet.fillSheet(docSave, stockHistoryList);
-			
-			String newSheetName = String.format("%s-%s", prefix, sheetName);
-			logger.info("sheet {}", newSheetName);
-			docSave.renameSheet(sheetName, newSheetName);			
+	private static void generateReportStockHistory(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
+		Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithDividend(transactionList), true, true);
+		
+		List<StockHistory> stockHistoryList = new ArrayList<>();
+		
+		for(List<StockHistory> list: collectionList) {
+			stockHistoryList.addAll(list);
+			stockHistoryList.add(new StockHistory());
 		}
 		
-		{
-			Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithoutDividend(transactionList), true, false);
+		String sheetName = Sheet.getSheetName(StockHistory.class);
+		docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+		Sheet.fillSheet(docSave, stockHistoryList);
+		
+		String newSheetName = String.format("%s-%s", prefix, sheetName);
+		logger.info("sheet {}", newSheetName);
+		docSave.renameSheet(sheetName, newSheetName);			
+	}
+	
+	private static void generateReportTransfer(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
+		Collection<List<StockHistory>> collectionList = UpdateStockHistory.filter(UpdateStockHistory.getStockHistoryListWithoutDividend(transactionList), true, false);
 
-			List<Transfer> transferList = new ArrayList<>();
-			for(List<StockHistory> stockHistoryList: collectionList) {
-				for(StockHistory stockHistory: stockHistoryList) {
-					final Transfer transfer;
-					if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity == 0) {
-						double buyPrice = DoubleUtil.roundQuantity((stockHistory.buy - stockHistory.buyFee) / stockHistory.buyQuantity);
-						double averagePrice = DoubleUtil.roundQuantity(stockHistory.totalCost / stockHistory.totalQuantity);
-						transfer = Transfer.buy(stockHistory.symbol, stockHistory.date,
-								stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
-								stockHistory.totalQuantity, stockHistory.totalCost, averagePrice);
-					} else if (stockHistory.buyQuantity == 0 && stockHistory.sellQuantity != 0) {
-						double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell + stockHistory.sellFee) / stockHistory.sellQuantity);
-						transfer = Transfer.sell(stockHistory.symbol, stockHistory.date,
-								stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
-					} else if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity != 0) {
-						logger.debug("stockHistory {}", stockHistory);
-						double buyPrice = DoubleUtil.roundQuantity((stockHistory.buy - stockHistory.buyFee) / stockHistory.buyQuantity);
-						// Calculate averagePrice before sell
-						double averagePrice = DoubleUtil.roundPrice((stockHistory.totalCost + stockHistory.sell) / (stockHistory.totalQuantity + stockHistory.sellQuantity));					
-						double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell - stockHistory.sellFee) / stockHistory.sellQuantity);
-						transfer = Transfer.buySell(stockHistory.symbol, stockHistory.date,
-								stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
-								stockHistory.totalQuantity, stockHistory.totalCost, averagePrice,
-								stockHistory.date, stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
-					} else {
-//						logger.error("Unexpected  {}", stockHistory);
-//						throw new UnexpectedException("Unexpected");
-						transfer = null;
-						logger.warn("  {}", stockHistory);
-					}
-					if (transfer != null) transferList.add(transfer);
+		List<Transfer> transferList = new ArrayList<>();
+		for(List<StockHistory> stockHistoryList: collectionList) {
+			for(StockHistory stockHistory: stockHistoryList) {
+				final Transfer transfer;
+				if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity == 0) {
+					double buyPrice = DoubleUtil.roundQuantity((stockHistory.buy - stockHistory.buyFee) / stockHistory.buyQuantity);
+					double averagePrice = DoubleUtil.roundQuantity(stockHistory.totalCost / stockHistory.totalQuantity);
+					transfer = Transfer.buy(stockHistory.symbol, stockHistory.date,
+							stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
+							stockHistory.totalQuantity, stockHistory.totalCost, averagePrice);
+				} else if (stockHistory.buyQuantity == 0 && stockHistory.sellQuantity != 0) {
+					double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell + stockHistory.sellFee) / stockHistory.sellQuantity);
+					transfer = Transfer.sell(stockHistory.symbol, stockHistory.date,
+							stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
+				} else if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity != 0) {
+					logger.debug("stockHistory {}", stockHistory);
+					double buyPrice = DoubleUtil.roundQuantity((stockHistory.buy - stockHistory.buyFee) / stockHistory.buyQuantity);
+					// Calculate averagePrice before sell
+					double averagePrice = DoubleUtil.roundPrice((stockHistory.totalCost + stockHistory.sell) / (stockHistory.totalQuantity + stockHistory.sellQuantity));					
+					double sellPrice = DoubleUtil.roundQuantity((stockHistory.sell - stockHistory.sellFee) / stockHistory.sellQuantity);
+					transfer = Transfer.buySell(stockHistory.symbol, stockHistory.date,
+							stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
+							stockHistory.totalQuantity, stockHistory.totalCost, averagePrice,
+							stockHistory.date, stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
+				} else {
+//					logger.error("Unexpected  {}", stockHistory);
+//					throw new UnexpectedException("Unexpected");
+					transfer = null;
+					logger.warn("  {}", stockHistory);
 				}
-				transferList.add(new Transfer());
+				if (transfer != null) transferList.add(transfer);
 			}
-			
-			String sheetName = Sheet.getSheetName(Transfer.class);
-			docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-			Sheet.fillSheet(docSave, transferList);
-			
-			String newSheetName = String.format("%s-%s", prefix, sheetName);
-			logger.info("sheet {}", newSheetName);
-			docSave.renameSheet(sheetName, newSheetName);						
+			transferList.add(new Transfer());
 		}
+		
+		String sheetName = Sheet.getSheetName(Transfer.class);
+		docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+		Sheet.fillSheet(docSave, transferList);
+		
+		String newSheetName = String.format("%s-%s", prefix, sheetName);
+		logger.info("sheet {}", newSheetName);
+		docSave.renameSheet(sheetName, newSheetName);						
+	}
+	
+	private static void generateReport(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
+		generateReportStockHistory(docLoad, docSave, prefix, transactionList);
+		generateReportTransfer(docLoad, docSave, prefix, transactionList);
 	}
 	
 	public static void generateReport() {

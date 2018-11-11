@@ -124,6 +124,14 @@ public class Account extends Sheet {
 			cash, null, null,
 			null, null, null, null, null);
 	}
+	public static Account dividend(String date, Double deposit, Double withdraw, Double fund, Double cash, Double gain, String symbol) {
+		return new Account(
+			date,
+			null, null, null,
+			deposit, withdraw, fund,
+			cash, null, gain,
+			symbol, null, null, null, null);
+	}
 	public static Account buy(String date, Double cash, Double stock, String symbol, Double buy) {
 		return new Account(
 			date,
@@ -132,12 +140,12 @@ public class Account extends Sheet {
 			cash, stock, null,
 			symbol, buy, null, null, null);
 	}
-	public static Account sell(String date, Double cash, Double stock, String symbol, Double sell, Double sellCost, Double sellGain) {
+	public static Account sell(String date, Double cash, Double stock, Double gain, String symbol, Double sell, Double sellCost, Double sellGain) {
 		return new Account(
 			date,
 			null, null, null,
 			null, null, null,
-			cash, stock, null,
+			cash, stock, gain,
 			symbol, null, sell, sellCost, sellGain);
 	}
 }

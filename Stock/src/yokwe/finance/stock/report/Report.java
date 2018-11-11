@@ -93,11 +93,15 @@ public class Report {
 	private static void generateReportAccount(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
 		List<Account> accountList = new ArrayList<>();
 		
+		Portfolio portfolio = new Portfolio();
+		
 		int    fundJPY = 0;
 		double fund    = 0;
 		double cash    = 0;
 		double stock   = 0;
 		double gain    = 0;
+		double sellCost = 0;
+		double sellGain = 0;
 
 		for(Transaction transaction: transactionList) {
 			final Account account;
@@ -138,14 +142,33 @@ public class Report {
 				account = Account.fundUSD(transaction.date, null, transaction.debit, fund, cash);
 				break;
 			case INTEREST: // Interest of account
-				fund = DoubleUtil.roundPrice(fund + transaction.credit);
 				cash = DoubleUtil.roundPrice(cash + transaction.credit);
-				account = Account.fundUSD(transaction.date, transaction.credit, null, fund, cash);
+				gain = DoubleUtil.roundPrice(gain + transaction.credit);
+				account = Account.dividend(transaction.date, transaction.credit, null, fund, cash, gain, null);
 				break;
 			case DIVIDEND: // Dividend of stock
+				cash = DoubleUtil.roundPrice(cash + transaction.credit);
+				gain = DoubleUtil.roundPrice(gain + transaction.credit);
+				account = Account.dividend(transaction.date, transaction.credit, null, fund, cash, gain, transaction.symbol);
+				break;
 			case BUY:      // Buy stock   *NOTE* Buy must  be before SELL
+				portfolio.buy(transaction.symbol, transaction.quantity, transaction.debit);
+				
+				cash = DoubleUtil.roundPrice(cash - transaction.debit);
+				stock = DoubleUtil.roundPrice(stock + transaction.debit);
+				account = Account.buy(transaction.date, cash, stock, transaction.symbol, transaction.debit);
+				break;
 			case SELL:     // Sell stock  *NOTE* Sell must be after BUY
+				sellCost = portfolio.sell(transaction.symbol, transaction.quantity);
+				sellGain = DoubleUtil.roundPrice(transaction.credit - sellCost);
+				
+				cash = DoubleUtil.roundPrice(cash + transaction.credit);
+				stock = DoubleUtil.roundPrice(stock - sellCost);
+				gain = DoubleUtil.roundPrice(gain + sellGain);
+				account = Account.sell(transaction.date, cash, stock, gain, transaction.symbol, transaction.credit, sellCost, sellGain);
+				break;
 			case CHANGE:   // Stock split, reverse split or symbol change
+				portfolio.change(transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
 				account = null;
 				break;
 			default:

@@ -109,11 +109,11 @@ public class Report {
 			switch(transaction.type) {
 			case DEPOSIT_JPY:         // Increase cash JPY
 				fundJPY += transaction.amountJPY;
-				account = Account.fundJPY(transaction.date, transaction.amountJPY, null, fundJPY);
+				account = Account.fundJPY(transaction.date, transaction.amountJPY, null, fundJPY, fund, cash, stock, gain);
 				break;
 			case WITHDRAW_JPY:        // Decrease cash
 				fundJPY -= transaction.amountJPY;
-				account = Account.fundJPY(transaction.date, null, transaction.amountJPY, fundJPY);
+				account = Account.fundJPY(transaction.date, null, transaction.amountJPY, fundJPY, fund, cash, stock, gain);
 				break;
 			case EXCHANGE_JPY_TO_USD: // Buy USD from JPY
 				fundJPY -= transaction.amountJPY;
@@ -121,7 +121,7 @@ public class Report {
 				cash = DoubleUtil.roundPrice(cash + transaction.amountUSD);
 				account = Account.fundJPYUSD(transaction.date,
 						null, transaction.amountJPY, fundJPY,
-						transaction.amountUSD, null, fund, cash);
+						transaction.amountUSD, null, fund, cash, stock, gain);
 				break;
 			case EXCHANGE_USD_TO_JPY: // Buy JPY from USD
 				fundJPY += transaction.amountJPY;
@@ -129,34 +129,34 @@ public class Report {
 				cash = DoubleUtil.roundPrice(cash - transaction.amountUSD);
 				account = Account.fundJPYUSD(transaction.date,
 						transaction.amountJPY, null, fundJPY,
-						null, transaction.amountUSD, fund, cash);
+						null, transaction.amountUSD, fund, cash, stock, gain);
 				break;			
 			case DEPOSIT:  // Increase cash
 				fund = DoubleUtil.roundPrice(fund + transaction.credit);
 				cash = DoubleUtil.roundPrice(cash + transaction.credit);
-				account = Account.fundUSD(transaction.date, transaction.credit, null, fund, cash);
+				account = Account.fundUSD(transaction.date, fundJPY, transaction.credit, null, fund, cash, stock, gain);
 				break;
 			case WITHDRAW: // Decrease cash
 				fund = DoubleUtil.roundPrice(fund - transaction.debit);
 				cash = DoubleUtil.roundPrice(cash - transaction.debit);
-				account = Account.fundUSD(transaction.date, null, transaction.debit, fund, cash);
+				account = Account.fundUSD(transaction.date, fundJPY, null, transaction.debit, fund, cash, stock, gain);
 				break;
 			case INTEREST: // Interest of account
 				cash = DoubleUtil.roundPrice(cash + transaction.credit);
 				gain = DoubleUtil.roundPrice(gain + transaction.credit);
-				account = Account.dividend(transaction.date, transaction.credit, null, fund, cash, gain, null);
+				account = Account.dividend(transaction.date, fundJPY, transaction.credit, fund, cash, stock, gain, null);
 				break;
 			case DIVIDEND: // Dividend of stock
 				cash = DoubleUtil.roundPrice(cash + transaction.credit);
 				gain = DoubleUtil.roundPrice(gain + transaction.credit);
-				account = Account.dividend(transaction.date, transaction.credit, null, fund, cash, gain, transaction.symbol);
+				account = Account.dividend(transaction.date, fundJPY, transaction.credit, fund, cash, stock, gain, transaction.symbol);
 				break;
 			case BUY:      // Buy stock   *NOTE* Buy must  be before SELL
 				portfolio.buy(transaction.symbol, transaction.quantity, transaction.debit);
 				
 				cash = DoubleUtil.roundPrice(cash - transaction.debit);
 				stock = DoubleUtil.roundPrice(stock + transaction.debit);
-				account = Account.buy(transaction.date, cash, stock, transaction.symbol, transaction.debit);
+				account = Account.buy(transaction.date, fundJPY, fund, cash, stock, gain, transaction.symbol, transaction.debit);
 				break;
 			case SELL:     // Sell stock  *NOTE* Sell must be after BUY
 				sellCost = portfolio.sell(transaction.symbol, transaction.quantity);
@@ -165,11 +165,11 @@ public class Report {
 				cash = DoubleUtil.roundPrice(cash + transaction.credit);
 				stock = DoubleUtil.roundPrice(stock - sellCost);
 				gain = DoubleUtil.roundPrice(gain + sellGain);
-				account = Account.sell(transaction.date, cash, stock, gain, transaction.symbol, transaction.credit, sellCost, sellGain);
+				account = Account.sell(transaction.date, fundJPY, fund, cash, stock, gain, transaction.symbol, transaction.credit, sellCost, sellGain);
 				break;
 			case CHANGE:   // Stock split, reverse split or symbol change
 				portfolio.change(transaction.symbol, transaction.quantity, transaction.newSymbol, transaction.newQuantity);
-				account = null;
+				account = Account.change(transaction.date, fundJPY, fund, cash, stock, gain, transaction.newSymbol);
 				break;
 			default:
 				logger.error("Unexpected  {}", transaction);

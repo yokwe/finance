@@ -7,6 +7,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
+import yokwe.finance.stock.data.Market;
 import yokwe.finance.stock.libreoffice.Sheet;
 import yokwe.finance.stock.libreoffice.SpreadSheet;
 import yokwe.finance.stock.util.DoubleUtil;
@@ -107,6 +108,10 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
+				if (Market.isSaturdayOrSunday(activity.settlementDate)) {
+					logger.error("Unexpected  {}", activity);
+					throw new UnexpectedException("Unexpected");
+				}
 				if (activity.transaction == null) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
@@ -196,7 +201,21 @@ public class Transaction implements Comparable<Transaction> {
 			List<Activity.Dividend> activityList = Sheet.extractSheet(docActivity, Activity.Dividend.class, sheetName);
 			for(Activity.Dividend activity: activityList) {
 				// Sanity check
-				if (activity.payDateUS == null) {
+				if (activity.payDateUS != null && 0 < activity.payDateUS.length()) {
+					String date = activity.payDateUS;
+					if (Market.isClosed(date)) {
+						logger.error("Market is closed - payDateUS -  {}", activity);
+						throw new UnexpectedException("Market is closed");
+					}
+				} else {
+					logger.error("Null date - {}", activity);
+					throw new UnexpectedException("Null date");
+				}
+				if (activity.payDateJP == null) {
+					logger.error("Unexpected  {}", activity);
+					throw new UnexpectedException("Unexpected");
+				}
+				if (Market.isSaturdayOrSunday(activity.payDateJP)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
@@ -215,13 +234,18 @@ public class Transaction implements Comparable<Transaction> {
 			
 			for(Activity.Trade activity: activityList) {
 				// Sanity check
-				if (activity.settlementDate == null) {
+				if (Market.isSaturdayOrSunday(activity.settlementDate)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.tradeDate == null) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
+				}				
+				if (activity.tradeDate != null && 0 < activity.tradeDate.length()) {
+					String date = activity.tradeDate;
+					if (Market.isClosed(date)) {
+						logger.warn("Market is closed - tradeDate -  {}", activity);
+					}
+				} else {
+					logger.error("Null date - {}", activity);
+					throw new UnexpectedException("Null date");
 				}
 				if (activity.securityCode == null) {
 					logger.error("Unexpected  {}", activity);

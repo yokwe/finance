@@ -188,7 +188,7 @@ public class Transaction implements Comparable<Transaction> {
 		return new Transaction(Type.DEPOSIT_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, 0);
 	}
 	public static Transaction withdrawJPY(String date, int amountJPY) {
-		return new Transaction(Type.DEPOSIT_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, 0);
+		return new Transaction(Type.WITHDRAW_JPY, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, 0);
 	}
 	public static Transaction exchangeJPYToUSD(String date, int amountJPY, double amountUSD) {
 		return new Transaction(Type.EXCHANGE_JPY_TO_USD, date, FILLER, 0, 0, 0, 0, 0, FILLER, 0, amountJPY, amountUSD);
@@ -284,7 +284,7 @@ public class Transaction implements Comparable<Transaction> {
 				transaction = Transaction.depositJPY(originalTransaction.date, originalTransaction.jpy);
 				break;
 			case JPY_OUT:
-				transaction = null;
+				transaction = Transaction.withdrawJPY(originalTransaction.date, -originalTransaction.jpy);
 				break;
 			default:
 				logger.error("Unknown type {}", originalTransaction.type);

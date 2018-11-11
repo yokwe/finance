@@ -46,7 +46,7 @@ public class Activity {
 		
 		@Override
 		public String toString() {
-			return String.format("%s %s %s %.2f %.2f %d", settlementDate, transaction, fxRate, usd, jpy);
+			return String.format("%s %s %.2f %.2f %d", settlementDate, transaction, fxRate, usd, jpy);
 		}
 	}
 

@@ -74,7 +74,6 @@ public class Report {
 //					logger.error("Unexpected  {}", stockHistory);
 //					throw new UnexpectedException("Unexpected");
 					transfer = null;
-					logger.warn("  {}", stockHistory);
 				}
 				if (transfer != null) transferList.add(transfer);
 			}

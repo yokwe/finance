@@ -81,6 +81,15 @@ public class Market {
 		Holiday holiday = holidayMap.get(date);
 		return holiday != null && holiday.closed;
 	}
+	public static final boolean isSaturdayOrSunday(String date) {
+		return isSaturdayOrSunday(LocalDate.parse(date));
+	}
+	public static final boolean isSaturdayOrSunday(LocalDate date) {
+		DayOfWeek dayOfWeek = date.getDayOfWeek();
+		if (dayOfWeek == DayOfWeek.SUNDAY)   return true;
+		if (dayOfWeek == DayOfWeek.SATURDAY) return true;
+		return false;
+	}
 	
 	public static LocalDate getNextTradeDate(LocalDate date) {
 		LocalDate nextDate = date;

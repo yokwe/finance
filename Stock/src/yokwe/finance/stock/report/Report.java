@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
+import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.StockHistory;
 import yokwe.finance.stock.libreoffice.Sheet;
 import yokwe.finance.stock.libreoffice.SpreadSheet;
@@ -89,9 +90,83 @@ public class Report {
 		docSave.renameSheet(sheetName, newSheetName);						
 	}
 	
+	private static void generateReportAccount(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
+		List<Account> accountList = new ArrayList<>();
+		
+		int    fundJPY = 0;
+		double fund    = 0;
+		double cash    = 0;
+		double stock   = 0;
+		double gain    = 0;
+
+		for(Transaction transaction: transactionList) {
+			final Account account;
+			
+			switch(transaction.type) {
+			case DEPOSIT_JPY:         // Increase cash JPY
+				fundJPY += transaction.amountJPY;
+				account = Account.fundJPY(transaction.date, transaction.amountJPY, null, fundJPY);
+				break;
+			case WITHDRAW_JPY:        // Decrease cash
+				fundJPY -= transaction.amountJPY;
+				account = Account.fundJPY(transaction.date, null, transaction.amountJPY, fundJPY);
+				break;
+			case EXCHANGE_JPY_TO_USD: // Buy USD from JPY
+				fundJPY -= transaction.amountJPY;
+				fund = DoubleUtil.roundPrice(fund + transaction.amountUSD);
+				cash = DoubleUtil.roundPrice(cash + transaction.amountUSD);
+				account = Account.fundJPYUSD(transaction.date,
+						null, transaction.amountJPY, fundJPY,
+						transaction.amountUSD, null, fund, cash);
+				break;
+			case EXCHANGE_USD_TO_JPY: // Buy JPY from USD
+				fundJPY += transaction.amountJPY;
+				fund = DoubleUtil.roundPrice(fund - transaction.amountUSD);
+				cash = DoubleUtil.roundPrice(cash - transaction.amountUSD);
+				account = Account.fundJPYUSD(transaction.date,
+						transaction.amountJPY, null, fundJPY,
+						null, transaction.amountUSD, fund, cash);
+				break;			
+			case DEPOSIT:  // Increase cash
+				fund = DoubleUtil.roundPrice(fund + transaction.credit);
+				cash = DoubleUtil.roundPrice(cash + transaction.credit);
+				account = Account.fundUSD(transaction.date, transaction.credit, null, fund, cash);
+				break;
+			case WITHDRAW: // Decrease cash
+				fund = DoubleUtil.roundPrice(fund - transaction.debit);
+				cash = DoubleUtil.roundPrice(cash - transaction.debit);
+				account = Account.fundUSD(transaction.date, null, transaction.debit, fund, cash);
+				break;
+			case INTEREST: // Interest of account
+				fund = DoubleUtil.roundPrice(fund + transaction.credit);
+				cash = DoubleUtil.roundPrice(cash + transaction.credit);
+				account = Account.fundUSD(transaction.date, transaction.credit, null, fund, cash);
+				break;
+			case DIVIDEND: // Dividend of stock
+			case BUY:      // Buy stock   *NOTE* Buy must  be before SELL
+			case SELL:     // Sell stock  *NOTE* Sell must be after BUY
+			case CHANGE:   // Stock split, reverse split or symbol change
+				account = null;
+				break;
+			default:
+				logger.error("Unexpected  {}", transaction);
+				throw new UnexpectedException("Unexpected");				
+			}
+			
+			if (account != null) accountList.add(account);
+		}
+		
+		String sheetName = String.format("%s-%s", prefix, Sheet.getSheetName(Account.class));
+		docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
+		Sheet.fillSheet(docSave, accountList, sheetName);
+		
+		logger.info("sheet {}", sheetName);
+	}
+	
 	private static void generateReport(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
 		generateReportStockHistory(docLoad, docSave, prefix, transactionList);
 		generateReportTransfer(docLoad, docSave, prefix, transactionList);
+		generateReportAccount(docLoad, docSave, prefix, transactionList);
 	}
 	
 	public static void generateReport() {

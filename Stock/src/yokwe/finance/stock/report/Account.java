@@ -115,6 +115,15 @@ public class Account extends Sheet {
 			cash, null, null,
 			null, null, null, null, null);
 	}
+	public static Account fundJPYUSD(String date, Integer depositJPY, Integer withdrawJPY, Integer fundJPY,
+		Double deposit, Double withdraw, Double fund, Double cash) {
+		return new Account(
+			date,
+			depositJPY, withdrawJPY, fundJPY,
+			deposit, withdraw, fund,
+			cash, null, null,
+			null, null, null, null, null);
+	}
 	public static Account buy(String date, Double cash, Double stock, String symbol, Double buy) {
 		return new Account(
 			date,

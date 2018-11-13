@@ -8,6 +8,7 @@ SQLITE_JDBC_VERSION=3.8.11.1
 COMMONS_CSV_VERSION=1.5
 HTTPCOMPONENTS_CLIENT_VERSION=4.5.5
 COMMONS_MATH3_VERSION=3.6.1
+JAVAX_JSON_VERSION=1.1
 
 
 all: fetch update
@@ -18,9 +19,9 @@ clean:
 prepare:
 	mkdir -p tmp jar
 
-fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3 fetch-gson fetch-jsonp
+fetch: prepare fetch-logback fetch-slf4j fetch-sqlite-jdbc fetch-commons-csv fetch-httpcomponents-client fetch-commons-math3 fetch-javax-json
 
-update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3 update-gson update-jsonp
+update: prepare update-logback update-slf4j update-sqlite-jdbc update-commons-csv update-httpcomponents-client update-commons-math3 update-javax-json
 
 
 fetch-logback:
@@ -47,13 +48,9 @@ fetch-commons-math3:
 	rm -f tmp/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 	cd tmp; wget http://ftp.riken.jp/net/apache//commons/math/binaries/commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 
-fetch-gson:
-	rm -rf tmp/gson
-	cd tmp; git clone https://github.com/google/gson
-
-fetch-jsonp:
-	rm -rf tmp/jsonp
-	cd tmp; git clone https://github.com/javaee/jsonp
+fetch-javax-json:
+	rm -f tmp/javax.json-${JAVAX_JSON_VERSION}.jar
+	cd tmp; wget http://repo1.maven.org/maven2/org/glassfish/javax.json/${JAVAX_JSON_VERSION}/javax.json-${JAVAX_JSON_VERSION}.jar
 
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
@@ -94,16 +91,5 @@ update-commons-math3:
 	cd tmp; unzip commons-math3-${COMMONS_MATH3_VERSION}-bin.zip
 	cd tmp/commons-math3-${COMMONS_MATH3_VERSION}; cp -p commons-math3-${COMMONS_MATH3_VERSION}.jar ../../jar
 
-update-gson:
-	cd tmp/gson; mvn package source:jar javadoc:jar
-	cd tmp/gson; \
-	  cp -p  \
-	    gson/target/gson-2.8.5-SNAPSHOT.jar \
-	    gson/target/gson-2.8.5-SNAPSHOT-javadoc.jar \
-	    gson/target/gson-2.8.5-SNAPSHOT-sources.jar \
-	    ../../jar
-
-update-jsonp:
-	cd tmp/jsonp; mvn -U -C clean install -Dnon.final=true
-	cd tmp/jsonp; \
-	  cp -p impl/target/javax.json-*.jar ../../jar
+update-javax-json:
+	cp -p tmp/javax.json-${JAVAX_JSON_VERSION}.jar jar

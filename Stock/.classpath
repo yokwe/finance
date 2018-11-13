@@ -13,13 +13,10 @@
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/juh.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/jurt.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/libreoffice/program/classes/ridl.jar"/>
-	<classpathentry kind="lib" path="/Common/jar/javax.json-1.2-SNAPSHOT-javadoc.jar"/>
-	<classpathentry kind="lib" path="/Common/jar/javax.json-1.2-SNAPSHOT-sources.jar"/>
-	<classpathentry kind="lib" path="/Common/jar/javax.json-1.2-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/commons-csv-1.5.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/commons-math3-3.6.1.jar"/>
-	<classpathentry kind="lib" path="/Common/jar/gson-2.8.5-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/httpclient-4.5.5.jar"/>
 	<classpathentry kind="lib" path="/Common/jar/httpcore-4.4.9.jar"/>
+	<classpathentry kind="lib" path="/Common/jar/javax.json-1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

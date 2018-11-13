@@ -222,7 +222,7 @@ public class Transaction implements Comparable<Transaction> {
 				
 				double fee = DoubleUtil.roundPrice(activity.withholdingTaxUS + activity.withholdingTaxJPUS);
 //				double fee = DoubleUtil.roundPrice(activity.taxBaseUS - activity.amount2);
-				transactionList.add(Transaction.dividend(activity.payDateUS, activity.symbol, activity.quantity, activity.unitPrice, fee, activity.amount2));
+				transactionList.add(Transaction.dividend(activity.payDateJP, activity.symbol, activity.quantity, activity.unitPrice, fee, activity.amount2));
 			}
 		}
 		

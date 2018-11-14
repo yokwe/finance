@@ -1,5 +1,6 @@
 package yokwe.finance.stock.report;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class Report {
 					transfer = Transfer.sell(stockHistory.symbol, stockHistory.date,
 							stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
 				} else if (stockHistory.buyQuantity != 0 && stockHistory.sellQuantity != 0) {
-					logger.debug("stockHistory {}", stockHistory);
+					// Buy and sell for the stock happened same day.
 					double buyPrice = DoubleUtil.roundQuantity((stockHistory.buy - stockHistory.buyFee) / stockHistory.buyQuantity);
 					// Calculate averagePrice before sell
 					double averagePrice = DoubleUtil.roundPrice((stockHistory.totalCost + stockHistory.sell) / (stockHistory.totalQuantity + stockHistory.sellQuantity));					
@@ -90,6 +91,8 @@ public class Report {
 	}
 	
 	private static void generateReportAccount(SpreadSheet docLoad, SpreadSheet docSave, String prefix, List<Transaction> transactionList) {
+		String DATE_FIRST = LocalDate.now().minusYears(1).toString();
+
 		List<Account> accountList = new ArrayList<>();
 		
 		Portfolio portfolio = new Portfolio();
@@ -175,7 +178,7 @@ public class Report {
 				throw new UnexpectedException("Unexpected");				
 			}
 			
-			if (account != null) accountList.add(account);
+			if (account != null && DATE_FIRST.compareTo(account.date) < 0) accountList.add(account);
 		}
 		
 		String sheetName = String.format("%s-%s", prefix, Sheet.getSheetName(Account.class));

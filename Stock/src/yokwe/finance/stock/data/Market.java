@@ -109,11 +109,13 @@ public class Market {
 	}
 	private static LocalDate T2_SETTLEMENT_START_DATE = LocalDate.of(2017, 9, 5);
 	// See settlement calendar below
-	//    https://stld.com/?year=2016&month=11
+	//    https://stlcl.com/?year=2016&month=11
 	private static Map<LocalDate, LocalDate> irregularlementDateMap = new TreeMap<>();
 	static {
 		irregularlementDateMap.put(LocalDate.of(2016, 11, 10), LocalDate.of(2016, 11, 16));
 		irregularlementDateMap.put(LocalDate.of(2017, 10,  6), LocalDate.of(2017, 10, 11));
+		irregularlementDateMap.put(LocalDate.of(2018, 10,  4), LocalDate.of(2018, 10,  9));
+		irregularlementDateMap.put(LocalDate.of(2018, 10,  5), LocalDate.of(2018, 10, 10));
 	}
 	public static LocalDate toSettlementDate(LocalDate tradeDate) {
 		if (irregularlementDateMap.containsKey(tradeDate)) {

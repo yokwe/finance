@@ -24,8 +24,6 @@ public class JapanHoliday {
 	public static final int YEAR_START = 2015;
 	public static final int YEAR_END   = 2025;
 	
-	public static final String HOLIDAY_NO = "NO";
-	
 	private static final Matcher MAT_YYYY_MM_DD = Pattern.compile("^(20[0-9]{2})-([01]?[0-9])-([0-3]?[0-9])$").matcher("");
 	private static final Matcher MAT_MM_DD      = Pattern.compile("^([01]?[0-9])-([0-3]?[0-9])$").matcher("");
 	private static final Matcher MAT_MM_DDM     = Pattern.compile("^([01]?[0-9])-([0-3]?[0-9])M$").matcher("");
@@ -39,44 +37,34 @@ public class JapanHoliday {
 		public String date;
 		public String start;
 		public String end;
-		public String publicHoliday;
 		
 		public Data() {
-			event   = "";
-			date    = "";
-			start   = "";
-			end     = "";
-			publicHoliday = "";
+			event = "";
+			date  = "";
+			start = "";
+			end   = "";
 		}
 		
 		public Data(Data that) {
-			this.event   = that.event;
-			this.date    = that.date;
-			this.start   = that.start;
-			this.end     = that.end;
-			this.publicHoliday = that.publicHoliday;
+			this.event = that.event;
+			this.date  = that.date;
+			this.start = that.start;
+			this.end   = that.end;
 		}
 		
 		@Override
 		public String toString() {
-			return String.format("%s %s %s %s %s",
-				event, date, (start.isEmpty() ? "-" : start), (end.isEmpty() ? "-" : end), (publicHoliday.isEmpty() ? "-" : publicHoliday));
+			return String.format("%s %s %s %s",
+				event, date, (start.isEmpty() ? "-" : start), (end.isEmpty() ? "-" : end));
 		}
 	}
 	
-	private static Map<LocalDate, Data> holidayMap = new TreeMap<>();
+	private static Map<LocalDate, Data> publicHolidayMap = new TreeMap<>();
 	static {
 		List<Data> dataList = CSVUtil.loadWithHeader(PATH_JAPAN_HOLIDAY_CSV, Data.class);
 		
 		for(Data data: dataList) {
 			if (data.event.length() == 0) continue;
-			
-			if (!data.publicHoliday.isEmpty()) {
-				if (data.publicHoliday.compareTo(HOLIDAY_NO) != 0) {
-					logger.error("Unexpected holiday {}", data);
-					throw new UnexpectedException("Unexpected");
-				}
-			}
 			
 			final int yearStart;
 			final int yearEnd;
@@ -111,7 +99,7 @@ public class JapanHoliday {
 				
 				if (MAT_YYYY_MM_DD.matches()) {
 					LocalDate date = LocalDate.parse(data.date, FORMAT_YYYY_MM_DD);
-					holidayMap.put(date, data);
+					publicHolidayMap.put(date, data);
 				} else if (MAT_MM_DD.matches()) {
 					if (MAT_MM_DD.groupCount() != 2) {
 						logger.error("Unexpected date format {}", data);
@@ -123,7 +111,7 @@ public class JapanHoliday {
 					
 					for(int yyyy = yearStart; yyyy <= yearEnd; yyyy++) {
 						LocalDate date = LocalDate.of(yyyy, mm, dd);
-						holidayMap.put(date, data);
+						publicHolidayMap.put(date, data);
 					}
 				} else if (MAT_MM_DDM.matches()) {
 					if (MAT_MM_DDM.groupCount() != 2) {
@@ -147,7 +135,7 @@ public class JapanHoliday {
 						LocalDate firstDateOfMonth = LocalDate.of(yyyy, mm, 1);
 						LocalDate firstMonday = firstDateOfMonth.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY));
 						LocalDate date = firstMonday.plusDays((dd - 1) * 7);
-						holidayMap.put(date, data);
+						publicHolidayMap.put(date, data);
 					}
 				} else {
 					logger.error("Unexpected date format {}", data);
@@ -156,16 +144,13 @@ public class JapanHoliday {
 			}
 		}
 		Map<LocalDate, Data> observedList = new TreeMap<>();
-		for(LocalDate date: holidayMap.keySet()) {
+		for(LocalDate date: publicHolidayMap.keySet()) {
 			if (date.getDayOfWeek() == DayOfWeek.SUNDAY) {
-				Data data = holidayMap.get(date);
-				// Skip if not public holiday
-				if (data.publicHoliday.compareTo(HOLIDAY_NO) == 0) continue;
-				
+				Data data = publicHolidayMap.get(date);
 				LocalDate nextDate = date.plusDays(0);
 				for(;;) {
 					nextDate = nextDate.plusDays(1);
-					if (holidayMap.containsKey(nextDate)) continue;
+					if (publicHolidayMap.containsKey(nextDate)) continue;
 					break;
 				}
 				Data nextData = new Data(data);
@@ -174,24 +159,41 @@ public class JapanHoliday {
 //				logger.info("Observed  {}  {}  {}", date, nextDate, nextData);
 			}
 		}
-		holidayMap.putAll(observedList);
-		logger.info("holidayMap {} {} {}", YEAR_START, YEAR_END, holidayMap.size());
+		publicHolidayMap.putAll(observedList);
+		logger.info("publicHolidayMap {} {} {}", YEAR_START, YEAR_END, publicHolidayMap.size());
 	}
 
-	public static final boolean isHoliday(LocalDate date) {
+	public static final boolean isPublicHoliday(LocalDate date) {
+		return publicHolidayMap.containsKey(date);
+	}
+	public static final boolean isPublicHoliday(String date) {
+		return isPublicHoliday(LocalDate.parse(date));
+	}
+	
+	public static final boolean isClosed(LocalDate date) {
 		DayOfWeek dayOfWeek = date.getDayOfWeek();
 		if (dayOfWeek == DayOfWeek.SUNDAY)   return true;
 		if (dayOfWeek == DayOfWeek.SATURDAY) return true;
 		
-		return holidayMap.containsKey(date);
+		int ddmm = date.getMonthValue() * 100 + date.getDayOfMonth();
+		switch(ddmm) {
+		case 101:
+		case 102:
+		case 103:
+		case 1230:
+		case 1231:
+			return true;
+		}
+
+		return isPublicHoliday(date);
 	}
-	public static final boolean isHoliday(String date) {
-		return isHoliday(LocalDate.parse(date));
+	public static final boolean isClosed(String date) {
+		return isClosed(LocalDate.parse(date));
 	}
-	
+
 	public static void main(String[] args) {
 		logger.info("START");
-		for(Map.Entry<LocalDate, Data> entry: holidayMap.entrySet()) {
+		for(Map.Entry<LocalDate, Data> entry: publicHolidayMap.entrySet()) {
 			logger.info("{}  {}", entry.getKey(), entry.getValue());
 		}
 		logger.info("END");

@@ -109,7 +109,7 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
-				if (JapanHoliday.isHoliday(activity.settlementDate)) {
+				if (JapanHoliday.isClosed(activity.settlementDate)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
@@ -214,7 +214,7 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
-				if (JapanHoliday.isHoliday(activity.payDateJP)) {
+				if (JapanHoliday.isClosed(activity.payDateJP)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
@@ -237,7 +237,7 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
-				if (JapanHoliday.isHoliday(activity.settlementDate)) {
+				if (JapanHoliday.isClosed(activity.settlementDate)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
@@ -245,7 +245,7 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
-				if (JapanHoliday.isHoliday(activity.tradeDate)) {
+				if (JapanHoliday.isClosed(activity.tradeDate)) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}

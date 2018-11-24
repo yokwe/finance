@@ -48,7 +48,7 @@ public class CSVUtil {
 		return load(path, clazz, csvFormat);
 	}
 
-	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
+	public static <E> List<E> loadWithHeader(Reader reader, Class<E> clazz) {
 		String[] names;
 		{
 			List<String> nameList = new ArrayList<>();
@@ -63,7 +63,20 @@ public class CSVUtil {
 		}
 		
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
-		return load(path, clazz, csvFormat);
+		return load(reader, clazz, csvFormat);
+	}
+	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
+		{
+			File file = new File(path);
+			if (!file.exists()) return null;
+		}
+
+		try {
+			return loadWithHeader(new BufferedReader(new FileReader(path), BUFFER_SIZE), clazz);
+		} catch (FileNotFoundException e) {
+			logger.error("FileNotFoundException {}", e.toString());
+			throw new UnexpectedException("FileNotFoundException");
+		}
 	}
 
 	public static <E> List<E> load(String path, Class<E> clazz) {
@@ -84,6 +97,8 @@ public class CSVUtil {
 			throw new UnexpectedException("FileNotFoundException");
 		}
 	}
+	
+	private static final String UTF8_BOM = "\uFEFF";
 
 	public static <E> List<E> load(Reader reader, Class<E> clazz, CSVFormat csvFormat) {
 		Field[]  fields;
@@ -126,6 +141,9 @@ public class CSVUtil {
 					}
 					for(int i = 0; i < size; i++) {
 						String headerName = record.get(i);
+						
+						if (headerName.contains(UTF8_BOM)) headerName = headerName.substring(1);
+						
 						if (!headerName.equals(names[i])) {
 							logger.error("headerName != name  {}  {} != {}", i, headerName, names[i]);
 							throw new UnexpectedException("headerName != name");

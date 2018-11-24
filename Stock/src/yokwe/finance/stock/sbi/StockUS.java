@@ -5,15 +5,15 @@ public class StockUS implements Comparable<StockUS> {
 	public String name;
 	public String nameJP;
 	public String description;
-	public String market;
+	public String exchange;
 	public String category;
 	
-	public StockUS(String ticker, String name, String nameJP, String description, String market, String category) {
+	public StockUS(String ticker, String name, String nameJP, String description, String exchange, String category) {
 		this.ticker      = ticker;
 		this.name        = name;
 		this.nameJP      = nameJP;
 		this.description = description;
-		this.market      = market;
+		this.exchange    = exchange;
 		this.category    = category;
 	}
 	public StockUS() {
@@ -22,7 +22,7 @@ public class StockUS implements Comparable<StockUS> {
 	
 	@Override
 	public String toString() {
-		return String.format("%s %s %s %s %s", ticker, name, description, market, category);
+		return String.format("%s %s %s %s %s", ticker, name, description, exchange, category);
 	}
 
 	@Override

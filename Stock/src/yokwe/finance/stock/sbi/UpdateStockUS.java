@@ -100,14 +100,14 @@ public class UpdateStockUS {
 						logger.error("Unexpected row = {}", row);
 						throw new UnexpectedException("Unexpected");
 					}
-					String ticker = ms.group(1);
-					String name   = ms.group(2);
-					String nameJP = ms.group(3);
+					String ticker      = ms.group(1);
+					String name        = ms.group(2);
+					String nameJP      = ms.group(3);
 					String description = ms.group(4);
-					String market = ms.group(5);
+					String exchange    = ms.group(5);
 										
-//					logger.info("++++ {}={}={}={}={}=", ticker, name, nameJP, description, market);
-					stockUS = new StockUS(ticker, name, nameJP, description, market, category);
+//					logger.info("++++ {}={}={}={}={}=", ticker, name, nameJP, description, exchange);
+					stockUS = new StockUS(ticker, name, nameJP, description, exchange, category);
 					
 					countStock++;
 				} else if (me.find()) {
@@ -115,13 +115,14 @@ public class UpdateStockUS {
 						logger.error("Unexpected row = {}", row);
 						throw new UnexpectedException("Unexpected");
 					}
-					String ticker = me.group(1);
-					String name   = me.group(2);
-					String nameJP = me.group(3);
-					String market = me.group(4);
+					String ticker      = me.group(1);
+					String name        = me.group(2);
+					String nameJP      = me.group(3);
+					String description = "ETF";
+					String exchange    = me.group(4);
 					
-//					logger.info("**** {}={}={}={}=", ticker, name, nameJP, market);
-					stockUS = new StockUS(ticker, name, nameJP, "ETF", market, category);
+//					logger.info("**** {}={}={}={}=", ticker, name, nameJP, exchange);
+					stockUS = new StockUS(ticker, name, nameJP, description, exchange, category);
 					
 					countETF++;
 				} else {

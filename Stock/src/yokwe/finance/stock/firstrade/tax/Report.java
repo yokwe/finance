@@ -270,7 +270,8 @@ public class Report {
 			// Build UnrealizedGain sheet
 			if (!MODE_TEST) {
 				LocalDate DATE_LAST  = Market.getLastTradingDate();
-				LocalDate DATE_FIRST = DATE_LAST.minusYears(1);
+				// Advance one day because minusYears(1) returns same date of last year.
+				LocalDate DATE_FIRST = Market.getNextTradeDate(DATE_LAST.minusYears(1));
 
 				// build accountMap
 				DateMap<Account> accountMap = new DateMap<>();

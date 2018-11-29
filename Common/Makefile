@@ -9,6 +9,7 @@ COMMONS_CSV_VERSION=1.5
 HTTPCOMPONENTS_CLIENT_VERSION=4.5.5
 COMMONS_MATH3_VERSION=3.6.1
 JAVAX_JSON_VERSION=1.1
+GOOGLE_DRIVE_VERSION=3
 
 
 all: fetch update
@@ -52,6 +53,10 @@ fetch-javax-json:
 	rm -f tmp/javax.json-${JAVAX_JSON_VERSION}.jar
 	cd tmp; wget http://repo1.maven.org/maven2/org/glassfish/javax.json/${JAVAX_JSON_VERSION}/javax.json-${JAVAX_JSON_VERSION}.jar
 
+fetch-google-drive:
+	rm -f tmp/google-api-services-drive-v${GOOGLE_DRIVE_VERSION}.zip
+	cd tmp; wget -O google-api-services-drive-v${GOOGLE_DRIVE_VERSION}.zip https://developers.google.com/resources/api-libraries/download/drive/v${GOOGLE_DRIVE_VERSION}/java
+
 update-logback:
 	rm -rf tmp/logback-${LOGBACK_VERSION}
 	rm -rf jar/logback-*
@@ -93,3 +98,9 @@ update-commons-math3:
 
 update-javax-json:
 	cp -p tmp/javax.json-${JAVAX_JSON_VERSION}.jar jar
+
+update-google-drive:
+	rm -rf tmp/drive jar/drive
+	mkdir -p jar/drive
+	cd tmp; unzip google-api-services-drive-v${GOOGLE_DRIVE_VERSION}.zip
+	cd tmp/drive; cp -pr *.jar libs libs-sources ../../jar/drive

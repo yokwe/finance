@@ -300,7 +300,7 @@ public class Transaction implements Comparable<Transaction> {
 						logger.error("Unexpected  {}", activity);
 						throw new UnexpectedException("Unexpected");
 					}
-					if (activity.consumptionTaxJP <= 0) {
+					if (activity.consumptionTaxJP < 0) {
 						logger.error("Unexpected  {}", activity);
 						throw new UnexpectedException("Unexpected");
 					}

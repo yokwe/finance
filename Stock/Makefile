@@ -16,7 +16,14 @@ prepare-log:
 
 prepare-deploy-jar:
 	sudo chmod 777 /var/lib/tomcat8/webapps/
-	
+
+#
+# ods
+#
+save-ods:
+	cp ~/Dropbox/Trade/投資活動_monex.ods     ~/Dropbox/Trade/SAVE/投資活動_monex_$$(date +%Y%m%d).ods
+	cp ~/Dropbox/Trade/投資活動_firstrade.ods ~/Dropbox/Trade/SAVE/投資活動_firstrade_$$(date +%Y%m%d).ods
+
 #
 # preferred
 #

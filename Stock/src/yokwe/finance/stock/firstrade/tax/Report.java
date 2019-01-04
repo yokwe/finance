@@ -41,6 +41,15 @@ public class Report {
 				double interest = transaction.credit;
 				double fxRate = ForexUtil.getUSD(transaction.date);
 				
+				if (ret.containsKey(date)) {
+					Interest lastValue = ret.get(date);
+					// Sanity check
+					if (!DoubleUtil.isAlmostEqual(fxRate, lastValue.fxRate)) {
+						logger.error("Unexpected fxRate {} {} - {} {}", date, fxRate, lastValue.date, lastValue.fxRate);
+						throw new UnexpectedException("Unextected fxRate");
+					}
+					interest = DoubleUtil.roundPrice(interest + lastValue.interest);
+				}
 				ret.put(date, new Interest(date, interest, fxRate));
 			}
 		}

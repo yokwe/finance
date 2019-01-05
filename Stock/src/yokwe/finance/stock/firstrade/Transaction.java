@@ -742,6 +742,10 @@ public class Transaction implements Comparable<Transaction> {
 					break;
 				}
 				default:
+					if (activity.transaction.startsWith("##")) {
+						logger.info("ignore {}", activity);
+						continue;
+					}
 					logger.error("Unknown transaction {}", activity.transaction);
 					throw new UnexpectedException("Unknown transaction");
 				}

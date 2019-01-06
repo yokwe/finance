@@ -1,6 +1,5 @@
 package yokwe.finance.stock.firstrade.tax;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -14,11 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
 import yokwe.finance.stock.data.ForexUtil;
-import yokwe.finance.stock.data.Market;
 import yokwe.finance.stock.firstrade.Transaction;
 import yokwe.finance.stock.libreoffice.Sheet;
 import yokwe.finance.stock.libreoffice.SpreadSheet;
-import yokwe.finance.stock.util.DateMap;
 import yokwe.finance.stock.util.DoubleUtil;
 
 public class Report {
@@ -270,54 +267,10 @@ public class Report {
 			// Build yearList from accountList
 			List<String> yearList = new ArrayList<>();
 			yearList.addAll(accountList.stream().map(e -> e.date.substring(0, 4)).collect(Collectors.toSet()));
-			// Add dummy date used in BuySell.addDummySell
-			yearList.add(BuySell.DUMMY_DATE.substring(0, 4));
 			Collections.sort(yearList);
 			// Reverse yearList to position latest year sheet to left most.
 			Collections.reverse(yearList);
 
-			// Build UnrealizedGain sheet
-			if (!MODE_TEST) {
-				LocalDate DATE_LAST  = Market.getLastTradingDate();
-				// Advance one day because minusYears(1) returns same date of last year.
-				LocalDate DATE_FIRST = Market.getNextTradeDate(DATE_LAST.minusYears(1));
-
-				// build accountMap
-				DateMap<Account> accountMap = new DateMap<>();
-				for(Account account: accountList) {
-					accountMap.put(account.date, account);
-				}
-
-				// build unrealizedGainList
-				List<UnrealizedGain> unrealizedGainList = new ArrayList<>();
-				LocalDate last = DATE_LAST;
-				for(LocalDate date = DATE_FIRST; date.isBefore(last) || date.isEqual(last); date = date.plusDays(1)) {
-					if (Market.isClosed(date)) continue;
-					
-					Account account = accountMap.get(date);
-					double  unreal  = Position.getUnrealizedValue(date.toString());
-					
-					double fund = account.fundTotal;
-					double cash = account.cashTotal;
-					double realizedGain = account.gainTotal;
-					double stockCost = account.stockTotal;
-					double stockValue = unreal;
-					double stockUnrealizedGain = stockValue - stockCost;
-					double unrealizedGain = realizedGain + stockUnrealizedGain;
-					
-					unrealizedGainList.add(new UnrealizedGain(
-						date.toString(), fund, cash, realizedGain, stockCost, stockValue, stockUnrealizedGain, unrealizedGain));
-				}
-				
-				{
-					String sheetName = Sheet.getSheetName(UnrealizedGain.class);
-					docSave.importSheet(docLoad, sheetName, docSave.getSheetCount());
-					Sheet.fillSheet(docSave, unrealizedGainList);
-					
-					String newSheetName = String.format("%s", sheetName);
-					logger.info("sheet {}", newSheetName);
-				}
-			}
 
 			for(String targetYear: yearList) {
 				// Account

@@ -8,8 +8,6 @@ import java.util.TreeMap;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.UnexpectedException;
-import yokwe.finance.stock.data.Price;
-import yokwe.finance.stock.data.PriceUtil;
 import yokwe.finance.stock.firstrade.Transaction;
 import yokwe.finance.stock.util.DoubleUtil;
 
@@ -215,30 +213,7 @@ public class BuySell {
 			}
 		}
 		
-		// Add dummy sell record for remaining stocks
-		addDummySell(ret);
 		return ret;
-	}
-	
-	public static final String DUMMY_DATE = "9999-12-31";
-	public static final double DUMMY_FEE  = 0.0;
-	private static void addDummySell(Map<String, BuySell> buySellMap) {
-		for(BuySell buySell: buySellMap.values()) {
-			if (buySell.isAlmostZero()) continue;
-			
-			String symbol   = buySell.symbol;
-			String name     = buySell.name;
-			double quantity = buySell.totalQuantity;
-			
-			// Get latest price of symbol
-			Price price = PriceUtil.getLastPrice(symbol);
-//			logger.info("price {} {} {}", price.date, price.symbol, price.close);
-
-			// Add dummy sell record
-			Transaction transaction = Transaction.sell(DUMMY_DATE, symbol, name, quantity, price.close, DUMMY_FEE, DoubleUtil.roundPrice(quantity * price.close));	
-			buySell.sell(transaction);
-			Position.sell(transaction.date, transaction.symbol, transaction.quantity);
-		}
 	}
 
 }

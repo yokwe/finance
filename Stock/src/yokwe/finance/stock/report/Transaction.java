@@ -286,6 +286,9 @@ public class Transaction implements Comparable<Transaction> {
 			case JPY_OUT:
 				transaction = Transaction.withdrawJPY(originalTransaction.date, -originalTransaction.jpy);
 				break;
+			case FEE:
+				transaction = Transaction.withdraw(originalTransaction.date, originalTransaction.usd);
+				break;
 			default:
 				logger.error("Unknown type {}", originalTransaction.type);
 				throw new UnexpectedException("Unknown type");

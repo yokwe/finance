@@ -12,6 +12,7 @@ public class Activity {
 		public static final String TRANSACTION_TO_SOUGOU        = "証券総合口座へ";
 		public static final String TRANSACTION_TO_USD_DEPOSIT   = "円貨から外貨預り金へ";
 		public static final String TRANSACTION_FROM_USD_DEPOSIT = "外貨から円貨預り金へ";
+		public static final String TRANSACTION_ADR_FEE          = "ADRﾃｽｳﾘﾖｳ";
 
 		@ColumnName("受渡日")
 		@NumberFormat(SpreadSheet.FORMAT_DATE)

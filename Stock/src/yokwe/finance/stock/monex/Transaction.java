@@ -22,6 +22,7 @@ public class Transaction implements Comparable<Transaction> {
 		JPY_IN, JPY_OUT, USD_IN, USD_OUT,
 		DIVIDEND,
 		BUY, SELL,
+		FEE,
 	}
 	
 	public final Type   type;
@@ -90,6 +91,9 @@ public class Transaction implements Comparable<Transaction> {
 	private static Transaction dividend(String date, String symbol, int quantity, double price, double fee, double total) {
 		return new Transaction(Type.DIVIDEND, date, symbol, quantity, price, fee, total, 0, 0, 0);
 	}
+	private static Transaction fee(String date, double usd) {
+		return new Transaction(Type.FEE, date, "", 0, 0, 0, 0, 0, usd, 0);
+	}
 
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
 		List<Transaction> transactionList = new ArrayList<>();
@@ -114,10 +118,6 @@ public class Transaction implements Comparable<Transaction> {
 					throw new UnexpectedException("Unexpected");
 				}
 				if (activity.transaction == null) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.jpy == 0) {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
@@ -186,6 +186,22 @@ public class Transaction implements Comparable<Transaction> {
 						throw new UnexpectedException("Unexpected");
 					}
 					transactionList.add(Transaction.usdOut(activity.settlementDate, activity.jpy, activity.usd, activity.fxRate));
+					break;
+				case Activity.Account.TRANSACTION_ADR_FEE:
+					// Sanity check
+					if (activity.fxRate != 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (0 <= activity.usd) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.jpy != 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					transactionList.add(Transaction.fee(activity.settlementDate, -activity.usd));
 					break;
 				default:
 					logger.error("Unexpected  {}", activity);

@@ -39,6 +39,7 @@ public class UpdateStockHistory {
 				case JPY_OUT:
 				case USD_IN:
 				case USD_OUT:
+				case FEE:
 					break;
 				default:
 					logger.error("Unexpected {}", transaction);

@@ -3,7 +3,10 @@ package yokwe.finance.stock.app;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -258,7 +261,8 @@ public class UpdatePreferred {
 		File[] fileArray = dir.listFiles();
 		Arrays.sort(fileArray, (a, b) -> a.getName().compareTo(b.getName()));
 		
-		List<Preferred> preferredList = new ArrayList<>();
+//		List<Preferred> preferredList = new ArrayList<>();
+		Map<String, Preferred> preferredMap = new TreeMap<>();
 		
 		int count = 0;
 		for(File file: fileArray) {
@@ -279,6 +283,16 @@ public class UpdatePreferred {
 			}
 
 			String symbol  = SYMBOL.getValue(content);
+			{
+				// Remove suffix for Called
+				if (symbol.endsWith("*")) {
+					symbol = symbol.substring(0, symbol.length() - 1);
+				}
+				// Remove suffix for When Issued
+				if (symbol.endsWith("#")) {
+					symbol = symbol.substring(0, symbol.length() - 1);
+				}
+			}
 			String parent  = content.contains("Goto Parent Company") ? PARENT.getValue(content) : "*NA*";
 			String country = content.contains("<b>Address:</b>") ? toCountry(ADDRESS.getValue(content)) : "*NA*";
 			String type    = content.contains("Security Type:") ? TYPE.getValue(content) : "Common";
@@ -611,14 +625,22 @@ public class UpdatePreferred {
 					}
 				}
 			}
-
-			preferredList.add(
-				new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref,
+			if (preferredMap.containsKey(symbol)) {
+				logger.warn("Duplicat symbol {}", symbol);
+			} else {
+				Preferred value = new Preferred(symbol, type, parent, country, name, cpnRate, annAmt, liqPref,
 					(0 < remark.length()) ? remark.substring(1) : "",
-					callPrice, callDate, maturDate, distDates, ipo));
+					callPrice, callDate, maturDate, distDates, ipo);
+				preferredMap.put(symbol, value);
+			}
 		}
 		
-		Preferred.save(preferredList);
+		// Save prefeffedMap
+		{
+			List<Preferred> preferredList = new ArrayList<>(preferredMap.values());
+			Collections.sort(preferredList);
+			Preferred.save(preferredList);
+		}
 	}
 	
 	public static void main(String[] args) {

@@ -5,7 +5,7 @@ import java.util.List;
 import yokwe.finance.stock.app.UpdatePreferred;
 import yokwe.finance.stock.util.CSVUtil;
 
-public class Preferred {
+public class Preferred implements Comparable<Preferred> {
 	public String symbol;
 	public String type;
 	public String parent;
@@ -48,6 +48,11 @@ public class Preferred {
 		return String.format("%-8s  %20s  %-8s  %s", symbol, type, parent, country);
 	}
 	
+	@Override
+	public int compareTo(Preferred that) {
+		return this.symbol.compareTo(that.symbol);
+	}
+
 	public static List<Preferred> load() {
 		return CSVUtil.loadWithHeader(UpdatePreferred.PATH_FILE, Preferred.class);
 	}
@@ -55,5 +60,4 @@ public class Preferred {
 	public static void save(List<Preferred> preferredList) {
 		CSVUtil.saveWithHeader(preferredList, UpdatePreferred.PATH_FILE);
 	}
-
 }

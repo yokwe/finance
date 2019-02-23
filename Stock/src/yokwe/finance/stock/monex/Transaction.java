@@ -212,7 +212,7 @@ public class Transaction implements Comparable<Transaction> {
 		
 		// Process Dividend
 		for(String sheetName: sheetNameList) {
-			if (!sheetName.equals("配当")) continue;
+			if (!sheetName.matches("^20[0-9][0-9]-配当$")) continue;
 			logger.info("Sheet {}", sheetName);
 			
 			List<Activity.Dividend> activityList = Sheet.extractSheet(docActivity, Activity.Dividend.class, sheetName);
@@ -242,7 +242,7 @@ public class Transaction implements Comparable<Transaction> {
 		}
 		
 		for(String sheetName: sheetNameList) {
-			if (!sheetName.matches("^20[0-9][0-9]$")) continue;
+			if (!sheetName.matches("^20[0-9][0-9]-譲渡$")) continue;
 			logger.info("Sheet {}", sheetName);
 			
 			List<Activity.Trade> activityList = Sheet.extractSheet(docActivity, Activity.Trade.class, sheetName);

@@ -232,5 +232,13 @@
                 </java>
         </target>
 
+	<!-- sbi -->
+	<target name="run-sbi-update-stock-us">
+                <java classname="yokwe.finance.stock.sbi.UpdateStockUS" fork="true">
+                        <classpath location="${jar.yokwe}" />
+                        <classpath refid="ext.jar" />
+                        <sysproperty key="java.library.path" value="/usr/lib/libreoffice/program"/>
+                </java>
+        </target>
 
 </project>

@@ -71,6 +71,11 @@ public class Report {
 							stockHistory.buyQuantity, buyPrice, stockHistory.buyFee, stockHistory.buy,
 							stockHistory.totalQuantity, stockHistory.totalCost, averagePrice,
 							stockHistory.date, stockHistory.sellQuantity, sellPrice, stockHistory.sellFee, stockHistory.sell, stockHistory.sellCost, stockHistory.sellProfit);
+				} else if (stockHistory.buyQuantity == 0 && stockHistory.sellQuantity == 0 && stockHistory.dividend == 0) {
+					// Change
+					double averagePrice = DoubleUtil.roundQuantity(stockHistory.totalCost / stockHistory.totalQuantity);
+					transfer = Transfer.change(stockHistory.symbol, stockHistory.date,
+							stockHistory.totalQuantity, stockHistory.totalCost, averagePrice);
 				} else {
 //					logger.error("Unexpected  {}", stockHistory);
 //					throw new UnexpectedException("Unexpected");

@@ -108,12 +108,14 @@ public class UpdateStockHistory {
 		for(List<StockHistory> list: listCollection) {
 			StockHistory last = list.get(list.size() - 1);
 			
+			boolean needToAdd = false;
 			if (wantActive) {
-				if (last.isActive()) ret.add(list);
+				if (last.isActive()) needToAdd = true;
 			}
 			if (wantThisYear) {
-				if (last.date.startsWith(THIS_YEAR)) ret.add(list);
+				if (last.date.startsWith(THIS_YEAR)) needToAdd = true;
 			}
+			if (needToAdd) ret.add(list);
 		}
 		
 		return ret;

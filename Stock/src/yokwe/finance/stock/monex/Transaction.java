@@ -2,6 +2,7 @@ package yokwe.finance.stock.monex;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ public class Transaction implements Comparable<Transaction> {
 		JPY_IN, JPY_OUT, USD_IN, USD_OUT,
 		DIVIDEND,
 		BUY, SELL,
-		FEE,
+		FEE, CHANGE,
 	}
 	
 	public final Type   type;
@@ -38,10 +39,14 @@ public class Transaction implements Comparable<Transaction> {
 	public final double usd;
 	public final double fxRate;
 	
+	public final String newSymbol;
+	public final int    newQuantity;
+	
 	private Transaction(
 		Type type, String date,
 		String symbol, int quantity, double price, double fee, double total,
-		int jpy, double usd, double fxRate) {
+		int jpy, double usd, double fxRate,
+		String newSymbol, int newQuantity) {
 		this.type     = type;
 		this.date     = date;
 		
@@ -54,6 +59,9 @@ public class Transaction implements Comparable<Transaction> {
 		this.jpy      = jpy;
 		this.usd      = usd;
 		this.fxRate   = fxRate;
+		
+		this.newSymbol   = newSymbol;
+		this.newQuantity = newQuantity;
 	}
 	
 	@Override
@@ -71,28 +79,31 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static Transaction jpyIn(String date, int jpy) {
-		return new Transaction(Type.JPY_IN, date, "", 0, 0, 0, 0, jpy, 0, 0);
+		return new Transaction(Type.JPY_IN, date, "", 0, 0, 0, 0, jpy, 0, 0, "", 0);
 	}
 	private static Transaction jpyOut(String date, int jpy) {
-		return new Transaction(Type.JPY_OUT, date, "", 0, 0, 0, 0, jpy, 0, 0);
+		return new Transaction(Type.JPY_OUT, date, "", 0, 0, 0, 0, jpy, 0, 0, "", 0);
 	}
 	private static Transaction usdIn(String date, int jpy, double usd, double fxRate) {
-		return new Transaction(Type.USD_IN, date, "", 0, 0, 0, 0, jpy, usd, fxRate);
+		return new Transaction(Type.USD_IN, date, "", 0, 0, 0, 0, jpy, usd, fxRate, "", 0);
 	}
 	private static Transaction usdOut(String date, int jpy, double usd, double fxRate) {
-		return new Transaction(Type.USD_OUT, date, "", 0, 0, 0, 0, jpy, usd, fxRate);
+		return new Transaction(Type.USD_OUT, date, "", 0, 0, 0, 0, jpy, usd, fxRate, "", 0);
 	}
 	private static Transaction buy(String date, String symbol, int quantity, double price, double fee, double total) {
-		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, total, 0, 0, 0);
+		return new Transaction(Type.BUY, date, symbol, quantity, price, fee, total, 0, 0, 0, "", 0);
 	}
 	private static Transaction sell(String date, String symbol, int quantity, double price, double fee, double total) {
-		return new Transaction(Type.SELL, date, symbol, quantity, price, fee, total, 0, 0, 0);
+		return new Transaction(Type.SELL, date, symbol, quantity, price, fee, total, 0, 0, 0, "", 0);
 	}
 	private static Transaction dividend(String date, String symbol, int quantity, double price, double fee, double total) {
-		return new Transaction(Type.DIVIDEND, date, symbol, quantity, price, fee, total, 0, 0, 0);
+		return new Transaction(Type.DIVIDEND, date, symbol, quantity, price, fee, total, 0, 0, 0, "", 0);
 	}
 	private static Transaction fee(String date, double usd) {
-		return new Transaction(Type.FEE, date, "", 0, 0, 0, 0, 0, usd, 0);
+		return new Transaction(Type.FEE, date, "", 0, 0, 0, 0, 0, usd, 0, "", 0);
+	}
+	private static Transaction change(String date, String symbol, int quantity, String newSymbol, int newQuantity) {
+		return new Transaction(Type.CHANGE, date, symbol, quantity, 0, 0, 0, 0, 0, 0, newSymbol, newQuantity);
 	}
 
 	public static List<Transaction> getTransactionList(SpreadSheet docActivity) {
@@ -247,7 +258,8 @@ public class Transaction implements Comparable<Transaction> {
 			
 			List<Activity.Trade> activityList = Sheet.extractSheet(docActivity, Activity.Trade.class, sheetName);
 			
-			for(Activity.Trade activity: activityList) {
+			for(Iterator<Activity.Trade> iterator = activityList.iterator(); iterator.hasNext(); ) {
+				Activity.Trade activity = iterator.next();
 				// Sanity check
 				if (activity.settlementDate == null || activity.settlementDate.isEmpty()) {
 					logger.error("Unexpected  {}", activity);
@@ -273,84 +285,119 @@ public class Transaction implements Comparable<Transaction> {
 					logger.error("Unexpected  {}", activity);
 					throw new UnexpectedException("Unexpected");
 				}
-				if (activity.transaction == null) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.quantity <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.unitPrice <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.price <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.tax < 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.fee < 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.other < 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.subTotalPrice <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.fxRate <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.feeJP == 0 && activity.consumptionTaxJP == 0) {
-					// If both have zero, it is OK.
-				} else {
-					if (activity.feeJP <= 0) {
-						logger.error("Unexpected  {}", activity);
-						throw new UnexpectedException("Unexpected");
-					}
-					if (activity.consumptionTaxJP < 0) {
-						logger.error("Unexpected  {}", activity);
-						throw new UnexpectedException("Unexpected");
-					}
-				}
-				if (activity.withholdingTaxJP < 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.total <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-				if (activity.totalJPY <= 0) {
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
-
+				
 				switch (activity.transaction) {
-				case Activity.Trade.TRANSACTION_BUY: {
-					double fee = DoubleUtil.round(activity.total - activity.price, 2);
-					transactionList.add(Transaction.buy(activity.settlementDate, activity.symbol, activity.quantity,
-							activity.unitPrice, fee, activity.total));
+				case Activity.Trade.TRANSACTION_BUY:
+				case Activity.Trade.TRANSACTION_SELL:
+					if (activity.transaction == null) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.quantity <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.unitPrice <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.price <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.tax < 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.fee < 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.other < 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.subTotalPrice <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.fxRate <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.feeJP == 0 && activity.consumptionTaxJP == 0) {
+						// If both have zero, it is OK.
+					} else {
+						if (activity.feeJP <= 0) {
+							logger.error("Unexpected  {}", activity);
+							throw new UnexpectedException("Unexpected");
+						}
+						if (activity.consumptionTaxJP < 0) {
+							logger.error("Unexpected  {}", activity);
+							throw new UnexpectedException("Unexpected");
+						}
+					}
+					if (activity.withholdingTaxJP < 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.total <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.totalJPY <= 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+
+					switch (activity.transaction) {
+					case Activity.Trade.TRANSACTION_BUY: {
+						double fee = DoubleUtil.round(activity.total - activity.price, 2);
+						transactionList.add(Transaction.buy(activity.settlementDate, activity.symbol, activity.quantity,
+								activity.unitPrice, fee, activity.total));
+					}
+						break;
+					case Activity.Trade.TRANSACTION_SELL: {
+						double fee = DoubleUtil.round(activity.price - activity.total, 2);
+						transactionList.add(Transaction.sell(activity.settlementDate, activity.symbol, activity.quantity,
+								activity.unitPrice, fee, activity.total));
+					}
+						break;
+					default:
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					break;
+				case Activity.Trade.TRANSACTION_CHANGE:
+				{
+					// activity    => new symbol
+					// newActivity => old symbol
+					Activity.Trade nextActivity = iterator.next();
+					
+					if (activity.settlementDate.compareTo(nextActivity.settlementDate) != 0) {
+						logger.error("Unexpected  {}", activity);
+						logger.error("Unexpected  {}", nextActivity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.symbol.compareTo(nextActivity.symbol) != 0) {
+						logger.error("Unexpected  {}", activity);
+						logger.error("Unexpected  {}", nextActivity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (activity.quantity < 0) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					if (0 < nextActivity.quantity) {
+						logger.error("Unexpected  {}", activity);
+						throw new UnexpectedException("Unexpected");
+					}
+					
+					transactionList.add(Transaction.change(activity.settlementDate, nextActivity.symbol, nextActivity.quantity, activity.symbol, activity.quantity));
 				}
 					break;
-				case Activity.Trade.TRANSACTION_SELL: {
-					double fee = DoubleUtil.round(activity.price - activity.total, 2);
-					transactionList.add(Transaction.sell(activity.settlementDate, activity.symbol, activity.quantity,
-							activity.unitPrice, fee, activity.total));
 				}
-					break;
-				default:
-					logger.error("Unexpected  {}", activity);
-					throw new UnexpectedException("Unexpected");
-				}
+				
 			}
 		}
 

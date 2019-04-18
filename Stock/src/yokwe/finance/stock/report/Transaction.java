@@ -66,8 +66,10 @@ public class Transaction implements Comparable<Transaction> {
 		
 		// Sanity check
 		if (quantity < 0) {
-			logger.error("quantity  {}", quantity);
-			throw new UnexpectedException("Unexpected");
+			if (type != Type.CHANGE) {
+				logger.error("quantity  {}", quantity);
+				throw new UnexpectedException("Unexpected");
+			}
 		}
 		if (!DoubleUtil.isAlmostEqual(quantity, this.quantity)) {
 			logger.error("quantity  {}  {}", quantity, this.quantity);
@@ -288,6 +290,9 @@ public class Transaction implements Comparable<Transaction> {
 				break;
 			case FEE:
 				transaction = Transaction.withdraw(originalTransaction.date, originalTransaction.usd);
+				break;
+			case CHANGE:
+				transaction = Transaction.change(originalTransaction.date, originalTransaction.symbol, originalTransaction.quantity, originalTransaction.newSymbol, originalTransaction.newQuantity);
 				break;
 			default:
 				logger.error("Unknown type {}", originalTransaction.type);

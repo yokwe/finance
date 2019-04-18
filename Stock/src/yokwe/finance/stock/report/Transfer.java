@@ -121,4 +121,13 @@ public class Transfer extends Sheet {
 			totalQuantity, totalAmount, averagePrice,
 			sellDate, sellQuantity, sellPrice, sellFee, sellAmount, sellCost, profit);
 	}
+	public static Transfer change(
+			String symbol, String buyDate,
+			Double totalQuantity, Double totalAmount, Double averagePrice){
+			return new Transfer(
+				symbol, buyDate, null, null, null, null,
+				totalQuantity, totalAmount, averagePrice,
+				null, null, null, null, null, null, null);
+		}
+
 }

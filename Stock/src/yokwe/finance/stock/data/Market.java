@@ -116,6 +116,7 @@ public class Market {
 		irregularlementDateMap.put(LocalDate.of(2017, 10,  6), LocalDate.of(2017, 10, 11));
 		irregularlementDateMap.put(LocalDate.of(2018, 10,  4), LocalDate.of(2018, 10,  9));
 		irregularlementDateMap.put(LocalDate.of(2018, 10,  5), LocalDate.of(2018, 10, 10));
+		irregularlementDateMap.put(LocalDate.of(2018, 11,  9), LocalDate.of(2018, 11, 14));
 	}
 	public static LocalDate toSettlementDate(LocalDate tradeDate) {
 		if (irregularlementDateMap.containsKey(tradeDate)) {

@@ -32,9 +32,9 @@ public class UpdateStockHistory {
 				case DIVIDEND:
 					builder.dividend(transaction.date, transaction.symbol, transaction.fee, transaction.total);
 					break;
-//				case CHANGE:
-//					builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
-//					break;
+				case CHANGE:
+					builder.change(transaction.date, transaction.symbol, -transaction.quantity, transaction.newSymbol, transaction.newQuantity);
+					break;
 				case JPY_IN:
 				case JPY_OUT:
 				case USD_IN:

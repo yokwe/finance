@@ -17,6 +17,26 @@ import yokwe.finance.stock.UnexpectedException;
 public class FileUtil {
 	private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
 
+	public static String read(String path) {
+		File file = new File(path);
+		if (file.canRead()) {
+			return read(file);
+		} else {
+			logger.error("File cannot read.  path = {}", path);
+			throw new UnexpectedException();
+		}
+	}
+
+	public static String read(String path, String encoding) {
+		File file = new File(path);
+		if (file.canRead()) {
+			return read(file, encoding);
+		} else {
+			logger.error("File cannot read.  path = {}", path);
+			throw new UnexpectedException();
+		}
+	}
+
 	public static String read(File file) {
 		String encoding = Charset.defaultCharset().name();
 		return read(file, encoding);

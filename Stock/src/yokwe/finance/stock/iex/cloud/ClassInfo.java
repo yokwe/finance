@@ -69,6 +69,14 @@ public class ClassInfo {
 	public final int         fieldSize;
 	public final String      filter;
 	
+	private static Field getField(Class<?> clazz, String fieldName) {
+		try {
+			return clazz.getDeclaredField("METHOD");
+		} catch (NoSuchFieldException e) {
+			return null;
+		}
+	}
+	
 	ClassInfo(Class<? extends Base> clazz) {
 		try {
 			List<Field> fieldList = new ArrayList<>();
@@ -92,35 +100,51 @@ public class ClassInfo {
 			
 			String method;
 			{
-				Field field = null;
-				try {
-					field = clazz.getDeclaredField("METHOD");
-				} catch (NoSuchFieldException e) {
-					Class<?> enclosingClass = clazz.getEnclosingClass();
-					try {
-						field = enclosingClass.getDeclaredField("METHOD");
-					} catch (NoSuchFieldException e2) {
+				Field field = getField(clazz, "METHOD");
+				if (field != null) {
+					if (!Modifier.isStatic(field.getModifiers())) {
+						logger.error("METHOD field is not static {}", clazz.getName());
+						throw new UnexpectedError("TYPE field is not static");
 					}
-				}
-				if (field == null) {
-					logger.error("No METHOD field {}", clazz.getName());
-					throw new UnexpectedError("No TYPE field");
-				}
-				if (!Modifier.isStatic(field.getModifiers())) {
-					logger.error("METHOD field is not static {}", clazz.getName());
-					throw new UnexpectedError("TYPE field is not static");
-				}
-				String fieldTypeName = field.getType().getName();
-				if (!fieldTypeName.equals("java.lang.String")) {
-					logger.error("Unexpected fieldTypeName {}", fieldTypeName);
-					throw new UnexpectedError("Unexpected fieldTypeName");
-				}
-				Object value = field.get(null);
-				if (value instanceof String) {
-					method = (String)value;
+					String fieldTypeName = field.getType().getName();
+					if (!fieldTypeName.equals("java.lang.String")) {
+						logger.error("Unexpected fieldTypeName {}", fieldTypeName);
+						throw new UnexpectedError("Unexpected fieldTypeName");
+					}
+					Object value = field.get(null);
+					if (value instanceof String) {
+						method = (String)value;
+					} else {
+						logger.error("Unexpected value {}", value.getClass().getName());
+						throw new UnexpectedError("Unexpected value");
+					}
 				} else {
-					logger.error("Unexpected value {}", value.getClass().getName());
-					throw new UnexpectedError("Unexpected value");
+					// check METHOD field in enclosing class
+					Class<?> enclosingClass = clazz;
+					for(;;) {
+						enclosingClass = enclosingClass.getEnclosingClass();
+						if (!Base.class.isAssignableFrom(enclosingClass)) break;
+						if (enclosingClass == null) break;
+						field = getField(enclosingClass, "METHOD");
+						if (field != null) break;
+					}
+					if (field == null) {
+						logger.error("No METHOD field {}", clazz.getName());
+						throw new UnexpectedError("No TYPE field");
+					}
+					
+					// sanity check of found field
+					if (!Modifier.isStatic(field.getModifiers())) {
+						logger.error("METHOD field is not static {}", clazz.getName());
+						throw new UnexpectedError("TYPE field is not static");
+					}
+					String fieldTypeName = field.getType().getName();
+					if (!fieldTypeName.equals("java.lang.String")) {
+						logger.error("Unexpected fieldTypeName {}", fieldTypeName);
+						throw new UnexpectedError("Unexpected fieldTypeName");
+					}
+
+					method = null;
 				}
 			}
 			

@@ -4,12 +4,15 @@ import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -161,6 +164,12 @@ public class Base {
 					case "double":
 						fieldInfo.field.set(this, Double.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
 						break;
+					case "long":
+						fieldInfo.field.set(this, Long.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
+						break;
+					case "int":
+						fieldInfo.field.set(this, Integer.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString()));
+						break;
 					default:
 						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
 						throw new UnexpectedError("Unexptected type");
@@ -225,8 +234,109 @@ public class Base {
 						
 						fieldInfo.field.set(this, child);
 					} else {
-						logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
-						throw new UnexpectedError("Unexptected type");
+						String fieldTypeName = fieldType.getName();
+						switch(fieldTypeName) {
+						case "java.util.Map":
+						{
+							java.lang.reflect.Type type = fieldInfo.field.getGenericType();
+							if (type instanceof ParameterizedType) {
+								ParameterizedType parameterizedType = (ParameterizedType)type;
+								
+								java.lang.reflect.Type[] types = parameterizedType.getActualTypeArguments();
+								if (types.length != 2) {
+									logger.error("Unexptected types.length {}", types.length);
+									throw new UnexpectedError("Unexpected types.length");
+								}
+
+								String keyTypeName   = types[0].getTypeName();
+								String valueTypeName = types[1].getTypeName();
+								
+//								logger.info("keyTypeName   {}", keyTypeName);
+//								logger.info("valueTypeName {}", valueTypeName);
+								
+								if (!keyTypeName.equals("java.lang.String")) {
+									logger.error("Unexptected keyTypeName {}", keyTypeName);
+									throw new UnexpectedError("Unexptected keyTypeName");
+								}
+								
+								switch(valueTypeName) {
+								case "java.lang.Long":
+								{
+									Map<String, Long> child = new TreeMap<>();
+									JsonObject childJson = jsonObject.get(fieldInfo.jsonName).asJsonObject();
+									for(String childKey: childJson.keySet()) {
+										JsonValue childValue = childJson.get(childKey);
+										ValueType childValueType = childValue.getValueType();
+										
+										switch(childValueType) {
+										case NUMBER:
+										{
+											JsonNumber jsonNumber = childJson.getJsonNumber(childKey);
+											long value = jsonNumber.longValue();
+											child.put(childKey, value);
+										}
+											break;
+										case STRING:
+										{
+											JsonString jsonString = childJson.getJsonString(childKey);
+											long value = Long.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString());
+											child.put(childKey, value);
+										}
+											break;
+										default:
+											logger.error("Unexptected childValueType {}", childValueType);
+											throw new UnexpectedError("Unexptected childValueType");
+										}
+									}
+									fieldInfo.field.set(this, child);
+								}
+									break;
+								case "java.lang.Integer":
+								{
+									Map<String, Integer> child = new TreeMap<>();
+									JsonObject childJson = jsonObject.get(fieldInfo.jsonName).asJsonObject();
+									for(String childKey: childJson.keySet()) {
+										JsonValue childValue = childJson.get(childKey);
+										ValueType childValueType = childValue.getValueType();
+										
+										switch(childValueType) {
+										case NUMBER:
+										{
+											JsonNumber jsonNumber = childJson.getJsonNumber(childKey);
+											int value = jsonNumber.intValue();
+											child.put(childKey, value);
+										}
+											break;
+										case STRING:
+										{
+											JsonString jsonString = childJson.getJsonString(childKey);
+											int value = Integer.valueOf((jsonString.getString().length() == 0) ? "0" : jsonString.getString());
+											child.put(childKey, value);
+										}
+											break;
+										default:
+											logger.error("Unexptected childValueType {}", childValueType);
+											throw new UnexpectedError("Unexptected childValueType");
+										}
+									}
+									fieldInfo.field.set(this, child);
+								}
+									break;
+								default:
+									logger.error("Unexptected keyTypeName {}", keyTypeName);
+									throw new UnexpectedError("Unexptected keyTypeName");
+								}
+							} else {
+								throw new UnexpectedError("Unexptected");
+							}
+							
+						}
+							break;
+						default:
+							logger.error("Unexptected type {} {}", valueType.toString(), fieldInfo.toString());
+							logger.error("fieldTypeName {}", fieldTypeName);
+							throw new UnexpectedError("Unexptected type");
+						}
 					}
 				}
 					break;
@@ -315,6 +425,12 @@ public class Base {
 			throw new UnexpectedError("IllegalArgumentException");
 		} catch (InvocationTargetException e) {
 			logger.error("InvocationTargetException {}", e.toString());
+			logger.error("getCause() {}", e.getCause());
+			StackTraceElement[] list = e.getStackTrace();
+			for(int i = 0; i < list.length; i++) {
+				logger.info("XXX {}  {}", i, list[i]);
+			}
+			
 			throw new UnexpectedError("InvocationTargetException");
 		} catch (NoSuchMethodException e) {
 			logger.error("NoSuchMethodException {}", e.toString());
@@ -325,7 +441,7 @@ public class Base {
 		}
 	}
 
-	private static String[] encodeSymbol(String[] symbols) {
+	protected static String[] encodeSymbol(String[] symbols) {
 		try {
 			String[] ret = new String[symbols.length];
 			for(int i = 0; i < symbols.length; i++) {
@@ -343,6 +459,10 @@ public class Base {
 		ClassInfo classInfo = ClassInfo.get(clazz);
 		
 		// 'https://cloud.iexapis.com/v1/status?token=sk_bb977734bffe47ef8dca20cd4cfad878'
+		if (classInfo.method == null) {
+			logger.error("method == null {}", classInfo);
+			throw new UnexpectedError("method == null");
+		}
 		String url = context.getURL(classInfo.method);
 		logger.info("url = {}", url);
 		

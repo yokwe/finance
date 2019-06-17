@@ -39,41 +39,46 @@ public class Account {
 		public static final String METHOD = "/account/usage";
 
 		public static class KeyUsage extends Base {
-			// "ACCOUNT_USAGE":"0","IEX_STATS":"0","REF_DATA_IEX_SYMBOLS":"0","IEX_TOPS":"0","IEX_DEEP":"0"
+			// "ACCOUNT_USAGE":"0","IEX_STATS":"0","REF_DATA_IEX_SYMBOLS":"0","IEX_TOPS":"0","IEX_DEEP":"0","REF_DATA":"100"
 			@JSONName("ACCOUNT_USAGE")
-			public String accountUsage;
+			public long accountUsage;
 			@JSONName("IEX_STATS")
-			public String iexStats;
+			public long iexStats;
 			@JSONName("REF_DATA_IEX_SYMBOLS")
-			public String refDataIEXSymbols;
+			public long refDataIEXSymbols;
 			@JSONName("IEX_TOPS")
-			public String iexTops;
+			public long iexTops;
 			@JSONName("IEX_DEEP")
-			public String iexDeep;
+			public long iexDeep;
+			@JSONName("REF_DATA")
+			public long refData;
 			
 			public KeyUsage() {
-				accountUsage      = null;
-				iexStats          = null;
-				refDataIEXSymbols = null;
-				iexTops           = null;
-				iexDeep           = null;
+				accountUsage      = 0;
+				iexStats          = 0;
+				refDataIEXSymbols = 0;
+				iexTops           = 0;
+				iexDeep           = 0;
+				refData           = 0;
 			}
 
 			public KeyUsage(JsonObject jsonObject) {
 				super(jsonObject);
 			}
 		}
+		
 		public static class Messages extends Base {
-			//public Map<String, String> dailyUsage;
-			public long monthlyUsage;
-			public long monthlyPayAsYouGo;
+			public Map<String, Long> dailyUsage;
+			public long              monthlyUsage;
+			public long              monthlyPayAsYouGo;
 			// tokenUsage
-			public KeyUsage keyUsage;
+			public KeyUsage          keyUsage;
 			
 			public Messages() {
+				dailyUsage        = null;
 				monthlyUsage      = 0;
 				monthlyPayAsYouGo = 0;
-				keyUsage          = new KeyUsage();
+				keyUsage          = null;
 			}
 			
 			public Messages(JsonObject jsonObject) {
@@ -86,7 +91,7 @@ public class Account {
 //		public Rules    rules;
 		
 		public Usage() {
-			messages = new Messages();
+			messages = null;
 		}
 		public Usage(JsonObject jsonObject) {
 			super(jsonObject);

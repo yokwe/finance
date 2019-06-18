@@ -46,15 +46,26 @@ public class IEXCloud {
 			logger.info("usage = {}", usage);
 		}
 		
+//		{
+//			List<RefData.IEX.Symbols> symbols = RefData.IEX.Symbols.getArray(context, RefData.IEX.Symbols.class);
+//			logger.info("array symbols = {}", symbols.size());
+//			
+//			RefData.IEX.Symbols.saveCSV(symbols);
+//		}
 		{
-			List<RefData.IEX.Symbols> symbols = RefData.IEX.Symbols.getArray(context, RefData.IEX.Symbols.class);
-			logger.info("array symbols = {}", symbols.size());
+			List<RefData.IEX.Symbols> iexSymbols = RefData.IEX.Symbols.getCSV(context, RefData.IEX.Symbols.class);
+			logger.info("iexSymbols = {}", iexSymbols.size());
+			
+			RefData.IEX.Symbols.saveCSV(iexSymbols);
 		}
-		{
-			List<RefData.IEX.Symbols> symbols = RefData.IEX.Symbols.getCSV(context, RefData.IEX.Symbols.class);
-			logger.info("csv   symbols = {}", symbols.size());
-		}
-		
+
+//		{
+//			List<RefData.Symbols> symbols = RefData.Symbols.getCSV(context, RefData.Symbols.class);
+//			logger.info("symbols = {}", symbols.size());
+//			
+//			RefData.Symbols.saveCSV(symbols);
+//		}
+
 		
 		logger.info("STOP");
 	}

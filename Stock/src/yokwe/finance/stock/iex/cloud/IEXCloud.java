@@ -66,12 +66,19 @@ public class IEXCloud {
 //			RefData.Symbols.saveCSV(symbols);
 //		}
 
-		{
-			List<RefData.OTC.Symbols> otcSymbols = RefData.OTC.Symbols.getCSV(context, RefData.OTC.Symbols.class);
-			logger.info("otcSymbols = {}", otcSymbols.size());
-			
-			RefData.OTC.Symbols.saveCSV(otcSymbols);
-		}
+//		{
+//			List<RefData.OTC.Symbols> otcSymbols = RefData.OTC.Symbols.getCSV(context, RefData.OTC.Symbols.class);
+//			logger.info("otcSymbols = {}", otcSymbols.size());
+//			
+//			RefData.OTC.Symbols.saveCSV(otcSymbols);
+//		}
+
+//		{
+//			List<RefData.Exchanges> exchanges = RefData.Exchanges.getCSV(context, RefData.Exchanges.class);
+//			logger.info("exchanges = {}", exchanges.size());
+//			
+//			RefData.Exchanges.saveCSV(exchanges);
+//		}
 
 		logger.info("STOP");
 	}

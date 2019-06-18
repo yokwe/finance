@@ -5,8 +5,6 @@ import java.util.Map;
 
 import javax.json.JsonObject;
 
-import yokwe.finance.stock.iex.cloud.IEXCloud.JSONName;
-
 public class Account {
 	public static class Metadata extends Base {
 		public static final String METHOD = "/account/metadata";
@@ -37,42 +35,13 @@ public class Account {
 	
 	public static class Usage extends Base {
 		public static final String METHOD = "/account/usage";
-
-		public static class KeyUsage extends Base {
-			// "ACCOUNT_USAGE":"0","IEX_STATS":"0","REF_DATA_IEX_SYMBOLS":"0","IEX_TOPS":"0","IEX_DEEP":"0","REF_DATA":"100"
-			@JSONName("ACCOUNT_USAGE")
-			public long accountUsage;
-			@JSONName("IEX_STATS")
-			public long iexStats;
-			@JSONName("REF_DATA_IEX_SYMBOLS")
-			public long refDataIEXSymbols;
-			@JSONName("IEX_TOPS")
-			public long iexTops;
-			@JSONName("IEX_DEEP")
-			public long iexDeep;
-			@JSONName("REF_DATA")
-			public long refData;
-			
-			public KeyUsage() {
-				accountUsage      = 0;
-				iexStats          = 0;
-				refDataIEXSymbols = 0;
-				iexTops           = 0;
-				iexDeep           = 0;
-				refData           = 0;
-			}
-
-			public KeyUsage(JsonObject jsonObject) {
-				super(jsonObject);
-			}
-		}
 		
 		public static class Messages extends Base {
 			public Map<String, Long> dailyUsage;
 			public long              monthlyUsage;
 			public long              monthlyPayAsYouGo;
-			// tokenUsage
-			public KeyUsage          keyUsage;
+			public Map<String, Long> tokenUsage;
+			public Map<String, Long> keyUsage;
 			
 			public Messages() {
 				dailyUsage        = null;

@@ -65,13 +65,14 @@ public class ClassInfo {
 
 	public final String      clazzName;
 	public final String      method;
+	public final String      path;
 	public final FieldInfo[] fieldInfos;
 	public final int         fieldSize;
 	public final String      filter;
 	
 	private static Field getField(Class<?> clazz, String fieldName) {
 		try {
-			return clazz.getDeclaredField("METHOD");
+			return clazz.getDeclaredField(fieldName);
 		} catch (NoSuchFieldException e) {
 			return null;
 		}
@@ -104,7 +105,7 @@ public class ClassInfo {
 				if (field != null) {
 					if (!Modifier.isStatic(field.getModifiers())) {
 						logger.error("METHOD field is not static {}", clazz.getName());
-						throw new UnexpectedError("TYPE field is not static");
+						throw new UnexpectedError("METHOD field is not static");
 					}
 					String fieldTypeName = field.getType().getName();
 					if (!fieldTypeName.equals("java.lang.String")) {
@@ -119,32 +120,32 @@ public class ClassInfo {
 						throw new UnexpectedError("Unexpected value");
 					}
 				} else {
-					// check METHOD field in enclosing class
-					Class<?> enclosingClass = clazz;
-					for(;;) {
-						enclosingClass = enclosingClass.getEnclosingClass();
-						if (!Base.class.isAssignableFrom(enclosingClass)) break;
-						if (enclosingClass == null) break;
-						field = getField(enclosingClass, "METHOD");
-						if (field != null) break;
-					}
-					if (field == null) {
-						logger.error("No METHOD field {}", clazz.getName());
-						throw new UnexpectedError("No TYPE field");
-					}
-					
-					// sanity check of found field
+					method = null;
+				}
+			}
+
+			String path;
+			{
+				Field field = getField(clazz, "PATH");
+				if (field != null) {
 					if (!Modifier.isStatic(field.getModifiers())) {
-						logger.error("METHOD field is not static {}", clazz.getName());
-						throw new UnexpectedError("TYPE field is not static");
+						logger.error("PATH field is not static {}", clazz.getName());
+						throw new UnexpectedError("PATH field is not static");
 					}
 					String fieldTypeName = field.getType().getName();
 					if (!fieldTypeName.equals("java.lang.String")) {
 						logger.error("Unexpected fieldTypeName {}", fieldTypeName);
 						throw new UnexpectedError("Unexpected fieldTypeName");
 					}
-
-					method = null;
+					Object value = field.get(null);
+					if (value instanceof String) {
+						path = (String)value;
+					} else {
+						logger.error("Unexpected value {}", value.getClass().getName());
+						throw new UnexpectedError("Unexpected value");
+					}
+				} else {
+					path = null;
 				}
 			}
 			
@@ -160,6 +161,7 @@ public class ClassInfo {
 
 			this.clazzName  = clazz.getName();
 			this.method     = method;
+			this.path       = path;
 			this.fieldInfos = fieldInfos;
 			this.fieldSize  = fieldSize;
 			this.filter     = filter;
@@ -177,6 +179,6 @@ public class ClassInfo {
 	
 	@Override
 	public String toString() {
-		return String.format("%s %s %s", clazzName, Arrays.asList(this.fieldInfos));
+		return String.format("%s  %s  %s  %s", clazzName, method, path, Arrays.asList(this.fieldInfos));
 	}
 }

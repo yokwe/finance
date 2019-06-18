@@ -1,5 +1,6 @@
 package yokwe.finance.stock.iex.cloud;
 
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
@@ -10,6 +11,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import yokwe.finance.stock.iex.IEXUnexpectedError;
+import yokwe.finance.stock.util.CSVUtil;
 import yokwe.finance.stock.util.HttpUtil;
 
 public class Base {
@@ -464,14 +467,14 @@ public class Base {
 			throw new UnexpectedError("method == null");
 		}
 		String url = context.getURL(classInfo.method);
-		logger.info("url = {}", url);
+//		logger.info("url = {}", url);
 		
 		String jsonString = HttpUtil.downloadAsString(url);
 		if (jsonString == null) {
 			logger.error("jsonString == null");
 			throw new UnexpectedError("jsonString == null");
 		}
-		logger.info("jsonString = {}", jsonString);
+//		logger.info("jsonString = {}", jsonString);
 		
 		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
 			// Assume result is only one object
@@ -499,4 +502,93 @@ public class Base {
 		}
 	}
 
+	protected static <E extends Base> List<E> getArray(Context context, Class<E> clazz) {
+		ClassInfo classInfo = ClassInfo.get(clazz);
+		
+		// 'https://cloud.iexapis.com/v1/status?token=sk_bb977734bffe47ef8dca20cd4cfad878'
+		if (classInfo.method == null) {
+			logger.error("method == null {}", classInfo);
+			throw new UnexpectedError("method == null");
+		}
+		String url = context.getURL(classInfo.method);
+//		logger.info("url = {}", url);
+		
+		String jsonString = HttpUtil.downloadAsString(url);
+		if (jsonString == null) {
+			logger.error("jsonString == null");
+			throw new UnexpectedError("jsonString == null");
+		}
+//		logger.info("jsonString = {}", jsonString);
+		
+		try (JsonReader reader = Json.createReader(new StringReader(jsonString))) {
+			// Assume result is array
+			JsonArray jsonArray = reader.readArray();
+			
+			int jsonArraySize = jsonArray.size();
+			@SuppressWarnings("unchecked")
+			E[] ret = (E[])Array.newInstance(clazz, jsonArraySize);
+			
+			for(int i = 0; i < jsonArraySize; i++) {
+				JsonObject arg = jsonArray.getJsonObject(i);
+				ret[i]  = clazz.getDeclaredConstructor(JsonObject.class).newInstance(arg);
+			}
+			
+			// Sort array
+			Arrays.sort(ret);
+			
+			// Return as list
+			return Arrays.asList(ret);
+		} catch (IllegalAccessException e) {
+			logger.error("IllegalAccessException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalAccessException");
+		} catch (InstantiationException e) {
+			logger.error("InstantiationException {}", e.toString());
+			throw new IEXUnexpectedError("InstantiationException");
+		} catch (IllegalArgumentException e) {
+			logger.error("IllegalArgumentException {}", e.toString());
+			throw new IEXUnexpectedError("IllegalArgumentException");
+		} catch (InvocationTargetException e) {
+			logger.error("InvocationTargetException {}", e.toString());
+			throw new IEXUnexpectedError("InvocationTargetException");
+		} catch (NoSuchMethodException e) {
+			logger.error("NoSuchMethodException {}", e.toString());
+			throw new IEXUnexpectedError("NoSuchMethodException");
+		} catch (SecurityException e) {
+			logger.error("SecurityException {}", e.toString());
+			throw new IEXUnexpectedError("SecurityException");
+		}
+	}
+
+	protected static <E extends Base> List<E> getCSV(Context context, Class<E> clazz) {
+		ClassInfo classInfo = ClassInfo.get(clazz);
+		
+		// 'https://cloud.iexapis.com/v1/status?token=sk_bb977734bffe47ef8dca20cd4cfad878'
+		if (classInfo.method == null) {
+			logger.error("method == null {}", classInfo);
+			throw new UnexpectedError("method == null");
+		}
+		String url = context.getURLAsCSV(classInfo.method);
+//		logger.info("url = {}", url);
+		
+		String csvString = HttpUtil.downloadAsString(url);
+		if (csvString == null) {
+			logger.error("csvString == null");
+			throw new UnexpectedError("csvString == null");
+		}
+		Reader reader = new StringReader(csvString);
+
+		List<E> list = CSVUtil.loadWithHeader(reader, clazz);
+		
+		@SuppressWarnings("unchecked")
+		E[] ret = (E[])Array.newInstance(clazz, list.size());
+		for(int i = 0; i < ret.length; i++) {
+			ret[i] = list.get(i);
+		}
+		
+		// Sort array
+		Arrays.sort(ret);
+		
+		// Return as list
+		return Arrays.asList(ret);
+	}
 }

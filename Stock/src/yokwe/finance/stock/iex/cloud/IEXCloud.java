@@ -80,6 +80,13 @@ public class IEXCloud {
 //			RefData.Exchanges.saveCSV(exchanges);
 //		}
 
+		{
+			List<RefData.Market.US.Exchanges> usExchanges = RefData.Market.US.Exchanges.getCSV(context, RefData.Market.US.Exchanges.class);
+			logger.info("usExchanges = {}", usExchanges.size());
+			
+			RefData.Market.US.Exchanges.saveCSV(usExchanges);
+		}
+
 		logger.info("STOP");
 	}
 }

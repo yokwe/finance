@@ -71,6 +71,42 @@ public class RefData {
 	}
 
 
+	public static class Market {
+		public static class US {
+			public static class Exchanges extends Base implements Comparable<Exchanges> {
+				public static final String METHOD = "/ref-data/market/us/exchanges";
+				public static final String PATH   = "/us-exchanges.csv";
+
+				// mic,name,longName,tapeId,oatsId,type
+				public String mic;
+				public String name;
+				public String longName;
+				public String tapeId;
+				public String oatsId;
+				public String type;
+				
+				public Exchanges() {
+					mic      = null;
+					name     = null;
+					longName = null;
+					tapeId   = null;
+					oatsId   = null;
+					type     = null;
+				}
+				
+				public Exchanges(JsonObject jsonObject) {
+					super(jsonObject);
+				}
+
+				@Override
+				public int compareTo(Exchanges that) {
+					return this.mic.compareTo(that.mic);
+				}
+			}
+		}
+	}
+	
+	
 	public static class Symbols extends Base implements Comparable<Symbols> {
 		public static final String METHOD = "/ref-data/symbols";
 		public static final String PATH   = "/symbols.csv";

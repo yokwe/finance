@@ -4,6 +4,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,22 @@ public class IEXCloud {
 		}
 		
 		{
-			Account.Metadata metadata = Status.getObject(context, Account.Metadata.class);
+			Account.Metadata metadata = Account.Metadata.getObject(context, Account.Metadata.class);
 			logger.info("metadata = {}", metadata);
 		}
 		
 		{
-			Account.Usage usage = Status.getObject(context, Account.Usage.class);
+			Account.Usage usage = Account.Usage.getObject(context, Account.Usage.class);
 			logger.info("usage = {}", usage);
+		}
+		
+		{
+			List<RefData.IEX.Symbols> symbols = RefData.IEX.Symbols.getArray(context, RefData.IEX.Symbols.class);
+			logger.info("array symbols = {}", symbols.size());
+		}
+		{
+			List<RefData.IEX.Symbols> symbols = RefData.IEX.Symbols.getCSV(context, RefData.IEX.Symbols.class);
+			logger.info("csv   symbols = {}", symbols.size());
 		}
 		
 		

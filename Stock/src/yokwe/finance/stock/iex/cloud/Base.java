@@ -40,6 +40,7 @@ public class Base {
 	
 	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
 
+	public static final String PATH_DIR = "tmp/iex";
 
 	@Override
 	public String toString() {
@@ -502,6 +503,7 @@ public class Base {
 		}
 	}
 
+	// for symbols
 	protected static <E extends Base> List<E> getArray(Context context, Class<E> clazz) {
 		ClassInfo classInfo = ClassInfo.get(clazz);
 		
@@ -559,6 +561,7 @@ public class Base {
 		}
 	}
 
+	// for symbols
 	protected static <E extends Base> List<E> getCSV(Context context, Class<E> clazz) {
 		ClassInfo classInfo = ClassInfo.get(clazz);
 		
@@ -590,5 +593,33 @@ public class Base {
 		
 		// Return as list
 		return Arrays.asList(ret);
+	}
+
+	protected static <E extends Base> void saveCSV(List<E> dataList) {
+		E o = dataList.get(0);
+		ClassInfo classInfo = ClassInfo.get(o);
+		
+		if (classInfo.path == null) {
+			logger.error("classInfo.path == null  {}", classInfo);
+			throw new UnexpectedError("classInfo.path == null");
+		}
+		
+		String path = String.format("%s%s", PATH_DIR, classInfo.path);
+//		logger.info("path = {}", path);
+
+		CSVUtil.saveWithHeader(dataList, path);
+	}
+	protected static <E extends Base> List<E> loadCSV(Class<E> clazz) {
+		ClassInfo classInfo = ClassInfo.get(clazz);
+		
+		if (classInfo.path == null) {
+			logger.error("classInfo.path == null  {}", classInfo);
+			throw new UnexpectedError("classInfo.path == null");
+		}
+		
+		String path = String.format("%s%s", PATH_DIR, classInfo.path);
+//		logger.info("path = {}", path);
+		
+		return CSVUtil.loadWithHeader(path, clazz);
 	}
 }

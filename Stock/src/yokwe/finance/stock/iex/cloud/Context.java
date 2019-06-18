@@ -19,4 +19,7 @@ public class Context {
 	public String getURL(String method) {
 		return String.format("%s%s?token=%s", url, method, type.token.secret);
 	}
+	public String getURLAsCSV(String method) {
+		return String.format("%s%s?token=%s&format=csv", url, method, type.token.secret);
+	}
 }

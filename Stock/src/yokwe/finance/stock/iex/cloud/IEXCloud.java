@@ -94,6 +94,19 @@ public class IEXCloud {
 //			RefData.MutualFunds.Symbols.saveCSV(mfSymbols);
 //		}
 
+		{
+			List<Tops> tops = Tops.getCSV(context, Tops.class);
+			logger.info("top = {}", tops.size());
+			
+			Tops.saveCSV(tops);
+		}
+		
+		{
+			List<Tops.Last> topsLast = Tops.Last.getCSV(context, Tops.Last.class);
+			logger.info("topsLast = {}", topsLast.size());
+			
+			Tops.Last.saveCSV(topsLast);
+		}
 		logger.info("STOP");
 	}
 }

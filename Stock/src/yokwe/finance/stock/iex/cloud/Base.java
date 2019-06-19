@@ -38,7 +38,7 @@ public class Base {
 	// Use New York time in LocalDateTime
 	public static final ZoneId ZONE_ID = ZoneId.of("America/New_York");
 	
-	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.ofInstant(Instant.EPOCH, ZONE_ID);
+	public static final LocalDateTime NULL_LOCAL_DATE_TIME = LocalDateTime.of(1900, 1, 1, 0, 0);
 
 	public static final String PATH_DIR = "tmp/iex";
 
@@ -580,7 +580,7 @@ public class Base {
 		}
 		Reader reader = new StringReader(csvString);
 
-		List<E> list = CSVUtil.loadWithHeader(reader, clazz);
+		List<E> list = CSVUtil.loadWithHeader(reader, clazz, ZONE_ID);
 		
 		@SuppressWarnings("unchecked")
 		E[] ret = (E[])Array.newInstance(clazz, list.size());

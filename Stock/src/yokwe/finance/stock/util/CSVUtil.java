@@ -14,6 +14,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +53,9 @@ public class CSVUtil {
 	}
 
 	public static <E> List<E> loadWithHeader(Reader reader, Class<E> clazz) {
+		return loadWithHeader(reader, clazz, ZoneId.systemDefault());
+	}
+	public static <E> List<E> loadWithHeader(Reader reader, Class<E> clazz, ZoneId zoneID) {
 		String[] names;
 		{
 			List<String> nameList = new ArrayList<>();
@@ -63,7 +70,7 @@ public class CSVUtil {
 		}
 		
 		CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(names).withRecordSeparator("\n");
-		return load(reader, clazz, csvFormat);
+		return load(reader, clazz, csvFormat, zoneID);
 	}
 	public static <E> List<E> loadWithHeader(String path, Class<E> clazz) {
 		{
@@ -101,6 +108,10 @@ public class CSVUtil {
 	private static final String UTF8_BOM = "\uFEFF";
 
 	public static <E> List<E> load(Reader reader, Class<E> clazz, CSVFormat csvFormat) {
+		return load(reader, clazz, csvFormat, ZoneId.systemDefault());
+	}
+	
+	public static <E> List<E> load(Reader reader, Class<E> clazz, CSVFormat csvFormat, ZoneId zoneID) {
 		Field[]  fields;
 		String[] types;
 		int      size;
@@ -129,6 +140,12 @@ public class CSVUtil {
 				if (record.size() != size) {
 					logger.error("record.size != size  {} != {}", record.size(), size);
 					logger.error("record = {}", record);
+					for(int i = 0; i < record.size(); i++) {
+						logger.error("record {} = {}", i, record.get(i));
+					}
+					for(int i = 0; i < size; i++) {
+						logger.error("field {} = {}  {}", i, fields[i].getName(), fields[i].getType().getName());
+					}
 					throw new UnexpectedException("record.size != size");
 				}
 				
@@ -157,19 +174,58 @@ public class CSVUtil {
 					String value = record.get(i);
 					switch(types[i]) {
 					case "int":
-						fields[i].setInt(data, Integer.valueOf(value));
+					{
+						int intValue = value.isEmpty() ? 0 : Integer.parseInt(value);
+						fields[i].setInt(data, intValue);
+					}
 						break;
 					case "long":
-						fields[i].setLong(data, Long.valueOf(value));
+					{
+						long longValue = value.isEmpty() ? 0 : Long.parseLong(value);
+						fields[i].setLong(data, longValue);
+					}
 						break;
 					case "double":
-						fields[i].setDouble(data, Double.valueOf(value));
+					{
+						double doubleValue = value.isEmpty() ? 0 : Double.parseDouble(value);
+						fields[i].setDouble(data, doubleValue);
+					}
 						break;
 					case "boolean":
-						fields[i].setBoolean(data, Boolean.valueOf(value));
+					{
+						boolean booleanValue = value.isEmpty() ? false : Boolean.parseBoolean(value);
+						fields[i].setBoolean(data, booleanValue);
+					}
 						break;
 					case "java.lang.String":
 						fields[i].set(data, value);
+						break;
+					case "java.time.LocalDateTime":
+					{
+						final LocalDateTime localDateTime;
+						
+						if (value.isEmpty() || value.equals("0")) {
+							localDateTime = LocalDateTime.of(1900, 1, 1, 0, 0);
+						} else if (value.matches("^[0-9]+$")) {
+							try {
+								long longValue = Long.parseLong(value);
+								// Need time zone to calculate correct date time
+								localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(longValue), zoneID);
+							} catch(NumberFormatException e) {
+								logger.error("Unexptected value {}", value);
+								throw new UnexpectedException("Unexptected value");
+							}
+						} else {
+							try {
+								localDateTime = LocalDateTime.parse(value);
+							} catch (DateTimeParseException e) {
+								logger.error("Unexptected value {}", value);
+								throw new UnexpectedException("Unexptected value");
+							}
+						}
+						
+						fields[i].set(data, localDateTime);
+					}
 						break;
 					default:
 						logger.error("Unexptected type {}", types[i]);

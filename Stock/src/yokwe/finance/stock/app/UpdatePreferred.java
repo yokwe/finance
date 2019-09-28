@@ -180,6 +180,8 @@ public class UpdatePreferred {
 			
 			{"USA",         "Philadelphia"},
 			{"USA",         "New York"},
+			{"USA",         "Houston, TX"},
+			{"USA",			"Carmel, IN"},
 	};
 	
 	private static String toCountry(String address) {
